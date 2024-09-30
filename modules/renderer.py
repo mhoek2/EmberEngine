@@ -11,6 +11,10 @@ class Renderer:
     def __init__( self ):
         self.create_instance()
 
+        self.pitch = 0.3;
+        self.yaw = 0.3;
+        self.speed = 0.15;
+
         self.paused = False
         self.running = True
         self.framenum = 0
@@ -75,7 +79,7 @@ class Renderer:
         glLoadIdentity()
 
         # apply the look up and down
-        self.up_down_angle += self.mouse_move[1] * 0.1
+        self.up_down_angle += self.mouse_move[1] * self.pitch
         glRotatef( self.up_down_angle, 1.0, 0.0, 0.0 )
 
         # init the view matrix
@@ -88,30 +92,30 @@ class Renderer:
 
         if keypress[pygame.K_w]:
             # Move forward in the direction of the forward vector
-            glTranslatef(*-camera_forward * 0.1)
+            glTranslatef(*-camera_forward * self.speed)
 
         if keypress[pygame.K_s]:
             # Move backward in the direction opposite to the forward vector
-            glTranslatef(*(camera_forward) * 0.1)
+            glTranslatef(*(camera_forward) * self.speed)
 
         if keypress[pygame.K_d]:
             # Move to the right
-            glTranslatef(*-camera_right * 0.1)
+            glTranslatef(*-camera_right * self.speed)
 
         if keypress[pygame.K_a]:
             # Move to the left
-            glTranslatef(*(camera_right) * 0.1)
+            glTranslatef(*(camera_right) * self.speed)
 
         if keypress[pygame.K_SPACE]:
             # Move up in the direction of the up vector
-            glTranslatef(*-camera_up * 0.1)
+            glTranslatef(*-camera_up * self.speed)
 
         if keypress[pygame.K_LCTRL]:  # Assuming left control key for downward movement
             # Move down in the direction opposite to the up vector
-            glTranslatef(*(camera_up) * 0.1)
+            glTranslatef(*(camera_up) * self.speed)
 
         # apply the left and right rotation
-        glRotatef( self.mouse_move[0] * 0.2, 0.0, 1.0, 0.0 )
+        glRotatef( self.mouse_move[0] * self.yaw, 0.0, 1.0, 0.0 )
 
         # multiply the current matrix by the get the new view matrix and store the final vie matrix 
         glMultMatrixf( self.viewMatrix )
