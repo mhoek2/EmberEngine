@@ -6,7 +6,9 @@ from OpenGL.GLU import *
 
 import math
 
+from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
+
 from gameObjects.cube import Cube
 from gameObjects.sphere import Sphere
 from gameObjects.mesh import Mesh
@@ -17,11 +19,45 @@ sphere = gluNewQuadric()
 renderer.setup_lighting()
 
 gameObjects = []
-gameObjects.append( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
-gameObjects.append( Sphere( translate=(-4, 0, 0) ) )
-gameObjects.append( Sphere( translate=(0, 0, 0) ) )
-gameObjects.append( Sphere( translate=(-2, 0, 0) ) )
-gameObjects.append( Mesh( translate=(-16, 0, 0), filename="C:/Github-workspace/EmberEngine/assets/models/Tree/tree.obj" ) )
+#gameObjects.append( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
+#gameObjects.append( Sphere( translate=(0, 0, 0) ) )
+#gameObjects.append( Sphere( translate=(0, 0, 0) ) )
+#gameObjects.append( Sphere( translate=(-2, 0, 0) ) )
+#gameObjects.append( Mesh( translate=(-16, 0, 0), filename="C:/Github-workspace/EmberEngine/assets/models/Tree/tree.obj" ) )
+
+file = JsonHandler( 'C:/Github-workspace/EmberEngine/json/lang.json' )
+json_content = file.getJson();
+
+scale_modifier = 1
+
+def JsonToVertices() -> None:
+    gameObjects.append( Cube() )
+
+    for lang in json_content['languages']:
+
+        coords = lang['coordinates']
+
+        translation = ( coords['x'] * scale_modifier,
+                        coords['y'] * scale_modifier,
+                        coords['z'] * scale_modifier
+        )
+
+        color = (1.0, 1.0, 1.0) 
+
+        if lang['name'] == "Python":
+            color = (1.0, 1.0, 0.0) 
+        elif lang['name'] == "C++":
+            color = (0.0, 1.0, 1.0)
+
+        gameObjects.append( Sphere( 
+            translate=translation,
+            radius=0.05,
+            stacks=5,
+            slices=10,
+            color=color
+        ) )
+
+JsonToVertices()
 
 while renderer.running:
     events = pygame.event.get()
@@ -44,6 +80,10 @@ while renderer.running:
 
         for gameObject in gameObjects:
             gameObject.draw();
+
+
+
+
 
         renderer.end_frame()
 pygame.quit()
