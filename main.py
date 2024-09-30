@@ -28,10 +28,10 @@ gameObjects = []
 file = JsonHandler( 'C:/Github-workspace/EmberEngine/json/lang.json' )
 json_content = file.getJson();
 
-scale_modifier = 1
-
 def JsonToVertices() -> None:
     gameObjects.append( Cube() )
+
+    scale_modifier = 1
 
     for lang in json_content['languages']:
 
@@ -43,15 +43,20 @@ def JsonToVertices() -> None:
         )
 
         color = (1.0, 1.0, 1.0) 
+        radius = 0.02
 
         if lang['name'] == "Python":
             color = (1.0, 1.0, 0.0) 
+            radius = 0.05
+
         elif lang['name'] == "C++":
             color = (0.0, 1.0, 1.0)
+            radius = 0.05
+
 
         gameObjects.append( Sphere( 
             translate=translation,
-            radius=0.05,
+            radius=radius,
             stacks=5,
             slices=10,
             color=color
@@ -80,10 +85,6 @@ while renderer.running:
 
         for gameObject in gameObjects:
             gameObject.draw();
-
-
-
-
 
         renderer.end_frame()
 pygame.quit()
