@@ -9,11 +9,18 @@ import numpy as np
 from gameObjects.gameObject import GameObject
 
 class Sphere( GameObject ):
-    def __init__( self , translate=( 0.0, 0.0, 0.0 ), rotation=( 0.0, 0.0, 0.0, 0.0 ), radius=1, stacks=20, slices=20 ) -> None:
+    def __init__( self , 
+                 translate=( 0.0, 0.0, 0.0 ), 
+                 rotation=( 0.0, 0.0, 0.0, 0.0 ), 
+                 radius=1, stacks=20, slices=20,
+                 color=( 1.0, 1.0, 1.0 )) -> None:
         self.sphere = gluNewQuadric()
 
         self.translate = translate
         self.rotation = rotation
+
+        self.color = color
+        
 
         self.radius = radius
         self.stacks = stacks
@@ -28,6 +35,7 @@ class Sphere( GameObject ):
     #def draw_sphere(radius, slices, stacks, position : Tuple = (0,0,0)):
         """Draws a sphere using OpenGL with the given radius, slices, and stacks."""
         glPushMatrix()
+        glColor3f( self.color[0], self.color[1], self.color[2] )
         glRotatef( self.rotation[0], self.rotation[1], self.rotation[2], self.rotation[3] ); 
         glTranslatef( self.translate[0], self.translate[1], self.translate[2] ); 
 
