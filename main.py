@@ -22,12 +22,19 @@ def addGameObject( object ) -> int:
     gameObjects.append( object )
     return index
 
-sun = addGameObject( Sun( renderer, translate=(-2, 0, 0) ) )
+sun = addGameObject( Sun( renderer, 
+                         translate=(-2, 0, 0), 
+                         color=(0.7, 0.7, 0.0),
+                         diffuse=(.0, 1.0, 0.7),
+                         ambient=(0.0, 0.2, 0.2),
+                         anim_radius=10,
+                         anim_speed=2
+                   ) )
 
 addGameObject( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
-addGameObject( Sphere( translate=(-4, 0, 0) ) )
-addGameObject( Sphere( translate=(0, 0, 0) ) )
-addGameObject( Sphere( translate=(-2, 0, 0) ) )
+addGameObject( Sphere( translate=(-4, 0, 0), color=(1.0, 0.0, 0.0) ) )
+addGameObject( Sphere( translate=(0, 0, 0), color=(0.0, 1.0, 0.0) ) )
+addGameObject( Sphere( translate=(-2, 0, 0), color=(0.0, 0.0, 1.0) ) )
 addGameObject( Mesh( translate=(-16, 0, 0), filename="C:/Github-workspace/EmberEngine/assets/models/Tree/tree.obj" ) )
 
 while renderer.running:
@@ -38,7 +45,7 @@ while renderer.running:
         renderer.begin_frame()
 
         # plane
-        glColor4f(0.7, 0.0, 0.3, 1)
+        glColor4f(1, 1, 1, 1)
         glBegin(GL_QUADS)
         glVertex3f( -10, -10, -2 )
         glVertex3f( 10, -10, -2 )
