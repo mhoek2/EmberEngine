@@ -13,15 +13,24 @@ class Sun( Sphere ):
     def __init__( self, renderer, translate=( 0.0, 0.0, 0.0 ), 
                  rotation=( 0.0, 0.0, 0.0, 0.0 ), 
                  radius=1, stacks=20, slices=20,
-                 color=( 1.0, 1.0, 1.0 )) -> None:
+                 color=( 1.0, 1.0, 1.0 ), 
+                 diffuse=( 1.0, 1.0, 1.0 ),
+                 ambient=( 1.0, 1.0, 1.0 ),
+                 angle=1,
+                 anim_speed=0.05,
+                 anim_radius=4) -> None:
         super().__init__( translate, rotation, radius, stacks, slices, color )
 
         # context
         self.renderer = renderer
 
-        # lights
-        self.angle = 1
+        self.angle = angle
         self.light_pos = [1, -1, 1];
+        self.anim_radius = anim_radius
+        self.anim_speed = anim_speed
+        self.ambient = ambient
+        self.diffuse = diffuse
+
 
         glEnable( GL_DEPTH_TEST )
         glEnable( GL_LIGHTING )
@@ -30,18 +39,15 @@ class Sun( Sphere ):
         glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE )
 
         glEnable( GL_LIGHT0 )
-        glLightfv( GL_LIGHT0, GL_AMBIENT, [0.5, 0.5, 0.5, 1] )
-        glLightfv( GL_LIGHT0, GL_DIFFUSE, [1.0, 1.0, 1.0, 1] )
-
+        glLightfv( GL_LIGHT0, GL_AMBIENT, [self.ambient[0], self.ambient[1], self.ambient[2], 1] )
+        glLightfv( GL_LIGHT0, GL_DIFFUSE, [self.diffuse[0], self.diffuse[1], self.diffuse[2], 1] )
         return
     
     def update( self ) -> None:
-        self.angle += self.renderer.deltaTime * 0.5
-        radius = 4.2
+        self.angle += self.renderer.deltaTime * self.anim_speed 
 
-        # Calculate the new position of the circle
-        self.light_pos[0] = radius * math.cos( self.angle )  # Update x position
-        self.light_pos[2] = radius * math.sin( self.angle )   # Update y position for vertical
+        self.light_pos[0] = self.anim_radius * math.cos( self.angle )  # Update x position
+        self.light_pos[2] = self.anim_radius * math.sin( self.angle )  # Update y position for vertical
 
         glLightfv( GL_LIGHT0, GL_POSITION, 
                   [self.light_pos[0], self.light_pos[1], self.light_pos[2], 0] 

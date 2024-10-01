@@ -24,13 +24,14 @@ def addGameObject( object ) -> int:
     gameObjects.append( object )
     return index
 
-sun = addGameObject( Sun( renderer, translate=(-2, 0, 0) ) )
-
-#gameObjects.append( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
-#gameObjects.append( Sphere( translate=(0, 0, 0) ) )
-#gameObjects.append( Sphere( translate=(0, 0, 0) ) )
-#gameObjects.append( Sphere( translate=(-2, 0, 0) ) )
-#gameObjects.append( Mesh( translate=(-16, 0, 0), filename="C:/Github-workspace/EmberEngine/assets/models/Tree/tree.obj" ) )
+sun = addGameObject( Sun( renderer, 
+                         translate=(-2, 0, 0), 
+                         color=(0.7, 0.7, 0.0),
+                         diffuse=(.0, 1.0, 0.7),
+                         ambient=(0.0, 0.2, 0.2),
+                         anim_radius=10,
+                         anim_speed=2
+                   ) )
 
 file = JsonHandler( 'C:/Github-workspace/EmberEngine/json/lang.json' )
 json_content = file.getJson();
@@ -79,7 +80,7 @@ while renderer.running:
         renderer.begin_frame()
 
         # plane
-        glColor4f(0.7, 0.0, 0.3, 1)
+        glColor4f(1, 1, 1, 1)
         glBegin(GL_QUADS)
         glVertex3f( -10, -10, -2 )
         glVertex3f( 10, -10, -2 )
