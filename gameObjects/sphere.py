@@ -9,7 +9,7 @@ import numpy as np
 from gameObjects.gameObject import GameObject
 
 class Sphere( GameObject ):
-    def __init__( self , 
+    def __init__( self, 
                  translate=( 0.0, 0.0, 0.0 ), 
                  rotation=( 0.0, 0.0, 0.0, 0.0 ), 
                  radius=1, stacks=20, slices=20,

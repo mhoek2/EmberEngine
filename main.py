@@ -10,18 +10,25 @@ from modules.renderer import Renderer
 from gameObjects.cube import Cube
 from gameObjects.sphere import Sphere
 from gameObjects.mesh import Mesh
+from gameObjects.sun import Sun
 
 renderer = Renderer()
 renderer.setup_frustum_mvp()
-sphere = gluNewQuadric() 
-renderer.setup_lighting()
 
 gameObjects = []
-gameObjects.append( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
-gameObjects.append( Sphere( translate=(-4, 0, 0) ) )
-gameObjects.append( Sphere( translate=(0, 0, 0) ) )
-gameObjects.append( Sphere( translate=(-2, 0, 0) ) )
-gameObjects.append( Mesh( translate=(-16, 0, 0), filename="C:/Github-workspace/EmberEngine/assets/models/Tree/tree.obj" ) )
+
+def addGameObject( object ) -> int:
+    index = len(gameObjects)
+    gameObjects.append( object )
+    return index
+
+sun = addGameObject( Sun( renderer, translate=(-2, 0, 0) ) )
+
+addGameObject( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
+addGameObject( Sphere( translate=(-4, 0, 0) ) )
+addGameObject( Sphere( translate=(0, 0, 0) ) )
+addGameObject( Sphere( translate=(-2, 0, 0) ) )
+addGameObject( Mesh( translate=(-16, 0, 0), filename="C:/Github-workspace/EmberEngine/assets/models/Tree/tree.obj" ) )
 
 while renderer.running:
     events = pygame.event.get()
