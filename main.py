@@ -12,13 +12,20 @@ from modules.renderer import Renderer
 from gameObjects.cube import Cube
 from gameObjects.sphere import Sphere
 from gameObjects.mesh import Mesh
+from gameObjects.sun import Sun
 
 renderer = Renderer()
 renderer.setup_frustum_mvp()
-sphere = gluNewQuadric() 
-renderer.setup_lighting()
 
 gameObjects = []
+
+def addGameObject( object ) -> int:
+    index = len(gameObjects)
+    gameObjects.append( object )
+    return index
+
+sun = addGameObject( Sun( renderer, translate=(-2, 0, 0) ) )
+
 #gameObjects.append( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
 #gameObjects.append( Sphere( translate=(0, 0, 0) ) )
 #gameObjects.append( Sphere( translate=(0, 0, 0) ) )

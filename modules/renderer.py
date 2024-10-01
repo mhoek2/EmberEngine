@@ -1,3 +1,4 @@
+import math
 import pygame
 from pygame.locals import *
 
@@ -10,6 +11,7 @@ class Renderer:
     """The rendering backend"""
     def __init__( self ):
         self.create_instance()
+        self.clock = pygame.time.Clock()
 
         self.pitch = 0.3;
         self.yaw = 0.3;
@@ -17,7 +19,12 @@ class Renderer:
 
         self.paused = False
         self.running = True
+
+        # frames and timing
+        self.DELTA_SHIFT = 1000
         self.framenum = 0
+        self.frameTime = 0
+        self.deltaTime = 0
 
         # init mouse movement and center mouse on screen
         self.screen_center = [self.screen.get_size()[i] // 2 for i in range(2)]
@@ -29,17 +36,6 @@ class Renderer:
         pygame.init()
         self.display = (1200, 800)
         self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
-
-    def setup_lighting( self ) -> None:
-        glEnable( GL_DEPTH_TEST )
-        glEnable( GL_LIGHTING )
-        glShadeModel( GL_SMOOTH )
-        glEnable( GL_COLOR_MATERIAL )
-        glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE )
-
-        glEnable( GL_LIGHT0 )
-        glLightfv( GL_LIGHT0, GL_AMBIENT, [0.5, 0.5, 0.5, 1] )
-        glLightfv( GL_LIGHT0, GL_DIFFUSE, [1.0, 1.0, 1.0, 1] )
 
     def setup_frustum_mvp( self ) -> None:
         glMatrixMode( GL_PROJECTION )
@@ -126,9 +122,11 @@ class Renderer:
         glMultMatrixf( self.viewMatrix )
 
     def begin_frame( self ) -> None:
+        self.frameTime = self.clock.tick(60)
+        self.deltaTime = self.frameTime / self.DELTA_SHIFT
+
         self.update_camera()
 
-        glLightfv( GL_LIGHT0, GL_POSITION, [1, -1, 1, 0] )
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )
         glPushMatrix()
 
@@ -137,4 +135,3 @@ class Renderer:
 
         self.framenum += 1
         pygame.display.flip()
-        pygame.time.wait(10)
