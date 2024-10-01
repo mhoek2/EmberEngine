@@ -35,6 +35,7 @@ class Cube( GameObject ):
 
     def draw( self ) -> None:
         """Draws a wireframe cube with colored axes."""
+        return
         glPushMatrix()
         glRotatef( self.rotation[0], self.rotation[1], self.rotation[2], self.rotation[3] ); 
         glTranslatef( self.translate[0], self.translate[1], self.translate[2] ); 

@@ -1,4 +1,6 @@
 import math
+from OpenGL.arrays import returnPointer
+from pyrr import matrix44, Vector3
 import pygame
 from pygame.locals import *
 
@@ -7,15 +9,16 @@ from OpenGL.GLU import *
 
 import numpy as np
 
+from modules.shader import Shader
+from modules.camera import Camera
+
 class Renderer:
     """The rendering backend"""
     def __init__( self ):
-        self.create_instance()
-        self.clock = pygame.time.Clock()
+        # window
+        self.create_instance( 1200, 800 )
 
-        self.pitch = 0.3;
-        self.yaw = 0.3;
-        self.speed = 0.15;
+        self.clock = pygame.time.Clock()
 
         self.paused = False
         self.running = True
@@ -28,23 +31,51 @@ class Renderer:
 
         # init mouse movement and center mouse on screen
         self.screen_center = [self.screen.get_size()[i] // 2 for i in range(2)]
-        self.mouse_move = [ 0, 0 ]
-        self.up_down_angle = 0.0
-        pygame.mouse.set_pos( self.screen_center )
+        
+        # camera
+        self.cam = Camera()
+        self.lastX, self.lastY = 960, 540
+        self.first_mouse = True
 
-    def create_instance( self ) -> None:
+        pygame.mouse.set_pos( self.screen_center )
+        pygame.mouse.set_visible( False )
+
+        # shaders
+        self.create_shaders()
+
+        glEnable(GL_DEPTH_TEST)
+
+    def create_shaders( self ) -> None:
+        self.shader = Shader()
+
+        self.uMMatrix = glGetUniformLocation(self.shader.program, "uMMatrix")
+        self.uVMatrix = glGetUniformLocation(self.shader.program, "uVMatrix")
+        self.uPMatrix = glGetUniformLocation(self.shader.program, "uPMatrix")
+        self.sTexture = glGetUniformLocation(self.shader.program, "sTexture")
+       
+        self.aVertex = glGetAttribLocation(self.shader.program, "aVertex")
+        self.aNormal = glGetAttribLocation(self.shader.program, "aNormal")
+        self.aTexCoord = glGetAttribLocation(self.shader.program, "aTexCoord")
+
+        glUseProgram( self.shader.program )
+        glEnableVertexAttribArray( self.aVertex )
+        glEnableVertexAttribArray( self.aNormal )
+        glEnableVertexAttribArray( self.aTexCoord )
+
+    def create_instance( self, width, height ) -> None:
+        self.width = width
+        self.height = height
+
         pygame.init()
-        self.display = (1200, 800)
+        self.display = ( self.width, self.height )
         self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
 
     def setup_frustum_mvp( self ) -> None:
-        glMatrixMode( GL_PROJECTION )
-        gluPerspective( 45, ( self.display[0]/self.display[1] ), 0.1, 50.0 )
+        glViewport( 0, 0, self.width, self.height )
 
-        glMatrixMode( GL_MODELVIEW )
-        gluLookAt( 0, -8, 0, 0, 0, 0, 0, 0, 1 )
-        self.viewMatrix = glGetFloatv( GL_MODELVIEW_MATRIX )
-        glLoadIdentity()
+        self.aspect_ratio = self.width / self.height
+        self.model = matrix44.create_from_translation(Vector3([-14.0, -8.0, 0.0]))
+        self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 100.0)
 
     def event_handler( self, events ) -> None:
         mouse_moving = False
@@ -57,81 +88,61 @@ class Renderer:
                     self.running = False
                 if event.key == pygame.K_PAUSE or event.key == pygame.K_p:
                     self.paused = not self.paused
-                    pygame.mouse.set_pos( self.screen_center ) 
+                    #pygame.mouse.set_pos( self.screen_center ) 
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
                     mouse_moving = True
 
-        if not mouse_moving:
-            pygame.mouse.set_pos( self.screen_center )
+        #if not mouse_moving:
+            #pygame.mouse.set_pos( self.screen_center )
 
-    def update_camera( self ) -> None:
-        # get keys
+    def do_movement(self) -> None:
         keypress = pygame.key.get_pressed()
-        self.mouse_move = pygame.mouse.get_rel()
-    
-        # init model view matrix
-        glLoadIdentity()
-
-        # apply the look up and down
-        self.up_down_angle += self.mouse_move[1] * self.pitch
-        glRotatef( self.up_down_angle, 1.0, 0.0, 0.0 )
-
-        # init the view matrix
-        glPushMatrix()
-        glLoadIdentity()
-
-        camera_up = np.array([0.0, 1.0, 0.0])  # Up direction in world space (Y axis)
-        camera_right = np.array([1.0, 0.0, 0.0])  # Right direction in world space (X axis)
-        camera_forward = np.array([0.0, 0.0, -1.0])  # Forward direction in world space (Z axis)
 
         if keypress[pygame.K_w]:
-            # Move forward in the direction of the forward vector
-            glTranslatef(*-camera_forward * self.speed)
-
+            self.cam.process_keyboard("FORWARD", 0.05)
         if keypress[pygame.K_s]:
-            # Move backward in the direction opposite to the forward vector
-            glTranslatef(*(camera_forward) * self.speed)
-
+            self.cam.process_keyboard("BACKWARD", 0.05)
         if keypress[pygame.K_d]:
-            # Move to the right
-            glTranslatef(*-camera_right * self.speed)
-
+            self.cam.process_keyboard("RIGHT", 0.05)
         if keypress[pygame.K_a]:
-            # Move to the left
-            glTranslatef(*(camera_right) * self.speed)
+            self.cam.process_keyboard("LEFT", 0.05)
+        
+        #if keypress[pygame.K_SPACE]:
+        #    self.camera_position += camera_up * self.speed
+        #if keypress[pygame.K_LCTRL]:  # Assuming left control key for downward movement
+        #    self.camera_position -= camera_up * self.speed
 
-        if keypress[pygame.K_SPACE]:
-            # Move up in the direction of the up vector
-            glTranslatef(*-camera_up * self.speed)
 
-        if keypress[pygame.K_LCTRL]:  # Assuming left control key for downward movement
-            # Move down in the direction opposite to the up vector
-            glTranslatef(*(camera_up) * self.speed)
+    def do_mouse( self ):
+        xpos, ypos = pygame.mouse.get_pos()
+        #xpos, ypos = pygame.mouse.rel
 
-        # apply the left and right rotation
-        glRotatef( self.mouse_move[0] * self.yaw, 0.0, 1.0, 0.0 )
+        if self.first_mouse:
+            self.lastX = xpos
+            self.lastY = ypos
+            self.first_mouse = False
 
-        # multiply the current matrix by the get the new view matrix and store the final vie matrix 
-        glMultMatrixf( self.viewMatrix )
-        self.viewMatrix = glGetFloatv( GL_MODELVIEW_MATRIX )
+        xoffset = xpos - self.lastX
+        yoffset = self.lastY - ypos
 
-        # apply view matrix
-        glPopMatrix()
-        glMultMatrixf( self.viewMatrix )
+        self.lastX = xpos
+        self.lastY = ypos
+
+        self.cam.process_mouse_movement( xoffset, yoffset )
+        return
 
     def begin_frame( self ) -> None:
         self.frameTime = self.clock.tick(60)
         self.deltaTime = self.frameTime / self.DELTA_SHIFT
 
-        self.update_camera()
+        self.do_movement()
+        self.do_mouse()
 
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )
-        glPushMatrix()
 
     def end_frame( self ) -> None:
-        glPopMatrix()
 
         self.framenum += 1
         pygame.display.flip()

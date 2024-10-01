@@ -34,6 +34,8 @@ class Sphere( GameObject ):
     def draw( self ) -> None:
     #def draw_sphere(radius, slices, stacks, position : Tuple = (0,0,0)):
         """Draws a sphere using OpenGL with the given radius, slices, and stacks."""
+        return
+
         glPushMatrix()
         glColor3f( self.color[0], self.color[1], self.color[2] )
         glRotatef( self.rotation[0], self.rotation[1], self.rotation[2], self.rotation[3] ); 

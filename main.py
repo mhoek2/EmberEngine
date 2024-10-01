@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+from pyrr import matrix44, Vector3
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -13,6 +14,7 @@ from gameObjects.cube import Cube
 from gameObjects.sphere import Sphere
 from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
+from gameObjects.fullcube import FullCube
 
 renderer = Renderer()
 renderer.setup_frustum_mvp()
@@ -25,13 +27,17 @@ def addGameObject( object ) -> int:
     return index
 
 sun = addGameObject( Sun( renderer, 
-                         translate=(-2, 0, 0), 
-                         color=(0.7, 0.7, 0.0),
-                         diffuse=(.0, 1.0, 0.7),
-                         ambient=(0.0, 0.2, 0.2),
-                         anim_radius=10,
-                         anim_speed=2
+                          translate=(-2, 0, 0), 
+                          color=(0.7, 0.7, 0.0),
+                          diffuse=(.0, 1.0, 0.7),
+                          ambient=(0.0, 0.2, 0.2),
+                          anim_radius=10,
+                          anim_speed=2
                    ) )
+
+addGameObject( FullCube( renderer, 
+                         translate=(-2, 0, 0),
+             ) )
 
 file = JsonHandler( 'C:/Github-workspace/EmberEngine/json/lang.json' )
 json_content = file.getJson();
@@ -72,21 +78,14 @@ def JsonToVertices() -> None:
 
 JsonToVertices()
 
+glUniformMatrix4fv( renderer.uPMatrix, 1, GL_FALSE, renderer.projection )
+
 while renderer.running:
     events = pygame.event.get()
     renderer.event_handler( events )
 
     if not renderer.paused:
         renderer.begin_frame()
-
-        # plane
-        glColor4f(1, 1, 1, 1)
-        glBegin(GL_QUADS)
-        glVertex3f( -10, -10, -2 )
-        glVertex3f( 10, -10, -2 )
-        glVertex3f( 10, 10, -2 )
-        glVertex3f( -10, 10, -2 )
-        glEnd()
 
         for gameObject in gameObjects:
             gameObject.update();
