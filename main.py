@@ -39,6 +39,10 @@ addGameObject( FullCube( renderer,
                          translate=(-2, 0, 0),
              ) )
 
+addGameObject( FullCube( renderer, 
+                         translate=(2, 0, 0),
+             ) )
+
 file = JsonHandler( 'C:/Github-workspace/EmberEngine/json/lang.json' )
 json_content = file.getJson();
 

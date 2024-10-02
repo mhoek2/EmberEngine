@@ -16,7 +16,10 @@ class FullCube( GameObject ):
         
         self.translate = translate
         self.rotation = rotation
-        
+    
+        self.loadModel()
+
+    def loadModel( self ) -> None:
         _vertices = [
             ( 1.000000, -1.000000, -1.000000),
             ( 1.000000, -1.000000,  1.000000),
@@ -127,7 +130,7 @@ class FullCube( GameObject ):
         view = self.renderer.cam.get_view_matrix()
         glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
-        pos = pyrr.matrix44.create_from_translation( pyrr.Vector3([0, 0, -5]) )
+        pos = pyrr.matrix44.create_from_translation( pyrr.Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, pos )
 
         glDrawArrays(GL_TRIANGLES, 0, len(self.vertices))
