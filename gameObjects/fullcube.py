@@ -11,17 +11,10 @@ import numpy as np
 from gameObjects.gameObject import GameObject
 
 class FullCube( GameObject ):
-    def __init__( self, renderer, translate=( 0.0, 0.0, 0.0 ), rotation=( 0.0, 0.0, 0.0 ), scale=( 1.0, 1.0, 1.0 ) ) -> None:
-        self.renderer = renderer
-        
-        # https://github.com/adamlwgriffiths/Pyrr
-        self.translate = translate
-        self.rotation = rotation
-        self.scale = scale
-    
-        self.loadModel()
+    def onStart( self ) -> None:
+        self._loadModel()
 
-    def loadModel( self ) -> None:
+    def _loadModel( self ) -> None:
         _vertices = [
             ( 1.000000, -1.000000, -1.000000),
             ( 1.000000, -1.000000,  1.000000),
@@ -121,23 +114,24 @@ class FullCube( GameObject ):
             for index in indices
         ])
 
-    def update( self ) -> None:
-        return
+    def _createModelMatrix( self ):
+        """Create model matrix with translation, rotation and scale vectors"""
+        model = pyrr.Matrix44.identity()
+        model = model * pyrr.Matrix44.from_translation( pyrr.Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
+        model = model * pyrr.Matrix44.from_eulers(pyrr.Vector3([self.rotation[0], self.rotation[1], self.rotation[2]]))
+        return model * pyrr.Matrix44.from_scale( pyrr.Vector3( [self.scale[0], self.scale[1], self.scale[2]] ) )
 
-    def draw( self ) -> None:
+    def onUpdate( self ) -> None:
         glVertexAttribPointer( self.renderer.aVertex, 3, GL_FLOAT, GL_FALSE, 0, self.vertices )
         glVertexAttribPointer( self.renderer.aNormal, 3, GL_FLOAT, GL_FALSE, 0, self.normals )
         glVertexAttribPointer( self.renderer.aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, self.texcoords )
-         
+        
+        # create view matrix
         view = self.renderer.cam.get_view_matrix()
         glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
         # create model matrix
-        model = pyrr.Matrix44.identity()
-        model = model * pyrr.Matrix44.from_translation( pyrr.Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
-        model = model * pyrr.Matrix44.from_eulers(pyrr.Vector3([self.rotation[0], self.rotation[1], self.rotation[2]]))
-        model = model * pyrr.Matrix44.from_scale( pyrr.Vector3( [self.scale[0], self.scale[1], self.scale[2]] ) )
-        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, model )
+        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
 
         glDrawArrays( GL_TRIANGLES, 0, len(self.vertices)) 
         

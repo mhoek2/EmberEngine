@@ -18,12 +18,11 @@ class Renderer:
         # window
         self.create_instance( 1200, 800 )
 
-        self.clock = pygame.time.Clock()
-
         self.paused = False
         self.running = True
 
         # frames and timing
+        self.clock = pygame.time.Clock()
         self.DELTA_SHIFT = 1000
         self.framenum = 0
         self.frameTime = 0

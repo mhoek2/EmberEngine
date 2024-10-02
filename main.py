@@ -93,11 +93,9 @@ while renderer.running:
     if not renderer.paused:
         renderer.begin_frame()
 
+        # trigger update function in registered gameObjects
         for gameObject in gameObjects:
-            gameObject.update();
-
-        for gameObject in gameObjects:
-            gameObject.draw();
+            gameObject.onUpdate();
 
         renderer.end_frame()
 pygame.quit()
