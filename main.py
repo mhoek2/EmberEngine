@@ -10,14 +10,13 @@ import math
 
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
+from modules.images import Images
 
 from gameObjects.cube import Cube
 from gameObjects.sphere import Sphere
 from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
 from gameObjects.fullcube import FullCube
-
-from modules.TextureLoader import load_texture_pygame as load_texture
 
 class EmberEngine:
     def __init__( self ) -> None:  
@@ -26,8 +25,7 @@ class EmberEngine:
 
         self.gameObjects = []
 
-        self.textures = glGenTextures(3)
-        load_texture( "C:/Github-workspace/EmberEngine/assets/textures/cube.png", self.textures[0] )
+        self.images = Images()
 
         self.addGameObject( FullCube( self,
                                     translate=(-2, 0, 0),

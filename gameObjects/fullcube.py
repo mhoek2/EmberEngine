@@ -15,6 +15,8 @@ class FullCube( GameObject ):
         self._loadModel()
 
     def _loadModel( self ) -> None:
+        self.texture = self.images.loadOrFind( "cube.png" )
+
         _vertices = [
             ( 1.000000, -1.000000, -1.000000),
             ( 1.000000, -1.000000,  1.000000),
@@ -114,27 +116,19 @@ class FullCube( GameObject ):
             for index in indices
         ])
 
-    def _createModelMatrix( self ):
-        """Create model matrix with translation, rotation and scale vectors"""
-        model = pyrr.Matrix44.identity()
-        model = model * pyrr.Matrix44.from_translation( pyrr.Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
-        model = model * pyrr.Matrix44.from_eulers(pyrr.Vector3([self.rotation[0], self.rotation[1], self.rotation[2]]))
-        return model * pyrr.Matrix44.from_scale( pyrr.Vector3( [self.scale[0], self.scale[1], self.scale[2]] ) )
-
     def onUpdate( self ) -> None:
         glVertexAttribPointer( self.renderer.aVertex, 3, GL_FLOAT, GL_FALSE, 0, self.vertices )
         glVertexAttribPointer( self.renderer.aNormal, 3, GL_FLOAT, GL_FALSE, 0, self.normals )
         glVertexAttribPointer( self.renderer.aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, self.texcoords )
         
-        # create view matrix
+        # create and bind view matrix
         view = self.renderer.cam.get_view_matrix()
         glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
-        # create model matrix
+        # create and bind model matrix
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
 
         # texture
-        glBindTexture(GL_TEXTURE_2D, self.textures[0] )
+        self.images.bind( self.texture )
 
-        glDrawArrays( GL_TRIANGLES, 0, len(self.vertices)) 
-        
+        glDrawArrays( GL_TRIANGLES, 0, len(self.vertices))      
