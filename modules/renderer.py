@@ -31,14 +31,11 @@ class Renderer:
 
         # init mouse movement and center mouse on screen
         self.screen_center = [self.screen.get_size()[i] // 2 for i in range(2)]
-        
+        pygame.mouse.set_pos( self.screen_center )
+        pygame.mouse.set_visible( False )
+
         # camera
         self.cam = Camera()
-        self.lastX, self.lastY = 960, 540
-        self.first_mouse = True
-
-        pygame.mouse.set_pos( self.screen_center )
-        #pygame.mouse.set_visible( False )
 
         # shaders
         self.create_shaders()
