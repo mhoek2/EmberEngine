@@ -41,6 +41,8 @@ addGameObject( FullCube( renderer,
 
 addGameObject( FullCube( renderer, 
                          translate=(2, 0, 0),
+                         scale=( 0.5, 0.5, 0.5 ),
+                         rotation=( 0.5, 0.0, 0.0 )
              ) )
 
 file = JsonHandler( 'C:/Github-workspace/EmberEngine/json/lang.json' )

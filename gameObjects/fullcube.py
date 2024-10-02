@@ -11,11 +11,13 @@ import numpy as np
 from gameObjects.gameObject import GameObject
 
 class FullCube( GameObject ):
-    def __init__( self, renderer, translate=( 0.0, 0.0, 0.0 ), rotation=( 0.0, 0.0, 0.0, 0.0 ) ) -> None:
+    def __init__( self, renderer, translate=( 0.0, 0.0, 0.0 ), rotation=( 0.0, 0.0, 0.0 ), scale=( 1.0, 1.0, 1.0 ) ) -> None:
         self.renderer = renderer
         
+        # https://github.com/adamlwgriffiths/Pyrr
         self.translate = translate
         self.rotation = rotation
+        self.scale = scale
     
         self.loadModel()
 
@@ -130,8 +132,12 @@ class FullCube( GameObject ):
         view = self.renderer.cam.get_view_matrix()
         glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
-        pos = pyrr.matrix44.create_from_translation( pyrr.Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
-        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, pos )
+        # create model matrix
+        model = pyrr.Matrix44.identity()
+        model = model * pyrr.Matrix44.from_translation( pyrr.Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
+        model = model * pyrr.Matrix44.from_eulers(pyrr.Vector3([self.rotation[0], self.rotation[1], self.rotation[2]]))
+        model = model * pyrr.Matrix44.from_scale( pyrr.Vector3( [self.scale[0], self.scale[1], self.scale[2]] ) )
+        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, model )
 
-        glDrawArrays(GL_TRIANGLES, 0, len(self.vertices))
+        glDrawArrays( GL_TRIANGLES, 0, len(self.vertices)) 
         
