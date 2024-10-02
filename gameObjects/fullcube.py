@@ -133,5 +133,8 @@ class FullCube( GameObject ):
         # create model matrix
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
 
+        # texture
+        glBindTexture(GL_TEXTURE_2D, self.textures[0] )
+
         glDrawArrays( GL_TRIANGLES, 0, len(self.vertices)) 
         

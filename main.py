@@ -1,3 +1,4 @@
+from _pytest.monkeypatch import V
 import pygame
 from pygame.locals import *
 from pyrr import matrix44, Vector3
@@ -16,10 +17,15 @@ from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
 from gameObjects.fullcube import FullCube
 
+from modules.TextureLoader import load_texture_pygame as load_texture
+
 renderer = Renderer()
 renderer.setup_projection()
 
 gameObjects = []
+
+textures = glGenTextures(3)
+load_texture("C:/Github-workspace/EmberEngine/assets/textures/cube.png", textures[0])
 
 def addGameObject( object ) -> int:
     index = len(gameObjects)
@@ -35,11 +41,11 @@ sun = addGameObject( Sun( renderer,
                           anim_speed=2
                    ) )
 
-addGameObject( FullCube( renderer, 
+addGameObject( FullCube( renderer, textures,
                          translate=(-2, 0, 0),
              ) )
 
-addGameObject( FullCube( renderer, 
+addGameObject( FullCube( renderer, textures,
                          translate=(2, 0, 0),
                          scale=( 0.5, 0.5, 0.5 ),
                          rotation=( 0.5, 0.0, 0.0 )
