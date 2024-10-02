@@ -46,8 +46,9 @@ class Renderer:
         glEnable(GL_DEPTH_TEST)
 
     def create_shaders( self ) -> None:
-        self.shader = Shader()
+        self.shader = Shader( "general" )
 
+        # keep this here for now since only one shader is used
         self.uMMatrix = glGetUniformLocation(self.shader.program, "uMMatrix")
         self.uVMatrix = glGetUniformLocation(self.shader.program, "uVMatrix")
         self.uPMatrix = glGetUniformLocation(self.shader.program, "uPMatrix")
@@ -113,12 +114,6 @@ class Renderer:
         if keypress[pygame.K_a]:
             self.cam.process_keyboard( "LEFT", velocity )
         
-        #if keypress[pygame.K_SPACE]:
-        #    self.camera_position += camera_up * self.speed
-        #if keypress[pygame.K_LCTRL]:  # Assuming left control key for downward movement
-        #    self.camera_position -= camera_up * self.speed
-
-
     def do_mouse( self ):
         xpos, ypos = pygame.mouse.get_rel()
 

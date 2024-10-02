@@ -5,42 +5,18 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from modules.files import FileHandler
 import textwrap
 
 class Shader:
-    def __init__( self ):
-        self.vert_tmpl = textwrap.dedent("""\
-            uniform mat4 uMMatrix;
-            uniform mat4 uVMatrix;
-            uniform mat4 uPMatrix;
-       
-            attribute vec3 aVertex;
-            attribute vec3 aNormal;
-            attribute vec2 aTexCoord;
-    
-            varying vec2 vTexCoord;
-    
-            void main(){
-                vTexCoord = aTexCoord;
-                // Make GL think we are actually using the normal
-                aNormal;
-                gl_Position = (uPMatrix * uVMatrix * uMMatrix) * vec4(aVertex, 1.0);
-            }
-        """)
+    def __init__( self, uid : str ):
 
-        self.frag_tmpl = textwrap.dedent("""\
-            uniform sampler2D sTexture;
-            varying vec2 vTexCoord;
+        # fix path to use root..
+        shader_path = "C:/Github-workspace/EmberEngine/shaders/"
+        vert_shader = textwrap.dedent(FileHandler(f"{shader_path}{uid}.vert").getContent())
+        frag_shader = textwrap.dedent(FileHandler(f"{shader_path}{uid}.frag").getContent())
 
-            void main(){
-                //gl_FragColor = texture2D(sTexture, vTexCoord);
-                gl_FragColor = vec4(1.0);
-            }
-        """)  
-
-        self.program = self.load_program( self.vert_tmpl, 
-                                          self.frag_tmpl 
-                                        )
+        self.program = self.load_program( vert_shader, frag_shader )
         return
 
     def load_program( self, in_vert, in_frag ):
