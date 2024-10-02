@@ -11,6 +11,7 @@ import math
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
 from modules.images import Images
+from modules.models import Models
 
 from gameObjects.cube import Cube
 from gameObjects.sphere import Sphere
@@ -25,14 +26,25 @@ class EmberEngine:
 
         self.gameObjects = []
 
-        self.images = Images()
+        self.models = Models( self )
+        self.images = Images( self )
 
-        self.addGameObject( FullCube( self,
-                                    translate=(-2, 0, 0),
+        self.addGameObject( Mesh( self,
+                                    translate=(2, 0, 0),
+                                    scale=( 1, 1, 1 )
                         ) )
 
         self.addGameObject( FullCube( self,
-                                    translate=(2, 0, 0),
+                                    translate=(-2, 0, 0),
+                                    scale=( 1, 1, 1 )
+                        ) )
+
+        self.addGameObject( Mesh( self,
+                                    translate=(0, 0, 0),
+                                    scale=( 0.2, 0.2, 0.2 )
+                        ) )
+        self.addGameObject( FullCube( self,
+                                    translate=(2, 3, 0),
                                     scale=( 0.5, 0.5, 0.5 ),
                                     rotation=( 0.5, 0.0, 0.0 )
                         ) )
@@ -53,6 +65,9 @@ class EmberEngine:
 
             if not self.renderer.paused:
                 self.renderer.begin_frame()
+
+                view = self.renderer.cam.get_view_matrix()
+                glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:

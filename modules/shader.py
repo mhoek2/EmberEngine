@@ -12,9 +12,9 @@ class Shader:
     def __init__( self, uid : str ):
 
         # fix path to use root..
-        shader_path = "C:/Github-workspace/EmberEngine/shaders/"
-        vert_shader = textwrap.dedent(FileHandler(f"{shader_path}{uid}.vert").getContent())
-        frag_shader = textwrap.dedent(FileHandler(f"{shader_path}{uid}.frag").getContent())
+        basepath = "C:/Github-workspace/EmberEngine/shaders/"
+        vert_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.vert").getContent())
+        frag_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.frag").getContent())
 
         self.program = self.load_program( vert_shader, frag_shader )
         return

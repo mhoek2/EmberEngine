@@ -6,57 +6,36 @@ from OpenGL.GLU import *
 
 import numpy as np
 
-from modules.files import FileHandler
 from gameObjects.gameObject import GameObject
+from modules.objLoader import ObjLoader
 
 import pathlib
-from objloader import *
 
 class Mesh( GameObject ):
-    def __init__( self, translate=( 0.0, 0.0, 0.0 ), rotation=( 0.0, 0.0, 0.0, 0.0 ), filename="" ) -> None:
-        self.translate = translate
-        self.rotation = rotation
-        self.filename = filename;
+    def onStart( self ) -> None:
+        self.model = self.models.loadOrFind( "cube/cube.obj" )
+        self.texture = self.images.loadOrFind( "cube.png" )
 
-        self.vertices = []
-        self.loadMesh()
+    def onUpdate( self ) -> None:
+        #glVertexAttribPointer( self.renderer.aVertex, 3, GL_FLOAT, GL_FALSE, 0, self.vertices )
+        #glVertexAttribPointer( self.renderer.aNormal, 3, GL_FLOAT, GL_FALSE, 0, self.normals )
+        #glVertexAttribPointer( self.renderer.aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, self.texcoords )
         
-        return
-    
-    def loadMesh( self ) -> None:
-        self.file = FileHandler( self.filename )
-        obj_file = pathlib.Path( self.filename )
-        
-        with obj_file.open('r') as file:
-            for line in file:
-                if line.startswith( 'v ' ):  # Vertex line
-                    parts = line.split()  # Split the line into parts
-                    self.vertices.append( ( float(parts[1]), float(parts[2]), float(parts[3]) ) )
-    
+        # model
+        #self.models.bind( self.model )
+        #self.models.bind2( self.model )
 
-        # transition to glTranslatef please
-        #self.translated_vertices = [
-        #    (vertex[0] + self.position[0], 
-        #     vertex[1] + self.position[1], 
-        #     vertex[2] + self.position[2])
-        #    for vertex in self.vertices
-        #]
+        # texture
+        #self.images.bind( self.texture )
 
-        return
+        # create and bind view matrix
+        #view = self.renderer.cam.get_view_matrix()
+        #glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
-    def update( self ) -> None:
-        return
+        # create and bind model matrix
+        #glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
 
-    def draw( self ) -> None:
-        glPushMatrix()
-        glRotatef( self.rotation[0], self.rotation[1], self.rotation[2], self.rotation[3] ); 
-        glTranslatef( self.translate[0], self.translate[1], self.translate[2] ); 
-
-        glBegin( GL_TRIANGLES )
-        for vertex in self.vertices:
-            glColor3f( 1.0, 1.0, 1.0 )
-            glVertex3f( vertex[0], vertex[1], vertex[2] )
-        glEnd()
-
-        glPopMatrix()
-        return
+        self.models.bind2( self.model )
+        self.images.bind( self.texture )
+        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
+        self.models.drawArrays( self.model )     

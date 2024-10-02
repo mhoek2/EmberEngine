@@ -122,8 +122,8 @@ class FullCube( GameObject ):
         glVertexAttribPointer( self.renderer.aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, self.texcoords )
         
         # create and bind view matrix
-        view = self.renderer.cam.get_view_matrix()
-        glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
+        #view = self.renderer.cam.get_view_matrix()
+        #glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
         # create and bind model matrix
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
@@ -131,4 +131,4 @@ class FullCube( GameObject ):
         # texture
         self.images.bind( self.texture )
 
-        glDrawArrays( GL_TRIANGLES, 0, len(self.vertices))      
+        glDrawArrays( GL_TRIANGLES, 0, len(self.vertices))
