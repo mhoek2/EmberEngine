@@ -38,7 +38,7 @@ class Renderer:
         self.first_mouse = True
 
         pygame.mouse.set_pos( self.screen_center )
-        pygame.mouse.set_visible( False )
+        #pygame.mouse.set_visible( False )
 
         # shaders
         self.create_shaders()
@@ -88,26 +88,30 @@ class Renderer:
                     self.running = False
                 if event.key == pygame.K_PAUSE or event.key == pygame.K_p:
                     self.paused = not self.paused
-                    #pygame.mouse.set_pos( self.screen_center ) 
+                    pygame.mouse.set_pos( self.screen_center ) 
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
                     mouse_moving = True
 
-        #if not mouse_moving:
-            #pygame.mouse.set_pos( self.screen_center )
+        if not mouse_moving:
+            pygame.mouse.set_pos( self.screen_center )
 
     def do_movement(self) -> None:
         keypress = pygame.key.get_pressed()
 
+        velocity = 0.05;
+        if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
+            velocity *= 3
+
         if keypress[pygame.K_w]:
-            self.cam.process_keyboard("FORWARD", 0.05)
+            self.cam.process_keyboard( "FORWARD", velocity )
         if keypress[pygame.K_s]:
-            self.cam.process_keyboard("BACKWARD", 0.05)
+            self.cam.process_keyboard( "BACKWARD", velocity )
         if keypress[pygame.K_d]:
-            self.cam.process_keyboard("RIGHT", 0.05)
+            self.cam.process_keyboard( "RIGHT", velocity )
         if keypress[pygame.K_a]:
-            self.cam.process_keyboard("LEFT", 0.05)
+            self.cam.process_keyboard( "LEFT", velocity )
         
         #if keypress[pygame.K_SPACE]:
         #    self.camera_position += camera_up * self.speed
@@ -116,21 +120,9 @@ class Renderer:
 
 
     def do_mouse( self ):
-        xpos, ypos = pygame.mouse.get_pos()
-        #xpos, ypos = pygame.mouse.rel
+        xpos, ypos = pygame.mouse.get_rel()
 
-        if self.first_mouse:
-            self.lastX = xpos
-            self.lastY = ypos
-            self.first_mouse = False
-
-        xoffset = xpos - self.lastX
-        yoffset = self.lastY - ypos
-
-        self.lastX = xpos
-        self.lastY = ypos
-
-        self.cam.process_mouse_movement( xoffset, yoffset )
+        self.cam.process_mouse_movement( xpos, -ypos )
         return
 
     def begin_frame( self ) -> None:
