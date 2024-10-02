@@ -71,11 +71,10 @@ class Renderer:
         self.display = ( self.width, self.height )
         self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
 
-    def setup_frustum_mvp( self ) -> None:
+    def setup_projection( self ) -> None:
         glViewport( 0, 0, self.width, self.height )
 
         self.aspect_ratio = self.width / self.height
-        self.model = matrix44.create_from_translation(Vector3([-14.0, -8.0, 0.0]))
         self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 100.0)
 
     def event_handler( self, events ) -> None:
@@ -100,8 +99,8 @@ class Renderer:
 
     def do_movement(self) -> None:
         keypress = pygame.key.get_pressed()
-
         velocity = 0.05;
+
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
             velocity *= 3
 
@@ -127,9 +126,11 @@ class Renderer:
         self.do_movement()
         self.do_mouse()
 
+        # clear swapchain or FBO
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )
 
     def end_frame( self ) -> None:
-
         self.framenum += 1
+
+        # upload to swapchain image
         pygame.display.flip()

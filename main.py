@@ -17,7 +17,7 @@ from gameObjects.sun import Sun
 from gameObjects.fullcube import FullCube
 
 renderer = Renderer()
-renderer.setup_frustum_mvp()
+renderer.setup_projection()
 
 gameObjects = []
 

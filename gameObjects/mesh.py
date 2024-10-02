@@ -21,8 +21,6 @@ class Mesh( GameObject ):
         self.vertices = []
         self.loadMesh()
         
-        #self.file = FileHandler( self.filename )
-        #self.model = Obj.fromstring( self.file.getContent() )
         return
     
     def loadMesh( self ) -> None:
