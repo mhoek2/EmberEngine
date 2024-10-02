@@ -6,12 +6,13 @@ class ObjLoader:
     @staticmethod
     def search_data(data_values, coordinates, skip, data_type):
         for d in data_values:
-            if d == skip:
-                continue
-            if data_type == 'float':
-                coordinates.append(float(d))
-            elif data_type == 'int':
-                coordinates.append(int(d)-1)
+            if len(d) > 0:
+                if d == skip:
+                    continue
+                if data_type == 'float':
+                    coordinates.append(float(d))
+                elif data_type == 'int':
+                    coordinates.append(int(d)-1)
 
 
     @staticmethod # sorted vertex buffer for use with glDrawArrays function
@@ -75,17 +76,18 @@ class ObjLoader:
             line = f.readline()
             while line:
                 values = line.split()
-                if values[0] == 'v':
-                    ObjLoader.search_data(values, vert_coords, 'v', 'float')
-                elif values[0] == 'vt':
-                    ObjLoader.search_data(values, tex_coords, 'vt', 'float')
-                elif values[0] == 'vn':
-                    ObjLoader.search_data(values, norm_coords, 'vn', 'float')
-                elif values[0] == 'f':
-                    for value in values[1:]:
-                        val = value.split('/')
-                        ObjLoader.search_data(val, all_indices, 'f', 'int')
-                        indices.append(int(val[0])-1)
+                if len(values):
+                    if values[0] == 'v':
+                        ObjLoader.search_data(values, vert_coords, 'v', 'float')
+                    elif values[0] == 'vt':
+                        ObjLoader.search_data(values, tex_coords, 'vt', 'float')
+                    elif values[0] == 'vn':
+                        ObjLoader.search_data(values, norm_coords, 'vn', 'float')
+                    elif values[0] == 'f':
+                        for value in values[1:]:
+                            val = value.split('/')
+                            ObjLoader.search_data(val, all_indices, 'f', 'int')
+                            indices.append(int(val[0])-1)
 
                 line = f.readline()
 

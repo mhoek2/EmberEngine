@@ -30,25 +30,20 @@ class EmberEngine:
         self.images = Images( self )
 
         self.addGameObject( Mesh( self,
-                                    translate=(2, 0, 0),
-                                    scale=( 1, 1, 1 )
+                                    translate=(0, 1, 0),
+                                    scale=( 1, 1, 1 ),
+                                    rotation=( 0.0, 0.0, 80.0 )
                         ) )
 
         self.addGameObject( FullCube( self,
-                                    translate=(-2, 0, 0),
-                                    scale=( 1, 1, 1 )
-                        ) )
-
-        self.addGameObject( Mesh( self,
                                     translate=(0, 0, 0),
-                                    scale=( 0.2, 0.2, 0.2 )
-                        ) )
-        self.addGameObject( FullCube( self,
-                                    translate=(2, 3, 0),
-                                    scale=( 0.5, 0.5, 0.5 ),
-                                    rotation=( 0.5, 0.0, 0.0 )
-                        ) )
+                                    scale=( 5, 0.01, 5 )
+                       ) )
 
+        self.addGameObject( FullCube( self,
+                                    translate=(0, 0, 0),
+                                    scale=( 1, 1, 1 )
+                       ) )
         # bind projection matrix
         glUniformMatrix4fv( self.renderer.uPMatrix, 1, GL_FALSE, self.renderer.projection )
 
