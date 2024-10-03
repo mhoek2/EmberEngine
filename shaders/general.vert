@@ -12,7 +12,10 @@ layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in vec3 aNormal;
 
 out vec2 vTexCoord;
-out vec3 viewDir;
+
+out vec4 var_Normal;
+out vec4 var_LightDir;
+out vec4 var_ViewDir;
   
 void main(){
     vTexCoord = aTexCoord;
@@ -29,5 +32,9 @@ void main(){
 	L		= ( uMMatrix * vec4( L, 0.0 ) ).xyz;
 	L		= normalize( ( L * 0.5 ) + vec3( 0.5 ) );
 	
-	viewDir = u_ViewOrigin.xyz - vec3(0.0, 1.0, 5.0);
+	vec3 viewDir = u_ViewOrigin.xyz - vec3(0.0, 1.0, 5.0);
+
+	var_LightDir	= vec4(L, 0.0);	
+	var_Normal		= vec4(normal, 0.0);
+	var_ViewDir		= vec4(viewDir, 0.0);
 }
