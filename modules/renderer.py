@@ -4,7 +4,7 @@ from pyrr import matrix44, Vector3
 import pygame
 from pygame.locals import *
 
-from OpenGL.GL import *
+from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 import numpy as np
@@ -45,6 +45,11 @@ class Renderer:
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     def create_shaders( self ) -> None:
+        #vert = "C:/Github-workspace/EmberEngine/shaders/general.vert"
+        #frag = "C:/Github-workspace/EmberEngine/shaders/general.frag"
+        #self.shader = Shader()
+        #self.shader.initShaderFromGLSL( [vert], [frag] )
+
         self.shader = Shader( "general" )
 
         # keep this here for now since only one shader is used
@@ -52,15 +57,18 @@ class Renderer:
         self.uVMatrix = glGetUniformLocation(self.shader.program, "uVMatrix")
         self.uPMatrix = glGetUniformLocation(self.shader.program, "uPMatrix")
         self.sTexture = glGetUniformLocation(self.shader.program, "sTexture")
+
+        self.u_ViewOrigin = glGetUniformLocation(self.shader.program, "u_ViewOrigin")
+        self.in_lightdir = glGetUniformLocation(self.shader.program, "in_lightdir")
        
-        self.aVertex = glGetAttribLocation(self.shader.program, "aVertex")
-        self.aNormal = glGetAttribLocation(self.shader.program, "aNormal")
-        self.aTexCoord = glGetAttribLocation(self.shader.program, "aTexCoord")
+        #self.aVertex = glGetAttribLocation(self.shader.program, "aVertex")
+        #self.aNormal = glGetAttribLocation(self.shader.program, "aNormal")
+        #self.aTexCoord = glGetAttribLocation(self.shader.program, "aTexCoord")
 
         glUseProgram( self.shader.program )
-        glEnableVertexAttribArray( self.aVertex )
-        glEnableVertexAttribArray( self.aNormal )
-        glEnableVertexAttribArray( self.aTexCoord )
+        #glEnableVertexAttribArray( self.aVertex )
+        #glEnableVertexAttribArray( self.aNormal )
+        #glEnableVertexAttribArray( self.aTexCoord )
 
     def create_instance( self, width, height ) -> None:
         self.width = width

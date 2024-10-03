@@ -64,6 +64,12 @@ class EmberEngine:
                 view = self.renderer.cam.get_view_matrix()
                 glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
+                camera_pos = self.renderer.cam.camera_pos
+                glUniform4f( self.renderer.u_ViewOrigin, camera_pos[0], camera_pos[1], camera_pos[2], 0.0 )
+
+                light_dir = (1.0, 0.0, 1.0, 1.0)
+                glUniform4f( self.renderer.u_ViewOrigin, light_dir[0], light_dir[1], light_dir[2], light_dir[3] )
+
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:
                     gameObject.onUpdate();

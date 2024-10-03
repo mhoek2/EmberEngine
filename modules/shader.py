@@ -19,6 +19,12 @@ class Shader:
         self.program = self.load_program( vert_shader, frag_shader )
         return
 
+    def printOpenGLError( self ):
+        err = glGetError() # pylint: disable=E1111
+        if (err != GL_NO_ERROR):
+            print('GLERROR: ', gluErrorString(err)) # pylint: disable=E1101
+
+
     def load_program( self, in_vert, in_frag ):
         vert = self.load_shader( GL_VERTEX_SHADER, in_vert )
         if vert == 0:
@@ -35,12 +41,20 @@ class Shader:
 
         glAttachShader( program, vert )
         glAttachShader( program, frag )
+        self.printOpenGLError()
 
         glLinkProgram( program )
 
+        if(GL_TRUE!=glGetProgramiv(program, GL_LINK_STATUS)):
+            err =  glGetShaderInfoLog(frag) 
+            raise Exception(err)          
+        self.printOpenGLError()
         if glGetProgramiv( program, GL_LINK_STATUS, None ) == GL_FALSE:
             glDeleteProgram( program )
             return 0
+
+
+
 
         return program
 

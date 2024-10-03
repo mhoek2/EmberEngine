@@ -117,14 +117,15 @@ class FullCube( GameObject ):
         ])
 
     def onUpdate( self ) -> None:
-        glVertexAttribPointer( self.renderer.aVertex, 3, GL_FLOAT, GL_FALSE, 0, self.vertices )
-        glVertexAttribPointer( self.renderer.aNormal, 3, GL_FLOAT, GL_FALSE, 0, self.normals )
-        glVertexAttribPointer( self.renderer.aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, self.texcoords )
+        return
+        #glVertexAttribPointer( self.renderer.aVertex, 3, GL_FLOAT, GL_FALSE, 0, self.vertices )
+        #glVertexAttribPointer( self.renderer.aNormal, 3, GL_FLOAT, GL_FALSE, 0, self.normals )
+        #glVertexAttribPointer( self.renderer.aTexCoord, 2, GL_FLOAT, GL_FALSE, 0, self.texcoords )
         
         # create and bind model matrix
-        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
+        #glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
 
         # texture
-        self.images.bind( self.texture )
+        #self.images.bind( self.texture )
 
-        glDrawArrays( GL_TRIANGLES, 0, len(self.vertices))
+        #glDrawArrays( GL_TRIANGLES, 0, len(self.vertices))
