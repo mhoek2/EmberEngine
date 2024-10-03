@@ -13,7 +13,7 @@ import pathlib
 class Mesh( GameObject ):
     def onStart( self ) -> None:
         self.model = self.models.loadOrFind( "Tree/Tree.obj" )
-       # self.texture = self.images.loadOrFind( "cube.png" )
+        self.texture = self.images.loadOrFind( "cube.png" )
 
     def onUpdate( self ) -> None:
         self.models.bind( self.model )
@@ -21,9 +21,9 @@ class Mesh( GameObject ):
         #glUseProgram( self.renderer.shader.program )
 
         # texture
-        #self.images.bind( self.texture )
+        self.images.bind( self.texture )
 
         # create and bind model matrix
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
         
-        self.models.drawArrays( self.model )     
+        self.models.draw( self.model )     

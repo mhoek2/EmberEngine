@@ -35,6 +35,12 @@ class EmberEngine:
                                     rotation=( 0.0, 0.0, 80.0 )
                         ) )
 
+        self.addGameObject( Mesh( self,
+                                    translate=(3, 1, 0),
+                                    scale=( 1, 1, 1 ),
+                                    rotation=( 0.0, 0.0, 80.0 )
+                        ) )
+
         self.addGameObject( FullCube( self,
                                     translate=(0, 0, 0),
                                     scale=( 5, 0.01, 5 )
