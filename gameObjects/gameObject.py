@@ -12,7 +12,13 @@ from modules.images import Images
 from modules.models import Models
 
 class GameObject:
-    def __init__( self, context, translate=( 0.0, 0.0, 0.0 ), rotation=( 0.0, 0.0, 0.0 ), scale=( 1.0, 1.0, 1.0 ) ) -> None:
+    def __init__( self, context, 
+                 model_file="Tree/Tree.obj",
+                 texture_file="marble.png",
+                 normals_file="marble_n.png",
+                 translate=[ 0.0, 0.0, 0.0 ], 
+                 rotation=[ 0.0, 0.0, 0.0 ], 
+                 scale=[ 1.0, 1.0, 1.0 ] ) -> None:
         self.context = context
         self.renderer : Renderer = context.renderer
         self.images : Images = context.images
@@ -22,6 +28,13 @@ class GameObject:
         self.translate = translate
         self.rotation = rotation
         self.scale = scale
+
+        # model
+        self.model_file = model_file
+
+        # texture
+        self.texture_file = texture_file
+        self.normals_file = normals_file
 
         self.onStart()
         return

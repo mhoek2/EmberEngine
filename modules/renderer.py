@@ -39,6 +39,9 @@ class Renderer:
         # shaders
         self.create_shaders()
 
+        # debug
+        self.renderMode = 0
+
         glClearColor(0, 0.1, 0.1, 1)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
@@ -52,9 +55,12 @@ class Renderer:
         self.uVMatrix = glGetUniformLocation(self.shader.program, "uVMatrix")
         self.uPMatrix = glGetUniformLocation(self.shader.program, "uPMatrix")
         self.sTexture = glGetUniformLocation(self.shader.program, "sTexture")
+        self.sNormal = glGetUniformLocation(self.shader.program, "sNormal")
 
         self.u_ViewOrigin = glGetUniformLocation(self.shader.program, "u_ViewOrigin")
         self.in_lightdir = glGetUniformLocation(self.shader.program, "in_lightdir")
+       
+        self.in_renderMode = glGetUniformLocation(self.shader.program, "in_renderMode")
        
         glUseProgram( self.shader.program )
 
@@ -70,7 +76,19 @@ class Renderer:
         glViewport( 0, 0, self.width, self.height )
 
         self.aspect_ratio = self.width / self.height
-        self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 100.0)
+        self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 1000.0)
+
+    def event_handler_render_mode( self, event ) -> None:
+        if event.key == pygame.K_0: self.renderMode = 0
+        if event.key == pygame.K_1: self.renderMode = 1
+        if event.key == pygame.K_2: self.renderMode = 2
+        if event.key == pygame.K_3: self.renderMode = 3
+        if event.key == pygame.K_4: self.renderMode = 4
+        if event.key == pygame.K_5: self.renderMode = 5
+        if event.key == pygame.K_6: self.renderMode = 6
+        if event.key == pygame.K_7: self.renderMode = 7
+        if event.key == pygame.K_8: self.renderMode = 8
+        if event.key == pygame.K_9: self.renderMode = 9
 
     def event_handler( self, events ) -> None:
         mouse_moving = False
@@ -84,6 +102,8 @@ class Renderer:
                 if event.key == pygame.K_PAUSE or event.key == pygame.K_p:
                     self.paused = not self.paused
                     pygame.mouse.set_pos( self.screen_center ) 
+
+                self.event_handler_render_mode( event )
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]

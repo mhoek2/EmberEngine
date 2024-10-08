@@ -24,6 +24,10 @@ class Images:
         self._images_size += 1
         return index
 
-    def bind( self, index : int ):
+    def bind( self, index : int, texture_index, shader_uniform, shader_index ):
         """Bind texture using OpenGL with image index"""
-        glBindTexture(GL_TEXTURE_2D, self.images[index] )
+
+        glActiveTexture( texture_index );                     # Activate texture unit 0
+        glBindTexture( GL_TEXTURE_2D, self.images[index] );   # Bind the first texture
+        glUniform1i(glGetUniformLocation( self.renderer.shader.program, shader_uniform ), shader_index); # Set texture uniform to 0
+

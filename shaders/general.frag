@@ -3,7 +3,10 @@
 #define PI 3.1415926535897932384626433832795
 
 uniform sampler2D sTexture;
+uniform sampler2D sNormal;
 
+in vec4 var_Tangent;
+in vec4 var_BiTangent;
 in vec4 var_Normal;
 in vec4 var_LightDir;
 in vec4 var_ViewDir;
@@ -11,52 +14,69 @@ in vec2 vTexCoord;
 
 out vec4 out_Color;
 
+uniform int in_renderMode;
 
-	vec3 Diffuse_Lambert(in vec3 DiffuseColor)
-	{
-		return DiffuseColor * (1.0 / PI);
-	}
+vec3 Diffuse_Lambert(in vec3 DiffuseColor)
+{
+	return DiffuseColor * (1.0 / PI);
+}
 
-	vec3 CalcDiffuse( in vec3 diffuse, in float NE, in float NL,
-		in float LH, in float roughness )
-	{
-		return Diffuse_Lambert(diffuse);
-	}
+vec3 CalcDiffuse( in vec3 diffuse, in float NE, in float NL,
+	in float LH, in float roughness )
+{
+	return Diffuse_Lambert(diffuse);
+}
 
-	vec3 F_Schlick( in vec3 SpecularColor, in float VH )
-	{
-		float Fc = pow(1 - VH, 5);
-		return clamp(50.0 * SpecularColor.g, 0.0, 1.0) * Fc + (1 - Fc) * SpecularColor; //hacky way to decide if reflectivity is too low (< 2%)
-	}
+vec3 F_Schlick( in vec3 SpecularColor, in float VH )
+{
+	float Fc = pow(1 - VH, 5);
+	return clamp(50.0 * SpecularColor.g, 0.0, 1.0) * Fc + (1 - Fc) * SpecularColor; //hacky way to decide if reflectivity is too low (< 2%)
+}
 
-	float D_GGX( in float NH, in float a )
-	{
-		float a2 = a * a;
-		float d = (NH * a2 - NH) * NH + 1;
-		return a2 / (PI * d * d);
-	}
+float D_GGX( in float NH, in float a )
+{
+	float a2 = a * a;
+	float d = (NH * a2 - NH) * NH + 1;
+	return a2 / (PI * d * d);
+}
 
-	// Appoximation of joint Smith term for GGX
-	// [Heitz 2014, "Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"]
-	float V_SmithJointApprox( in float a, in float NV, in float NL )
-	{
-		float Vis_SmithV = NL * (NV * (1 - a) + a);
-		float Vis_SmithL = NV * (NL * (1 - a) + a);
-		return 0.5 * (1.0 / (Vis_SmithV + Vis_SmithL));
-	}
+// Appoximation of joint Smith term for GGX
+// [Heitz 2014, "Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"]
+float V_SmithJointApprox( in float a, in float NV, in float NL )
+{
+	float Vis_SmithV = NL * (NV * (1 - a) + a);
+	float Vis_SmithL = NV * (NL * (1 - a) + a);
+	return 0.5 * (1.0 / (Vis_SmithV + Vis_SmithL));
+}
 
-	vec3 CalcSpecular( in vec3 specular, in float NH, in float NL,
-		in float NE, float LH, in float VH, in float roughness )
-	{
-		vec3  F = F_Schlick(specular, VH);
-		float D = D_GGX(NH, roughness);
-		float V = V_SmithJointApprox(roughness, NE, NL);
+vec3 CalcSpecular( in vec3 specular, in float NH, in float NL,
+	in float NE, float LH, in float VH, in float roughness )
+{
+	vec3  F = F_Schlick(specular, VH);
+	float D = D_GGX(NH, roughness);
+	float V = V_SmithJointApprox(roughness, NE, NL);
 
-		return D * F * V;
-	}
+	return D * F * V;
+}
 
+vec3 CalcNormal( in vec3 vertexNormal, in vec2 frag_tex_coord )
+{
+	//return normalize(vertexNormal);
+	//if ( normal_texture_set > -1 ) {
+		//vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
+		vec3 n = texture(sNormal, frag_tex_coord * 4).rgb;
+		//n = normalize(n * 2.0 - 1.0);
 
+		n.xy *= 1.0;
+		n.z = sqrt(clamp((0.25 - n.x * n.x) - n.y * n.y, 0.0, 1.0));
+		n = n.x * var_Tangent.rgb + n.y * var_BiTangent.rgb + n.z * vertexNormal;
 
+		return normalize(n);
+	/*}
+	
+	else
+		return normalize(vertexNormal);*/
+}
 
 void main(){
 	vec4 diffuse;
@@ -64,7 +84,7 @@ void main(){
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E;
 
-	vec4 base = texture2D(sTexture, vTexCoord);
+	vec4 base = texture2D(sTexture, vTexCoord * 4);
 
 	viewDir = var_ViewDir.xyz;
 	E = normalize(viewDir);
@@ -73,15 +93,24 @@ void main(){
 	float sqrLightDist = dot(L, L);
 	L /= sqrt(sqrLightDist);
 
-	lightColor = vec3(1.0, 0.0, 0.0);
-	ambientColor = vec3(0.5, 0.5, 0.5);
+	lightColor = vec3(1.0, 1.0, 1.0);
+	ambientColor = vec3(1.0);
 	diffuse = base;
 	attenuation = 1.0;
 
+	N = CalcNormal( var_Normal.xyz, vTexCoord );	
+
 	lightColor *= PI;
+	//ambientColor = lightColor;
+	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
+	lightColor /= max( surfNL, 0.25 );
+	ambientColor = max( ambientColor - lightColor * surfNL, 0.0 );
+	
+
+	
 
 	vec4 specular = vec4( 0.9 );
-	float roughness = 0.5;
+	float roughness = 0.001;
 	float AO = 1.0;
 
 	ambientColor *= AO;
@@ -102,8 +131,22 @@ void main(){
 
 	out_Color.rgb  = lightColor * reflectance * ( attenuation * NL );
 	out_Color.rgb += ambientColor * diffuse.rgb;
-	
-	out_Color.rgb = var_Normal.rgb;
+
+	if ( in_renderMode > 0 )
+	{
+		switch( in_renderMode )
+		{
+			case 1: out_Color.rgb = base.rgb; break;
+			case 9: out_Color.rgb = texture2D(sNormal, vTexCoord * 4).rgb; break;
+			case 2: out_Color.rgb = ( var_Normal.rgb * 0.5 + 0.5 ); break;
+			case 3: out_Color.rgb = ( N.rgb * 0.5 + 0.5 ); break;
+			case 4: out_Color.rgb = var_Tangent.rgb; break;
+			case 5: out_Color.rgb = var_BiTangent.rgb; break;
+			case 6: out_Color.rgb = L.rgb; break;
+			case 7: out_Color.rgb = E.rgb; break;
+			case 8: out_Color.rgb = reflectance.rgb; break;
+		}
+	}
 
 	out_Color.a = diffuse.a;
 }
