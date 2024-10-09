@@ -96,8 +96,8 @@ void main(){
 	float sqrLightDist = dot(L, L);
 	L /= sqrt(sqrLightDist);
 
-	lightColor = vec3(1.0, 0.6, 0.2);
-	ambientColor = vec3(0.3, 0.6, 0.1);
+	lightColor = vec3(1.0, 1.0, 1.0);
+	ambientColor = vec3(0.3, 0.3, 0.2);
 	diffuse = base;
 	attenuation = 1.0;
 
@@ -106,14 +106,12 @@ void main(){
 	lightColor *= PI;
 
 	//ambientColor = lightColor;
-	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
-	lightColor /= max( surfNL, 0.25 );
-	ambientColor = max( ambientColor - lightColor * surfNL, 0.0 );
+	//float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
+	//lightColor /= max( surfNL, 0.25 );
+	//ambientColor = max( ambientColor - lightColor * surfNL, 0.0 );
 	
-
-
 	vec4 specular = vec4( 0.9 );
-	float roughness = 0.0;
+	float roughness = 0.01;
 	float AO = 1.0;
 
 	ambientColor *= AO;
