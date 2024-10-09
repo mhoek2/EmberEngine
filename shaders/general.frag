@@ -4,6 +4,7 @@
 
 uniform sampler2D sTexture;
 uniform sampler2D sNormal;
+uniform sampler2D sPhyiscal;
 
 in vec4 var_Tangent;
 in vec4 var_BiTangent;
@@ -12,7 +13,7 @@ in vec4 var_LightDir;
 in vec4 var_ViewDir;
 in vec2 vTexCoord;
 
-out vec4 out_Color;
+out vec4 out_color;
 
 uniform int in_renderMode;
 
@@ -110,9 +111,22 @@ void main(){
 	//lightColor /= max( surfNL, 0.25 );
 	//ambientColor = max( ambientColor - lightColor * surfNL, 0.0 );
 	
-	vec4 specular = vec4( 0.9 );
-	float roughness = 0.01;
+	vec4 specular = vec4( 1.0 );
+	float roughness = 0.99;
 	float AO = 1.0;
+
+	const vec4 specularScale = vec4( 1.0, 1.0, 1.0, 0.5 );
+
+	// metallic roughness workflow
+	vec4 ORMS = texture( sPhyiscal, vTexCoord * 4 ).brga;
+	ORMS.xyzw *= specularScale.zwxy;
+
+	specular.rgb = mix(vec3(0.08) * ORMS.w, diffuse.rgb, ORMS.z);
+	diffuse.rgb *= vec3(1.0 - ORMS.z);
+
+	roughness = mix(0.01, 1.0, ORMS.y);
+	AO = min(ORMS.x, AO);
+
 
 	ambientColor *= AO;
 
@@ -130,24 +144,26 @@ void main(){
 
 	vec3 reflectance = Fd + Fs;
 
-	out_Color.rgb  = lightColor * reflectance * ( attenuation * NL );
-	out_Color.rgb += ambientColor * diffuse.rgb;
+	out_color.rgb  = lightColor * reflectance * ( attenuation * NL );
+	out_color.rgb += ambientColor * diffuse.rgb;
 
 	if ( in_renderMode > 0 )
 	{
 		switch( in_renderMode )
 		{
-			case 1: out_Color.rgb = base.rgb; break;
-			case 9: out_Color.rgb = texture2D(sNormal, vTexCoord * 4).rgb; break;
-			case 2: out_Color.rgb = ( var_Normal.rgb * 0.5 + 0.5 ); break;
-			case 3: out_Color.rgb = ( N.rgb * 0.5 + 0.5 ); break;
-			case 4: out_Color.rgb = var_Tangent.rgb; break;
-			case 5: out_Color.rgb = var_BiTangent.rgb; break;
-			case 6: out_Color.rgb = L.rgb; break;
-			case 7: out_Color.rgb = E.rgb; break;
-			case 8: out_Color.rgb = reflectance.rgb; break;
+			case 1: out_color.rgb = base.rgb; break;
+			case 2 : out_color.rgb = specular.rgb; break;		
+			case 3 : out_color.rgb = vec3(roughness); break;
+			case 4 : out_color.rgb = vec3(AO); break;
+			case 5: out_color.rgb = ( var_Normal.rgb * 0.5 + 0.5 ); break;
+			case 6: out_color.rgb = ( N.rgb * 0.5 + 0.5 ); break;
+			case 7: out_color.rgb = var_Tangent.rgb; break;
+			case 8: out_color.rgb = L.rgb; break;
+			//case 9: out_color.rgb = E.rgb; break;s
+			//case 9: out_color.rgb = E.rgb; break;s
+			case 9: out_color.rgb = reflectance.rgb; break;
 		}
 	}
 
-	out_Color.a = diffuse.a;
+	out_color.a = diffuse.a;
 }

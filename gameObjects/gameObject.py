@@ -14,8 +14,9 @@ from modules.models import Models
 class GameObject:
     def __init__( self, context, 
                  model_file="Tree/Tree.obj",
-                 texture_file="marble.png",
-                 normals_file="marble_n.png",
+                 texture_file="newfloor.jpg",
+                 normals_file="newfloor_nh.tga",
+                 phyiscal_file="newfloor_rmo.tga",
                  translate=[ 0.0, 0.0, 0.0 ], 
                  rotation=[ 0.0, 0.0, 0.0 ], 
                  scale=[ 1.0, 1.0, 1.0 ] ) -> None:
@@ -35,6 +36,7 @@ class GameObject:
         # texture
         self.texture_file = texture_file
         self.normals_file = normals_file
+        self.phyiscal_file = phyiscal_file
 
         self.onStart()
         return

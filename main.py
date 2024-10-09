@@ -33,6 +33,7 @@ class EmberEngine:
         self.models = Models( self )
         self.images = Images( self )
 
+        # default opbject
         self.addGameObject( Mesh( self,
                                     translate=[0, 1, 0],
                                     scale=[ 1, 1, 1 ],
@@ -44,6 +45,7 @@ class EmberEngine:
                                     model_file="cube/cube.obj",
                                     texture_file="wall_inset.jpg",
                                     normals_file="wall_inset_nh.tga",
+                                    phyiscal_file="wall_inset_rmo.tga",
                                     translate=[0, 0, 0],
                                     scale=[ 5, 0.01, 5 ],
                         ) )
@@ -52,6 +54,7 @@ class EmberEngine:
                                     model_file="cube/cube.obj",
                                     texture_file="pipesnwall.jpg",
                                     normals_file="pipesnwall_n.tga",
+                                    phyiscal_file="pipesnwall_rmo.png",
                                     translate=[0, 0, 0],
                                     scale=[ 1, 1, 1 ],
                                     rotation=[ 0.0, 0.0, 45.0 ]
@@ -67,6 +70,7 @@ class EmberEngine:
                         model_file="Sphere/sphere.obj",
                         texture_file="sun.jpg",
                         normals_file="sun_n.tga",
+                        phyiscal_file="sun_rmo.tga",
                         translate=[1, -1, 1],
                         scale=[ 1, 1, 1 ],
                         rotation=[ 0.0, 0.0, 80.0 ]

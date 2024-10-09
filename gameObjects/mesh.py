@@ -15,6 +15,7 @@ class Mesh( GameObject ):
         self.model = self.models.loadOrFind( self.model_file )
         self.texture = self.images.loadOrFind( self.texture_file )
         self.normals = self.images.loadOrFind( self.normals_file )
+        self.physical = self.images.loadOrFind( self.phyiscal_file )
 
     def onUpdate( self ) -> None:
         #glUseProgram( self.renderer.shader.program )
@@ -22,6 +23,7 @@ class Mesh( GameObject ):
         # texture
         self.images.bind( self.texture, GL_TEXTURE0, "sTexture", 0 )
         self.images.bind( self.normals, GL_TEXTURE1, "sNormal", 1 )
+        self.images.bind( self.physical, GL_TEXTURE2, "sPhyiscal", 2 )
 
         # create and bind model matrix
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
