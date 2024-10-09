@@ -42,8 +42,8 @@ class EmberEngine:
 
         self.addGameObject( Mesh( self,
                                     model_file="cube/cube.obj",
-                                    texture_file="marble.png",
-                                    normals_file="marble_n.png",
+                                    texture_file="wall_inset.jpg",
+                                    normals_file="wall_inset_nh.tga",
                                     translate=[0, 0, 0],
                                     scale=[ 5, 0.01, 5 ],
                         ) )

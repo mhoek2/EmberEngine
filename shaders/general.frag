@@ -64,18 +64,21 @@ vec3 CalcNormal( in vec3 vertexNormal, in vec2 frag_tex_coord )
 	//return normalize(vertexNormal);
 	//if ( normal_texture_set > -1 ) {
 		//vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
-		vec3 n = texture(sNormal, frag_tex_coord * 4).rgb;
+		vec3 biTangent = 1.0 * cross(vertexNormal, var_Tangent.xyz);
+		vec3 n = texture(sNormal, frag_tex_coord * 4).rgb - vec3(0.5);
 		//n = normalize(n * 2.0 - 1.0);
 
 		n.xy *= 1.0;
 		n.z = sqrt(clamp((0.25 - n.x * n.x) - n.y * n.y, 0.0, 1.0));
-		n = n.x * var_Tangent.rgb + n.y * var_BiTangent.rgb + n.z * vertexNormal;
+		n = n.x * var_Tangent.rgb + n.y * biTangent + n.z * vertexNormal;
+		//n = n.x * var_Tangent.rgb + n.y * var_BiTangent.rgb + n.z * vertexNormal;
 
 		return normalize(n);
 	/*}
 	
 	else
 		return normalize(vertexNormal);*/
+
 }
 
 void main(){
@@ -93,24 +96,24 @@ void main(){
 	float sqrLightDist = dot(L, L);
 	L /= sqrt(sqrLightDist);
 
-	lightColor = vec3(1.0, 1.0, 1.0);
-	ambientColor = vec3(1.0);
+	lightColor = vec3(1.0, 0.6, 0.2);
+	ambientColor = vec3(0.3, 0.6, 0.1);
 	diffuse = base;
 	attenuation = 1.0;
 
 	N = CalcNormal( var_Normal.xyz, vTexCoord );	
 
 	lightColor *= PI;
+
 	//ambientColor = lightColor;
 	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
 	lightColor /= max( surfNL, 0.25 );
 	ambientColor = max( ambientColor - lightColor * surfNL, 0.0 );
 	
 
-	
 
 	vec4 specular = vec4( 0.9 );
-	float roughness = 0.001;
+	float roughness = 0.0;
 	float AO = 1.0;
 
 	ambientColor *= AO;

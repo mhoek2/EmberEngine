@@ -32,6 +32,10 @@ void main(){
 	position	= (uMMatrix * vec4(position, 1.0)).xyz;
 	normal		= normalize(mat3(uMMatrix) * normal);
 	
+	vec3 tangent	= normalize(mat3(uMMatrix) * aTangent);
+	vec3 bitangent	= normalize(mat3(uMMatrix) * aBiTangent);
+
+
 	//normal.z *= -1.0;
 
 	vec3 L	= in_lightdir.xyz;// * 2.0 - vec3(1.0);
@@ -44,7 +48,7 @@ void main(){
 
 	var_LightDir	= vec4(L, 0.0);	
 	var_Normal		= vec4(normal, 0.0);
-	var_Tangent		= vec4(aTangent, 0.0 );
-	var_BiTangent   = vec4(aBiTangent, 0.0 );
+	var_Tangent		= vec4(tangent, 0.0 );
+	var_BiTangent   = vec4(bitangent, 0.0 );
 	var_ViewDir		= vec4(viewDir, 0.0);
 }

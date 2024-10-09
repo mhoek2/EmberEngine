@@ -16,8 +16,8 @@ class Sun( GameObject ):
         self.normals = self.images.loadOrFind( self.normals_file )
 
         self.angle=1.0
-        self.anim_speed=0.5
-        self.anim_radius=4.0
+        self.anim_speed=0.05
+        self.anim_radius=8.0
 
     def onUpdate( self ) -> None:
         #glUseProgram( self.renderer.shader.program )

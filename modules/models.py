@@ -21,7 +21,58 @@ class Models:
         return
 
     @staticmethod
-    def prepare_gl_buffers( mesh ):
+    def normalize(vectors):
+        # Normalize a vector array
+        lengths = np.linalg.norm(vectors, axis=1, keepdims=True)
+        return np.divide(vectors, lengths, where=lengths != 0)
+
+    def compute_tangents_bitangents(self, vertices, tex_coords, indices):
+        # Create empty tangent and bitangent arrays
+        tangents = np.zeros_like(vertices)
+        bitangents = np.zeros_like(vertices)
+
+        # Iterate through each triangle
+        for i in range(0, len(indices), 3):
+            # Get vertex indices
+            i0, i1, i2 = indices[i], indices[i + 1], indices[i + 2]
+
+            # Get vertex positions
+            v0 = vertices[i0]
+            v1 = vertices[i1]
+            v2 = vertices[i2]
+
+            # Get texture coordinates
+            uv0 = tex_coords[i0]
+            uv1 = tex_coords[i1]
+            uv2 = tex_coords[i2]
+
+            # Calculate edges
+            delta_pos1 = v1 - v0
+            delta_pos2 = v2 - v0
+            delta_uv1 = uv1 - uv0
+            delta_uv2 = uv2 - uv0
+
+            # Calculate the tangent and bitangent
+            r = 1.0 / (delta_uv1[0] * delta_uv2[1] - delta_uv1[1] * delta_uv2[0])
+            tangent = r * (delta_pos1 * delta_uv2[1] - delta_pos2 * delta_uv1[1])
+            bitangent = r * (-delta_pos1 * delta_uv2[0] + delta_pos2 * delta_uv1[0])
+
+            # Assign the computed tangents and bitangents to the vertices
+            tangents[i0] += tangent
+            tangents[i1] += tangent
+            tangents[i2] += tangent
+
+            bitangents[i0] += bitangent
+            bitangents[i1] += bitangent
+            bitangents[i2] += bitangent
+
+        # Normalize the tangents and bitangents
+        tangents = self.normalize( tangents )
+        bitangents = self.normalize( bitangents )
+
+        return tangents, bitangents
+
+    def prepare_gl_buffers( self, mesh ):
         gl = {}
 
         v = np.array( mesh.vertices, dtype='f' )  # Shape: (n_vertices, 3)
@@ -32,7 +83,11 @@ class Models:
         else:
             t = np.zeros( ( len(v), 2 ), dtype='f' )
 
-        combined = np.hstack( ( v, n, t ) )  # Shape: (n_vertices, 8)
+        # create tangents
+        indices = np.array(mesh.faces).flatten()
+        tangents, bitangents = self.compute_tangents_bitangents( v, t, indices )
+
+        combined = np.hstack( ( v, n, t, tangents, bitangents ) )  # Shape: (n_vertices, 8)
 
         gl["vbo"] = vbo.VBO( combined )
         gl["vbo_size"] = combined.itemsize
@@ -77,14 +132,25 @@ class Models:
             size = mesh_gl["vbo_size"]
             stride = size * mesh_gl["vbo_shape"]
             
+            # vertex
             glEnableVertexAttribArray( 0 )
             glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, stride, None )
 
+            # normal
+            glEnableVertexAttribArray( 2 )
+            glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 3 ) )
+
+            # uv
             glEnableVertexAttribArray( 1 )
             glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 6 ) )
 
-            glEnableVertexAttribArray( 2 )
-            glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 3 ) )
+            # tangents
+            glEnableVertexAttribArray( 3 )
+            glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 9 ) )
+
+            # bitangents
+            glEnableVertexAttribArray( 4 )
+            glVertexAttribPointer( 4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 12 ) )
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_gl["faces"])
             glDrawElements(GL_TRIANGLES, mesh_gl["nbfaces"] * 3, GL_UNSIGNED_INT, None)
