@@ -65,6 +65,13 @@ class EmberEngine:
                                     rotation=[ 0.0, 0.0, 45.0 ]
                         ) )
 
+        self.addGameObject( Mesh( self,
+                                    model_file="station.obj",
+                                    translate=[0, 0, 0],
+                                    scale=[ 0.05, 0.05, 0.05 ],
+                                    rotation=[ 0.0, 0.0, 0.0 ]
+                        ) )
+
         self.setupSun()
         self.loadEnvironment()
 

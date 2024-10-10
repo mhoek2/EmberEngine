@@ -6,6 +6,7 @@ uniform sampler2D sTexture;
 uniform sampler2D sNormal;
 uniform sampler2D sPhyiscal;
 uniform samplerCube sEnvironment;
+uniform sampler2D sBRDF;
 
 in vec4 var_Tangent;
 in vec4 var_BiTangent;
@@ -90,10 +91,9 @@ vec3 CalcIBLContribution( in float roughness, in vec3 N, in vec3 E,
 	R.y *= -1.0f;
 	
 	vec3 cubeLightColor = textureLod(sEnvironment, R, roughness * 6).rgb * 1.0;
-	//vec2 EnvBRDF = texture(brdflut_texture, vec2(NE, 1.0 - roughness)).rg;
-	vec2 EnvBRDF = vec2( 1.4, 0.4 );
+	vec2 EnvBRDF = texture(sBRDF, vec2(NE, 1.0 - roughness)).rg;
 
-	return cubeLightColor;// * (specular.rgb * EnvBRDF.x + EnvBRDF.y);
+	return cubeLightColor * (specular.rgb * EnvBRDF.x + EnvBRDF.y);
 }
 
 void main(){

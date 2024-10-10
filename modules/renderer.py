@@ -141,7 +141,7 @@ class Renderer:
         velocity = 0.05;
 
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
-            velocity *= 3
+            velocity *= 30
 
         if keypress[pygame.K_w]:
             self.cam.process_keyboard( "FORWARD", velocity )
