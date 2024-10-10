@@ -25,6 +25,9 @@ class Mesh( GameObject ):
         self.images.bind( self.normals, GL_TEXTURE1, "sNormal", 1 )
         self.images.bind( self.physical, GL_TEXTURE2, "sPhyiscal", 2 )
 
+        # environment
+        self.cubemaps.bind( self.context.environment_map, GL_TEXTURE3, "sEnvironment", 3 )
+
         # create and bind model matrix
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
         

@@ -1,33 +1,33 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from modules.imageLoader import load_image_pygame as load_image
+from modules.imageLoader import load_cubemap_pygame as load_cubemap
 from modules.renderer import Renderer
 
-class Images:
+class Cubemap:
     def __init__( self, context ):
         self.context = context
         self.renderer : Renderer = context.renderer
 
-        self.images = glGenTextures(30)
-        self._images_size = 0;
+        self.cubemap = glGenTextures(30)
+        self._num_cubemaps = 0;
 
-        self.basepath = "C:/Github-workspace/EmberEngine/assets/textures/"
+        self.basepath = "C:/Github-workspace/EmberEngine/assets/cubemaps/"
         return
 
     def loadOrFind( self, uid : str ) -> int:
         """Load or find an image, implement find later"""
 
-        index = self._images_size
-        load_image( f"{self.basepath}{uid}", self.images[index] )
+        index = self._num_cubemaps
+        load_cubemap( f"{self.basepath}{uid}", ".jpg", self.cubemap[index] )
 
-        self._images_size += 1
+        self._num_cubemaps += 1
         return index
 
     def bind( self, index : int, texture_index, shader_uniform, shader_index ):
         """Bind texture using OpenGL with image index"""
-
+        
         glActiveTexture( texture_index )
-        glBindTexture( GL_TEXTURE_2D, self.images[index] )
+        glBindTexture( GL_TEXTURE_CUBE_MAP, self.cubemap[index] )
         glUniform1i(glGetUniformLocation( self.renderer.shader.program, shader_uniform ), shader_index)
 

@@ -7,6 +7,7 @@ from OpenGL.GLU import *
 import numpy as np
 from pyrr import Matrix44, Vector3
 
+from modules.cubemap import Cubemap
 from modules.renderer import Renderer
 from modules.images import Images
 from modules.models import Models
@@ -23,6 +24,7 @@ class GameObject:
         self.context = context
         self.renderer : Renderer = context.renderer
         self.images : Images = context.images
+        self.cubemaps : Cubemap = context.cubemaps
         self.models : Models = context.models
         
         # https://github.com/adamlwgriffiths/Pyrr

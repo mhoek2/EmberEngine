@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 
 uniform mat4 uMMatrix;
 uniform mat4 uVMatrix;

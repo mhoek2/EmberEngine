@@ -1,10 +1,11 @@
-#version 330
+#version 330 core
 
 #define PI 3.1415926535897932384626433832795
 
 uniform sampler2D sTexture;
 uniform sampler2D sNormal;
 uniform sampler2D sPhyiscal;
+uniform samplerCube sEnvironment;
 
 in vec4 var_Tangent;
 in vec4 var_BiTangent;
@@ -82,6 +83,19 @@ vec3 CalcNormal( in vec3 vertexNormal, in vec2 frag_tex_coord )
 
 }
 
+vec3 CalcIBLContribution( in float roughness, in vec3 N, in vec3 E,
+	in float NE, in vec3 specular )
+{
+	vec3 R = reflect(-E, N);
+	R.y *= -1.0f;
+	
+	vec3 cubeLightColor = textureLod(sEnvironment, R, roughness * 6).rgb * 1.0;
+	//vec2 EnvBRDF = texture(brdflut_texture, vec2(NE, 1.0 - roughness)).rg;
+	vec2 EnvBRDF = vec2( 1.4, 0.4 );
+
+	return cubeLightColor;// * (specular.rgb * EnvBRDF.x + EnvBRDF.y);
+}
+
 void main(){
 	vec4 diffuse;
 	float attenuation;
@@ -89,6 +103,7 @@ void main(){
 	vec3 L, N, E;
 
 	vec4 base = texture2D(sTexture, vTexCoord * 4);
+	vec4 env = texture(sEnvironment, vec3(1.0, 0.0, 1.0) );
 
 	viewDir = var_ViewDir.xyz;
 	E = normalize(viewDir);
@@ -147,6 +162,8 @@ void main(){
 	out_color.rgb  = lightColor * reflectance * ( attenuation * NL );
 	out_color.rgb += ambientColor * diffuse.rgb;
 
+	out_color.rgb += CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO );
+
 	if ( in_renderMode > 0 )
 	{
 		switch( in_renderMode )
@@ -158,9 +175,8 @@ void main(){
 			case 5: out_color.rgb = ( var_Normal.rgb * 0.5 + 0.5 ); break;
 			case 6: out_color.rgb = ( N.rgb * 0.5 + 0.5 ); break;
 			case 7: out_color.rgb = var_Tangent.rgb; break;
-			case 8: out_color.rgb = L.rgb; break;
-			//case 9: out_color.rgb = E.rgb; break;s
-			//case 9: out_color.rgb = E.rgb; break;s
+			//case 8: out_color.rgb = L.rgb; break;
+			case 8: out_color.rgb = CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO ); break;
 			case 9: out_color.rgb = reflectance.rgb; break;
 		}
 	}

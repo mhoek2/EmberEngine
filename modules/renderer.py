@@ -42,33 +42,57 @@ class Renderer:
         # debug
         self.renderMode = 0
 
-        glClearColor(0.0, 0.3, 0.7, 1)
+        #glClearColor(0.0, 0.3, 0.7, 1)
+        glClearColor(0.0, 0.0, 0.0, 1)
+
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+    def use_shader( self, shader ) -> None:
+        self.shader = shader
+        glUseProgram( self.shader.program )
+
     def create_shaders( self ) -> None:
-        self.shader = Shader( "general" )
+        self.general = Shader( "general" )
+        self.skybox = Shader( "skybox" )
 
         # keep this here for now since only one shader is used
+        # ..!
+
+        # general
+        self.use_shader( self.general )
+
         self.uMMatrix = glGetUniformLocation(self.shader.program, "uMMatrix")
         self.uVMatrix = glGetUniformLocation(self.shader.program, "uVMatrix")
         self.uPMatrix = glGetUniformLocation(self.shader.program, "uPMatrix")
+
         self.sTexture = glGetUniformLocation(self.shader.program, "sTexture")
         self.sNormal = glGetUniformLocation(self.shader.program, "sNormal")
+        self.sEnvironment = glGetUniformLocation(self.shader.program, "sEnvironment")
 
         self.u_ViewOrigin = glGetUniformLocation(self.shader.program, "u_ViewOrigin")
         self.in_lightdir = glGetUniformLocation(self.shader.program, "in_lightdir")
        
         self.in_renderMode = glGetUniformLocation(self.shader.program, "in_renderMode")
-       
-        glUseProgram( self.shader.program )
+
+        # skybox
+        self.use_shader( self.skybox )
+        self.uVMatrix2 = glGetUniformLocation(self.shader.program, "uVMatrix")
+        self.uPMatrix2 = glGetUniformLocation(self.shader.program, "uPMatrix")
 
     def create_instance( self, width, height ) -> None:
         self.width = width
         self.height = height
 
         pygame.init()
+
+        gl_version = (3, 3)
+
+        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, gl_version[0])
+        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
+        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
+
         self.display = ( self.width, self.height )
         self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
 

@@ -2,6 +2,8 @@
 import os
 
 import site
+
+from gameObjects.skybox import Skybox
 print(site.getsitepackages())
 
 import pygame
@@ -15,6 +17,7 @@ import math
 
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
+from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
 
@@ -32,6 +35,8 @@ class EmberEngine:
 
         self.models = Models( self )
         self.images = Images( self )
+        self.cubemaps = Cubemap( self )
+        self.skybox = Skybox( self )
 
         # default opbject
         self.addGameObject( Mesh( self,
@@ -60,10 +65,11 @@ class EmberEngine:
                                     rotation=[ 0.0, 0.0, 45.0 ]
                         ) )
 
-        # bind projection matrix
-        glUniformMatrix4fv( self.renderer.uPMatrix, 1, GL_FALSE, self.renderer.projection )
-
         self.setupSun()
+        self.loadEnvironment()
+
+    def loadEnvironment( self ) -> None:
+        self.environment_map = self.cubemaps.loadOrFind( "bespin_day" )
 
     def setupSun( self ) -> None:
         self.sun = self.addGameObject( Sun( self,
@@ -89,15 +95,38 @@ class EmberEngine:
 
             if not self.renderer.paused:
                 self.renderer.begin_frame()
-
-                # viewmatrix
                 view = self.renderer.cam.get_view_matrix()
-                glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
 
+
+                # skybox
+                #glDepthMask(GL_LEQUAL);
+
+                self.renderer.use_shader( self.renderer.skybox )
+
+                # bind projection matrix
+                glUniformMatrix4fv( self.renderer.uPMatrix2, 1, GL_FALSE, self.renderer.projection )
+                # viewmatrix
+                glUniformMatrix4fv( self.renderer.uVMatrix2, 1, GL_FALSE, view )
+
+                self.cubemaps.bind( self.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
+                self.skybox.draw()
+                #glDepthMask(GL_LESS);
+
+                
+                self.renderer.use_shader( self.renderer.general )
+
+
+                # projection matrix can be bound at start
+                # bind projection matrix
+                glUniformMatrix4fv( self.renderer.uPMatrix, 1, GL_FALSE, self.renderer.projection )
+                
+                # viewmatrix
+                glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
+                
                 # camera
                 camera_pos = self.renderer.cam.camera_pos
                 glUniform4f( self.renderer.u_ViewOrigin, camera_pos[0], camera_pos[1], camera_pos[2], 0.0 )
-                
+
                 # sun direction/position
                 light_dir = self.gameObjects[self.sun].translate
                 glUniform4f( self.renderer.in_lightdir, light_dir[0], light_dir[1], light_dir[2], 0.0 )
