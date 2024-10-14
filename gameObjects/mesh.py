@@ -21,8 +21,8 @@ class Mesh( GameObject ):
         #glUseProgram( self.renderer.shader.program )
 
         # texture
-        self.images.bind( self.texture, GL_TEXTURE0, "sTexture", 0 )
-        self.images.bind( self.normals, GL_TEXTURE1, "sNormal", 1 )
+        #self.images.bind( self.texture, GL_TEXTURE0, "sTexture", 0 )
+        #self.images.bind( self.normals, GL_TEXTURE1, "sNormal", 1 )
         self.images.bind( self.physical, GL_TEXTURE2, "sPhyiscal", 2 )
 
         # environment

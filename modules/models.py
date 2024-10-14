@@ -3,17 +3,23 @@ from OpenGL.GLU import *
 from OpenGL.arrays import vbo
 
 from modules.renderer import Renderer
+from modules.material import Material
 
 import impasse  as imp
+from impasse.constants import MaterialPropertyKey, ProcessingStep
 import numpy as np
+
+import os
 
 class Models:
     def __init__( self, context ):
         self.context = context
         self.renderer : Renderer = context.renderer
+        self.materials : Material = context.materials
         
         self.model = [i for i in range(30)]
         self.model_mesh = [{} for i in range(30)]
+        #self.model_material = [[] for i in range(30)]
 
         self.num_models = 0
 
@@ -72,6 +78,7 @@ class Models:
 
         return tangents, bitangents
 
+
     def prepare_gl_buffers( self, mesh ):
         gl = {}
 
@@ -107,16 +114,26 @@ class Models:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
+        # material
+        gl["material"] = self.materials.loadOrFind( mesh.material, self.path_dir )
+
         return gl
 
     def loadOrFind( self, uid : str ) -> int:
         """Load or find an model, implement find later"""
         index = self.num_models
 
-        self.model[index] = imp.load( f"{self.basepath}{uid}" )
+        filepath = f"{self.basepath}{uid}"
+
+        self.model[index] = imp.load( filepath, processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
+
+        # used for textures
+        self.path_dir = os.path.dirname( filepath )
 
         for mesh_idx, mesh in enumerate( self.model[index].meshes ):
             self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers(mesh)
+
+        # need to release?
 
         self.num_models+=1
         return index
@@ -151,6 +168,10 @@ class Models:
             # bitangents
             glEnableVertexAttribArray( 4 )
             glVertexAttribPointer( 4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 12 ) )
+
+
+            # material
+            self.materials.bind( mesh_gl["material"] )
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_gl["faces"])
             glDrawElements(GL_TRIANGLES, mesh_gl["nbfaces"] * 3, GL_UNSIGNED_INT, None)

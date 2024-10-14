@@ -68,7 +68,7 @@ vec3 CalcNormal( in vec3 vertexNormal, in vec2 frag_tex_coord )
 	//if ( normal_texture_set > -1 ) {
 		//vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
 		vec3 biTangent = 1.0 * cross(vertexNormal, var_Tangent.xyz);
-		vec3 n = texture(sNormal, frag_tex_coord * 4).rgb - vec3(0.5);
+		vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
 		//n = normalize(n * 2.0 - 1.0);
 
 		n.xy *= 1.0;
@@ -102,7 +102,7 @@ void main(){
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E;
 
-	vec4 base = texture2D(sTexture, vTexCoord * 4);
+	vec4 base = texture2D(sTexture, vTexCoord);
 	vec4 env = texture(sEnvironment, vec3(1.0, 0.0, 1.0) );
 
 	viewDir = var_ViewDir.xyz;
@@ -133,7 +133,7 @@ void main(){
 	const vec4 specularScale = vec4( 1.0, 1.0, 1.0, 0.5 );
 
 	// metallic roughness workflow
-	vec4 ORMS = texture( sPhyiscal, vTexCoord * 4 ).brga;
+	vec4 ORMS = texture( sPhyiscal, vTexCoord ).brga;
 	ORMS.xyzw *= specularScale.zwxy;
 
 	specular.rgb = mix(vec3(0.08) * ORMS.w, diffuse.rgb, ORMS.z);
