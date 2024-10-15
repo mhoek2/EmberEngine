@@ -1,7 +1,7 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from modules.imageLoader import load_image_pygame as load_image
+from modules.imageLoader import load_image_pygame as load_image, create_rmo_map
 from modules.renderer import Renderer
 
 import os
@@ -18,7 +18,18 @@ class Images:
 
         self.basepath = "C:/Github-workspace/EmberEngine/assets/textures/"
         self.defaultImage = self.loadOrFindFullPath( f"{self.basepath}default.jpg")
+        
         return
+
+    def loadOrFindPhysicalMap( self, roughness_path, metallic_path, ao_path ):
+        index = self._images_size
+
+        # load
+        if not create_rmo_map( roughness_path, metallic_path, ao_path, self.images[index] ):
+            return self.defaultImage
+
+        self._images_size += 1
+        return index
 
     def loadOrFindFullPath( self, uid : str ) -> int:
         """Load or find an image, implement find later"""

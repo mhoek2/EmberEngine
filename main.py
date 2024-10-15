@@ -52,7 +52,7 @@ class EmberEngine:
         #                            model_file="cube/cube.obj",
         #                            texture_file="wall_inset.jpg",
         #                            normals_file="wall_inset_nh.tga",
-        #                            phyiscal_file="wall_inset_rmo.tga",
+        #                            phyiscal_file="wall_inset_rmo.tga",dw
         #                            translate=[0, 0, 0],
         #                            scale=[ 5, 0.01, 5 ],
         #                ) )
@@ -81,6 +81,44 @@ class EmberEngine:
                                     scale=[ 0.05, 0.05, 0.05 ],
                                     rotation=[ 90.0, 0.0, 0.0 ]
                         ) )
+
+        #self.addGameObject( Mesh( self,
+        #                            model_file="japan/model.fbx",
+        #                            translate=[0, 0, 0],
+        #                            scale=[ 1, 1, 1 ],
+        #                            rotation=[ 90.0, 60.0, 0.0 ]
+        #                ) )
+
+        # fix nested models matix
+        #self.addGameObject( Mesh( self,
+        #                            model_file="rusty-truck/model.fbx",
+        #                            translate=[0, 0, 0],
+        #                            scale=[ 1, 1, 1 ],
+        #                            rotation=[ 0.0, 0.0, 0.0 ]
+        #                ) )
+
+
+        self.addGameObject( Mesh( self,
+                                    model_file="jerrycan/model.fbx",
+                                    translate=[5, 0, 0],
+                                    scale=[ 0.05, 0.05, 0.05 ],
+                                    rotation=[ 0.0, 0.0, 0.0 ]
+                        ) )
+
+        self.addGameObject( Mesh( self,
+                                    model_file="cabinet/model.fbx",
+                                    translate=[-5, 0, 0],
+                                    scale=[ 1, 1, 1 ],
+                                    rotation=[ 0.0, 0.0, 0.0 ]
+                        ) )
+
+
+        #self.addGameObject( Mesh( self,
+        #                            model_file="helmet/model.fbx",
+        #                            translate=[-5, 0, 0],
+        #                            scale=[ 1, 1, 1 ],
+        #                            rotation=[ 0.0, 0.0, 0.0 ]
+        #                ) )
 
         self.setupSun()
         self.loadEnvironment()

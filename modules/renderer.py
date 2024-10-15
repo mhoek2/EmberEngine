@@ -41,6 +41,7 @@ class Renderer:
 
         # debug
         self.renderMode = 0
+        self.animSun = False
 
         #glClearColor(0.0, 0.3, 0.7, 1)
         glClearColor(0.0, 0.0, 0.0, 1)
@@ -164,6 +165,14 @@ class Renderer:
 
         self.do_movement()
         self.do_mouse()
+
+
+        # animate sun
+        keypress = pygame.key.get_pressed()
+        if keypress[pygame.K_o]:
+            self.animSun = True
+        elif self.animSun:
+            self.animSun = False
 
         # clear swapchain or FBO
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )

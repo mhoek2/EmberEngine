@@ -6,7 +6,6 @@ import os
 from impasse.structs import Material as ImpasseMaterial, MaterialProperty
 from impasse.constants import MaterialPropertyKey, TextureSemantic
 
-from modules.imageLoader import load_image_pygame as load_image
 from modules.images import Images
 from modules.renderer import Renderer
 
@@ -21,9 +20,17 @@ class Material:
         self._materials_size = 0;
 
         self.basepath = "C:/Github-workspace/EmberEngine/assets/textures/"
+        self.defaultRMO = self.images.loadOrFindFullPath( f"{self.basepath}default_rmo.png")
+
         return
 
     #, mesh_mat_index : int
+
+    @staticmethod
+    def add_ao_suffix( filename ):
+        base, ext = os.path.splitext(filename)
+        return f"{base}_ao{ext}"
+
     def loadOrFind( self, material, path ) -> int:
         """Processes a material by loading images and setting info"""
 
@@ -41,27 +48,50 @@ class Material:
 
         info["albedo"] = False
         info["normal"] = False
+        info["phyiscal"] = False
+
+        _metallic = False
+        _roughness = False
+        _ao = False
 
         for prop in material.properties:
+
             if prop.key == MaterialPropertyKey.TEXTURE:
+                # albedo
                 if prop.semantic == TextureSemantic.DIFFUSE:
                     _filename = os.path.basename( prop.data )
                     info["albedo"] = self.images.loadOrFindFullPath( f"{path}/{_filename}")
+
+                    # find ambient occlusion
+                    _filepath_ao = f"{path}/{ self.add_ao_suffix( _filename )}"
+                    if os.path.isfile( _filepath_ao ):
+                        _ao = _filepath_ao
         
-                if prop.semantic == TextureSemantic.NORMALS:
+                # normals
+                elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
                     _filename = os.path.basename( prop.data )
                     info["normal"] = self.images.loadOrFindFullPath( f"{path}/{_filename}")
         
-                if prop.semantic == TextureSemantic.SHININESS: #roughness
+                # roughness
+                elif prop.semantic == TextureSemantic.SHININESS: 
                     _filename = os.path.basename( prop.data )
-                    return
+                    _roughness = f"{path}/{_filename}"
 
-                if prop.semantic == 18: #metallic
+                # ambient occlusion
+                elif prop.semantic == TextureSemantic.AMBIENT: 
                     _filename = os.path.basename( prop.data )
-                    info["normal"] = self.images.loadOrFindFullPath( f"{path}/{_filename}")
+                    _ao = f"{path}/{_filename}"
 
-            if prop.key == MaterialPropertyKey.USE_ROUGHNESS_MAP:
-                test = 1
+            # metallic
+            if prop.key == "$raw.ReflectionFactor|file":  # hmmm... 
+                _filename = os.path.basename( prop.data )
+                _metallic = f"{path}/{_filename}"
+
+        # _roughness, _metallic and _ao should be packed into a new _rmo file.
+        if not _metallic and not _roughness and not _ao:
+            info["phyiscal"] = self.defaultRMO
+        else:
+            info["phyiscal"] = self.images.loadOrFindPhysicalMap( _roughness, _metallic, _ao ) 
 
         self._materials_size += 1
 
@@ -78,5 +108,7 @@ class Material:
         if info["normal"]:
             self.images.bind( info["normal"], GL_TEXTURE1, "sNormal", 1 )
 
+        if info["phyiscal"]:
+            self.images.bind( info["phyiscal"], GL_TEXTURE2, "sPhyiscal", 2 )
 
         return
