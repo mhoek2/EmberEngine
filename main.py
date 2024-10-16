@@ -30,34 +30,34 @@ from gameObjects.sun import Sun
 class EmberEngine:
     def __init__( self ) -> None:
         self.rootdir = Path.cwd()
-        self.engineAssets = f"{self.rootdir}\\engineAssets\\"
-        self.assets = f"{self.rootdir}\\assets\\"
 
-        self.renderer = Renderer( self )
-        self.renderer.setup_projection()
+        self.engineAssets   = f"{self.rootdir}\\engineAssets\\"
+        self.assets         = f"{self.rootdir}\\assets\\"
+
+        self.renderer   = Renderer( self )
 
         self.gameObjects : GameObject = []
 
-        self.images = Images( self )
-        self.materials = Material( self )
-        self.models = Models( self )
-        self.cubemaps = Cubemap( self )
-        self.skybox = Skybox( self )
+        self.images     = Images( self )
+        self.materials  = Material( self )
+        self.models     = Models( self )
+        self.cubemaps   = Cubemap( self )
+        self.skybox     = Skybox( self )
         
         # default material
         self.defaultMaterial = self.materials.buildMaterial( 
-            albedo = f"{self.engineAssets}textures\\default.jpg",
-            normal = f"{self.engineAssets}textures\\default_normal.png",
-            rmo = f"{self.engineAssets}textures\\default_rmo.png"
+            albedo  = f"{self.engineAssets}textures\\default.jpg",
+            normal  = f"{self.engineAssets}textures\\default_normal.png",
+            rmo     = f"{self.engineAssets}textures\\default_rmo.png"
         )
 
-        #default opbject
-        self.addGameObject( Mesh( self,
-                                    material    = self.defaultMaterial,
-                                    translate   = [0, 1, 0],
-                                    scale       = [ 1, 1, 1 ],
-                                    rotation    = [ 0.0, 0.0, 80.0 ]
-                        ) )
+        #default object
+        #self.addGameObject( Mesh( self,
+        #                            material    = self.defaultMaterial,
+        #                            translate   = [0, 1, 0],
+        #                            scale       = [ 1, 1, 1 ],
+        #                            rotation    = [ 0.0, 0.0, 80.0 ]
+        #                ) )
 
         self.addGameObject( Mesh( self,
                                     model_file  = f"{self.assets}models\\Tree\\Tree.obj",
@@ -80,12 +80,12 @@ class EmberEngine:
         #                ) )
 
         
-        #self.addGameObject( Mesh( self,
-        #                            model_file="gun/model.fbx",
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 0.05, 0.05, 0.05 ],
-        #                            rotation=[ 90.0, 0.0, 0.0 ]
-        #                ) )
+        self.addGameObject( Mesh( self,
+                                    model_file=f"{self.assets}models\\gun\\model.fbx",
+                                    translate=[0, 0, 0],
+                                    scale=[ 0.05, 0.05, 0.05 ],
+                                    rotation=[ 90.0, 0.0, 0.0 ]
+                        ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="japan/model.fbx",
@@ -103,23 +103,15 @@ class EmberEngine:
         #                ) )
 
 
-        #self.addGameObject( Mesh( self,
-        #                            model_file="jerrycan/model.fbx",
-        #                            translate=[5, 0, 0],
-        #                            scale=[ 0.05, 0.05, 0.05 ],
-        #                            rotation=[ 0.0, 0.0, 0.0 ]
-        #                ) )
+        self.addGameObject( Mesh( self,
+                                    model_file  = f"{self.assets}models\\jerrycan\\model.fbx",
+                                    translate   = [5, 0, 0],
+                                    scale       = [ 0.05, 0.05, 0.05 ],
+                                    rotation    = [ 0.0, 0.0, 0.0 ]
+                        ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="cabinet/model.fbx",
-        #                            translate=[-5, 0, 0],
-        #                            scale=[ 1, 1, 1 ],
-        #                            rotation=[ 0.0, 0.0, 0.0 ]
-        #                ) )
-
-
-        #self.addGameObject( Mesh( self,
-        #                            model_file="helmet/model.fbx",
         #                            translate=[-5, 0, 0],
         #                            scale=[ 1, 1, 1 ],
         #                            rotation=[ 0.0, 0.0, 0.0 ]

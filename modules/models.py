@@ -14,12 +14,11 @@ import os
 class Models:
     def __init__( self, context ):
         self.context = context
-        self.renderer : Renderer = context.renderer
-        self.materials : Material = context.materials
+        self.renderer   : Renderer = context.renderer
+        self.materials  : Material = context.materials
         
         self.model = [i for i in range(30)]
         self.model_mesh = [{} for i in range(30)]
-        #self.model_material = [[] for i in range(30)]
 
         self._num_models = 0
 
@@ -171,7 +170,6 @@ class Models:
             # bitangents
             glEnableVertexAttribArray( 4 )
             glVertexAttribPointer( 4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 12 ) )
-
 
             # material
             self.materials.bind( mesh_gl["material"] )

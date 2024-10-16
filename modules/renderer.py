@@ -52,6 +52,8 @@ class Renderer:
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+        self.setup_projection_matrix()
+
     def use_shader( self, shader ) -> None:
         self.shader = shader
         glUseProgram( self.shader.program )
@@ -99,7 +101,7 @@ class Renderer:
         self.display = ( self.width, self.height )
         self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
 
-    def setup_projection( self ) -> None:
+    def setup_projection_matrix( self ) -> None:
         glViewport( 0, 0, self.width, self.height )
 
         self.aspect_ratio = self.width / self.height
@@ -167,7 +169,6 @@ class Renderer:
 
         self.do_movement()
         self.do_mouse()
-
 
         # animate sun
         keypress = pygame.key.get_pressed()

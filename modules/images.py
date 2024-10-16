@@ -11,7 +11,7 @@ class Images:
         self.context = context
         self.renderer : Renderer = context.renderer
 
-        self.images = glGenTextures(300)
+        self.images = glGenTextures( 300 )
         self.images_paths = []
 
         self._num_images = 0;

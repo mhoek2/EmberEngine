@@ -11,8 +11,8 @@ from modules.renderer import Renderer
 class Material:
     def __init__( self, context ):
         self.context = context
-        self.renderer : Renderer = context.renderer
-        self.images : Images = context.images
+        self.renderer   : Renderer = context.renderer
+        self.images     : Images = context.images
 
         self.materials = [{} for i in range(300)]
         self._num_materials = 0;
@@ -27,12 +27,12 @@ class Material:
         return f"{base}_ao{ext}"
 
     def buildMaterial( self, 
-                       albedo : str = False, 
-                       normal : str = False, 
-                       r : str = False, 
-                       m : str = False, 
-                       o : str = False,
-                       rmo : str = False ) -> int:
+                       albedo   : str = False, 
+                       normal   : str = False, 
+                       r        : str = False, 
+                       m        : str = False, 
+                       o        : str = False,
+                       rmo      : str = False ) -> int:
         """Build a material based on defined textures"""
 
         index = self._num_materials

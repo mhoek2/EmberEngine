@@ -21,11 +21,11 @@ class GameObject:
                  rotation = [ 0.0, 0.0, 0.0 ], 
                  scale = [ 1.0, 1.0, 1.0 ] ) -> None:
         self.context = context
-        self.renderer   : Renderer = context.renderer
-        self.materials  : Material = context.materials
-        self.images     : Images = context.images
-        self.cubemaps   : Cubemap = context.cubemaps
-        self.models     : Models = context.models
+        self.renderer       : Renderer = context.renderer
+        self.materials      : Material = context.materials
+        self.images         : Images = context.images
+        self.cubemaps       : Cubemap = context.cubemaps
+        self.models         : Models = context.models
 
         self.assets         : str = context.assets
         self.engineAssets   : str = context.engineAssets
