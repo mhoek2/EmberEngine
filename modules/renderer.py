@@ -14,7 +14,9 @@ from modules.camera import Camera
 
 class Renderer:
     """The rendering backend"""
-    def __init__( self ):
+    def __init__( self, context ):
+        self.context = context
+
         # window
         self.create_instance( 1200, 800 )
 
@@ -55,8 +57,8 @@ class Renderer:
         glUseProgram( self.shader.program )
 
     def create_shaders( self ) -> None:
-        self.general = Shader( "general" )
-        self.skybox = Shader( "skybox" )
+        self.general = Shader( self.context, "general" )
+        self.skybox = Shader( self.context, "skybox" )
 
         # keep this here for now since only one shader is used
         # ..!

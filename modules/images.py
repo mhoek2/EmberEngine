@@ -11,13 +11,13 @@ class Images:
         self.context = context
         self.renderer : Renderer = context.renderer
 
-        self.images = glGenTextures(30)
+        self.images = glGenTextures(300)
         self.images_paths = []
 
         self._images_size = 0;
 
-        self.basepath = "C:/Github-workspace/EmberEngine/assets/textures/"
-        self.defaultImage = self.loadOrFindFullPath( f"{self.basepath}default.jpg")
+        self.basepath = f"{self.context.rootdir}\\textures\\"
+        self.defaultImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default.jpg")
         
         return
 

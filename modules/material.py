@@ -19,9 +19,7 @@ class Material:
         self.materials_info = [{} for i in range(300)]
         self._materials_size = 0;
 
-        self.basepath = "C:/Github-workspace/EmberEngine/assets/textures/"
-        self.defaultRMO = self.images.loadOrFindFullPath( f"{self.basepath}default_rmo.png")
-
+        self.defaultRMO = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_rmo.png")
         return
 
     #, mesh_mat_index : int
@@ -60,32 +58,32 @@ class Material:
                 # albedo
                 if prop.semantic == TextureSemantic.DIFFUSE:
                     _filename = os.path.basename( prop.data )
-                    info["albedo"] = self.images.loadOrFindFullPath( f"{path}/{_filename}")
+                    info["albedo"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
 
                     # find ambient occlusion
-                    _filepath_ao = f"{path}/{ self.add_ao_suffix( _filename )}"
+                    _filepath_ao = f"{path}\\{ self.add_ao_suffix( _filename )}"
                     if os.path.isfile( _filepath_ao ):
                         _ao = _filepath_ao
         
                 # normals
                 elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
                     _filename = os.path.basename( prop.data )
-                    info["normal"] = self.images.loadOrFindFullPath( f"{path}/{_filename}")
+                    info["normal"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
         
                 # roughness
                 elif prop.semantic == TextureSemantic.SHININESS: 
                     _filename = os.path.basename( prop.data )
-                    _roughness = f"{path}/{_filename}"
+                    _roughness = f"{path}\\{_filename}"
 
                 # ambient occlusion
                 elif prop.semantic == TextureSemantic.AMBIENT: 
                     _filename = os.path.basename( prop.data )
-                    _ao = f"{path}/{_filename}"
+                    _ao = f"{path}\\{_filename}"
 
             # metallic
             if prop.key == "$raw.ReflectionFactor|file":  # hmmm... 
                 _filename = os.path.basename( prop.data )
-                _metallic = f"{path}/{_filename}"
+                _metallic = f"{path}\\{_filename}"
 
         # _roughness, _metallic and _ao should be packed into a new _rmo file.
         if not _metallic and not _roughness and not _ao:

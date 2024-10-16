@@ -16,7 +16,7 @@ class Cubemap:
         self.cubemap = glGenTextures(30)
         self._num_cubemaps = 0;
 
-        self.basepath = "C:/Github-workspace/EmberEngine/assets/cubemaps/"
+        self.basepath = f"{self.context.rootdir}\\cubemaps\\"
 
         # BRDF Lut
         self.create_brdf_lut()
@@ -91,14 +91,17 @@ class Cubemap:
         #data = self.create_brdf_texture( size )
         #create_image( size, data, self.brdf_lut )
         #load_image( f"{self.basepath}brdf.jpg", self.brdf_lut_texture )
-        self.brdf_lut = self.context.images.loadOrFind( f"../../shaders/brdf.jpg" )
+        self.brdf_lut = self.context.images.loadOrFindFullPath( f"{self.renderer.shader.basepath}brdf.jpg" )
         return
 
-    def loadOrFind( self, uid : str ) -> int:
+    def loadDefaultCubemap( self ) -> int:
+        return self.loadOrFind( f"{self.context.engineAssets}\\cubemaps\\default" )
+
+    def loadOrFind( self, path : str ) -> int:
         """Load or find an image, implement find later"""
 
         index = self._num_cubemaps
-        load_cubemap( f"{self.basepath}{uid}", ".jpg", self.cubemap[index] )
+        load_cubemap( path, ".jpg", self.cubemap[index] )
 
         self._num_cubemaps += 1
         return index

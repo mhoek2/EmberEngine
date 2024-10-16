@@ -9,12 +9,13 @@ from modules.files import FileHandler
 import textwrap
 
 class Shader:
-    def __init__( self, uid : str ):
+    def __init__( self, context, uid : str ):
+        self.context = context
 
         # fix path to use root..
-        basepath = "C:/Github-workspace/EmberEngine/shaders/"
-        vert_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.vert").getContent())
-        frag_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.frag").getContent())
+        self.basepath = f"{self.context.rootdir}\\shaders\\"
+        vert_shader = textwrap.dedent(FileHandler(f"{self.basepath}{uid}.vert").getContent())
+        frag_shader = textwrap.dedent(FileHandler(f"{self.basepath}{uid}.frag").getContent())
 
         self.program = self.load_program( vert_shader, frag_shader )
         return
@@ -52,9 +53,6 @@ class Shader:
         if glGetProgramiv( program, GL_LINK_STATUS, None ) == GL_FALSE:
             glDeleteProgram( program )
             return 0
-
-
-
 
         return program
 

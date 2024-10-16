@@ -1,10 +1,10 @@
-
 import os
+from pathlib import Path
 
-import site
+#import site
+#print(site.getsitepackages())
 
 from gameObjects.skybox import Skybox
-print(site.getsitepackages())
 
 import pygame
 from pygame.locals import *
@@ -28,8 +28,12 @@ from gameObjects.sun import Sun
 
 
 class EmberEngine:
-    def __init__( self ) -> None:  
-        self.renderer = Renderer()
+    def __init__( self ) -> None:
+        self.rootdir = Path.cwd()
+        self.engineAssets = f"{self.rootdir}\\engineAssets\\"
+        self.assets = f"{self.rootdir}\\assets\\"
+
+        self.renderer = Renderer( self )
         self.renderer.setup_projection()
 
         self.gameObjects : GameObject = []
@@ -40,22 +44,19 @@ class EmberEngine:
         self.cubemaps = Cubemap( self )
         self.skybox = Skybox( self )
         
-        # default opbject
-        #self.addGameObject( Mesh( self,
-        #                            translate=[0, 1, 0],
-        #                            scale=[ 1, 1, 1 ],
-        #                            rotation=[ 0.0, 0.0, 80.0 ]
-        #                ) )
+        #default opbject
+        self.addGameObject( Mesh( self,
+                                    translate=[0, 1, 0],
+                                    scale=[ 1, 1, 1 ],
+                                    rotation=[ 0.0, 0.0, 80.0 ]
+                        ) )
 
 
-        #self.addGameObject( Mesh( self,
-        #                            model_file="cube/cube.obj",
-        #                            texture_file="wall_inset.jpg",
-        #                            normals_file="wall_inset_nh.tga",
-        #                            phyiscal_file="wall_inset_rmo.tga",dw
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 5, 0.01, 5 ],
-        #                ) )
+        self.addGameObject( Mesh( self,
+                                    model_file=f"{self.assets}models\\Tree\\Tree.obj",
+                                    translate=[0, 0, 0],
+                                    scale=[ 1, 1, 1 ],
+                        ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="cube/cube.obj",
@@ -75,12 +76,12 @@ class EmberEngine:
         #                ) )
 
         
-        self.addGameObject( Mesh( self,
-                                    model_file="gun/model.fbx",
-                                    translate=[0, 0, 0],
-                                    scale=[ 0.05, 0.05, 0.05 ],
-                                    rotation=[ 90.0, 0.0, 0.0 ]
-                        ) )
+        #self.addGameObject( Mesh( self,
+        #                            model_file="gun/model.fbx",
+        #                            translate=[0, 0, 0],
+        #                            scale=[ 0.05, 0.05, 0.05 ],
+        #                            rotation=[ 90.0, 0.0, 0.0 ]
+        #                ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="japan/model.fbx",
@@ -98,19 +99,19 @@ class EmberEngine:
         #                ) )
 
 
-        self.addGameObject( Mesh( self,
-                                    model_file="jerrycan/model.fbx",
-                                    translate=[5, 0, 0],
-                                    scale=[ 0.05, 0.05, 0.05 ],
-                                    rotation=[ 0.0, 0.0, 0.0 ]
-                        ) )
+        #self.addGameObject( Mesh( self,
+        #                            model_file="jerrycan/model.fbx",
+        #                            translate=[5, 0, 0],
+        #                            scale=[ 0.05, 0.05, 0.05 ],
+        #                            rotation=[ 0.0, 0.0, 0.0 ]
+        #                ) )
 
-        self.addGameObject( Mesh( self,
-                                    model_file="cabinet/model.fbx",
-                                    translate=[-5, 0, 0],
-                                    scale=[ 1, 1, 1 ],
-                                    rotation=[ 0.0, 0.0, 0.0 ]
-                        ) )
+        #self.addGameObject( Mesh( self,
+        #                            model_file="cabinet/model.fbx",
+        #                            translate=[-5, 0, 0],
+        #                            scale=[ 1, 1, 1 ],
+        #                            rotation=[ 0.0, 0.0, 0.0 ]
+        #                ) )
 
 
         #self.addGameObject( Mesh( self,
@@ -121,14 +122,14 @@ class EmberEngine:
         #                ) )
 
         self.setupSun()
-        self.loadEnvironment()
+        self.loadDefaultEnvironment()
 
-    def loadEnvironment( self ) -> None:
-        self.environment_map = self.cubemaps.loadOrFind( "bespin_day" )
+    def loadDefaultEnvironment( self ) -> None:
+        self.environment_map = self.cubemaps.loadDefaultCubemap()
 
     def setupSun( self ) -> None:
         self.sun = self.addGameObject( Sun( self,
-                        model_file="Sphere/sphere.obj",
+                        model_file=f"{self.engineAssets}models\\sphere\\model.obj",
                         texture_file="sun.jpg",
                         normals_file="sun_n.tga",
                         phyiscal_file="sun_rmo.tga",

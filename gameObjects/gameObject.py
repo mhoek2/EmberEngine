@@ -14,10 +14,10 @@ from modules.models import Models
 
 class GameObject:
     def __init__( self, context, 
-                 model_file="Tree/Tree.obj",
-                 texture_file="newfloor.jpg",
-                 normals_file="newfloor_nh.tga",
-                 phyiscal_file="newfloor_rmo.tga",
+                 model_file=False,
+                 texture_file=False,
+                 normals_file=False,
+                 phyiscal_file=False,
                  translate=[ 0.0, 0.0, 0.0 ], 
                  rotation=[ 0.0, 0.0, 0.0 ], 
                  scale=[ 1.0, 1.0, 1.0 ] ) -> None:
@@ -33,7 +33,10 @@ class GameObject:
         self.scale = scale
 
         # model
-        self.model_file = model_file
+        if not model_file:
+            self.model_file = f"{self.context.engineAssets}models\\cube\\model.obj"
+        else:
+            self.model_file = model_file
 
         # texture
         self.texture_file = texture_file

@@ -23,7 +23,6 @@ class Models:
 
         self.num_models = 0
 
-        self.basepath = "C:/Github-workspace/EmberEngine/assets/models/"
         return
 
     @staticmethod
@@ -119,16 +118,14 @@ class Models:
 
         return gl
 
-    def loadOrFind( self, uid : str ) -> int:
+    def loadOrFind( self, path : str ) -> int:
         """Load or find an model, implement find later"""
         index = self.num_models
 
-        filepath = f"{self.basepath}{uid}"
-
-        self.model[index] = imp.load( filepath, processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
+        self.model[index] = imp.load( path, processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
 
         # used for textures
-        self.path_dir = os.path.dirname( filepath )
+        self.path_dir = os.path.dirname( path )
 
         for mesh_idx, mesh in enumerate( self.model[index].meshes ):
             self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers(mesh)
