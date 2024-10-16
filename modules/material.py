@@ -1,4 +1,3 @@
-import copy
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import os
@@ -19,12 +18,43 @@ class Material:
         self._num_materials = 0;
 
         self.defaultRMO = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_rmo.png")
+        self.defaultNormal = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_normal.png")
         return
 
     @staticmethod
     def add_ao_suffix( filename ):
         base, ext = os.path.splitext(filename)
         return f"{base}_ao{ext}"
+
+    def buildMaterial( self, 
+                       albedo : str = False, 
+                       normal : str = False, 
+                       r : str = False, 
+                       m : str = False, 
+                       o : str = False,
+                       rmo : str = False ) -> int:
+        """Build a material based on defined textures"""
+
+        index = self._num_materials
+        mat = self.materials[index]
+
+        mat["albedo"] = self.images.loadOrFindFullPath( albedo )
+
+        if normal:
+            mat["normal"] = self.images.loadOrFindFullPath( normal )
+        else:
+            mat["normal"] = self.defaultNormal
+
+        if rmo:
+            mat["phyiscal"] = self.images.loadOrFindFullPath( rmo )
+        else:
+            if not r and not m and not o:
+                mat["phyiscal"] = self.defaultRMO
+            else:
+                mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
+
+        self._num_materials += 1
+        return index
 
     def loadOrFind( self, material, path ) -> int:
         """Create a material by parsing model material info and loading textures"""
@@ -34,18 +64,13 @@ class Material:
         #    if mat == material:
         #        return i
 
-        # load
-        index = self._num_materials
-
+        # initiliate empty material
+        index = self.buildMaterial()
         mat = self.materials[index]
-
-        mat["albedo"] = False
-        mat["normal"] = False
-        mat["phyiscal"] = False
-
-        _metallic = False
-        _roughness = False
-        _ao = False
+  
+        r = False
+        m = False
+        o = False
 
         for prop in material.properties:
 
@@ -58,7 +83,7 @@ class Material:
                     # find ambient occlusion
                     _filepath_ao = f"{path}\\{ self.add_ao_suffix( _filename )}"
                     if os.path.isfile( _filepath_ao ):
-                        _ao = _filepath_ao
+                        o = _filepath_ao
         
                 # normals
                 elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
@@ -68,45 +93,46 @@ class Material:
                 # roughness
                 elif prop.semantic == TextureSemantic.SHININESS: 
                     _filename = os.path.basename( prop.data )
-                    _roughness = f"{path}\\{_filename}"
+                    r = f"{path}\\{_filename}"
 
                 # ambient occlusion
                 elif prop.semantic == TextureSemantic.AMBIENT: 
                     _filename = os.path.basename( prop.data )
-                    _ao = f"{path}\\{_filename}"
+                    o = f"{path}\\{_filename}"
 
             # metallic
             if prop.key == "$raw.ReflectionFactor|file":  # hmmm... 
                 _filename = os.path.basename( prop.data )
-                _metallic = f"{path}\\{_filename}"
+                m = f"{path}\\{_filename}"
 
-        # _roughness, _metallic and _ao should be packed into a new _rmo file.
-        if not _metallic and not _roughness and not _ao:
+        # r, m and o should be packed into a new _rmo file.
+        if not r and not m and not o:
             mat["phyiscal"] = self.defaultRMO
         else:
-            mat["phyiscal"] = self.images.loadOrFindPhysicalMap( _roughness, _metallic, _ao ) 
-
-        self._num_materials += 1
+            mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
         return index
 
     def bind( self, index ):
 
-        mat = self.materials[index]
+        if index < self._num_materials:
+            mat = self.materials[index]
+        else:
+            mat = self.materials[self.context.defaultMaterial]
 
-        if mat["albedo"]:
+        if 'albedo' in mat:
             self.images.bind( mat["albedo"], GL_TEXTURE0, "sTexture", 0 )
         else:
             self.images.bind( self.images.defaultImage, GL_TEXTURE0, "sTexture", 0 )
 
-        if mat["normal"]:
+        if 'normal' in mat:
             self.images.bind( mat["normal"], GL_TEXTURE1, "sNormal", 1 )
         else:
             self.images.bind( self.images.defaultImage, GL_TEXTURE1, "sNormal", 1 )
 
-        if mat["phyiscal"]:
+        if 'phyiscal' in mat:
             self.images.bind( mat["phyiscal"], GL_TEXTURE2, "sPhyiscal", 2 )
         else:
-            self.images.bind( self.images.defaultImagev, GL_TEXTURE1, "sPhyiscal", 2 )
+            self.images.bind( self.images.defaultImage, GL_TEXTURE1, "sPhyiscal", 2 )
 
         return

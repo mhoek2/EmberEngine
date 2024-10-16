@@ -12,7 +12,7 @@ import pathlib
 
 class Mesh( GameObject ):
     def onStart( self ) -> None:
-        self.model = self.models.loadOrFind( self.model_file )
+        self.model = self.models.loadOrFind( self.model_file, self.material )
 
     def onUpdate( self ) -> None:
         #glUseProgram( self.renderer.shader.program )

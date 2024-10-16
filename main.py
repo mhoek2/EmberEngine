@@ -44,18 +44,25 @@ class EmberEngine:
         self.cubemaps = Cubemap( self )
         self.skybox = Skybox( self )
         
+        # default material
+        self.defaultMaterial = self.materials.buildMaterial( 
+            albedo = f"{self.engineAssets}textures\\default.jpg",
+            normal = f"{self.engineAssets}textures\\default_normal.png",
+            rmo = f"{self.engineAssets}textures\\default_rmo.png"
+        )
+
         #default opbject
         self.addGameObject( Mesh( self,
-                                    translate=[0, 1, 0],
-                                    scale=[ 1, 1, 1 ],
-                                    rotation=[ 0.0, 0.0, 80.0 ]
+                                    material    = self.defaultMaterial,
+                                    translate   = [0, 1, 0],
+                                    scale       = [ 1, 1, 1 ],
+                                    rotation    = [ 0.0, 0.0, 80.0 ]
                         ) )
 
-
         self.addGameObject( Mesh( self,
-                                    model_file=f"{self.assets}models\\Tree\\Tree.obj",
-                                    translate=[0, 0, 0],
-                                    scale=[ 1, 1, 1 ],
+                                    model_file  = f"{self.assets}models\\Tree\\Tree.obj",
+                                    translate   = [0, 0, 0],
+                                    scale       = [ 1, 1, 1 ],
                         ) )
 
         #self.addGameObject( Mesh( self,

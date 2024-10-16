@@ -8,21 +8,29 @@ import numpy as np
 from pyrr import Matrix44, Vector3
 
 from modules.cubemap import Cubemap
+from modules.material import Material
 from modules.renderer import Renderer
 from modules.images import Images
 from modules.models import Models
 
 class GameObject:
     def __init__( self, context, 
-                 model_file=False,
-                 translate=[ 0.0, 0.0, 0.0 ], 
-                 rotation=[ 0.0, 0.0, 0.0 ], 
-                 scale=[ 1.0, 1.0, 1.0 ] ) -> None:
+                 model_file = False,
+                 material = -1,
+                 translate = [ 0.0, 0.0, 0.0 ], 
+                 rotation = [ 0.0, 0.0, 0.0 ], 
+                 scale = [ 1.0, 1.0, 1.0 ] ) -> None:
         self.context = context
-        self.renderer : Renderer = context.renderer
-        self.images : Images = context.images
-        self.cubemaps : Cubemap = context.cubemaps
-        self.models : Models = context.models
+        self.renderer   : Renderer = context.renderer
+        self.materials  : Material = context.materials
+        self.images     : Images = context.images
+        self.cubemaps   : Cubemap = context.cubemaps
+        self.models     : Models = context.models
+
+        self.assets         : str = context.assets
+        self.engineAssets   : str = context.engineAssets
+
+        self.material   : int = material
         
         # https://github.com/adamlwgriffiths/Pyrr
         self.translate = translate

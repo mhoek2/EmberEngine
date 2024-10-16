@@ -11,11 +11,16 @@ from gameObjects.gameObject import GameObject
 
 class Sun( GameObject ):
     def onStart( self ) -> None:
-        self.model = self.models.loadOrFind( self.model_file )
+        mat = self.materials.buildMaterial( 
+            albedo = f"{self.engineAssets}textures\\sun\\albedo.jpg",
+            r = f"{self.engineAssets}textures\\sun\\roughness.jpg",
+        )
 
-        self.angle=1.0
-        self.anim_speed=2.0
-        self.anim_radius=8.0
+        self.model = self.models.loadOrFind( self.model_file, mat )
+
+        self.angle          = 1.0
+        self.anim_speed     = 2.0
+        self.anim_radius    = 8.0
 
     def onUpdate( self ) -> None:
         #glUseProgram( self.renderer.shader.program )

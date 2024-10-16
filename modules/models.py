@@ -78,7 +78,7 @@ class Models:
         return tangents, bitangents
 
 
-    def prepare_gl_buffers( self, mesh ):
+    def prepare_gl_buffers( self, mesh, material : int = -1 ):
         gl = {}
 
         v = np.array( mesh.vertices, dtype='f' )  # Shape: (n_vertices, 3)
@@ -114,11 +114,14 @@ class Models:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
         # material
-        gl["material"] = self.materials.loadOrFind( mesh.material, self.path_dir )
+        if material == -1:
+            gl["material"] = self.materials.loadOrFind( mesh.material, self.path_dir )
+        else:
+            gl["material"] = material
 
         return gl
 
-    def loadOrFind( self, path : str ) -> int:
+    def loadOrFind( self, path : str, material : int = -1 ) -> int:
         """Load or find an model, implement find later"""
         index = self._num_models
 
@@ -131,7 +134,7 @@ class Models:
         self.path_dir = os.path.dirname( path )
 
         for mesh_idx, mesh in enumerate( self.model[index].meshes ):
-            self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers(mesh)
+            self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers( mesh, material )
 
         # need to release?
 

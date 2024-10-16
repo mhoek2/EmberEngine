@@ -118,6 +118,7 @@ def create_rmo_map( roughness_path, metallic_path, ao_path, texture ):
 
     size = (-1, -1)
     # Load images and get highest dimension
+    # TODO: fix missing file issue..
     if roughness_path:
         roughness = pygame.image.load( roughness_path )
         if size < roughness.get_size() : size = roughness.get_size()
