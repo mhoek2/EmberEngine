@@ -21,7 +21,7 @@ class Models:
         self.model_mesh = [{} for i in range(30)]
         #self.model_material = [[] for i in range(30)]
 
-        self.num_models = 0
+        self._num_models = 0
 
         return
 
@@ -120,7 +120,10 @@ class Models:
 
     def loadOrFind( self, path : str ) -> int:
         """Load or find an model, implement find later"""
-        index = self.num_models
+        index = self._num_models
+
+        if not os.path.isfile( path ):
+            raise ValueError("Invalid model path!")
 
         self.model[index] = imp.load( path, processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
 
@@ -132,7 +135,7 @@ class Models:
 
         # need to release?
 
-        self.num_models+=1
+        self._num_models += 1
         return index
 
     def draw( self, index : int ) -> None:

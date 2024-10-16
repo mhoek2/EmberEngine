@@ -15,14 +15,11 @@ class Material:
         self.renderer : Renderer = context.renderer
         self.images : Images = context.images
 
-        self.materials = [ImpasseMaterial for i in range(300)]
-        self.materials_info = [{} for i in range(300)]
-        self._materials_size = 0;
+        self.materials = [{} for i in range(300)]
+        self._num_materials = 0;
 
         self.defaultRMO = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_rmo.png")
         return
-
-    #, mesh_mat_index : int
 
     @staticmethod
     def add_ao_suffix( filename ):
@@ -30,7 +27,7 @@ class Material:
         return f"{base}_ao{ext}"
 
     def loadOrFind( self, material, path ) -> int:
-        """Processes a material by loading images and setting info"""
+        """Create a material by parsing model material info and loading textures"""
 
         # find
         #for i, mat in self.materials:
@@ -38,15 +35,13 @@ class Material:
         #        return i
 
         # load
-        index = self._materials_size
+        index = self._num_materials
 
-        self.materials[index] = material # can be deprecated later
-        
-        info = self.materials_info[index]
+        mat = self.materials[index]
 
-        info["albedo"] = False
-        info["normal"] = False
-        info["phyiscal"] = False
+        mat["albedo"] = False
+        mat["normal"] = False
+        mat["phyiscal"] = False
 
         _metallic = False
         _roughness = False
@@ -58,7 +53,7 @@ class Material:
                 # albedo
                 if prop.semantic == TextureSemantic.DIFFUSE:
                     _filename = os.path.basename( prop.data )
-                    info["albedo"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+                    mat["albedo"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
 
                     # find ambient occlusion
                     _filepath_ao = f"{path}\\{ self.add_ao_suffix( _filename )}"
@@ -68,7 +63,7 @@ class Material:
                 # normals
                 elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
                     _filename = os.path.basename( prop.data )
-                    info["normal"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+                    mat["normal"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
         
                 # roughness
                 elif prop.semantic == TextureSemantic.SHININESS: 
@@ -87,26 +82,31 @@ class Material:
 
         # _roughness, _metallic and _ao should be packed into a new _rmo file.
         if not _metallic and not _roughness and not _ao:
-            info["phyiscal"] = self.defaultRMO
+            mat["phyiscal"] = self.defaultRMO
         else:
-            info["phyiscal"] = self.images.loadOrFindPhysicalMap( _roughness, _metallic, _ao ) 
+            mat["phyiscal"] = self.images.loadOrFindPhysicalMap( _roughness, _metallic, _ao ) 
 
-        self._materials_size += 1
+        self._num_materials += 1
 
         return index
 
     def bind( self, index ):
 
-        #mat : ImpasseMaterial = self.materials[index] # can be deprecatedv
-        info = self.materials_info[index]
+        mat = self.materials[index]
 
-        if info["albedo"]:
-            self.images.bind( info["albedo"], GL_TEXTURE0, "sTexture", 0 )
-       
-        if info["normal"]:
-            self.images.bind( info["normal"], GL_TEXTURE1, "sNormal", 1 )
+        if mat["albedo"]:
+            self.images.bind( mat["albedo"], GL_TEXTURE0, "sTexture", 0 )
+        else:
+            self.images.bind( self.images.defaultImage, GL_TEXTURE0, "sTexture", 0 )
 
-        if info["phyiscal"]:
-            self.images.bind( info["phyiscal"], GL_TEXTURE2, "sPhyiscal", 2 )
+        if mat["normal"]:
+            self.images.bind( mat["normal"], GL_TEXTURE1, "sNormal", 1 )
+        else:
+            self.images.bind( self.images.defaultImage, GL_TEXTURE1, "sNormal", 1 )
+
+        if mat["phyiscal"]:
+            self.images.bind( mat["phyiscal"], GL_TEXTURE2, "sPhyiscal", 2 )
+        else:
+            self.images.bind( self.images.defaultImagev, GL_TEXTURE1, "sPhyiscal", 2 )
 
         return

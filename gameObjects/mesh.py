@@ -14,21 +14,8 @@ class Mesh( GameObject ):
     def onStart( self ) -> None:
         self.model = self.models.loadOrFind( self.model_file )
 
-        # should be replaced with default material
-        if self.texture_file:
-            self.texture = self.images.loadOrFind( self.texture_file )
-        if self.normals_file:
-            self.normals = self.images.loadOrFind( self.normals_file )
-        if self.phyiscal_file:
-            self.physical = self.images.loadOrFind( self.phyiscal_file )
-
     def onUpdate( self ) -> None:
         #glUseProgram( self.renderer.shader.program )
-
-        # texture
-        #self.images.bind( self.texture, GL_TEXTURE0, "sTexture", 0 )
-        #self.images.bind( self.normals, GL_TEXTURE1, "sNormal", 1 )
-        #self.images.bind( self.physical, GL_TEXTURE2, "sPhyiscal", 2 )
 
         # environment
         self.cubemaps.bind( self.context.environment_map, GL_TEXTURE3, "sEnvironment", 3 )

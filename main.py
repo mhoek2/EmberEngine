@@ -60,9 +60,6 @@ class EmberEngine:
 
         #self.addGameObject( Mesh( self,
         #                            model_file="cube/cube.obj",
-        #                            texture_file="pipesnwall.jpg",
-        #                            normals_file="pipesnwall_n.tga",
-        #                            phyiscal_file="pipesnwall_rmo.png",
         #                            translate=[0, 0, 0],
         #                            scale=[ 1, 1, 1 ],
         #                            rotation=[ 0.0, 0.0, 45.0 ]
@@ -130,9 +127,6 @@ class EmberEngine:
     def setupSun( self ) -> None:
         self.sun = self.addGameObject( Sun( self,
                         model_file=f"{self.engineAssets}models\\sphere\\model.obj",
-                        texture_file="sun.jpg",
-                        normals_file="sun_n.tga",
-                        phyiscal_file="sun_rmo.tga",
                         translate=[1, -1, 1],
                         scale=[ 1, 1, 1 ],
                         rotation=[ 0.0, 0.0, 80.0 ]

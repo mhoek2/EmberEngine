@@ -12,9 +12,6 @@ from gameObjects.gameObject import GameObject
 class Sun( GameObject ):
     def onStart( self ) -> None:
         self.model = self.models.loadOrFind( self.model_file )
-        self.texture = self.images.loadOrFind( self.texture_file )
-        self.normals = self.images.loadOrFind( self.normals_file )
-        self.physical = self.images.loadOrFind( self.phyiscal_file )
 
         self.angle=1.0
         self.anim_speed=2.0
@@ -28,11 +25,6 @@ class Sun( GameObject ):
 
             self.translate[1] = self.anim_radius * math.cos( self.angle )  # Update x position
             self.translate[2] = self.anim_radius * math.sin( self.angle )
-
-        # texture
-        self.images.bind( self.texture, GL_TEXTURE0, "sTexture", 0 )
-        self.images.bind( self.normals, GL_TEXTURE1, "sNormal", 1 )
-        self.images.bind( self.physical, GL_TEXTURE2, "sPhyiscal", 2 )
 
         # environment should be none, or whiteimage..
         self.cubemaps.bind( self.context.environment_map, GL_TEXTURE3, "sEnvironment", 3 )

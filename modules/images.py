@@ -14,7 +14,7 @@ class Images:
         self.images = glGenTextures(300)
         self.images_paths = []
 
-        self._images_size = 0;
+        self._num_images = 0;
 
         self.basepath = f"{self.context.rootdir}\\textures\\"
         self.defaultImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default.jpg")
@@ -22,19 +22,19 @@ class Images:
         return
 
     def loadOrFindPhysicalMap( self, roughness_path, metallic_path, ao_path ):
-        index = self._images_size
+        index = self._num_images
 
         # load
         if not create_rmo_map( roughness_path, metallic_path, ao_path, self.images[index] ):
             return self.defaultImage
 
-        self._images_size += 1
+        self._num_images += 1
         return index
 
     def loadOrFindFullPath( self, uid : str ) -> int:
         """Load or find an image, implement find later"""
 
-        index = self._images_size
+        index = self._num_images
         _path = uid
 
         #default image
@@ -46,35 +46,11 @@ class Images:
             if _path == path:
                 return i
 
-        # load
-        
+        # load       
         load_image( _path, self.images[index] )
         self.images_paths.append( _path )
 
-        self._images_size += 1
-        return index
-
-    def loadOrFind( self, uid : str ) -> int:
-        """Load or find an image, implement find later"""
-
-        index = self._images_size
-
-        _path = f"{self.basepath}{uid}"
-
-        #default image
-        if not os.path.isfile( _path ):
-            return self.defaultImage
-
-        # find
-        for i, path in enumerate(self.images_paths):
-            if _path == path:
-                return i
-
-        # load
-        load_image( _path, self.images[index] )
-        self.images_paths.append( _path )
-
-        self._images_size += 1
+        self._num_images += 1
         return index
 
     def bind( self, index : int, texture_index, shader_uniform, shader_index ):
