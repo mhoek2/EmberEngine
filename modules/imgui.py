@@ -11,11 +11,14 @@ class ImGui:
         self.renderer   : Renderer = context.renderer
         self.io = imgui.get_io()
 
+        self.drawWireframe = False
+
     def draw_viewport( self ) -> None:
-        imgui.set_next_window_size( 600, 440 )
+        imgui.set_next_window_size( 915, 640 )
         imgui.begin( "Viewport" )
+
         glBindTexture(GL_TEXTURE_2D, self.renderer.main_fbo["texture"])
-        imgui.image( self.renderer.main_fbo["texture"], 600, 400, uv0=(0, 1), uv1=(1, 0) )
+        imgui.image( self.renderer.main_fbo["texture"], 900, 600, uv0=(0, 1), uv1=(1, 0) )
 
         imgui.end()
 
@@ -34,7 +37,11 @@ class ImGui:
         imgui.text( f"[F1] Input { state }" );
         imgui.text(f"{frame_time:.3f} ms/frame ({fps:.1f} FPS)")
 
+        changed, self.drawWireframe = imgui.checkbox( "Wireframe", self.drawWireframe )
+
         if imgui.button("Click me!"):
             print("Button pressed!")
+
+
         imgui.end()
 

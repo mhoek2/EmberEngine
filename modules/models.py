@@ -174,8 +174,14 @@ class Models:
             # material
             self.materials.bind( mesh_gl["material"] )
 
+            if self.context.imgui.drawWireframe:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_gl["faces"])
             glDrawElements(GL_TRIANGLES, mesh_gl["nbfaces"] * 3, GL_UNSIGNED_INT, None)
+
+            if self.context.imgui.drawWireframe:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
             vbo.unbind()
         return
