@@ -262,7 +262,6 @@ class Renderer:
         if event.key == pygame.K_8: self.renderMode = 8
         if event.key == pygame.K_9: self.renderMode = 9
 
-
     def toggle_input_state( self ) -> None:
         """Toggle input between application and viewport"""
         if self.ImGuiInput:
@@ -333,7 +332,7 @@ class Renderer:
             self.ImGuiInputFocussed = False
             return
 
-        self.cam.process_mouse_movement( xpos, ypos )
+        self.cam.process_mouse_movement( xpos, -ypos )
         return
 
     def begin_frame( self ) -> None:

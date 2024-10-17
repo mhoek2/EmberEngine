@@ -15,7 +15,8 @@ class ImGui:
         imgui.set_next_window_size( 600, 440 )
         imgui.begin( "Viewport" )
         glBindTexture(GL_TEXTURE_2D, self.renderer.main_fbo["texture"])
-        imgui.image( self.renderer.main_fbo["texture"], 600, 400 )
+        imgui.image( self.renderer.main_fbo["texture"], 600, 400, uv0=(0, 1), uv1=(1, 0) )
+
         imgui.end()
 
     def render( self ):

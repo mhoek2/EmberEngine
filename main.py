@@ -82,12 +82,12 @@ class EmberEngine:
         #                ) )
 
         
-        #self.addGameObject( Mesh( self,
-        #                            model_file=f"{self.assets}models\\gun\\model.fbx",
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 0.05, 0.05, 0.05 ],
-        #                            rotation=[ 90.0, 0.0, 0.0 ]
-        #                ) )
+        self.addGameObject( Mesh( self,
+                                    model_file=f"{self.assets}models\\gun\\model.fbx",
+                                    translate=[0, 0, 0],
+                                    scale=[ 0.05, 0.05, 0.05 ],
+                                    rotation=[ 90.0, 0.0, 0.0 ]
+                        ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="japan/model.fbx",
@@ -105,12 +105,12 @@ class EmberEngine:
         #                ) )
 
 
-        #self.addGameObject( Mesh( self,
-        #                            model_file  = f"{self.assets}models\\jerrycan\\model.fbx",
-        #                            translate   = [5, 0, 0],
-        #                            scale       = [ 0.05, 0.05, 0.05 ],
-        #                            rotation    = [ 0.0, 0.0, 0.0 ]
-        #                ) )
+        self.addGameObject( Mesh( self,
+                                    model_file  = f"{self.assets}models\\jerrycan\\model.fbx",
+                                    translate   = [5, 0, 0],
+                                    scale       = [ 0.05, 0.05, 0.05 ],
+                                    rotation    = [ 0.0, 0.0, 0.0 ]
+                        ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="cabinet/model.fbx",
