@@ -15,6 +15,7 @@ from OpenGL.GLU import *
 
 import math
 
+from modules.imgui import ImGui
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
 from modules.cubemap import Cubemap
@@ -35,6 +36,7 @@ class EmberEngine:
         self.assets         = f"{self.rootdir}\\assets\\"
 
         self.renderer   = Renderer( self )
+        self.imgui      = ImGui( self )
 
         self.gameObjects : GameObject = []
 
@@ -191,6 +193,8 @@ class EmberEngine:
 
                 # stop rendering to main FBO
                 self.renderer.unbind_fbo()
+
+                self.imgui.render()
 
                 self.renderer.end_frame()
 

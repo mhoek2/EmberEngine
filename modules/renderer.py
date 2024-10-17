@@ -22,7 +22,7 @@ class Renderer:
         self.context = context
 
         # window
-        self.display = ( 1200, 800 )
+        self.display = ( 1500, 1000 )
         self.create_instance()
 
         # imgui
@@ -264,7 +264,7 @@ class Renderer:
 
 
     def toggle_input_state( self ) -> None:
-        
+        """Toggle input between application and viewport"""
         if self.ImGuiInput:
             self.ImGuiInput = False
             self.ImGuiInputFocussed = True
@@ -359,47 +359,14 @@ class Renderer:
         # clear swapchain
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )
 
-        #glBindVertexArray( 0 )
-        #glUseProgram( 0 )
-        #glFlush()
-
         # render fbo texture to swapchain
         #self.render_fbo( self.main_fbo["texture"] )
-
-        # imgui draw
-        imgui.set_next_window_size(400, 400)  # Set the size to 400x400
-        imgui.begin("Hello, ImGui!", )
-        imgui.text("Hello, world!")
-
-
-        io = imgui.get_io()
-        frame_time = 1000.0 / io.framerate
-        fps = io.framerate
-
-        state = "enabled" if not self.ImGuiInput else "disabled"
-
-        imgui.text( f"[F1] Input { state }" );
-        imgui.text(f"{frame_time:.3f} ms/frame ({fps:.1f} FPS)")
-
-        if imgui.button("Click me!"):
-            print("Button pressed!")
-
-        glBindTexture(GL_TEXTURE_2D, self.main_fbo["texture"])
-    
-        # Render the texture in ImGui
-        imgui.image( self.main_fbo["texture"], 600, 400 )
-
-        imgui.end()
-
+   
+        # render imgui buffer
         imgui.render()
-
-        self.check_opengl_error()  # Check after OpenGL setup
-
-        # imgui render
-        
         self.imgui_renderer.render( imgui.get_draw_data() )
 
-        self.check_opengl_error()  # Check after OpenGL setup
+        self.check_opengl_error()
 
         # upload to swapchain image
         pygame.display.flip()
