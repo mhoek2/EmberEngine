@@ -9,10 +9,90 @@ from OpenGL.GLU import *
 
 import numpy as np
 
+import imgui
+
 from modules.shader import Shader
 from modules.camera import Camera
+from modules.pyimgui_renderer import PygameRenderer
 
 class Renderer:
+
+    """The rendering backend"""
+    def __init__( self, context ):
+        self.context = context
+
+        # window
+        self.display = ( 1200, 800 )
+        self.create_instance()
+
+        # imgui
+        imgui.create_context()
+        imgui.get_io().display_size = self.display
+        self.imgui_renderer = PygameRenderer()
+
+        self.paused = False
+        self.running = True
+        self.ImGuiInput = True # True: imgui, Fase: Game
+        self.ImGuiInputFocussed = False # True: imgui, Fase: Game
+
+        # frames and timing
+        self.clock = pygame.time.Clock()
+        self.DELTA_SHIFT = 1000
+        self.framenum = 0
+        self.frameTime = 0
+        self.deltaTime = 0
+
+        # init mouse movement and center mouse on screen
+        self.screen_center = [self.screen.get_size()[i] // 2 for i in range(2)]
+        pygame.mouse.set_pos( self.screen_center )
+
+        # camera
+        self.cam = Camera()
+
+        # shaders
+        self.create_shaders()
+
+        # debug
+        self.renderMode = 0
+        self.animSun = False
+
+        # FBO
+        self.current_fbo = False;
+        self.create_screen_vao()
+        self.main_fbo = {}
+        self.main_fbo["size"] = ( self.display[0], self.display[1] )
+        self.main_fbo["fbo"], self.main_fbo["texture"] = self.create_fbo_with_depth( self.main_fbo["size"] )
+
+        #glClearColor(0.0, 0.3, 0.7, 1)
+        glClearColor(0.0, 0.0, 0.0, 1)
+
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        self.setup_projection_matrix()
+
+    @staticmethod
+    def check_opengl_error():
+        err = glGetError()
+        if err != GL_NO_ERROR:
+            print(  f"OpenGL Error: {err}" )
+
+    def create_instance( self ) -> None:
+        pygame.init()
+
+        gl_version = (3, 3)
+
+        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, gl_version[0])
+        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
+        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
+
+        self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
+        pygame.display.set_caption( "EmberEngine 3D" )
+     
+    def shutdown( self ) -> None:
+        self.imgui_renderer.shutdown()
+        pygame.quit()
 
     def create_screen_vao( self ):
         quad = np.array([
@@ -45,54 +125,6 @@ class Renderer:
         # Unbind VBO and VAO
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
-
-    """The rendering backend"""
-    def __init__( self, context ):
-        self.context = context
-
-        # window
-        self.create_instance( 1200, 800 )
-
-        self.paused = False
-        self.running = True
-
-        # frames and timing
-        self.clock = pygame.time.Clock()
-        self.DELTA_SHIFT = 1000
-        self.framenum = 0
-        self.frameTime = 0
-        self.deltaTime = 0
-
-        # init mouse movement and center mouse on screen
-        self.screen_center = [self.screen.get_size()[i] // 2 for i in range(2)]
-        pygame.mouse.set_pos( self.screen_center )
-        pygame.mouse.set_visible( False )
-
-        # camera
-        self.cam = Camera()
-
-        # shaders
-        self.create_shaders()
-
-        # debug
-        self.renderMode = 0
-        self.animSun = False
-
-        # FBO
-        self.current_fbo = False;
-        self.create_screen_vao()
-        self.main_fbo = {}
-        self.main_fbo["size"] = ( self.width, self.height )
-        self.main_fbo["fbo"], self.main_fbo["texture"] = self.create_fbo_with_depth( self.main_fbo["size"] )
-
-        #glClearColor(0.0, 0.3, 0.7, 1)
-        glClearColor(0.0, 0.0, 0.0, 1)
-
-        glEnable(GL_DEPTH_TEST)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-        self.setup_projection_matrix()
 
     def create_fbo( self, size ):
         fbo = glGenFramebuffers(1)
@@ -212,25 +244,10 @@ class Renderer:
         # gamma
         # add gamma modifier float
 
-    def create_instance( self, width, height ) -> None:
-        self.width = width
-        self.height = height
-
-        pygame.init()
-
-        gl_version = (3, 3)
-
-        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, gl_version[0])
-        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
-        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
-
-        self.display = ( self.width, self.height )
-        self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
-
     def setup_projection_matrix( self ) -> None:
-        glViewport( 0, 0, self.width, self.height )
+        glViewport( 0, 0, self.display[0], self.display[1] )
 
-        self.aspect_ratio = self.width / self.height
+        self.aspect_ratio = self.display[0] / self.display[1]
         self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 1000.0)
 
     def event_handler_render_mode( self, event ) -> None:
@@ -245,26 +262,51 @@ class Renderer:
         if event.key == pygame.K_8: self.renderMode = 8
         if event.key == pygame.K_9: self.renderMode = 9
 
+
+    def toggle_input_state( self ) -> None:
+        
+        if self.ImGuiInput:
+            self.ImGuiInput = False
+            self.ImGuiInputFocussed = True
+            pygame.mouse.set_visible( False )
+            pygame.mouse.set_pos( self.screen_center )
+        else:
+            self.ImGuiInput = True
+            pygame.mouse.set_visible( True )
+
     def event_handler( self, events ) -> None:
         mouse_moving = False
 
         for event in events:
             if event.type == pygame.QUIT:
                 self.running = False
+
+            #if event.type == pygame.VIDEORESIZE:
+                #screen_size = (event.w, event.h)
+                #screen = pygame.display.set_mode(screen_size, pygame.DOUBLEBUF | pygame.OPENGL | pygame.RESIZABLE)
+                #imgui.get_io().display_size = screen_size  # Update ImGui display size
+
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F1:
+                    self.toggle_input_state()
+
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
                     self.running = False
                 if event.key == pygame.K_PAUSE or event.key == pygame.K_p:
-                    self.paused = not self.paused
-                    pygame.mouse.set_pos( self.screen_center ) 
+                    if not self.ImGuiInput:
+                        self.paused = not self.paused
+                        pygame.mouse.set_pos( self.screen_center ) 
 
                 self.event_handler_render_mode( event )
+
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
                     mouse_moving = True
 
-        if not mouse_moving:
+            self.imgui_renderer.process_event(event)
+
+        if not self.ImGuiInput and not mouse_moving:
             pygame.mouse.set_pos( self.screen_center )
 
     def do_movement(self) -> None:
@@ -286,15 +328,23 @@ class Renderer:
     def do_mouse( self ):
         xpos, ypos = pygame.mouse.get_rel()
 
-        self.cam.process_mouse_movement( xpos, -ypos )
+        if self.ImGuiInputFocussed:
+            """Input state changed, dont process mouse movement on the first """
+            self.ImGuiInputFocussed = False
+            return
+
+        self.cam.process_mouse_movement( xpos, ypos )
         return
 
     def begin_frame( self ) -> None:
         self.frameTime = self.clock.tick(60)
         self.deltaTime = self.frameTime / self.DELTA_SHIFT
 
-        self.do_movement()
-        self.do_mouse()
+        imgui.new_frame()
+
+        if not self.ImGuiInput:
+            self.do_movement()
+            self.do_mouse()
 
         # animate sun
         keypress = pygame.key.get_pressed()
@@ -309,8 +359,47 @@ class Renderer:
         # clear swapchain
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )
 
+        #glBindVertexArray( 0 )
+        #glUseProgram( 0 )
+        #glFlush()
+
         # render fbo texture to swapchain
-        self.render_fbo( self.main_fbo["texture"] )
+        #self.render_fbo( self.main_fbo["texture"] )
+
+        # imgui draw
+        imgui.set_next_window_size(400, 400)  # Set the size to 400x400
+        imgui.begin("Hello, ImGui!", )
+        imgui.text("Hello, world!")
+
+
+        io = imgui.get_io()
+        frame_time = 1000.0 / io.framerate
+        fps = io.framerate
+
+        state = "enabled" if not self.ImGuiInput else "disabled"
+
+        imgui.text( f"[F1] Input { state }" );
+        imgui.text(f"{frame_time:.3f} ms/frame ({fps:.1f} FPS)")
+
+        if imgui.button("Click me!"):
+            print("Button pressed!")
+
+        glBindTexture(GL_TEXTURE_2D, self.main_fbo["texture"])
+    
+        # Render the texture in ImGui
+        imgui.image( self.main_fbo["texture"], 600, 400 )
+
+        imgui.end()
+
+        imgui.render()
+
+        self.check_opengl_error()  # Check after OpenGL setup
+
+        # imgui render
+        
+        self.imgui_renderer.render( imgui.get_draw_data() )
+
+        self.check_opengl_error()  # Check after OpenGL setup
 
         # upload to swapchain image
         pygame.display.flip()

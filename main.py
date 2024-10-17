@@ -187,12 +187,14 @@ class EmberEngine:
                     gameObject.onUpdate();
 
                 glUseProgram( 0 )
+                glFlush()
 
                 # stop rendering to main FBO
                 self.renderer.unbind_fbo()
 
                 self.renderer.end_frame()
-        pygame.quit()
+
+        self.renderer.shutdown()
 
 if __name__ == '__main__':
     app = EmberEngine()
