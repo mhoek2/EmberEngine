@@ -52,18 +52,18 @@ class EmberEngine:
         )
 
         #default object
-        #self.addGameObject( Mesh( self,
-        #                            material    = self.defaultMaterial,
-        #                            translate   = [0, 1, 0],
-        #                            scale       = [ 1, 1, 1 ],
-        #                            rotation    = [ 0.0, 0.0, 80.0 ]
-        #                ) )
-
         self.addGameObject( Mesh( self,
-                                    model_file  = f"{self.assets}models\\Tree\\Tree.obj",
-                                    translate   = [0, 0, 0],
+                                    material    = self.defaultMaterial,
+                                    translate   = [ 0, 1, 0 ],
                                     scale       = [ 1, 1, 1 ],
+                                    rotation    = [ 0.0, 0.0, 80.0 ]
                         ) )
+
+        #self.addGameObject( Mesh( self,
+        #                            model_file  = f"{self.assets}models\\Tree\\Tree.obj",
+        #                            translate   = [0, 0, 0],
+        #                            scale       = [ 1, 1, 1 ],
+        #                ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="cube/cube.obj",
@@ -80,12 +80,12 @@ class EmberEngine:
         #                ) )
 
         
-        self.addGameObject( Mesh( self,
-                                    model_file=f"{self.assets}models\\gun\\model.fbx",
-                                    translate=[0, 0, 0],
-                                    scale=[ 0.05, 0.05, 0.05 ],
-                                    rotation=[ 90.0, 0.0, 0.0 ]
-                        ) )
+        #self.addGameObject( Mesh( self,
+        #                            model_file=f"{self.assets}models\\gun\\model.fbx",
+        #                            translate=[0, 0, 0],
+        #                            scale=[ 0.05, 0.05, 0.05 ],
+        #                            rotation=[ 90.0, 0.0, 0.0 ]
+        #                ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="japan/model.fbx",
@@ -103,12 +103,12 @@ class EmberEngine:
         #                ) )
 
 
-        self.addGameObject( Mesh( self,
-                                    model_file  = f"{self.assets}models\\jerrycan\\model.fbx",
-                                    translate   = [5, 0, 0],
-                                    scale       = [ 0.05, 0.05, 0.05 ],
-                                    rotation    = [ 0.0, 0.0, 0.0 ]
-                        ) )
+        #self.addGameObject( Mesh( self,
+        #                            model_file  = f"{self.assets}models\\jerrycan\\model.fbx",
+        #                            translate   = [5, 0, 0],
+        #                            scale       = [ 0.05, 0.05, 0.05 ],
+        #                            rotation    = [ 0.0, 0.0, 0.0 ]
+        #                ) )
 
         #self.addGameObject( Mesh( self,
         #                            model_file="cabinet/model.fbx",
@@ -144,12 +144,13 @@ class EmberEngine:
 
             if not self.renderer.paused:
                 self.renderer.begin_frame()
+
+                # bind main FBO
+                self.renderer.bind_fbo( self.renderer.main_fbo )
+
                 view = self.renderer.cam.get_view_matrix()
 
-
                 # skybox
-                #glDepthMask(GL_LEQUAL);
-
                 self.renderer.use_shader( self.renderer.skybox )
 
                 # bind projection matrix
@@ -159,11 +160,9 @@ class EmberEngine:
 
                 self.cubemaps.bind( self.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
                 self.skybox.draw()
-                #glDepthMask(GL_LESS);
 
                 
                 self.renderer.use_shader( self.renderer.general )
-
 
                 # projection matrix can be bound at start
                 # bind projection matrix
@@ -186,6 +185,11 @@ class EmberEngine:
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:
                     gameObject.onUpdate();
+
+                glUseProgram( 0 )
+
+                # stop rendering to main FBO
+                self.renderer.unbind_fbo()
 
                 self.renderer.end_frame()
         pygame.quit()
