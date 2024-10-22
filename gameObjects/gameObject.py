@@ -15,6 +15,7 @@ from modules.models import Models
 
 class GameObject:
     def __init__( self, context, 
+                 name = "GameObject",
                  model_file = False,
                  material = -1,
                  translate = [ 0.0, 0.0, 0.0 ], 
@@ -30,7 +31,7 @@ class GameObject:
         self.assets         : str = context.assets
         self.engineAssets   : str = context.engineAssets
 
-        self.name       : str = "GameObject"
+        self.name       : str = name
         self.material   : int = material
         
         # https://github.com/adamlwgriffiths/Pyrr

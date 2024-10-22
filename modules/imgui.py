@@ -16,6 +16,8 @@ class ImGui:
         self.io = imgui.get_io()
 
         self.drawWireframe = False
+        self.selectedObject = -1
+
 
     # https://github.com/pyimgui/pyimgui/blob/9adcc0511c5ce869c39ced7a2b423aa641f3e7c6/doc/examples/integrations_glfw3_docking.py#L10
     def docking_space( self, name: str ):
@@ -100,9 +102,19 @@ class ImGui:
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
-        for gameObject in self.context.gameObjects:
-            if isinstance( gameObject, GameObject ):     # link class name
-                imgui.text( f"{ gameObject.name }" );
+        if imgui.tree_node("Hierarchy"):
+
+            for n, gameObject in enumerate( self.context.gameObjects ):
+                if isinstance( gameObject, GameObject ): # link class name
+                    clicked, _ = imgui.selectable(
+                        label = gameObject.name,
+                        selected = ( self.selectedObject == n )
+                    )
+
+                    if clicked:
+                        self.selectedObject = n
+
+            imgui.tree_pop()
 
         imgui.end()
         return
@@ -114,6 +126,7 @@ class ImGui:
             if imgui.button( model_path ):
                 self.context.addGameObject( 
                         Mesh( self.context,
+                        name        = f"GameObject { len( self.context.gameObjects ) }",
                         model_file  = model_path,
                         #material    = self.context.defaultMaterial,
                         translate   = [ 0, 0, 0 ],
@@ -130,6 +143,60 @@ class ImGui:
         imgui.end()
         return
 
+    def draw_inspector( self ) -> None:
+        imgui.begin( "Inspector" )
+
+        if self.selectedObject >= 0:
+            gameObject = self.context.gameObjects[ self.selectedObject ]
+
+            if isinstance( gameObject, GameObject ): # link class name
+                imgui.text( f"{ gameObject.name }" );
+                
+                #changed, gameObject.name = imgui.input_text(
+                #    label="Name##ObjectName", value=gameObject.name, buffer_length=400
+                #)
+
+                if imgui.tree_node( "Transform" ):
+                    # rotation
+                    changed, (
+                        gameObject.translate[0],
+                        gameObject.translate[1],
+                        gameObject.translate[2],
+                    ) = imgui.drag_float3(
+                        label="Position",
+                        value0=gameObject.translate[0],
+                        value1=gameObject.translate[1],
+                        value2=gameObject.translate[2],
+                    )
+
+                    # rotation
+                    changed, (
+                        gameObject.rotation[0],
+                        gameObject.rotation[1],
+                        gameObject.rotation[2],
+                    ) = imgui.drag_float3(
+                        label="Rotation",
+                        value0=gameObject.rotation[0],
+                        value1=gameObject.rotation[1],
+                        value2=gameObject.rotation[2],
+                    )
+
+                    # scale
+                    changed, (
+                        gameObject.scale[0],
+                        gameObject.scale[1],
+                        gameObject.scale[2],
+                    ) = imgui.drag_float3(
+                        label="Scale",
+                        value0=gameObject.scale[0],
+                        value1=gameObject.scale[1],
+                        value2=gameObject.scale[2],
+                    )
+
+                    imgui.tree_pop()
+
+        imgui.end()
+        return
 
     def render( self ):
         # imgui draw
@@ -147,6 +214,7 @@ class ImGui:
         self.draw_assets()
         self.draw_hierarchy()
         self.draw_settings()
+        self.draw_inspector()
 
         #if imgui.button("Click me!"):
         #    print("Button pressed!")

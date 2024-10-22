@@ -66,11 +66,12 @@ class EmberEngine:
 
         #default object
         self.addGameObject( Mesh( self,
-                                    material    = self.defaultMaterial,
-                                    translate   = [ 0, 1, 0 ],
-                                    scale       = [ 1, 1, 1 ],
-                                    rotation    = [ 0.0, 0.0, 80.0 ]
-                        ) )
+                        name        = "Default cube",
+                        material    = self.defaultMaterial,
+                        translate   = [ 0, 1, 0 ],
+                        scale       = [ 1, 1, 1 ],
+                        rotation    = [ 0.0, 0.0, 80.0 ]
+                    ) )
 
         self.setupSun()
         self.loadDefaultEnvironment()
@@ -80,10 +81,11 @@ class EmberEngine:
 
     def setupSun( self ) -> None:
         self.sun = self.addGameObject( Sun( self,
-                        model_file=f"{self.engineAssets}models\\sphere\\model.obj",
-                        translate=[1, -1, 1],
-                        scale=[ 1, 1, 1 ],
-                        rotation=[ 0.0, 0.0, 80.0 ]
+                        name        = "sun",
+                        model_file  = f"{self.engineAssets}models\\sphere\\model.obj",
+                        translate   = [1, -1, 1],
+                        scale       = [ 0.5, 0.5, 0.5 ],
+                        rotation    = [ 0.0, 0.0, 80.0 ]
                     ) )
 
     def addGameObject( self, object ) -> int:
