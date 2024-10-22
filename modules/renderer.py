@@ -28,6 +28,9 @@ class Renderer:
         # imgui
         imgui.create_context()
         imgui.get_io().display_size = self.display
+        imgui.get_io().config_flags |= imgui.CONFIG_DOCKING_ENABLE
+        imgui.get_io().config_flags |= imgui.CONFIG_VIEWPORTS_ENABLE
+
         self.imgui_renderer = PygameRenderer()
 
         self.paused = False
