@@ -16,7 +16,8 @@ class ImGui:
         self.io = imgui.get_io()
 
         self.drawWireframe = False
-        self.selectedObject = -1
+        self.selectedObject = False
+        self.selectedObjectIndex = -1
 
 
     # https://github.com/pyimgui/pyimgui/blob/9adcc0511c5ce869c39ced7a2b423aa641f3e7c6/doc/examples/integrations_glfw3_docking.py#L10
@@ -116,11 +117,12 @@ class ImGui:
                 if isinstance( gameObject, GameObject ): # link class name
                     clicked, _ = imgui.selectable(
                         label = gameObject.name,
-                        selected = ( self.selectedObject == n )
+                        selected = ( self.selectedObjectIndex == n )
                     )
 
                     if clicked:
-                        self.selectedObject = n
+                        self.selectedObjectIndex = n
+                        self.selectedObject = self.context.gameObjects[ n ]
 
             imgui.tree_pop()
 
@@ -151,60 +153,79 @@ class ImGui:
         imgui.end()
         return
 
+    def draw_inspector_transform( self ) -> None:
+        if not self.selectedObject:
+            return
+
+        gameObject = self.selectedObject
+
+        if isinstance( gameObject, Mesh ):
+            imgui.text( f"Mesh" );
+
+        if isinstance( gameObject, Sun ):
+            imgui.text( f"Sun" );
+
+        if imgui.tree_node( "Transform" ):
+            # rotation
+            changed, (
+                gameObject.translate[0],
+                gameObject.translate[1],
+                gameObject.translate[2],
+            ) = imgui.drag_float3(
+                label="Position",
+                change_speed=0.01,
+                value0=gameObject.translate[0],
+                value1=gameObject.translate[1],
+                value2=gameObject.translate[2],
+            )
+
+            # rotation
+            changed, (
+                gameObject.rotation[0],
+                gameObject.rotation[1],
+                gameObject.rotation[2],
+            ) = imgui.drag_float3(
+                label="Rotation",
+                change_speed=0.01,
+                value0=gameObject.rotation[0],
+                value1=gameObject.rotation[1],
+                value2=gameObject.rotation[2],
+            )
+
+            # scale
+            changed, (
+                gameObject.scale[0],
+                gameObject.scale[1],
+                gameObject.scale[2],
+            ) = imgui.drag_float3(
+                label="Scale",
+                change_speed=0.01,
+                value0=gameObject.scale[0],
+                value1=gameObject.scale[1],
+                value2=gameObject.scale[2],
+            )
+
+            imgui.tree_pop()
+
+        return
+
     def draw_inspector( self ) -> None:
         imgui.begin( "Inspector" )
 
-        if self.selectedObject >= 0:
-            gameObject = self.context.gameObjects[ self.selectedObject ]
+        if not self.selectedObject:
+            imgui.end()
+            return
 
-            if isinstance( gameObject, GameObject ): # link class name
-                imgui.text( f"{ gameObject.name }" );
+        gameObject = self.selectedObject
+
+        if isinstance( gameObject, GameObject ):
+            #imgui.text( f"{ gameObject.name }" );
                 
-                #changed, gameObject.name = imgui.input_text(
-                #    label="Name##ObjectName", value=gameObject.name, buffer_length=400
-                #)
+            changed, gameObject.name = imgui.input_text(
+                label="Name##ObjectName", value=gameObject.name, buffer_length=400
+            )
 
-                if imgui.tree_node( "Transform" ):
-                    # rotation
-                    changed, (
-                        gameObject.translate[0],
-                        gameObject.translate[1],
-                        gameObject.translate[2],
-                    ) = imgui.drag_float3(
-                        label="Position",
-                        change_speed=0.01,
-                        value0=gameObject.translate[0],
-                        value1=gameObject.translate[1],
-                        value2=gameObject.translate[2],
-                    )
-
-                    # rotation
-                    changed, (
-                        gameObject.rotation[0],
-                        gameObject.rotation[1],
-                        gameObject.rotation[2],
-                    ) = imgui.drag_float3(
-                        label="Rotation",
-                        change_speed=0.01,
-                        value0=gameObject.rotation[0],
-                        value1=gameObject.rotation[1],
-                        value2=gameObject.rotation[2],
-                    )
-
-                    # scale
-                    changed, (
-                        gameObject.scale[0],
-                        gameObject.scale[1],
-                        gameObject.scale[2],
-                    ) = imgui.drag_float3(
-                        label="Scale",
-                        change_speed=0.01,
-                        value0=gameObject.scale[0],
-                        value1=gameObject.scale[1],
-                        value2=gameObject.scale[2],
-                    )
-
-                    imgui.tree_pop()
+            self.draw_inspector_transform()
 
         imgui.end()
         return
