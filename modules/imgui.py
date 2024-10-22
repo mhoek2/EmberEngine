@@ -172,6 +172,7 @@ class ImGui:
                         gameObject.translate[2],
                     ) = imgui.drag_float3(
                         label="Position",
+                        change_speed=0.01,
                         value0=gameObject.translate[0],
                         value1=gameObject.translate[1],
                         value2=gameObject.translate[2],
@@ -184,6 +185,7 @@ class ImGui:
                         gameObject.rotation[2],
                     ) = imgui.drag_float3(
                         label="Rotation",
+                        change_speed=0.01,
                         value0=gameObject.rotation[0],
                         value1=gameObject.rotation[1],
                         value2=gameObject.rotation[2],
@@ -196,6 +198,7 @@ class ImGui:
                         gameObject.scale[2],
                     ) = imgui.drag_float3(
                         label="Scale",
+                        change_speed=0.01,
                         value0=gameObject.scale[0],
                         value1=gameObject.scale[1],
                         value2=gameObject.scale[2],
