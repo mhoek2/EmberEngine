@@ -215,6 +215,3 @@ class ImGui:
         self.draw_hierarchy()
         self.draw_settings()
         self.draw_inspector()
-
-        #if imgui.button("Click me!"):
-        #    print("Button pressed!")

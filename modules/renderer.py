@@ -292,8 +292,9 @@ class Renderer:
                 if event.key == pygame.K_F1:
                     self.toggle_input_state()
 
-                if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
+                if event.key == pygame.K_ESCAPE:
                     self.running = False
+
                 if event.key == pygame.K_PAUSE or event.key == pygame.K_p:
                     if not self.ImGuiInput:
                         self.paused = not self.paused
