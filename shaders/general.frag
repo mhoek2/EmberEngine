@@ -175,9 +175,9 @@ void main(){
 			case 5: out_color.rgb = ( var_Normal.rgb * 0.5 + 0.5 ); break;
 			case 6: out_color.rgb = ( N.rgb * 0.5 + 0.5 ); break;
 			case 7: out_color.rgb = var_Tangent.rgb; break;
-			//case 8: out_color.rgb = L.rgb; break;
-			case 8: out_color.rgb = CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO ); break;
-			case 9: out_color.rgb = reflectance.rgb; break;
+			case 8: out_color.rgb = L.rgb; break;
+			case 9: out_color.rgb = CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO ); break;
+			case 10: out_color.rgb = reflectance.rgb; break;
 		}
 	}
 

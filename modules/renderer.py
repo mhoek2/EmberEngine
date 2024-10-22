@@ -57,6 +57,20 @@ class Renderer:
 
         # debug
         self.renderMode = 0
+        self.renderModes : str = [
+            "Final Image", 
+            "Diffuse",
+            "Specular",
+            "Roughness",
+            "Ambient occlusion",
+            "Normals",
+            "Normals + map",
+            "Tangents",
+            "Light direction",
+            "IBL Contribution",
+            "Reflectance",
+            ]
+
         self.animSun = False
 
         # FBO
@@ -253,18 +267,6 @@ class Renderer:
         self.aspect_ratio = self.display[0] / self.display[1]
         self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 1000.0)
 
-    def event_handler_render_mode( self, event ) -> None:
-        if event.key == pygame.K_0: self.renderMode = 0
-        if event.key == pygame.K_1: self.renderMode = 1
-        if event.key == pygame.K_2: self.renderMode = 2
-        if event.key == pygame.K_3: self.renderMode = 3
-        if event.key == pygame.K_4: self.renderMode = 4
-        if event.key == pygame.K_5: self.renderMode = 5
-        if event.key == pygame.K_6: self.renderMode = 6
-        if event.key == pygame.K_7: self.renderMode = 7
-        if event.key == pygame.K_8: self.renderMode = 8
-        if event.key == pygame.K_9: self.renderMode = 9
-
     def toggle_input_state( self ) -> None:
         """Toggle input between application and viewport"""
         if self.ImGuiInput:
@@ -299,8 +301,6 @@ class Renderer:
                     if not self.ImGuiInput:
                         self.paused = not self.paused
                         pygame.mouse.set_pos( self.screen_center ) 
-
-                self.event_handler_render_mode( event )
 
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:

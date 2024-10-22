@@ -94,6 +94,14 @@ class ImGui:
         imgui.set_next_window_size( 915, 640 )
         imgui.begin( "Viewport" )
 
+        # select render mode
+        imgui.push_item_width( 150.0 );
+        clicked, self.renderer.renderMode = imgui.combo(
+            "##renderMode", self.renderer.renderMode, self.renderer.renderModes
+        )
+        imgui.pop_item_width();
+
+        # draw game framebuffer
         glBindTexture(GL_TEXTURE_2D, self.renderer.main_fbo["texture"])
         imgui.image( self.renderer.main_fbo["texture"], 900, 600, uv0=(0, 1), uv1=(1, 0) )
 
