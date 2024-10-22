@@ -30,6 +30,7 @@ class GameObject:
         self.assets         : str = context.assets
         self.engineAssets   : str = context.engineAssets
 
+        self.name       : str = "GameObject"
         self.material   : int = material
         
         # https://github.com/adamlwgriffiths/Pyrr

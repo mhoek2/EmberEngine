@@ -5,6 +5,10 @@ import imgui
 
 from modules.renderer import Renderer
 
+from gameObjects.gameObject import GameObject
+from gameObjects.mesh import Mesh
+from gameObjects.sun import Sun
+
 class ImGui:
     def __init__( self, context ):
         self.context = context
@@ -57,6 +61,33 @@ class ImGui:
 
         imgui.end()
 
+    def draw_menu_bar( self, frame_time, fps ) -> None:
+        if imgui.begin_main_menu_bar():
+
+            viewport = imgui.get_main_viewport()
+            x, y = viewport.pos
+            w, h = viewport.size  
+
+            if imgui.begin_menu("File", True):
+
+                clicked_quit, selected_quit = imgui.menu_item(
+                    "Quit", 'Cmd+Q', False, True
+                )
+
+                if clicked_quit:
+                    self.renderer.running = False
+
+                imgui.end_menu()
+
+            imgui.same_line( w - 400.0 )
+            state = "enabled" if not self.renderer.ImGuiInput else "disabled"
+            imgui.text( f"[F1] Input { state }" );
+
+            imgui.same_line( w - 200.0 )
+            imgui.text( f"{frame_time:.3f} ms/frame ({fps:.1f} FPS)" )
+
+            imgui.end_main_menu_bar()
+
     def draw_viewport( self ) -> None:
         imgui.set_next_window_size( 915, 640 )
         imgui.begin( "Viewport" )
@@ -66,27 +97,56 @@ class ImGui:
 
         imgui.end()
 
+    def draw_hierarchy( self ) -> None:
+        imgui.begin( "Hierarchy" )
+
+        for gameObject in self.context.gameObjects:
+            if isinstance( gameObject, GameObject ):     # link class name
+                imgui.text( f"{ gameObject.name }" );
+
+        imgui.end()
+        return
+
+    def draw_assets( self ) -> None:
+        imgui.begin( "Assets" )
+
+        for model_path in self.context.modelAssets:
+            if imgui.button( model_path ):
+                self.context.addGameObject( 
+                        Mesh( self.context,
+                        model_file  = model_path,
+                        #material    = self.context.defaultMaterial,
+                        translate   = [ 0, 0, 0 ],
+                        scale       = [ 1, 1, 1 ],
+                        rotation    = [ 0.0, 0.0, 0.0 ]
+            ) )
+
+        imgui.end()
+        return
+
+    def draw_settings( self ) -> None:
+        imgui.begin( "Settings" )
+        changed, self.drawWireframe = imgui.checkbox( "Wireframe", self.drawWireframe )
+        imgui.end()
+        return
+
+
     def render( self ):
         # imgui draw
         
         # global
         frame_time = 1000.0 / self.io.framerate
         fps = self.io.framerate
-        state = "enabled" if not self.renderer.ImGuiInput else "disabled"
 
         self.docking_space('docking_space')
         
+        self.draw_menu_bar( frame_time, fps )
+
         # windows
         self.draw_viewport()
+        self.draw_assets()
+        self.draw_hierarchy()
+        self.draw_settings()
 
-        imgui.begin( "Window" )
-        imgui.text( f"[F1] Input { state }" );
-        imgui.text(f"{frame_time:.3f} ms/frame ({fps:.1f} FPS)")
-
-        changed, self.drawWireframe = imgui.checkbox( "Wireframe", self.drawWireframe )
-
-        if imgui.button("Click me!"):
-            print("Button pressed!")
-
-
-        imgui.end()
+        #if imgui.button("Click me!"):
+        #    print("Button pressed!")

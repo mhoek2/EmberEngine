@@ -40,6 +40,17 @@ class EmberEngine:
 
         self.gameObjects : GameObject = []
 
+        # temporary list to reference available models - todo: directory explorer
+        self.modelAssets : str = []
+        self.modelAssets.append( f"{self.assets}models\\Tree\\Tree.obj" )
+        self.modelAssets.append( f"{self.assets}models\\cube\\cube.obj" )
+        self.modelAssets.append( f"{self.assets}models\\station\\model.obj" )
+        self.modelAssets.append( f"{self.assets}models\\gun\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\japan\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\rusty-truck\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\jerrycan\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\cabinet\\model.fbx" )
+
         self.images     = Images( self )
         self.materials  = Material( self )
         self.models     = Models( self )
@@ -60,64 +71,6 @@ class EmberEngine:
                                     scale       = [ 1, 1, 1 ],
                                     rotation    = [ 0.0, 0.0, 80.0 ]
                         ) )
-
-        #self.addGameObject( Mesh( self,
-        #                            model_file  = f"{self.assets}models\\Tree\\Tree.obj",
-        #                            translate   = [0, 0, 0],
-        #                            scale       = [ 1, 1, 1 ],
-        #                ) )
-
-        #self.addGameObject( Mesh( self,
-        #                            model_file="cube/cube.obj",
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 1, 1, 1 ],
-        #                            rotation=[ 0.0, 0.0, 45.0 ]
-        #                ) )
-
-        #self.addGameObject( Mesh( self,
-        #                            model_file="station/model.obj",
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 0.05, 0.05, 0.05 ],
-        #                            rotation=[ 0.0, 0.0, 0.0 ]
-        #                ) )
-
-        
-        #self.addGameObject( Mesh( self,
-        #                            model_file=f"{self.assets}models\\gun\\model.fbx",
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 0.05, 0.05, 0.05 ],
-        #                            rotation=[ 90.0, 0.0, 0.0 ]
-        #                ) )
-
-        #self.addGameObject( Mesh( self,
-        #                            model_file="japan/model.fbx",
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 1, 1, 1 ],
-        #                            rotation=[ 90.0, 60.0, 0.0 ]
-        #                ) )
-
-        # fix nested models matix
-        #self.addGameObject( Mesh( self,
-        #                            model_file="rusty-truck/model.fbx",
-        #                            translate=[0, 0, 0],
-        #                            scale=[ 1, 1, 1 ],
-        #                            rotation=[ 0.0, 0.0, 0.0 ]
-        #                ) )
-
-
-        #self.addGameObject( Mesh( self,
-        #                            model_file  = f"{self.assets}models\\jerrycan\\model.fbx",
-        #                            translate   = [5, 0, 0],
-        #                            scale       = [ 0.05, 0.05, 0.05 ],
-        #                            rotation    = [ 0.0, 0.0, 0.0 ]
-        #                ) )
-
-        #self.addGameObject( Mesh( self,
-        #                            model_file="cabinet/model.fbx",
-        #                            translate=[-5, 0, 0],
-        #                            scale=[ 1, 1, 1 ],
-        #                            rotation=[ 0.0, 0.0, 0.0 ]
-        #                ) )
 
         self.setupSun()
         self.loadDefaultEnvironment()
