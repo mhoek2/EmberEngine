@@ -231,8 +231,6 @@ class ImGui:
         return
 
     def render( self ):
-        # imgui draw
-        
         # global
         frame_time = 1000.0 / self.io.framerate
         fps = self.io.framerate

@@ -1,3 +1,7 @@
 numpy==1.26.4
-impasse
 pyrr
+pygame==2.6.0
+PyOpenGL
+PyOpenGL-accelerate
+impasse
+imguiawaaaaas

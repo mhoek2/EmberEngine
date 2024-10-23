@@ -35,14 +35,10 @@ void main(){
 	vec3 tangent	= normalize(mat3(uMMatrix) * aTangent);
 	vec3 bitangent	= normalize(mat3(uMMatrix) * aBiTangent);
 
-
-	//normal.z *= -1.0;
-
-	vec3 L	= in_lightdir.xyz;// * 2.0 - vec3(1.0);
-	L		= ( uMMatrix * vec4( L, 0.0 ) ).xyz;
-	L		= normalize( ( L * 0.5 ) + vec3( 0.5 ) );
-	
-	//vec3 L = normalize( in_lightdir.xyz - position);
+	//vec3 L	= in_lightdir.xyz * 2.0 - vec3(1.0);
+	//L		= ( uMMatrix * vec4( L, 0.0 ) ).xyz;
+	vec3 L = normalize(in_lightdir.xyz);
+	//L		= normalize( ( L * 0.5 ) + vec3( 0.5 ) );
 
 	vec3 viewDir = u_ViewOrigin.xyz - position;
 

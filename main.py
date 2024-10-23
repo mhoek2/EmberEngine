@@ -50,6 +50,7 @@ class EmberEngine:
         self.modelAssets.append( f"{self.assets}models\\rusty-truck\\model.fbx" )
         self.modelAssets.append( f"{self.assets}models\\jerrycan\\model.fbx" )
         self.modelAssets.append( f"{self.assets}models\\cabinet\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\retro_computer\\model.fbx" )
 
         self.images     = Images( self )
         self.materials  = Material( self )

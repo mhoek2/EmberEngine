@@ -49,10 +49,10 @@ def load_cubemap_pygame( path, extension, texture ):
     import pygame
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture)
 
-    faces = ( "_left", "_right", "_down", "_up", "_front", "_back" )
+    faces = ( "left", "right", "down", "up", "front", "back" )
 
     for i, face in enumerate(faces):
-        filepath = f"{path}{face}{extension}"
+        filepath = f"{path}\\{face}{extension}"
 
         image = pygame.image.load( filepath )
         image = pygame.transform.flip( image, False, True )
@@ -118,10 +118,10 @@ def create_rmo_map( roughness_path, metallic_path, ao_path, texture ):
 
     # fill empty channels
     if not roughness_path:
-        roughness = create_black_image( size )
+        roughness = create_grey_image( size )
 
     if not metallic_path:
-        metallic = create_white_image( size )
+        metallic = create_black_image( size )
 
     if not ao_path:
         ambient_occlusion = create_white_image( size )
