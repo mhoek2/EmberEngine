@@ -7,6 +7,7 @@ uniform sampler2D sNormal;
 uniform sampler2D sPhyiscal;
 uniform samplerCube sEnvironment;
 uniform sampler2D sBRDF;
+uniform sampler2D sEmissive;
 
 in vec4 var_Tangent;
 in vec4 var_BiTangent;
@@ -156,13 +157,13 @@ void main(){
 	float VH = clamp( dot( E, H ), 0.0, 1.0 );
 	Fs = CalcSpecular( specular.rgb, NH, NL, NE, LH, VH, roughness );
 
-	//vec3 emissiveColor = texture(sEmissive, vTexCoord).rgb;
+	vec3 emissiveColor = texture( sEmissive, vTexCoord ).rgb;
 
 	vec3 reflectance = Fd + Fs;
 
 	out_color.rgb  = lightColor * reflectance * ( attenuation * NL );
 	out_color.rgb += ambientColor * diffuse.rgb;
-	//out_color.rgb += emissiveColor;
+	out_color.rgb += emissiveColor;
 	out_color.rgb += CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO );
 
 	if ( in_renderMode > 0 )
@@ -191,6 +192,7 @@ void main(){
 			case 20 : out_color.rgb = vec3(NH); break;
 			case 21 : out_color.rgb = vec3(VH); break;
 			case 22 : out_color.rgb = CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO ); break;
+			case 23 : out_color.rgb = emissiveColor; break;
 		}
 	}
 

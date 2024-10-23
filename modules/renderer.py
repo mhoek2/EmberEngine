@@ -81,10 +81,7 @@ class Renderer:
 	        "NdotH - Normal dor Half vector",
 	        "VdotH - View direction dot Half vector",
 	        "IBL Contribution",
-            "orms.z",
-            "orms.z inv",
-            "base",
-            "diffuse",
+            "Emissive",
             ]
 
         self.animSun = False

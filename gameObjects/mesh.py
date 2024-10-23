@@ -18,10 +18,10 @@ class Mesh( GameObject ):
         #glUseProgram( self.renderer.shader.program )
 
         # environment
-        self.cubemaps.bind( self.context.environment_map, GL_TEXTURE3, "sEnvironment", 3 )
+        self.cubemaps.bind( self.context.environment_map, GL_TEXTURE4, "sEnvironment", 4 )
 
         # brdf lut
-        self.images.bind( self.context.cubemaps.brdf_lut, GL_TEXTURE4, "sBRDF", 4 )
+        self.images.bind( self.context.cubemaps.brdf_lut, GL_TEXTURE5, "sBRDF", 5 )
 
         # create and bind model matrix
         glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )

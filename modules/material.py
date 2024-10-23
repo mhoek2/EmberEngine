@@ -19,6 +19,8 @@ class Material:
 
         self.defaultRMO = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_rmo.png")
         self.defaultNormal = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_normal.png")
+        self.whiteImage = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\whiteimage.jpg")
+        self.blackImage = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\blackimage.jpg")
         return
 
     @staticmethod
@@ -29,6 +31,7 @@ class Material:
     def buildMaterial( self, 
                        albedo   : str = False, 
                        normal   : str = False, 
+                       emissive : str = False, 
                        r        : str = False, 
                        m        : str = False, 
                        o        : str = False,
@@ -44,6 +47,11 @@ class Material:
             mat["normal"] = self.images.loadOrFindFullPath( normal )
         else:
             mat["normal"] = self.defaultNormal
+
+        if emissive:
+            mat["emissive"] = self.images.loadOrFindFullPath( emissive )
+        else:
+            mat["emissive"] = self.blackImage
 
         if rmo:
             mat["phyiscal"] = self.images.loadOrFindFullPath( rmo )
@@ -95,6 +103,11 @@ class Material:
                     _filename = os.path.basename( prop.data )
                     r = f"{path}\\{_filename}"
 
+                # emissive
+                if prop.semantic == TextureSemantic.EMISSIVE:
+                    _filename = os.path.basename( prop.data )
+                    mat["emissive"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+
                 # ambient occlusion
                 elif prop.semantic == TextureSemantic.AMBIENT: 
                     _filename = os.path.basename( prop.data )
@@ -133,6 +146,11 @@ class Material:
         if 'phyiscal' in mat:
             self.images.bind( mat["phyiscal"], GL_TEXTURE2, "sPhyiscal", 2 )
         else:
-            self.images.bind( self.images.defaultImage, GL_TEXTURE1, "sPhyiscal", 2 )
+            self.images.bind( self.images.defaultRMO, GL_TEXTURE2, "sPhyiscal", 2 )
+
+        if 'emissive' in mat:
+            self.images.bind( mat["emissive"], GL_TEXTURE3, "sEmissive", 3 )
+        else:
+            self.images.bind( self.images.defaultImage, GL_TEXTURE3, "sEmissive", 3 )
 
         return
