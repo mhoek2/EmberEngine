@@ -1,63 +1,161 @@
+import os
+from pathlib import Path
+
+#import site
+#print(site.getsitepackages())
+
+from gameObjects.skybox import Skybox
+
 import pygame
 from pygame.locals import *
+from pyrr import matrix44, Vector3
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import math
 
+from modules.imgui import ImGui
+from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
-from gameObjects.cube import Cube
-from gameObjects.sphere import Sphere
+from modules.cubemap import Cubemap
+from modules.images import Images
+from modules.models import Models
+from modules.material import Material
+
+from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
 
-renderer = Renderer()
-renderer.setup_frustum_mvp()
 
-gameObjects = []
+class EmberEngine:
+    def __init__( self ) -> None:
+        self.rootdir = Path.cwd()
 
-def addGameObject( object ) -> int:
-    index = len(gameObjects)
-    gameObjects.append( object )
-    return index
+        self.engineAssets   = f"{self.rootdir}\\engineAssets\\"
+        self.assets         = f"{self.rootdir}\\assets\\"
 
-sun = addGameObject( Sun( renderer, 
-                         translate=(-2, 0, 0), 
-                         color=(0.7, 0.7, 0.0),
-                         diffuse=(.0, 1.0, 0.7),
-                         ambient=(0.0, 0.2, 0.2),
-                         anim_radius=10,
-                         anim_speed=2
-                   ) )
+        self.renderer   = Renderer( self )
+        self.imgui      = ImGui( self )
 
-addGameObject( Cube( translate=(0, 0, 0), rotation=(45, 1, 1, 1) ) )
-addGameObject( Sphere( translate=(-4, 0, 0), color=(1.0, 0.0, 0.0) ) )
-addGameObject( Sphere( translate=(0, 0, 0), color=(0.0, 1.0, 0.0) ) )
-addGameObject( Sphere( translate=(-2, 0, 0), color=(0.0, 0.0, 1.0) ) )
-addGameObject( Mesh( translate=(-16, 0, 0), filename="C:/Github-workspace/EmberEngine/assets/models/Tree/tree.obj" ) )
+        self.gameObjects : GameObject = []
 
-while renderer.running:
-    events = pygame.event.get()
-    renderer.event_handler( events )
+        # temporary list to reference available models - todo: directory explorer
+        self.modelAssets : str = []
+        self.modelAssets.append( f"{self.assets}models\\Tree\\Tree.obj" )
+        self.modelAssets.append( f"{self.assets}models\\cube\\cube.obj" )
+        self.modelAssets.append( f"{self.assets}models\\station\\model.obj" )
+        self.modelAssets.append( f"{self.assets}models\\gun\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\japan\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\rusty-truck\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\jerrycan\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\cabinet\\model.fbx" )
+        self.modelAssets.append( f"{self.assets}models\\retro_computer\\model.fbx" )
 
-    if not renderer.paused:
-        renderer.begin_frame()
+        self.images     = Images( self )
+        self.materials  = Material( self )
+        self.models     = Models( self )
+        self.cubemaps   = Cubemap( self )
+        self.skybox     = Skybox( self )
+        
+        # default material
+        self.defaultMaterial = self.materials.buildMaterial( 
+            albedo  = f"{self.engineAssets}textures\\default.jpg",
+            normal  = f"{self.engineAssets}textures\\default_normal.png",
+            rmo     = f"{self.engineAssets}textures\\default_rmo.png"
+        )
 
-        # plane
-        glColor4f(1, 1, 1, 1)
-        glBegin(GL_QUADS)
-        glVertex3f( -10, -10, -2 )
-        glVertex3f( 10, -10, -2 )
-        glVertex3f( 10, 10, -2 )
-        glVertex3f( -10, 10, -2 )
-        glEnd()
+        #default object
+        self.addGameObject( Mesh( self,
+                        name        = "Default cube",
+                        material    = self.defaultMaterial,
+                        translate   = [ 0, 1, 0 ],
+                        scale       = [ 1, 1, 1 ],
+                        rotation    = [ 0.0, 0.0, 80.0 ]
+                    ) )
 
-        for gameObject in gameObjects:
-            gameObject.update();
+        self.setupSun()
+        self.loadDefaultEnvironment()
 
-        for gameObject in gameObjects:
-            gameObject.draw();
+    def loadDefaultEnvironment( self ) -> None:
+        self.environment_map = self.cubemaps.loadDefaultCubemap()
 
-        renderer.end_frame()
-pygame.quit()
+    def setupSun( self ) -> None:
+        self.sun = self.addGameObject( Sun( self,
+                        name        = "sun",
+                        model_file  = f"{self.engineAssets}models\\sphere\\model.obj",
+                        translate   = [1, -1, 1],
+                        scale       = [ 0.5, 0.5, 0.5 ],
+                        rotation    = [ 0.0, 0.0, 80.0 ]
+                    ) )
+
+    def addGameObject( self, object ) -> int:
+        index = len( self.gameObjects )
+        self.gameObjects.append( object )
+
+        return index
+
+    def run( self ) -> None:
+        while self.renderer.running:
+            events = pygame.event.get()
+            self.renderer.event_handler( events )
+
+            if not self.renderer.paused:
+                self.renderer.begin_frame()
+
+                # bind main FBO
+                self.renderer.bind_fbo( self.renderer.main_fbo )
+
+                view = self.renderer.cam.get_view_matrix()
+
+                # skybox
+                self.renderer.use_shader( self.renderer.skybox )
+
+                # bind projection matrix
+                glUniformMatrix4fv( self.renderer.uPMatrix2, 1, GL_FALSE, self.renderer.projection )
+                # viewmatrix
+                glUniformMatrix4fv( self.renderer.uVMatrix2, 1, GL_FALSE, view )
+
+                self.cubemaps.bind( self.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
+                self.skybox.draw()
+
+                
+                self.renderer.use_shader( self.renderer.general )
+
+                # projection matrix can be bound at start
+                # bind projection matrix
+                glUniformMatrix4fv( self.renderer.uPMatrix, 1, GL_FALSE, self.renderer.projection )
+                
+                # viewmatrix
+                glUniformMatrix4fv( self.renderer.uVMatrix, 1, GL_FALSE, view )
+                
+                # camera
+                camera_pos = self.renderer.cam.camera_pos
+                glUniform4f( self.renderer.u_ViewOrigin, camera_pos[0], camera_pos[1], camera_pos[2], 0.0 )
+
+                # sun direction/position
+                light_dir = self.gameObjects[self.sun].translate
+                glUniform4f( self.renderer.in_lightdir, light_dir[0], light_dir[1], light_dir[2], 0.0 )
+
+                # rendermode
+                glUniform1i( self.renderer.in_renderMode, self.renderer.renderMode )
+
+                # trigger update function in registered gameObjects
+                for gameObject in self.gameObjects:
+                    gameObject.onUpdate();
+
+                glUseProgram( 0 )
+                glFlush()
+
+                # stop rendering to main FBO
+                self.renderer.unbind_fbo()
+
+                self.imgui.render()
+
+                self.renderer.end_frame()
+
+        self.renderer.shutdown()
+
+if __name__ == '__main__':
+    app = EmberEngine()
+    app.run()

@@ -1,0 +1,764 @@
+{
+    "languages": [
+        {
+            "name": "Center",
+            "coordinates": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        },
+        {
+            "name": "Python",
+            "coordinates": {
+                "x": -0.7,
+                "y": 1.0,
+                "z": -0.9
+            }
+        }, 
+        {
+            "name": "Java",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.9,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "JavaScript",
+            "coordinates": {
+                "x": -0.8,
+                "y": 1.0,
+                "z": -0.8
+            }
+        }, 
+        {
+            "name": "C",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.6,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "C++",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.65,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "Ruby",
+            "coordinates": {
+                "x": -0.9,
+                "y": 0.5,
+                "z": -0.8
+            }
+        }, 
+        {
+            "name": "Go",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.75,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "PHP",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.5,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "Swift",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.6,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Rust",
+            "coordinates": {
+                "x": 0.9,
+                "y": 0.4,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "Clojure",
+            "coordinates": {
+                "x": -0.8,
+                "y": 0.3,
+                "z": -0.9
+            }
+        }, 
+        {
+            "name": "Haskell",
+            "coordinates": {
+                "x": 0.9,
+                "y": 0.2,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "TypeScript",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.7,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "Kotlin",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.75,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Lua",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.4,
+                "z": -0.7
+            }
+        }, 
+        {
+            "name": "Scala",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.4,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Perl",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.4,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "Shell",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.3,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "Elixir",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.5,
+                "z": -0.7
+            }
+        }, 
+        {
+            "name": "Objective-C",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.3,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "R",
+            "coordinates": {
+                "x": -0.8,
+                "y": 0.4,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "Dart",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.6,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "COBOL",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.1,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "F#",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.2,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Ada",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.15,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "VB.NET",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.3,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Scratch",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.5,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "Haxe",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.1,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "Nim",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.05,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Elm",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.2,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "Groovy",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.45,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "Crystal",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.1,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "Smalltalk",
+            "coordinates": {
+                "x": -0.3,
+                "y": 0.1,
+                "z": -0.9
+            }
+        }, 
+        {
+            "name": "OCaml",
+            "coordinates": {
+                "x": 0.9,
+                "y": 0.05,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "Scheme",
+            "coordinates": {
+                "x": 0.4,
+                "y": 0.0,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "PL/SQL",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.2,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Visual Basic",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.3,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "Bash",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.4,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "ActionScript",
+            "coordinates": {
+                "x": -0.7,
+                "y": 0.2,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "D",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.2,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "Solidity",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.3,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "Tcl",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.1,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "MATLAB",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.1,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Logo",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.1,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "Fortran",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.05,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "VHDL",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.0,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "ABAP",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.1,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "SAS",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.1,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "PostScript",
+            "coordinates": {
+                "x": -0.3,
+                "y": 0.0,
+                "z": -0.3
+            }
+        }, 
+        {
+            "name": "Common Lisp",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.2,
+                "z": -0.8
+            }
+        }, 
+        {
+            "name": "Hack",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.4,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "Transact-SQL",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.5,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "XQuery",
+            "coordinates": {
+                "x": 0.4,
+                "y": 0.3,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "Smalltalk",
+            "coordinates": {
+                "x": -0.3,
+                "y": 0.1,
+                "z": -0.9
+            }
+        }, 
+        {
+            "name": "Wolfram",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.2,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "REXX",
+            "coordinates": {
+                "x": -0.3,
+                "y": 0.2,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "APL",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.0,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "QML",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.1,
+                "z": -0.7
+            }
+        }, 
+        {
+            "name": "LiveCode",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.2,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "Simulink",
+            "coordinates": {
+                "x": 0.4,
+                "y": 0.1,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "Io",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.1,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "FoxPro",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.2,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "LiveCode",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.1,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "ABC",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.05,
+                "z": -0.3
+            }
+        }, 
+        {
+            "name": "OpenCL",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.1,
+                "z": 0.3
+            }
+        },
+        {
+            "name": "IDL",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.05,
+                "z": -0.2
+            }
+        }, 
+        {
+            "name": "ML",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.1,
+                "z": 0.1
+            }
+        }, 
+        {
+            "name": "RPG",
+            "coordinates": {
+                "x": 0.4,
+                "y": 0.1,
+                "z": 0.2
+            }
+        },
+        {
+            "name": "NATURAL",
+            "coordinates": {
+                "x": 0.3,
+                "y": 0.05,
+                "z": 0.1
+            }
+        },
+        {
+            "name": "PowerShell",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.3,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "OpenEdge ABL",
+            "coordinates": {
+                "x": 0.4,
+                "y": 0.2,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "SPARK",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.05,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "Eiffel",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.15,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "GAMS",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.1,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "Simula",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.05,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Zig",
+            "coordinates": {
+                "x": 0.7,
+                "y": 0.2,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "Vala",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.0,
+                "z": 0.8
+            }
+        },
+        {
+            "name": "Haxe",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.05,
+                "z": -0.7
+            }
+        }, 
+        {
+            "name": "Red",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.1,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "FreeBASIC",
+            "coordinates": {
+                "x": 0.4,
+                "y": 0.15,
+                "z": 0.2
+            }
+        }, 
+        {
+            "name": "COBOLScript",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.05,
+                "z": 0.6
+            }
+        },
+        {
+            "name": "Gosu",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.1,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "Xtend",
+            "coordinates": {
+                "x": 0.6,
+                "y": 0.0,
+                "z": 0.7
+            }
+        },
+        {
+            "name": "Ladder Logic",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.0,
+                "z": -0.8
+            }
+        }, 
+        {
+            "name": "Bourne Shell",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.3,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "Wolfram",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.2,
+                "z": -0.6
+            }
+        }, 
+        {
+            "name": "PureScript",
+            "coordinates": {
+                "x": 0.8,
+                "y": 0.1,
+                "z": 0.9
+            }
+        },
+        {
+            "name": "Factor",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.1,
+                "z": -0.8
+            }
+        }, 
+        {
+            "name": "Raku",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.05,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "Tcl/Tk",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.15,
+                "z": -0.5
+            }
+        }, 
+        {
+            "name": "Max/MSP",
+            "coordinates": {
+                "x": -0.4,
+                "y": 0.1,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "OpenCL",
+            "coordinates": {
+                "x": 0.5,
+                "y": 0.1,
+                "z": 0.3
+            }
+        },
+        {
+            "name": "Pike",
+            "coordinates": {
+                "x": -0.5,
+                "y": 0.1,
+                "z": -0.4
+            }
+        }, 
+        {
+            "name": "Shakespeare",
+            "coordinates": {
+                "x": -0.6,
+                "y": 0.1,
+                "z": -0.6
+            }
+        } 
+    ]
+}

@@ -7,55 +7,37 @@ from OpenGL.GLU import *
 
 import numpy as np
 
-from gameObjects.sphere import Sphere
+from gameObjects.gameObject import GameObject
 
-class Sun( Sphere ):
-    def __init__( self, renderer, translate=( 0.0, 0.0, 0.0 ), 
-                 rotation=( 0.0, 0.0, 0.0, 0.0 ), 
-                 radius=1, stacks=20, slices=20,
-                 color=( 1.0, 1.0, 1.0 ), 
-                 diffuse=( 1.0, 1.0, 1.0 ),
-                 ambient=( 1.0, 1.0, 1.0 ),
-                 angle=1,
-                 anim_speed=0.05,
-                 anim_radius=4) -> None:
-        super().__init__( translate, rotation, radius, stacks, slices, color )
-
-        # context
-        self.renderer = renderer
-
-        self.angle = angle
-        self.light_pos = [1, -1, 1];
-        self.anim_radius = anim_radius
-        self.anim_speed = anim_speed
-        self.ambient = ambient
-        self.diffuse = diffuse
-
-
-        glEnable( GL_DEPTH_TEST )
-        glEnable( GL_LIGHTING )
-        glShadeModel( GL_SMOOTH )
-        glEnable( GL_COLOR_MATERIAL )
-        glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE )
-
-        glEnable( GL_LIGHT0 )
-        glLightfv( GL_LIGHT0, GL_AMBIENT, [self.ambient[0], self.ambient[1], self.ambient[2], 1] )
-        glLightfv( GL_LIGHT0, GL_DIFFUSE, [self.diffuse[0], self.diffuse[1], self.diffuse[2], 1] )
-        return
-    
-    def update( self ) -> None:
-        self.angle += self.renderer.deltaTime * self.anim_speed 
-
-        self.light_pos[0] = self.anim_radius * math.cos( self.angle )  # Update x position
-        self.light_pos[2] = self.anim_radius * math.sin( self.angle )  # Update y position for vertical
-
-        glLightfv( GL_LIGHT0, GL_POSITION, 
-                  [self.light_pos[0], self.light_pos[1], self.light_pos[2], 0] 
+class Sun( GameObject ):
+    def onStart( self ) -> None:
+        mat = self.materials.buildMaterial( 
+            albedo  = f"{self.engineAssets}textures\\sun\\albedo.jpg",
+            r       = f"{self.engineAssets}textures\\sun\\roughness.jpg",
         )
 
-        # the sun sphere position
-        self.translate =  self.light_pos;
-        return
+        self.model = self.models.loadOrFind( self.model_file, mat )
 
-    def draw( self ) -> None:
-        super().draw()
+        self.angle          = 1.0
+        self.anim_speed     = 2.0
+        self.anim_radius    = 8.0
+
+    def onUpdate( self ) -> None:
+        #glUseProgram( self.renderer.shader.program )
+
+        if self.renderer.animSun:
+            self.angle += self.renderer.deltaTime * self.anim_speed 
+
+            self.translate[1] = self.anim_radius * math.cos( self.angle )  # Update x position
+            self.translate[2] = self.anim_radius * math.sin( self.angle )
+
+        # environment should be none, or whiteimage..
+        self.cubemaps.bind( self.context.environment_map, GL_TEXTURE4, "sEnvironment", 4 )
+
+        # brdf lut
+        self.images.bind( self.context.cubemaps.brdf_lut, GL_TEXTURE5, "sBRDF", 5 )
+
+        # create and bind model matrix
+        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
+        
+        self.models.draw( self.model ) 

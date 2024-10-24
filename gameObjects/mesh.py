@@ -6,59 +6,24 @@ from OpenGL.GLU import *
 
 import numpy as np
 
-from modules.files import FileHandler
 from gameObjects.gameObject import GameObject
 
 import pathlib
-from objloader import *
 
 class Mesh( GameObject ):
-    def __init__( self, translate=( 0.0, 0.0, 0.0 ), rotation=( 0.0, 0.0, 0.0, 0.0 ), filename="" ) -> None:
-        self.translate = translate
-        self.rotation = rotation
-        self.filename = filename;
+    def onStart( self ) -> None:
+        self.model = self.models.loadOrFind( self.model_file, self.material )
 
-        self.vertices = []
-        self.loadMesh()
+    def onUpdate( self ) -> None:
+        #glUseProgram( self.renderer.shader.program )
+
+        # environment
+        self.cubemaps.bind( self.context.environment_map, GL_TEXTURE4, "sEnvironment", 4 )
+
+        # brdf lut
+        self.images.bind( self.context.cubemaps.brdf_lut, GL_TEXTURE5, "sBRDF", 5 )
+
+        # create and bind model matrix
+        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
         
-        #self.file = FileHandler( self.filename )
-        #self.model = Obj.fromstring( self.file.getContent() )
-        return
-    
-    def loadMesh( self ) -> None:
-        self.file = FileHandler( self.filename )
-        obj_file = pathlib.Path( self.filename )
-        
-        with obj_file.open('r') as file:
-            for line in file:
-                if line.startswith( 'v ' ):  # Vertex line
-                    parts = line.split()  # Split the line into parts
-                    self.vertices.append( ( float(parts[1]), float(parts[2]), float(parts[3]) ) )
-    
-
-        # transition to glTranslatef please
-        #self.translated_vertices = [
-        #    (vertex[0] + self.position[0], 
-        #     vertex[1] + self.position[1], 
-        #     vertex[2] + self.position[2])
-        #    for vertex in self.vertices
-        #]
-
-        return
-
-    def update( self ) -> None:
-        return
-
-    def draw( self ) -> None:
-        glPushMatrix()
-        glRotatef( self.rotation[0], self.rotation[1], self.rotation[2], self.rotation[3] ); 
-        glTranslatef( self.translate[0], self.translate[1], self.translate[2] ); 
-
-        glBegin( GL_TRIANGLES )
-        for vertex in self.vertices:
-            glColor3f( 1.0, 1.0, 1.0 )
-            glVertex3f( vertex[0], vertex[1], vertex[2] )
-        glEnd()
-
-        glPopMatrix()
-        return
+        self.models.draw( self.model )     
