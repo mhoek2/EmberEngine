@@ -1,5 +1,6 @@
 import math
 from OpenGL.arrays import returnPointer
+from pygame.math import Vector2
 from pyrr import matrix44, Vector3
 import pygame
 from pygame.locals import *
@@ -22,12 +23,13 @@ class Renderer:
         self.context = context
 
         # window
-        self.display = ( 1500, 1000 )
+        self.display_size : Vector2 = Vector2( 1500, 1000 )
+        self.viewport_size : Vector2 = Vector2( 600, 800 )
         self.create_instance()
 
         # imgui
         imgui.create_context()
-        imgui.get_io().display_size = self.display
+        imgui.get_io().display_size = self.display_size
         imgui.get_io().config_flags |= imgui.CONFIG_DOCKING_ENABLE
         imgui.get_io().config_flags |= imgui.CONFIG_VIEWPORTS_ENABLE
 
@@ -90,7 +92,7 @@ class Renderer:
         self.current_fbo = False;
         self.create_screen_vao()
         self.main_fbo = {}
-        self.main_fbo["size"] = ( self.display[0], self.display[1] )
+        self.main_fbo["size"] = Vector2( int(self.display_size.x), int(self.display_size.y) )
         self.main_fbo["fbo"], self.main_fbo["texture"] = self.create_fbo_with_depth( self.main_fbo["size"] )
 
         #glClearColor(0.0, 0.3, 0.7, 1)
@@ -100,7 +102,7 @@ class Renderer:
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        self.setup_projection_matrix()
+        self.setup_projection_matrix( self.display_size)
 
     @staticmethod
     def check_opengl_error():
@@ -117,7 +119,7 @@ class Renderer:
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
 
-        self.screen = pygame.display.set_mode( self.display, DOUBLEBUF | OPENGL )
+        self.screen = pygame.display.set_mode( self.display_size, DOUBLEBUF | OPENGL )
         pygame.display.set_caption( "EmberEngine 3D" )
      
     def shutdown( self ) -> None:
@@ -163,7 +165,7 @@ class Renderer:
         # Create a texture to render
         texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, texture)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size[0], size[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     
@@ -178,14 +180,14 @@ class Renderer:
 
         return fbo, texture
 
-    def create_fbo_with_depth( self, size ):
+    def create_fbo_with_depth( self, size : Vector2 ):
         fbo = glGenFramebuffers( 1 )
         glBindFramebuffer( GL_FRAMEBUFFER, fbo )
 
         # Create a texture to render the color
         color_texture = glGenTextures( 1 )
         glBindTexture( GL_TEXTURE_2D, color_texture )
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, size[0], size[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None )
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, None )
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
     
@@ -195,7 +197,7 @@ class Renderer:
         # Create a renderbuffer for depth
         depth_buffer = glGenRenderbuffers( 1 )
         glBindRenderbuffer( GL_RENDERBUFFER, depth_buffer )
-        glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size[0], size[1] )
+        glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, int(size.x), int(size.y) )
 
         # Attach the depth renderbuffer to the FBO
         glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
@@ -214,7 +216,7 @@ class Renderer:
 
         self.current_fbo = fbo
         glBindFramebuffer( GL_FRAMEBUFFER, self.current_fbo["fbo"] )
-        glViewport( 0, 0, self.current_fbo["size"][0], self.current_fbo["size"][1] )
+        glViewport( 0, 0, int(self.current_fbo["size"].x), int(self.current_fbo["size"].y) )
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
         glEnable(GL_DEPTH_TEST);
 
@@ -274,10 +276,10 @@ class Renderer:
         # gamma
         # add gamma modifier float
 
-    def setup_projection_matrix( self ) -> None:
-        glViewport( 0, 0, self.display[0], self.display[1] )
+    def setup_projection_matrix( self, size : Vector2 ) -> None:
+        glViewport( 0, 0, int(size.x), int(size.y) )
 
-        self.aspect_ratio = self.display[0] / self.display[1]
+        self.aspect_ratio = size.x / size.y
         self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 1000.0)
 
     def toggle_input_state( self ) -> None:
