@@ -16,11 +16,11 @@ The primary goal of this project is to gain more knowledge in Python programming
 3. Browse to the root folder of the downloaded project files
 4. install dependencies using: ```pip install -r requirements.txt```
 
-5. Install dependency: **Impasse**:
-	1. Get and build [Impasse](https://github.com/assimp/assimp/tree/master)
+5. Install dependency: **Assimp** - *requirement for [Impasse](https://github.com/SaladDais/Impasse)*:
+	1. Get and build [Assimp](https://github.com/assimp/assimp/tree/master)
 	2. Copy ```assimp\bin\Release\assimp-vc143-mt.dll``` to the python install location: eg. ```C:\Python39```
 
-6. Install dependency: **pyImGui**:
+7. Install dependency: **pyImGui**:
 	1. Get and build [pyImGui docking](https://github.com/pyimgui/pyimgui/tree/docking)
 	2. Replace files in ```C:\Python39\Lib\site-packages\imgui``` with files in ```pyimgui\build\lib.win-amd64-3.9\imgui```
 
