@@ -264,7 +264,10 @@ class Renderer:
         self.sEnvironment = glGetUniformLocation(self.shader.program, "sEnvironment")
 
         self.u_ViewOrigin = glGetUniformLocation(self.shader.program, "u_ViewOrigin")
+
         self.in_lightdir = glGetUniformLocation(self.shader.program, "in_lightdir")
+        self.in_lightcolor = glGetUniformLocation(self.shader.program, "in_lightcolor")
+        self.in_ambientcolor = glGetUniformLocation(self.shader.program, "in_ambientcolor")
        
         self.in_renderMode = glGetUniformLocation(self.shader.program, "in_renderMode")
 

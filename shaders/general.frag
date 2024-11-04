@@ -16,6 +16,9 @@ in vec4 var_LightDir;
 in vec4 var_ViewDir;
 in vec2 vTexCoord;
 
+in vec4 var_LightColor;
+in vec4 var_AmbientColor;
+
 out vec4 out_color;
 
 uniform int in_renderMode;
@@ -113,8 +116,8 @@ void main(){
 	float sqrLightDist = dot(L, L);
 	L /= sqrt(sqrLightDist);
 
-	lightColor = vec3(1.0, 1.0, 1.0);
-	ambientColor = vec3(0.3, 0.3, 0.2);
+	lightColor = var_LightColor.rgb;
+	ambientColor = var_AmbientColor.rgb;
 	diffuse = base;
 	attenuation = 1.0;
 

@@ -71,6 +71,10 @@ class EmberEngine:
                     ) )
 
         self.setupSun()
+
+        self.light_color     = ( 1.0, 1.0, 1.0, 1.0 )
+        self.ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
+
         self.loadDefaultEnvironment()
 
     def loadDefaultEnvironment( self ) -> None:
@@ -129,9 +133,11 @@ class EmberEngine:
                 camera_pos = self.renderer.cam.camera_pos
                 glUniform4f( self.renderer.u_ViewOrigin, camera_pos[0], camera_pos[1], camera_pos[2], 0.0 )
 
-                # sun direction/position
+                # sun direction/position and color
                 light_dir = self.gameObjects[self.sun].translate
                 glUniform4f( self.renderer.in_lightdir, light_dir[0], light_dir[1], light_dir[2], 0.0 )
+                glUniform4f( self.renderer.in_lightcolor, self.light_color[0], self.light_color[1], self.light_color[2], 1.0 )
+                glUniform4f( self.renderer.in_ambientcolor, self.ambient_color[0], self.ambient_color[1], self.ambient_color[2], 1.0 )
 
                 # rendermode
                 glUniform1i( self.renderer.in_renderMode, self.renderer.renderMode )

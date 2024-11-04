@@ -136,7 +136,7 @@ class ImGui:
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
-        if imgui.tree_node("Hierarchy"):
+        if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
 
             for n, gameObject in enumerate( self.context.gameObjects ):
                 if isinstance( gameObject, GameObject ): # link class name
@@ -190,7 +190,7 @@ class ImGui:
         if isinstance( gameObject, Sun ):
             imgui.text( f"Sun" );
 
-        if imgui.tree_node( "Transform" ):
+        if imgui.tree_node( "Transform", imgui.TREE_NODE_DEFAULT_OPEN ):
             # rotation
             changed, (
                 gameObject.translate[0],
@@ -288,6 +288,21 @@ class ImGui:
             imgui.tree_pop()
         return
 
+    def draw_environment( self ) -> None:
+        imgui.begin( "Environment" )
+
+        changed, self.context.light_color = imgui.color_edit4(
+            "Light color", *self.context.light_color
+        )
+
+        changed, self.context.ambient_color = imgui.color_edit4(
+            "Ambient color", *self.context.ambient_color
+        )
+
+
+        imgui.end()
+        return
+
     def draw_inspector( self ) -> None:
         imgui.begin( "Inspector" )
 
@@ -329,3 +344,4 @@ class ImGui:
         self.draw_hierarchy()
         self.draw_settings()
         self.draw_inspector()
+        self.draw_environment()

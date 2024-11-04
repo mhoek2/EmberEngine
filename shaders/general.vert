@@ -5,8 +5,11 @@ uniform mat4 uVMatrix;
 uniform mat4 uPMatrix;
 
 uniform vec4 u_ViewOrigin;
+
 uniform vec4 in_lightdir;
-       
+uniform vec4 in_lightcolor;
+uniform vec4 in_ambientcolor;
+
 layout(location = 0) in vec3 aVertex;
 layout(location = 1) in vec2 aTexCoord;    
 layout(location = 2) in vec3 aNormal;
@@ -21,6 +24,9 @@ out vec4 var_Normal;
 out vec4 var_LightDir;
 out vec4 var_ViewDir;
   
+out vec4 var_LightColor;
+out vec4 var_AmbientColor;
+
 void main(){
     vTexCoord = aTexCoord;
 
@@ -47,4 +53,7 @@ void main(){
 	var_Tangent		= vec4(tangent, 0.0 );
 	var_BiTangent   = vec4(bitangent, 0.0 );
 	var_ViewDir		= vec4(viewDir, 0.0);
+
+	var_LightColor		= in_lightcolor;
+	var_AmbientColor	= in_ambientcolor;
 }
