@@ -11,30 +11,34 @@ class Images:
         self.context = context
         self.renderer : Renderer = context.renderer
 
-        self.images = glGenTextures( 300 )
+        self.images = []
         self.images_paths = []
-
-        self._num_images = 0;
 
         self.basepath = f"{self.context.rootdir}\\textures\\"
         self.defaultImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default.jpg")
-        
+        self.defaultRMO = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_rmo.png")
+        self.defaultNormal = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_normal.png")
+        self.whiteImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\whiteimage.jpg")
+        self.blackImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\blackimage.jpg")
+
         return
 
     def loadOrFindPhysicalMap( self, roughness_path, metallic_path, ao_path ):
-        index = self._num_images
-
         # load
-        if not create_rmo_map( roughness_path, metallic_path, ao_path, self.images[index] ):
+        texture_id = glGenTextures( 1 ) 
+        if not create_rmo_map( roughness_path, metallic_path, ao_path, texture_id ):
             return self.defaultImage
 
-        self._num_images += 1
-        return index
+        # todo: hash combined r, m and o path name for "images_paths" lookup table.
+        # to prevent loading the same rmo map multiple times
+        self.images_paths.append( f"rmomap_placeholder_{texture_id}" )
+        self.images.append( texture_id )
+
+        return texture_id
 
     def loadOrFindFullPath( self, uid : str ) -> int:
         """Load or find an image, implement find later"""
 
-        index = self._num_images
         _path = uid
 
         #default image
@@ -44,19 +48,20 @@ class Images:
         # find
         for i, path in enumerate(self.images_paths):
             if _path == path:
-                return i
+                return self.images[i]
 
-        # load       
-        load_image( _path, self.images[index] )
+        # load
+        texture_id = glGenTextures( 1 ) 
+        load_image( _path, texture_id )
         self.images_paths.append( _path )
+        self.images.append( texture_id )
 
-        self._num_images += 1
-        return index
+        return texture_id
 
-    def bind( self, index : int, texture_index, shader_uniform, shader_index ):
+    def bind( self, texture_id : int, texture_index, shader_uniform, shader_index ):
         """Bind texture using OpenGL with image index"""
 
         glActiveTexture( texture_index )
-        glBindTexture( GL_TEXTURE_2D, self.images[index] )
+        glBindTexture( GL_TEXTURE_2D, texture_id )
         glUniform1i(glGetUniformLocation( self.renderer.shader.program, shader_uniform ), shader_index)
 

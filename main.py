@@ -59,11 +59,7 @@ class EmberEngine:
         self.skybox     = Skybox( self )
         
         # default material
-        self.defaultMaterial = self.materials.buildMaterial( 
-            albedo  = f"{self.engineAssets}textures\\default.jpg",
-            normal  = f"{self.engineAssets}textures\\default_normal.png",
-            rmo     = f"{self.engineAssets}textures\\default_rmo.png"
-        )
+        self.defaultMaterial = self.materials.buildMaterial( )
 
         #default object
         self.addGameObject( Mesh( self,

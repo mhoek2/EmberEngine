@@ -17,10 +17,6 @@ class Material:
         self.materials = [{} for i in range(300)]
         self._num_materials = 0;
 
-        self.defaultRMO = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_rmo.png")
-        self.defaultNormal = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_normal.png")
-        self.whiteImage = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\whiteimage.jpg")
-        self.blackImage = self.images.loadOrFindFullPath( f"{self.context.engineAssets}textures\\blackimage.jpg")
         return
 
     @staticmethod
@@ -46,23 +42,30 @@ class Material:
         if normal:
             mat["normal"] = self.images.loadOrFindFullPath( normal )
         else:
-            mat["normal"] = self.defaultNormal
+            mat["normal"] = self.images.defaultNormal
 
         if emissive:
             mat["emissive"] = self.images.loadOrFindFullPath( emissive )
         else:
-            mat["emissive"] = self.blackImage
+            mat["emissive"] = self.images.blackImage
 
         if rmo:
             mat["phyiscal"] = self.images.loadOrFindFullPath( rmo )
         else:
             if not r and not m and not o:
-                mat["phyiscal"] = self.defaultRMO
+                mat["phyiscal"] = self.images.defaultRMO
             else:
                 mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
         self._num_materials += 1
         return index
+
+    def getMaterialByIndex( self, index : int ):
+        """Get material by index, return default material if out of scope"""
+        if index < self._num_materials:
+            return self.materials[index]
+        else:
+            return self.materials[self.context.defaultMaterial]
 
     def loadOrFind( self, material, path ) -> int:
         """Create a material by parsing model material info and loading textures"""
@@ -120,7 +123,7 @@ class Material:
 
         # r, m and o should be packed into a new _rmo file.
         if not r and not m and not o:
-            mat["phyiscal"] = self.defaultRMO
+            mat["phyiscal"] = self.images.defaultRMO
         else:
             mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
@@ -141,7 +144,7 @@ class Material:
         if 'normal' in mat:
             self.images.bind( mat["normal"], GL_TEXTURE1, "sNormal", 1 )
         else:
-            self.images.bind( self.images.defaultImage, GL_TEXTURE1, "sNormal", 1 )
+            self.images.bind( self.images.defaultNormal, GL_TEXTURE1, "sNormal", 1 )
 
         if 'phyiscal' in mat:
             self.images.bind( mat["phyiscal"], GL_TEXTURE2, "sPhyiscal", 2 )
@@ -151,6 +154,6 @@ class Material:
         if 'emissive' in mat:
             self.images.bind( mat["emissive"], GL_TEXTURE3, "sEmissive", 3 )
         else:
-            self.images.bind( self.images.defaultImage, GL_TEXTURE3, "sEmissive", 3 )
+            self.images.bind( self.images.blackImage, GL_TEXTURE3, "sEmissive", 3 )
 
         return

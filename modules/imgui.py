@@ -1,9 +1,13 @@
+from pickletools import read_stringnl_noescape_pair
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 import imgui
 from pygame import Vector2
 
+from modules.material import Material
+from modules.images import Images
+from modules.models import Models
 from modules.renderer import Renderer
 
 from gameObjects.gameObject import GameObject
@@ -13,13 +17,24 @@ from gameObjects.sun import Sun
 class ImGui:
     def __init__( self, context ):
         self.context = context
-        self.renderer   : Renderer = context.renderer
         self.io = imgui.get_io()
 
         self.drawWireframe = False
         self.selectedObject = False
         self.selectedObjectIndex = -1
 
+        self.initialized = False
+
+    def initialize_context( self ) -> None:
+        if self.initialized:
+            return
+
+        self.renderer   : Renderer = self.context.renderer
+        self.materials  : Material = self.context.materials
+        self.images     : Images = self.context.images
+        self.models     : Models = self.context.models
+
+        self.initialized = True
 
     # https://github.com/pyimgui/pyimgui/blob/9adcc0511c5ce869c39ced7a2b423aa641f3e7c6/doc/examples/integrations_glfw3_docking.py#L10
     def docking_space( self, name: str ):
@@ -219,6 +234,60 @@ class ImGui:
 
         return
 
+    def draw_thumb( self, image, size ):
+        #glBindTexture( GL_TEXTURE_2D, image )
+        imgui.image( image, size, size )
+
+    def draw_inspector_material_thumb( self, label, texture_id ) -> None:
+        imgui.text( f"{label}" );
+        imgui.next_column()
+        self.draw_thumb( texture_id, 75 )
+        imgui.next_column()
+
+    def draw_inspector_material( self ) -> None:
+        if imgui.tree_node( "Material" ):
+
+            if not self.selectedObject:
+                imgui.tree_pop()
+                return
+
+            gameObject = self.selectedObject
+
+            if not isinstance( gameObject, GameObject ):
+                imgui.tree_pop()
+                return
+
+            # get material
+            material_id = -1
+
+            for mesh in self.models.model[gameObject.model].meshes:
+                mesh_index = self.models.model[gameObject.model].meshes.index(mesh)
+
+                mesh_gl = self.models.model_mesh[gameObject.model][mesh_index]
+                material_id = mesh_gl["material"]
+
+            if material_id < 0:
+                imgui.tree_pop()
+                return
+
+            mat = self.materials.getMaterialByIndex( material_id )
+
+            imgui.text( f"Material ID: { material_id }" );
+
+            imgui.columns(count=2, identifier=None, border=False)
+
+            self.draw_inspector_material_thumb( "Albedo", mat["albedo"] if 'albedo' in mat else self.images.defaultImage )
+            self.draw_inspector_material_thumb( "Normal", mat["normal"] if 'normal' in mat else self.images.defaultNormal )
+            self.draw_inspector_material_thumb( "Phyiscal", mat["phyiscal"] if 'phyiscal' in mat else self.images.defaultRMO )
+            self.draw_inspector_material_thumb( "Emissive", mat["emissive"] if 'emissive' in mat else self.images.blackImage )
+            
+            imgui.columns(1)
+
+            # specular scale
+
+            imgui.tree_pop()
+        return
+
     def draw_inspector( self ) -> None:
         imgui.begin( "Inspector" )
 
@@ -235,12 +304,17 @@ class ImGui:
                 label="Name##ObjectName", value=gameObject.name, buffer_length=400
             )
 
+            # components
             self.draw_inspector_transform()
+            self.draw_inspector_material()
 
         imgui.end()
         return
 
     def render( self ):
+        # init
+        self.initialize_context()
+
         # global
         frame_time = 1000.0 / self.io.framerate
         fps = self.io.framerate
