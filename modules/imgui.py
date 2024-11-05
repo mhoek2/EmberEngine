@@ -178,6 +178,48 @@ class ImGui:
         imgui.end()
         return
 
+    def draw_vec3_control( self, label, vector, resetValue = 0.0 ):
+
+        labels = ["X", "Y", "Z"]
+        label_colors = [(0.8, 0.1, 0.15), (0.2, 0.7, 0.2), (0.1, 0.25, 0.8)]
+
+        imgui.push_id( f"{label}_vec3_control" )
+
+        imgui.columns(count=2, identifier=None, border=False)
+        imgui.set_column_width(0, 70.0)
+
+        imgui.text( label )
+        imgui.next_column()
+
+        #imgui.push_multi_items_width(3, imgui.calc_item_width())
+        width = min(125, max(40, (imgui.get_window_size().x / 3) - ( 20 * 3)))
+
+        imgui.push_style_var(imgui.STYLE_ITEM_SPACING, (0.0, 0.0))
+
+        for i in range( 0, 3 ):
+            imgui.push_style_color(imgui.COLOR_BUTTON, label_colors[i][0], label_colors[i][1], label_colors[i][2])
+            if imgui.button( labels[i] ):
+                vector[i] = resetValue
+            imgui.pop_style_color(1)
+            imgui.same_line()
+            imgui.push_item_width( width );
+            changed, vector[i] = imgui.drag_float(
+                f"##{labels[i]}", vector[i], 0.01
+            )
+            imgui.pop_item_width();
+
+            if i < 2:
+                imgui.same_line()
+                imgui.dummy( 5, 5 )
+                imgui.same_line()
+
+        imgui.pop_style_var( 1 )
+
+        imgui.columns(1)
+
+        imgui.pop_id()
+        return
+
     def draw_inspector_transform( self ) -> None:
         if not self.selectedObject:
             return
@@ -191,44 +233,10 @@ class ImGui:
             imgui.text( f"Sun" );
 
         if imgui.tree_node( "Transform", imgui.TREE_NODE_DEFAULT_OPEN ):
-            # rotation
-            changed, (
-                gameObject.translate[0],
-                gameObject.translate[1],
-                gameObject.translate[2],
-            ) = imgui.drag_float3(
-                label="Position",
-                change_speed=0.01,
-                value0=gameObject.translate[0],
-                value1=gameObject.translate[1],
-                value2=gameObject.translate[2],
-            )
 
-            # rotation
-            changed, (
-                gameObject.rotation[0],
-                gameObject.rotation[1],
-                gameObject.rotation[2],
-            ) = imgui.drag_float3(
-                label="Rotation",
-                change_speed=0.01,
-                value0=gameObject.rotation[0],
-                value1=gameObject.rotation[1],
-                value2=gameObject.rotation[2],
-            )
-
-            # scale
-            changed, (
-                gameObject.scale[0],
-                gameObject.scale[1],
-                gameObject.scale[2],
-            ) = imgui.drag_float3(
-                label="Scale",
-                change_speed=0.01,
-                value0=gameObject.scale[0],
-                value1=gameObject.scale[1],
-                value2=gameObject.scale[2],
-            )
+            self.draw_vec3_control( "Position", gameObject.translate, 0.0 )
+            self.draw_vec3_control( "Rotation", gameObject.rotation, 0.0 )
+            self.draw_vec3_control( "Scale", gameObject.scale, 0.0 )
 
             imgui.tree_pop()
 
@@ -274,7 +282,10 @@ class ImGui:
 
             imgui.text( f"Material ID: { material_id }" );
 
+            imgui.separator()
+
             imgui.columns(count=2, identifier=None, border=False)
+            imgui.set_column_width(0, 70.0)
 
             self.draw_inspector_material_thumb( "Albedo", mat["albedo"] if 'albedo' in mat else self.images.defaultImage )
             self.draw_inspector_material_thumb( "Normal", mat["normal"] if 'normal' in mat else self.images.defaultNormal )
@@ -291,14 +302,13 @@ class ImGui:
     def draw_environment( self ) -> None:
         imgui.begin( "Environment" )
 
-        changed, self.context.light_color = imgui.color_edit4(
+        changed, self.context.light_color = imgui.color_edit3(
             "Light color", *self.context.light_color
         )
 
-        changed, self.context.ambient_color = imgui.color_edit4(
+        changed, self.context.ambient_color = imgui.color_edit3(
             "Ambient color", *self.context.ambient_color
         )
-
 
         imgui.end()
         return
