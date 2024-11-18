@@ -265,36 +265,46 @@ class ImGui:
                 imgui.tree_pop()
                 return
 
-            # get material
-            material_id = -1
+            # collect material(s)
+            materials = []
 
             for mesh in self.models.model[gameObject.model].meshes:
                 mesh_index = self.models.model[gameObject.model].meshes.index(mesh)
-
                 mesh_gl = self.models.model_mesh[gameObject.model][mesh_index]
-                material_id = mesh_gl["material"]
+      
+                if mesh_gl["material"] >= 0:
+                    materials.append( mesh_gl["material"] )
 
-            if material_id < 0:
-                imgui.tree_pop()
-                return
+            # visualize material(s)
+            multi_mat : bool = True if len(materials) > 1 else False
 
-            mat = self.materials.getMaterialByIndex( material_id )
+            for material_id in materials:
+                mat = self.materials.getMaterialByIndex( material_id )
 
-            imgui.text( f"Material ID: { material_id }" );
+                is_open : bool = False
 
-            imgui.separator()
+                # use tree node of this mesh has multiple materials
+                if multi_mat:
+                    if imgui.tree_node( f"Material ID: { material_id }" ):
+                        is_open = True
+                else:
+                    imgui.text( f"Material ID: { material_id }" );
+                    imgui.separator()
+                    is_open = True
 
-            imgui.columns(count=2, identifier=None, border=False)
-            imgui.set_column_width(0, 70.0)
+                if is_open:
+                    imgui.columns( count=2, identifier=None, border=False )
+                    imgui.set_column_width (0, 70.0 )
 
-            self.draw_inspector_material_thumb( "Albedo", mat["albedo"] if 'albedo' in mat else self.images.defaultImage )
-            self.draw_inspector_material_thumb( "Normal", mat["normal"] if 'normal' in mat else self.images.defaultNormal )
-            self.draw_inspector_material_thumb( "Phyiscal", mat["phyiscal"] if 'phyiscal' in mat else self.images.defaultRMO )
-            self.draw_inspector_material_thumb( "Emissive", mat["emissive"] if 'emissive' in mat else self.images.blackImage )
+                    self.draw_inspector_material_thumb( "Albedo", mat["albedo"] if 'albedo' in mat else self.images.defaultImage )
+                    self.draw_inspector_material_thumb( "Normal", mat["normal"] if 'normal' in mat else self.images.defaultNormal )
+                    self.draw_inspector_material_thumb( "Phyiscal", mat["phyiscal"] if 'phyiscal' in mat else self.images.defaultRMO )
+                    self.draw_inspector_material_thumb( "Emissive", mat["emissive"] if 'emissive' in mat else self.images.blackImage )
             
-            imgui.columns(1)
+                    imgui.columns(1)
 
-            # specular scale
+                if multi_mat and is_open:
+                    imgui.tree_pop()
 
             imgui.tree_pop()
         return

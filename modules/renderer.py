@@ -121,6 +121,7 @@ class Renderer:
 
         self.screen = pygame.display.set_mode( self.display_size, DOUBLEBUF | OPENGL )
         pygame.display.set_caption( "EmberEngine 3D" )
+        glEnable(GL_MULTISAMPLE)
      
     def shutdown( self ) -> None:
         self.imgui_renderer.shutdown()
