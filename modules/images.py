@@ -36,7 +36,7 @@ class Images:
 
         return texture_id
 
-    def loadOrFindFullPath( self, uid : str ) -> int:
+    def loadOrFindFullPath( self, uid : str, flip_x: bool = False, flip_y: bool = True ) -> int:
         """Load or find an image, implement find later"""
 
         _path = uid
@@ -52,7 +52,7 @@ class Images:
 
         # load
         texture_id = glGenTextures( 1 ) 
-        load_image( _path, texture_id )
+        load_image( _path, texture_id, flip_x, flip_y )
         self.images_paths.append( _path )
         self.images.append( texture_id )
 

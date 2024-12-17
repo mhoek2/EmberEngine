@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from pickletools import read_stringnl_noescape_pair
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
@@ -14,9 +16,15 @@ from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
 
+from pathlib import Path
+import textwrap
+
+if TYPE_CHECKING:
+    from main import EmberEngine
+
 class ImGui:
     def __init__( self, context ):
-        self.context = context
+        self.context : 'EmberEngine' = context
         self.io = imgui.get_io()
 
         self.drawWireframe = False
@@ -24,6 +32,20 @@ class ImGui:
         self.selectedObjectIndex = -1
 
         self.initialized = False
+
+    def load_gui_icons( self ) -> None:
+        """Load icons from game assets gui folder"""
+        self.icons = {}
+        self.icon_dir = Path( f"{self.context.engineAssets}\\gui\\icons" ).resolve()
+
+        if any( self.icon_dir.glob("*") ):
+            for path in self.icon_dir.glob("*"):
+                if path.suffix != ".png":
+                    continue
+                
+                icon_id = path.name.replace( path.suffix, "")
+                self.icons[f".{icon_id}"] = self.context.images.loadOrFindFullPath( str(path), flip_y=False )
+
 
     def initialize_context( self ) -> None:
         if self.initialized:
@@ -33,6 +55,9 @@ class ImGui:
         self.materials  : Material = self.context.materials
         self.images     : Images = self.context.images
         self.models     : Models = self.context.models
+
+        self.file_browser_init()
+        self.load_gui_icons()
 
         self.initialized = True
 
@@ -150,24 +175,6 @@ class ImGui:
                         self.selectedObject = self.context.gameObjects[ n ]
 
             imgui.tree_pop()
-
-        imgui.end()
-        return
-
-    def draw_assets( self ) -> None:
-        imgui.begin( "Assets" )
-
-        for model_path in self.context.modelAssets:
-            if imgui.button( model_path ):
-                self.context.addGameObject( 
-                        Mesh( self.context,
-                        name        = f"GameObject { len( self.context.gameObjects ) }",
-                        model_file  = model_path,
-                        #material    = self.context.defaultMaterial,
-                        translate   = [ 0, 0, 0 ],
-                        scale       = [ 1, 1, 1 ],
-                        rotation    = [ 0.0, 0.0, 0.0 ]
-            ) )
 
         imgui.end()
         return
@@ -346,6 +353,111 @@ class ImGui:
         imgui.end()
         return
 
+    #
+    # asset explorer
+    #
+    def open_file( self, path ) -> None:
+        if path.suffix == ".fbx" or path.suffix == ".obj":
+            game_object_name = path.name.replace(path.suffix, "")
+            self.context.addGameObject( 
+                    Mesh( self.context,
+                    name        = game_object_name,
+                    model_file  = str( path ),
+                    translate   = [ 0, 0, 0 ],
+                    scale       = [ 1, 1, 1 ],
+                    rotation    = [ 0.0, 0.0, 0.0 ]
+            ) )
+
+    def file_browser_rootpath( self ) -> Path:
+        return Path( self.context.assets ).resolve()
+
+    def file_browser_init( self ):
+        self._file_browser_dir = self.file_browser_rootpath()
+        self.icon_dim = 75.0
+
+    def get_file_browser_item_icon( self, path ) -> None:
+        icon = self.icons['.unknown']
+
+        if path.is_file() and path.suffix in self.icons:
+            icon = self.icons[path.suffix]
+
+        if path.is_dir() and ".folder" in self.icons:
+            icon = self.icons['.folder']
+
+        return icon
+
+    def set_file_browser_path( self, path ) -> None:
+        self._file_browser_dir = path
+
+    def file_browser_go_back( self ) -> None:
+        path = self._file_browser_dir.parent
+        self.set_file_browser_path( path )
+
+    def draw_file_browser_item( self, path ):
+        imgui.push_style_color(imgui.COLOR_BUTTON,          1.0, 1.0, 1.0, 0.0 ) 
+        imgui.push_style_color(imgui.COLOR_BUTTON_HOVERED,  1.0, 1.0, 1.0, 0.1 ) 
+        imgui.push_style_color(imgui.COLOR_BUTTON_ACTIVE,   1.0, 1.0, 1.0, 0.2 ) 
+               
+        icon = self.get_file_browser_item_icon( path )
+        if imgui.image_button( icon, self.icon_dim, self.icon_dim):
+            if path.is_file():
+                self.open_file( path )
+
+            elif path.is_dir():
+                self.set_file_browser_path( path )
+        
+        hovered : bool = imgui.is_item_hovered()
+
+        draw_list = imgui.get_window_draw_list()  # Get the draw list for the current window
+        button_size = imgui.get_item_rect_size()
+        button_pos = imgui.get_item_rect_max()
+        #window_pos = imgui.get_window_position()
+
+        # Get path name and text wrap centered
+        path_name = textwrap.fill( str(path.name), width=10 )
+        text_size = imgui.calc_text_size( path_name )
+
+        alpha = 1.0 if hovered else 0.7
+
+        draw_list.add_text( 
+            (button_pos.x - button_size.x) + (button_size.x - text_size.x) * 0.5 , 
+            button_pos.y, 
+            imgui.get_color_u32_rgba( 1.0, 1.0, 1.0, alpha ), 
+            path_name )
+
+        imgui.pop_style_color(3)
+
+    def draw_file_browser( self ) -> None:
+        imgui.begin( "Project Assets" )
+
+        imgui.text( str(self._file_browser_dir) )
+
+        if self._file_browser_dir != self.file_browser_rootpath():
+            if imgui.button( "Page up ^" ):
+                self.file_browser_go_back()
+
+        if any( self._file_browser_dir.glob("*") ):
+            row_width = 0
+            for i, path in enumerate(self._file_browser_dir.glob("*")):
+                imgui.push_id( str(path.name) )
+
+                # wrapping
+                if i > 0 and ( row_width + self.icon_dim ) < imgui.get_window_size().x:
+                    imgui.same_line()
+                elif i > 0:
+                    row_width = 0
+                    imgui.dummy(0, 35)
+
+
+                row_width += (self.icon_dim + 18.0)
+                
+                self.draw_file_browser_item( path )
+
+                imgui.pop_id()
+
+        imgui.dummy(0, 50)
+        imgui.end()
+
     def render( self ):
         # init
         self.initialize_context()
@@ -360,7 +472,7 @@ class ImGui:
 
         # windows
         self.draw_viewport()
-        self.draw_assets()
+        self.draw_file_browser()
         self.draw_hierarchy()
         self.draw_settings()
         self.draw_inspector()

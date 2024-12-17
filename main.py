@@ -40,18 +40,6 @@ class EmberEngine:
 
         self.gameObjects : GameObject = []
 
-        # temporary list to reference available models - todo: directory explorer
-        self.modelAssets : str = []
-        self.modelAssets.append( f"{self.assets}models\\Tree\\Tree.obj" )
-        self.modelAssets.append( f"{self.assets}models\\cube\\cube.obj" )
-        self.modelAssets.append( f"{self.assets}models\\station\\model.obj" )
-        self.modelAssets.append( f"{self.assets}models\\gun\\model.fbx" )
-        self.modelAssets.append( f"{self.assets}models\\japan\\model.fbx" )
-        self.modelAssets.append( f"{self.assets}models\\rusty-truck\\model.fbx" )
-        self.modelAssets.append( f"{self.assets}models\\jerrycan\\model.fbx" )
-        self.modelAssets.append( f"{self.assets}models\\cabinet\\model.fbx" )
-        self.modelAssets.append( f"{self.assets}models\\retro_computer\\model.fbx" )
-
         self.images     = Images( self )
         self.materials  = Material( self )
         self.models     = Models( self )

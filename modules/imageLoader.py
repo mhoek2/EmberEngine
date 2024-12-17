@@ -24,7 +24,7 @@ def create_image_pygame( size, data, texture ):
     return texture
 
 # for use with pygame
-def load_image_pygame(path, texture):
+def load_image_pygame(path, texture, flip_x: bool = False, flip_y: bool = True):
     import pygame
     glBindTexture(GL_TEXTURE_2D, texture)
 
@@ -38,7 +38,7 @@ def load_image_pygame(path, texture):
 
     # load image
     image = pygame.image.load(path)
-    image = pygame.transform.flip(image, False, True)
+    image = pygame.transform.flip(image, flip_x, flip_y)
     image_width, image_height = image.get_rect().size
     img_data = pygame.image.tostring(image, "RGBA")
     
