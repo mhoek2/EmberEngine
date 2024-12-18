@@ -12,8 +12,8 @@ from gameObjects.gameObject import GameObject
 class Sun( GameObject ):
     def onStart( self ) -> None:
         mat = self.materials.buildMaterial( 
-            albedo  = f"{self.settings.engineAssets}textures\\sun\\albedo.jpg",
-            r       = f"{self.settings.engineAssets}textures\\sun\\roughness.jpg",
+            albedo  = f"{self.settings.engine_texture_path}sun\\albedo.jpg",
+            r       = f"{self.settings.engine_texture_path}sun\\roughness.jpg",
         )
 
         self.model = self.models.loadOrFind( self.model_file, mat )

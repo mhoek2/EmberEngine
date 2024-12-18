@@ -12,6 +12,9 @@ class Settings:
         self.shader_path    = f"{self.rootdir}\\shaders\\"
         self.cubemap_path   = f"{self.rootdir}\\cubemaps\\"
 
+        self.engine_texture_path    = f"{self.engineAssets}\\textures\\"
+        self.engine_gui_path        = f"{self.engineAssets}\\gui\\"
+
         # wireframe
         self.drawWireframe = False
 

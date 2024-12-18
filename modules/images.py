@@ -13,12 +13,11 @@ class Images( Context ):
         self.images = []
         self.images_paths = []
 
-        self.basepath = f"{self.settings.rootdir}\\textures\\"
-        self.defaultImage = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\default.jpg")
-        self.defaultRMO = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\default_rmo.png")
-        self.defaultNormal = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\default_normal.png")
-        self.whiteImage = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\whiteimage.jpg")
-        self.blackImage = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\blackimage.jpg")
+        self.defaultImage = self.loadOrFindFullPath( f"{self.settings.engine_texture_path}default.jpg")
+        self.defaultRMO = self.loadOrFindFullPath( f"{self.settings.engine_texture_path}default_rmo.png")
+        self.defaultNormal = self.loadOrFindFullPath( f"{self.settings.engine_texture_path}default_normal.png")
+        self.whiteImage = self.loadOrFindFullPath( f"{self.settings.engine_texture_path}whiteimage.jpg")
+        self.blackImage = self.loadOrFindFullPath( f"{self.settings.engine_texture_path}blackimage.jpg")
 
         return
 
