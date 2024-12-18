@@ -373,7 +373,7 @@ class ImGui:
             ) )
 
     def file_browser_rootpath( self ) -> Path:
-        return Path( self.context.assets ).resolve()
+        return Path( self.settings.assets ).resolve()
 
     def file_browser_init( self ):
         self._file_browser_dir = self.file_browser_rootpath()
