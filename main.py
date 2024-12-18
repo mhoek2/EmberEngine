@@ -14,6 +14,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import math
+import numpy as np
 
 from modules.imgui import ImGui
 from modules.jsonHandling import JsonHandler
@@ -83,6 +84,22 @@ class EmberEngine:
 
         return index
 
+    def draw_grid( self, size, spacing ):
+
+        # Draw the grid lines on the XZ plane
+        for i in np.arange(-size, size + spacing, spacing):
+            # Draw lines parallel to Z axis
+            glBegin(GL_LINES)
+            glVertex3f(i, 0, -size)
+            glVertex3f(i, 0, size)
+            glEnd()
+
+            # Draw lines parallel to X axis
+            glBegin(GL_LINES)
+            glVertex3f(-size, 0, i)
+            glVertex3f(size, 0, i)
+            glEnd()
+
     def run( self ) -> None:
         while self.renderer.running:
             events = pygame.event.get()
@@ -96,7 +113,9 @@ class EmberEngine:
 
                 view = self.renderer.cam.get_view_matrix()
 
+                #
                 # skybox
+                #
                 self.renderer.use_shader( self.renderer.skybox )
 
                 # bind projection matrix
@@ -107,7 +126,21 @@ class EmberEngine:
                 self.cubemaps.bind( self.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
                 self.skybox.draw()
 
+                #
+                # grid
+                #
+                self.renderer.use_shader( self.renderer.color )
+                # bind projection matrix
+                glUniformMatrix4fv( self.renderer.uPMatrix3, 1, GL_FALSE, self.renderer.projection )
+                # viewmatrix
+                glUniformMatrix4fv( self.renderer.uVMatrix3, 1, GL_FALSE, view )
+                # color
+                glUniform4f( self.renderer.uColor3, 1.0, 0.0, 0.0, 1.0 )
+                self.draw_grid( 10.0, 0.5 )
                 
+                #
+                # general
+                #
                 self.renderer.use_shader( self.renderer.general )
 
                 # projection matrix can be bound at start
