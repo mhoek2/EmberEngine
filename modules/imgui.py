@@ -185,7 +185,23 @@ class ImGui:
 
     def draw_settings( self ) -> None:
         imgui.begin( "Settings" )
-        changed, self.drawWireframe = imgui.checkbox( "Wireframe", self.drawWireframe )
+
+        changed, self.settings.drawWireframe = imgui.checkbox( 
+            "Wireframe", self.settings.drawWireframe 
+        )
+        
+        changed, self.settings.grid_color = imgui.color_edit3(
+            "Grid color", *self.settings.grid_color
+        )
+
+        changed, self.settings.grid_size = imgui.drag_float(
+                f"Grid size", self.settings.grid_size, 1
+        )
+
+        changed, self.settings.grid_spacing = imgui.drag_float(
+                f"Grid spacing", self.settings.grid_spacing, 0.01
+        )
+
         imgui.end()
         return
 

@@ -11,9 +11,12 @@ import numpy as np
 
 import os
 
+from modules.settings import Settings
+
 class Models:
     def __init__( self, context ):
         self.context = context
+        self.settings   : Settings = context.settings
         self.renderer   : Renderer = context.renderer
         self.materials  : Material = context.materials
         
@@ -174,13 +177,13 @@ class Models:
             # material
             self.materials.bind( mesh_gl["material"] )
 
-            if self.context.imgui.drawWireframe:
+            if self.settings.drawWireframe:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_gl["faces"])
             glDrawElements(GL_TRIANGLES, mesh_gl["nbfaces"] * 3, GL_UNSIGNED_INT, None)
 
-            if self.context.imgui.drawWireframe:
+            if self.settings.drawWireframe:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
             vbo.unbind()
