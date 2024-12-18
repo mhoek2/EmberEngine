@@ -258,6 +258,7 @@ class Renderer:
 
         self.aspect_ratio = size.x / size.y
         self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 1000.0)
+        self.view = matrix44.create_identity() # identity as placeholder
 
     def toggle_input_state( self ) -> None:
         """Toggle input between application and viewport"""

@@ -82,7 +82,20 @@ class EmberEngine:
 
         return index
 
-    def draw_grid( self, size, spacing ):
+    def draw_grid( self ):
+        self.renderer.use_shader( self.renderer.color )
+        # bind projection matrix
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+
+        # viewmatrix
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
+
+        # color
+        grid_color = self.settings.grid_color
+        glUniform4f( self.renderer.shader.uniforms['uColor'],  grid_color[0],  grid_color[1], grid_color[2], 1.0 )
+                
+        size = self.settings.grid_size
+        spacing = self.settings.grid_spacing
 
         # Draw the grid lines on the XZ plane
         for i in np.arange(-size, size + spacing, spacing):
@@ -109,32 +122,17 @@ class EmberEngine:
                 # bind main FBO
                 self.renderer.bind_fbo( self.renderer.main_fbo )
 
-                view = self.renderer.cam.get_view_matrix()
+                self.renderer.view = self.renderer.cam.get_view_matrix()
 
                 #
                 # skybox
                 #
-                self.renderer.use_shader( self.renderer.skybox )
-
-                # bind projection matrix
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-                # viewmatrix
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, view )
-
-                self.cubemaps.bind( self.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
                 self.skybox.draw()
 
                 #
                 # grid
                 #
-                self.renderer.use_shader( self.renderer.color )
-                # bind projection matrix
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-                # viewmatrix
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, view )
-                # color
-                glUniform4f( self.renderer.shader.uniforms['uColor'], 1.0, 0.0, 0.0, 1.0 )
-                self.draw_grid( 10.0, 0.5 )
+                self.draw_grid()
                 
                 #
                 # general
@@ -146,7 +144,7 @@ class EmberEngine:
                 glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
                 
                 # viewmatrix
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, view )
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
                 
                 # camera
                 camera_pos = self.renderer.cam.camera_pos

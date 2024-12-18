@@ -75,6 +75,15 @@ class Skybox:
         glBindVertexArray( 0 );
 
     def draw( self ) -> None:
+        self.renderer.use_shader( self.renderer.skybox )
+
+        # bind projection matrix
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+
+        # viewmatrix
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
+
+        self.context.cubemaps.bind( self.context.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
 
         glDisable(GL_DEPTH_TEST);
         glBindVertexArray( self.VAO )
