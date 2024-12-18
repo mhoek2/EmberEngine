@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import List
 
 #import site
 #print(site.getsitepackages())
@@ -37,7 +38,7 @@ class EmberEngine:
         self.renderer   : Renderer = Renderer( self )
         self.imgui      : ImGui = ImGui( self )
 
-        self.gameObjects : GameObject = []
+        self.gameObjects : List[GameObject] = []
 
         self.images     : Images = Images( self )
         self.materials  : Material = Material( self )
@@ -76,7 +77,7 @@ class EmberEngine:
                         rotation    = [ 0.0, 0.0, 80.0 ]
                     ) )
 
-    def addGameObject( self, object ) -> int:
+    def addGameObject( self, object : GameObject ) -> int:
         index = len( self.gameObjects )
         self.gameObjects.append( object )
 
