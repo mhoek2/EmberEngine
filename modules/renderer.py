@@ -249,9 +249,16 @@ class Renderer:
         self.general = Shader( self.context, "general" )
         self.skybox = Shader( self.context, "skybox" )
         self.gamma = Shader( self.context, "gamma" )
+        self.color = Shader( self.context, "color" )
 
         # keep this here for now since only one shader is used
         # ..!
+        # color
+        self.use_shader( self.color )
+        self.uMMatrix3 = glGetUniformLocation(self.shader.program, "uMMatrix")
+        self.uVMatrix3 = glGetUniformLocation(self.shader.program, "uVMatrix")
+        self.uPMatrix3 = glGetUniformLocation(self.shader.program, "uPMatrix")
+        self.uColor3 = glGetUniformLocation(self.shader.program, "uColor")
 
         # general
         self.use_shader( self.general )
