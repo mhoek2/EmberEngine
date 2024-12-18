@@ -244,7 +244,7 @@ class Renderer:
         glBindVertexArray(0)
 
     def use_shader( self, shader ) -> None:
-        self.shader = shader
+        self.shader : Shader = shader
         glUseProgram( self.shader.program )
 
     def create_shaders( self ) -> None:
@@ -252,42 +252,6 @@ class Renderer:
         self.skybox = Shader( self.context, "skybox" )
         self.gamma = Shader( self.context, "gamma" )
         self.color = Shader( self.context, "color" )
-
-        # keep this here for now since only one shader is used
-        # ..!
-        # color
-        self.use_shader( self.color )
-        self.uMMatrix3 = glGetUniformLocation(self.shader.program, "uMMatrix")
-        self.uVMatrix3 = glGetUniformLocation(self.shader.program, "uVMatrix")
-        self.uPMatrix3 = glGetUniformLocation(self.shader.program, "uPMatrix")
-        self.uColor3 = glGetUniformLocation(self.shader.program, "uColor")
-
-        # general
-        self.use_shader( self.general )
-
-        self.uMMatrix = glGetUniformLocation(self.shader.program, "uMMatrix")
-        self.uVMatrix = glGetUniformLocation(self.shader.program, "uVMatrix")
-        self.uPMatrix = glGetUniformLocation(self.shader.program, "uPMatrix")
-
-        self.sTexture = glGetUniformLocation(self.shader.program, "sTexture")
-        self.sNormal = glGetUniformLocation(self.shader.program, "sNormal")
-        self.sEnvironment = glGetUniformLocation(self.shader.program, "sEnvironment")
-
-        self.u_ViewOrigin = glGetUniformLocation(self.shader.program, "u_ViewOrigin")
-
-        self.in_lightdir = glGetUniformLocation(self.shader.program, "in_lightdir")
-        self.in_lightcolor = glGetUniformLocation(self.shader.program, "in_lightcolor")
-        self.in_ambientcolor = glGetUniformLocation(self.shader.program, "in_ambientcolor")
-       
-        self.in_renderMode = glGetUniformLocation(self.shader.program, "in_renderMode")
-
-        # skybox
-        self.use_shader( self.skybox )
-        self.uVMatrix2 = glGetUniformLocation(self.shader.program, "uVMatrix")
-        self.uPMatrix2 = glGetUniformLocation(self.shader.program, "uPMatrix")
-
-        # gamma
-        # add gamma modifier float
 
     def setup_projection_matrix( self, size : Vector2 ) -> None:
         glViewport( 0, 0, int(size.x), int(size.y) )

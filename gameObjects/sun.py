@@ -38,6 +38,6 @@ class Sun( GameObject ):
         self.images.bind( self.context.cubemaps.brdf_lut, GL_TEXTURE5, "sBRDF", 5 )
 
         # create and bind model matrix
-        glUniformMatrix4fv( self.renderer.uMMatrix, 1, GL_FALSE, self._createModelMatrix() )
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self._createModelMatrix() )
         
         self.models.draw( self.model ) 
