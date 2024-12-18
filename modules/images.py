@@ -3,6 +3,7 @@ from OpenGL.GLU import *
 
 from modules.imageLoader import load_image_pygame as load_image, create_rmo_map
 from modules.renderer import Renderer
+from modules.settings import Settings
 
 import os
 
@@ -10,16 +11,17 @@ class Images:
     def __init__( self, context ):
         self.context = context
         self.renderer : Renderer = context.renderer
+        self.settings : Settings = context.settings
 
         self.images = []
         self.images_paths = []
 
-        self.basepath = f"{self.context.rootdir}\\textures\\"
-        self.defaultImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default.jpg")
-        self.defaultRMO = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_rmo.png")
-        self.defaultNormal = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\default_normal.png")
-        self.whiteImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\whiteimage.jpg")
-        self.blackImage = self.loadOrFindFullPath( f"{self.context.engineAssets}textures\\blackimage.jpg")
+        self.basepath = f"{self.settings.rootdir}\\textures\\"
+        self.defaultImage = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\default.jpg")
+        self.defaultRMO = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\default_rmo.png")
+        self.defaultNormal = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\default_normal.png")
+        self.whiteImage = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\whiteimage.jpg")
+        self.blackImage = self.loadOrFindFullPath( f"{self.settings.engineAssets}textures\\blackimage.jpg")
 
         return
 

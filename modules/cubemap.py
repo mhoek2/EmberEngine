@@ -5,6 +5,7 @@ from modules.imageLoader import load_image_pygame as load_image
 from modules.imageLoader import create_image_pygame as create_image
 from modules.imageLoader import load_cubemap_pygame as load_cubemap
 from modules.renderer import Renderer
+from modules.settings import Settings
 
 import numpy as np
 
@@ -12,11 +13,12 @@ class Cubemap:
     def __init__( self, context ):
         self.context = context
         self.renderer : Renderer = context.renderer
+        self.settings : Settings = context.settings
 
         self.cubemap = glGenTextures(30)
         self._num_cubemaps = 0;
 
-        self.basepath = f"{self.context.rootdir}\\cubemaps\\"
+        basepath = self.settings.cubemap_path
 
         # BRDF Lut
         self.create_brdf_lut()
@@ -91,11 +93,11 @@ class Cubemap:
         #data = self.create_brdf_texture( size )
         #create_image( size, data, self.brdf_lut )
         #load_image( f"{self.basepath}brdf.jpg", self.brdf_lut_texture )
-        self.brdf_lut = self.context.images.loadOrFindFullPath( f"{self.renderer.shader.basepath}brdf.jpg" )
+        self.brdf_lut = self.context.images.loadOrFindFullPath( f"{self.settings.shader_path}brdf.jpg" )
         return
 
     def loadDefaultCubemap( self ) -> int:
-        return self.loadOrFind( f"{self.context.engineAssets}\\cubemaps\\stars" )
+        return self.loadOrFind( f"{self.settings.engineAssets}\\cubemaps\\stars" )
 
     def loadOrFind( self, path : str ) -> int:
         """Load or find an image, implement find later"""

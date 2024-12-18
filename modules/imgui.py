@@ -11,6 +11,7 @@ from modules.material import Material
 from modules.images import Images
 from modules.models import Models
 from modules.renderer import Renderer
+from modules.settings import Settings
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
@@ -25,6 +26,8 @@ if TYPE_CHECKING:
 class ImGui:
     def __init__( self, context ):
         self.context : 'EmberEngine' = context
+        self.settings : Settings = context.settings
+
         self.io = imgui.get_io()
 
         self.drawWireframe = False
@@ -36,7 +39,7 @@ class ImGui:
     def load_gui_icons( self ) -> None:
         """Load icons from game assets gui folder"""
         self.icons = {}
-        self.icon_dir = Path( f"{self.context.engineAssets}\\gui\\icons" ).resolve()
+        self.icon_dir = Path( f"{self.settings.engineAssets}\\gui\\icons" ).resolve()
 
         if any( self.icon_dir.glob("*") ):
             for path in self.icon_dir.glob("*"):
@@ -51,6 +54,7 @@ class ImGui:
         if self.initialized:
             return
 
+        self.settings   : Settings = self.context.settings
         self.renderer   : Renderer = self.context.renderer
         self.materials  : Material = self.context.materials
         self.images     : Images = self.context.images

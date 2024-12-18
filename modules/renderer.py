@@ -12,6 +12,7 @@ import numpy as np
 
 import imgui
 
+from modules.settings import Settings
 from modules.shader import Shader
 from modules.camera import Camera
 from modules.pyimgui_renderer import PygameRenderer
@@ -21,6 +22,7 @@ class Renderer:
     """The rendering backend"""
     def __init__( self, context ):
         self.context = context
+        self.settings : Settings = context.settings
 
         # window
         self.display_size : Vector2 = Vector2( 1500, 1000 )

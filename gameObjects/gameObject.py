@@ -12,6 +12,7 @@ from modules.material import Material
 from modules.renderer import Renderer
 from modules.images import Images
 from modules.models import Models
+from modules.settings import Settings
 
 class GameObject:
     def __init__( self, context, 
@@ -22,17 +23,16 @@ class GameObject:
                  rotation = [ 0.0, 0.0, 0.0 ], 
                  scale = [ 1.0, 1.0, 1.0 ] ) -> None:
         self.context = context
+        self.settings       : Settings = context.settings
         self.renderer       : Renderer = context.renderer
         self.materials      : Material = context.materials
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps
         self.models         : Models = context.models
 
-        self.assets         : str = context.assets
-        self.engineAssets   : str = context.engineAssets
 
-        self.name       : str = name
-        self.material   : int = material
+        self.name           : str = name
+        self.material       : int = material
         
         # https://github.com/adamlwgriffiths/Pyrr
         self.translate = translate
@@ -41,7 +41,7 @@ class GameObject:
 
         # model
         if not model_file:
-            self.model_file = f"{self.context.engineAssets}models\\cube\\model.obj"
+            self.model_file = f"{self.settings.engineAssets}models\\cube\\model.obj"
         else:
             self.model_file = model_file
 

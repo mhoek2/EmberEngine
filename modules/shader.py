@@ -5,17 +5,20 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from modules.settings import Settings
 from modules.files import FileHandler
+
 import textwrap
 
 class Shader:
     def __init__( self, context, uid : str ):
         self.context = context
+        self.settings : Settings = context.settings
 
         # fix path to use root..
-        self.basepath = f"{self.context.rootdir}\\shaders\\"
-        vert_shader = textwrap.dedent(FileHandler(f"{self.basepath}{uid}.vert").getContent())
-        frag_shader = textwrap.dedent(FileHandler(f"{self.basepath}{uid}.frag").getContent())
+        basepath = self.settings.shader_path
+        vert_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.vert").getContent())
+        frag_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.frag").getContent())
 
         self.program = self.load_program( vert_shader, frag_shader )
         return

@@ -27,25 +27,23 @@ from modules.material import Material
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
+from modules.settings import Settings
 
 
 class EmberEngine:
     def __init__( self ) -> None:
-        self.rootdir = Path.cwd()
+        self.settings   : Settings = Settings()
 
-        self.engineAssets   = f"{self.rootdir}\\engineAssets\\"
-        self.assets         = f"{self.rootdir}\\assets\\"
-
-        self.renderer   = Renderer( self )
-        self.imgui      = ImGui( self )
+        self.renderer   : Renderer = Renderer( self )
+        self.imgui      : ImGui = ImGui( self )
 
         self.gameObjects : GameObject = []
 
-        self.images     = Images( self )
-        self.materials  = Material( self )
-        self.models     = Models( self )
-        self.cubemaps   = Cubemap( self )
-        self.skybox     = Skybox( self )
+        self.images     : Images = Images( self )
+        self.materials  : Material = Material( self )
+        self.models     : Models = Models( self )
+        self.cubemaps   : Cubemap = Cubemap( self )
+        self.skybox     : Skybox = Skybox( self )
         
         # default material
         self.defaultMaterial = self.materials.buildMaterial( )
@@ -72,7 +70,7 @@ class EmberEngine:
     def setupSun( self ) -> None:
         self.sun = self.addGameObject( Sun( self,
                         name        = "sun",
-                        model_file  = f"{self.engineAssets}models\\sphere\\model.obj",
+                        model_file  = f"{self.settings.engineAssets}models\\sphere\\model.obj",
                         translate   = [1, -1, 1],
                         scale       = [ 0.5, 0.5, 0.5 ],
                         rotation    = [ 0.0, 0.0, 80.0 ]
