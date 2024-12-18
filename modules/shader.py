@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import math
 import pygame
 from pygame.locals import *
@@ -10,10 +12,13 @@ from modules.files import FileHandler
 
 import textwrap
 
+if TYPE_CHECKING:
+    from main import EmberEngine
+
 class Shader:
     def __init__( self, context, uid : str ):
-        self.context = context
-        self.settings : Settings = context.settings
+        self.context    : 'EmberEngine' = context
+        self.settings   : Settings = context.settings
 
         # fix path to use root..
         basepath = self.settings.shader_path

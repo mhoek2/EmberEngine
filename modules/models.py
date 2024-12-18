@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.arrays import vbo
 
-from modules.renderer import Renderer
+from modules.context import Context
 from modules.material import Material
 
 import impasse  as imp
@@ -13,11 +13,10 @@ import os
 
 from modules.settings import Settings
 
-class Models:
+class Models( Context ):
     def __init__( self, context ):
-        self.context = context
-        self.settings   : Settings = context.settings
-        self.renderer   : Renderer = context.renderer
+        super().__init__( context )
+
         self.materials  : Material = context.materials
         
         self.model = [i for i in range(30)]

@@ -7,14 +7,14 @@ from OpenGL.GLU import *
 import numpy as np
 from pyrr import Matrix44, Vector3
 
+from modules.context import Context
+
 from modules.cubemap import Cubemap
 from modules.material import Material
-from modules.renderer import Renderer
 from modules.images import Images
 from modules.models import Models
-from modules.settings import Settings
 
-class GameObject:
+class GameObject( Context ):
     def __init__( self, context, 
                  name = "GameObject",
                  model_file = False,
@@ -22,9 +22,9 @@ class GameObject:
                  translate = [ 0.0, 0.0, 0.0 ], 
                  rotation = [ 0.0, 0.0, 0.0 ], 
                  scale = [ 1.0, 1.0, 1.0 ] ) -> None:
-        self.context = context
-        self.settings       : Settings = context.settings
-        self.renderer       : Renderer = context.renderer
+
+        super().__init__( context )
+
         self.materials      : Material = context.materials
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps

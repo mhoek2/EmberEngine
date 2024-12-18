@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import math
 from OpenGL.arrays import returnPointer
 from pygame.math import Vector2
@@ -17,12 +19,14 @@ from modules.shader import Shader
 from modules.camera import Camera
 from modules.pyimgui_renderer import PygameRenderer
 
-class Renderer:
+if TYPE_CHECKING:
+    from main import EmberEngine
 
+class Renderer:
     """The rendering backend"""
     def __init__( self, context ):
-        self.context = context
-        self.settings : Settings = context.settings
+        self.context    : 'EmberEngine' = context
+        self.settings   : Settings = context.settings
 
         # window
         self.display_size : Vector2 = Vector2( 1500, 1000 )

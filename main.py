@@ -4,7 +4,7 @@ from pathlib import Path
 #import site
 #print(site.getsitepackages())
 
-from gameObjects.skybox import Skybox
+
 
 import pygame
 from pygame.locals import *
@@ -19,6 +19,7 @@ import numpy as np
 from modules.imgui import ImGui
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
+from modules.settings import Settings
 from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
@@ -27,8 +28,7 @@ from modules.material import Material
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
-from modules.settings import Settings
-
+from gameObjects.skybox import Skybox
 
 class EmberEngine:
     def __init__( self ) -> None:

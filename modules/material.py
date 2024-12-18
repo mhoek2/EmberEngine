@@ -5,13 +5,13 @@ import os
 from impasse.structs import Material as ImpasseMaterial, MaterialProperty
 from impasse.constants import MaterialPropertyKey, TextureSemantic
 
+from modules.context import Context
 from modules.images import Images
-from modules.renderer import Renderer
 
-class Material:
+class Material( Context ):
     def __init__( self, context ):
-        self.context = context
-        self.renderer   : Renderer = context.renderer
+        super().__init__( context )
+
         self.images     : Images = context.images
 
         self.materials = [{} for i in range(300)]

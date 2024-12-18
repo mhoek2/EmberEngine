@@ -2,16 +2,13 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 from modules.imageLoader import load_image_pygame as load_image, create_rmo_map
-from modules.renderer import Renderer
-from modules.settings import Settings
+from modules.context import Context
 
 import os
 
-class Images:
+class Images( Context ):
     def __init__( self, context ):
-        self.context = context
-        self.renderer : Renderer = context.renderer
-        self.settings : Settings = context.settings
+        super().__init__( context )
 
         self.images = []
         self.images_paths = []

@@ -4,16 +4,13 @@ from OpenGL.GLU import *
 from modules.imageLoader import load_image_pygame as load_image
 from modules.imageLoader import create_image_pygame as create_image
 from modules.imageLoader import load_cubemap_pygame as load_cubemap
-from modules.renderer import Renderer
-from modules.settings import Settings
+from modules.context import Context
 
 import numpy as np
 
-class Cubemap:
+class Cubemap( Context ):
     def __init__( self, context ):
-        self.context = context
-        self.renderer : Renderer = context.renderer
-        self.settings : Settings = context.settings
+        super().__init__( context )
 
         self.cubemap = glGenTextures(30)
         self._num_cubemaps = 0;

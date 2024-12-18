@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from pickletools import read_stringnl_noescape_pair
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
@@ -7,11 +5,10 @@ from OpenGL.GLU import *
 import imgui
 from pygame import Vector2
 
+from modules.context import Context
 from modules.material import Material
 from modules.images import Images
 from modules.models import Models
-from modules.renderer import Renderer
-from modules.settings import Settings
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
@@ -20,13 +17,9 @@ from gameObjects.sun import Sun
 from pathlib import Path
 import textwrap
 
-if TYPE_CHECKING:
-    from main import EmberEngine
-
-class ImGui:
+class ImGui( Context ):
     def __init__( self, context ):
-        self.context : 'EmberEngine' = context
-        self.settings : Settings = context.settings
+        super().__init__( context )
 
         self.io = imgui.get_io()
 

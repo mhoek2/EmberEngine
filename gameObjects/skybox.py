@@ -5,14 +5,13 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from modules.renderer import Renderer
+from modules.context import Context
 
 import numpy as np
 
-class Skybox:
+class Skybox( Context ):
     def __init__( self, context ):
-        self.context = context
-        self.renderer : Renderer = context.renderer
+        super().__init__( context )
 
         size = 200
         self.skyboxVertices = np.array([
