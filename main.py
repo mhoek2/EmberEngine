@@ -120,11 +120,6 @@ class EmberEngine:
             if not self.renderer.paused:
                 self.renderer.begin_frame()
 
-                # bind main FBO
-                self.renderer.bind_fbo( self.renderer.main_fbo )
-
-                self.renderer.view = self.renderer.cam.get_view_matrix()
-
                 #
                 # skybox
                 #
@@ -139,6 +134,7 @@ class EmberEngine:
                 # general
                 #
                 self.renderer.use_shader( self.renderer.general )
+                glUniform1i( self.renderer.shader.uniforms['in_renderMode'], self.renderer.renderMode )
 
                 # projection matrix can be bound at start
                 # bind projection matrix
@@ -157,20 +153,9 @@ class EmberEngine:
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], self.light_color[0], self.light_color[1], self.light_color[2], 1.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], self.ambient_color[0], self.ambient_color[1], self.ambient_color[2], 1.0 )
 
-                # rendermode
-                glUniform1i( self.renderer.shader.uniforms['in_renderMode'], self.renderer.renderMode )
-
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:
                     gameObject.onUpdate();
-
-                glUseProgram( 0 )
-                glFlush()
-
-                # stop rendering to main FBO
-                self.renderer.unbind_fbo()
-
-                self.imgui.render()
 
                 self.renderer.end_frame()
 

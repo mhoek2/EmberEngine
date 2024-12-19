@@ -6,6 +6,7 @@ class Settings:
         """Global applictaion settings"""
 
         self.msaa = 8
+        self.msaaEnabled = True if self.msaa > 0 else False
 
         self.rootdir = Path.cwd()
 
@@ -21,6 +22,6 @@ class Settings:
         self.drawWireframe = False
 
         # grid
-        self.grid_color = ( 0.0, 1.0, 0.0, 1.0 )
+        self.grid_color = ( 0.83, 0.74, 94.0, 1.0 )
         self.grid_size = 10.0
         self.grid_spacing = 0.5

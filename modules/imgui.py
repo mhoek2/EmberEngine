@@ -147,17 +147,8 @@ class ImGui( Context ):
             self.renderer.viewport_size = Vector2( int(size.x), int(size.y) )
             self.renderer.setup_projection_matrix( self.renderer.viewport_size )
 
-        # draw game framebuffer
-        if self.settings.msaa > 0:
-            self.renderer.resolve_multisample_texture( self.settings.msaa )
-            glDrawArrays(GL_POINTS, 0, 1);
-
-            glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["tex_resolve"] )
-            imgui.image( self.renderer.main_fbo["tex_resolve"], self.renderer.viewport_size.x, self.renderer.viewport_size.y, uv0=(0, 1), uv1=(1, 0) )
-        else:
-            glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["texture"] )
-            imgui.image( self.renderer.main_fbo["texture"], self.renderer.viewport_size.x, self.renderer.viewport_size.y, uv0=(0, 1), uv1=(1, 0) )
-
+        glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["output"] )
+        imgui.image( self.renderer.main_fbo["output"], self.renderer.viewport_size.x, self.renderer.viewport_size.y, uv0=(0, 1), uv1=(1, 0) )
 
         imgui.end()
 
