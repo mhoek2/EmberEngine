@@ -10,8 +10,11 @@ uniform int samples;
 void main() {
     out_color = vec4(0.0);
 
+	ivec2 textureSize2d = textureSize(msaa_texture);
+	ivec2 texCoord = ivec2( fragTexCoord * vec2( textureSize2d ) );
+
     for ( int i = 0; i < samples; ++i )
-        out_color += texelFetch( msaa_texture, ivec2( fragTexCoord * vec2( 1500, 1000 ) ), i );
+        out_color += texelFetch( msaa_texture, texCoord, i );
 
     out_color /= float( samples );
 }
