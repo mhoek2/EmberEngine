@@ -5,6 +5,8 @@ class Settings:
     def __init__( self ) -> None:
         """Global applictaion settings"""
 
+        self.msaa = 8
+
         self.rootdir = Path.cwd()
 
         self.engineAssets   = f"{self.rootdir}\\engineAssets\\"

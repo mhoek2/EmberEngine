@@ -100,6 +100,10 @@ class Renderer:
         self.main_fbo = {}
         self.main_fbo["size"] = Vector2( int(self.display_size.x), int(self.display_size.y) )
         self.main_fbo["fbo"], self.main_fbo["texture"] = self.create_fbo_with_depth( self.main_fbo["size"] )
+        
+        if self.settings.msaa > 0:
+            self.main_fbo["tex_resolve"] = self.create_resolve_texture( self.main_fbo["size"]  )
+            self.main_fbo["fbo_resolve"] = self.create_resolve_fbo( self.main_fbo["tex_resolve"]  )
 
         #glClearColor(0.0, 0.3, 0.7, 1)
         glClearColor(0.0, 0.0, 0.0, 1)
@@ -165,6 +169,53 @@ class Renderer:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
+    def create_resolve_texture( self, size : Vector2 ):
+        texture_id  = glGenTextures( 1 )
+        glBindTexture(GL_TEXTURE_2D, texture_id)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, int(size.x), int(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glBindTexture(GL_TEXTURE_2D, 0)
+        return texture_id
+
+    def create_resolve_fbo( self, resolved_texture ):
+        resolve_fbo = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, resolve_fbo)
+
+        glBindTexture(GL_TEXTURE_2D, resolved_texture)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, resolved_texture, 0)
+
+        if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
+            raise Exception("Resolve framebuffer is not complete!")
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        return resolve_fbo
+
+    def resolve_multisample_texture( self, samples ):
+        glBindFramebuffer( GL_FRAMEBUFFER, self.main_fbo["fbo_resolve"] )
+        glClear( GL_COLOR_BUFFER_BIT )
+
+        #glUseProgram(resolve_shader_program)
+        self.use_shader( self.resolve )
+
+        glBindVertexArray( self.screenVAO )
+        glDisable(GL_DEPTH_TEST);
+
+        glActiveTexture( GL_TEXTURE0 )
+        glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, self.main_fbo["texture"] )
+        glUniform1i( glGetUniformLocation( self.shader.program, "msaa_texture"), 0 )
+        glUniform1i( glGetUniformLocation( self.shader.program, "samples"), samples )
+
+        glUniform1i(glGetUniformLocation( self.shader.program, "screenTexture" ), 0)
+        glDrawArrays(GL_TRIANGLES, 0, 6)
+
+        glBindVertexArray(0)
+
+        #glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)
+        #glBindVertexArray( 0 )
+
+        glBindFramebuffer( GL_FRAMEBUFFER, 0 )
+
     def create_fbo( self, size ):
         fbo = glGenFramebuffers(1)
         glBindFramebuffer(GL_FRAMEBUFFER, fbo)
@@ -190,28 +241,51 @@ class Renderer:
     def create_fbo_with_depth( self, size : Vector2 ):
         fbo = glGenFramebuffers( 1 )
         glBindFramebuffer( GL_FRAMEBUFFER, fbo )
+        
+        glEnable(GL_MULTISAMPLE);
 
         # Create a texture to render the color
         color_texture = glGenTextures( 1 )
-        glBindTexture( GL_TEXTURE_2D, color_texture )
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, None )
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
-    
-        # Attach the color texture to the FBO
-        glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0 )
+
+        # Set MSAA
+        if self.settings.msaa > 0:
+            glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, color_texture )
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.settings.msaa, GL_RGBA8, int(size.x), int(size.y), GL_TRUE)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0)
+        else:
+            glBindTexture( GL_TEXTURE_2D, color_texture )
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, int(size.x), int(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, None )
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+            glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0 )
 
         # Create a renderbuffer for depth
         depth_buffer = glGenRenderbuffers( 1 )
         glBindRenderbuffer( GL_RENDERBUFFER, depth_buffer )
-        glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, int(size.x), int(size.y) )
-
-        # Attach the depth renderbuffer to the FBO
-        glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
+        
+        # Set MSAA
+        if self.settings.msaa > 0:
+            glRenderbufferStorageMultisample( GL_RENDERBUFFER, self.settings.msaa, GL_DEPTH24_STENCIL8, int(size.x), int(size.y) )
+            glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
+        else:
+            glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, int(size.x), int(size.y) )
+            glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
 
         # Check if the FBO is complete
-        if glCheckFramebufferStatus( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE:
-            print( "Framebuffer not complete!" )
+        framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+        if framebuffer_status != GL_FRAMEBUFFER_COMPLETE:
+            if framebuffer_status == GL_FRAMEBUFFER_UNSUPPORTED:
+                print("Framebuffer is unsupported.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                print("Framebuffer incomplete: Attachment is not complete.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                print("Framebuffer incomplete: Missing attachment.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+                print("Framebuffer incomplete: Missing draw buffer.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+                print("Framebuffer incomplete: Missing read buffer.")
+            else:
+                print("Framebuffer incomplete: Unknown error.")
     
         glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 
@@ -241,7 +315,11 @@ class Renderer:
         glDisable(GL_DEPTH_TEST);
 
         glActiveTexture( GL_TEXTURE0 )
-        glBindTexture( GL_TEXTURE_2D, fbo_texture )
+        if self.settings.msaa > 0:
+            glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, fbo_texture )
+        else:
+            glBindTexture( GL_TEXTURE_2D, fbo_texture )
+
         glUniform1i(glGetUniformLocation( self.shader.program, "screenTexture" ), 0)
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
@@ -256,6 +334,7 @@ class Renderer:
         self.skybox = Shader( self.context, "skybox" )
         self.gamma = Shader( self.context, "gamma" )
         self.color = Shader( self.context, "color" )
+        self.resolve = Shader( self.context, "resolve" )
 
     def setup_projection_matrix( self, size : Vector2 ) -> None:
         glViewport( 0, 0, int(size.x), int(size.y) )
