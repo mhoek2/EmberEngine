@@ -97,9 +97,17 @@ class Renderer:
         # FBO
         self.current_fbo = False;
         self.create_screen_vao()
+
         self.main_fbo = {}
         self.main_fbo["size"] = Vector2( int(self.display_size.x), int(self.display_size.y) )
-        self.main_fbo["fbo"], self.main_fbo["texture"] = self.create_fbo_with_depth( self.main_fbo["size"] )
+        self.main_fbo["fbo"], self.main_fbo["color_image"] = self.create_fbo_with_depth( self.main_fbo["size"] )
+        self.main_fbo['output'] = self.main_fbo["color_image"]
+
+        if self.settings.msaaEnabled:
+            self.main_fbo["resolve"] = {}
+            self.main_fbo["resolve"]["color_image"] = self.create_resolve_texture( self.main_fbo["size"]  )
+            self.main_fbo["resolve"]["fbo"] = self.create_resolve_fbo( self.main_fbo["resolve"]["color_image"]  )
+            self.main_fbo['output'] = self.main_fbo["resolve"]["color_image"]
 
         #glClearColor(0.0, 0.3, 0.7, 1)
         glClearColor(0.0, 0.0, 0.0, 1)
@@ -127,7 +135,9 @@ class Renderer:
 
         self.screen = pygame.display.set_mode( self.display_size, DOUBLEBUF | OPENGL )
         pygame.display.set_caption( "EmberEngine 3D" )
-        glEnable(GL_MULTISAMPLE)
+
+        if self.settings.msaaEnabled:
+            glEnable( GL_MULTISAMPLE )
      
     def shutdown( self ) -> None:
         self.imgui_renderer.shutdown()
@@ -165,53 +175,97 @@ class Renderer:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
-    def create_fbo( self, size ):
-        fbo = glGenFramebuffers(1)
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo)
-
-        # Create a texture to render
-        texture = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, texture)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
+    def create_resolve_texture( self, size : Vector2 ):
+        texture_id  = glGenTextures( 1 )
+        glBindTexture(GL_TEXTURE_2D, texture_id)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, int(size.x), int(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    
-        # Attach the texture to the FBO
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0)
+        glBindTexture(GL_TEXTURE_2D, 0)
+        return texture_id
 
-        # Check if FBO is complete
+    def create_resolve_fbo( self, resolved_texture ):
+        resolve_fbo = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, resolve_fbo)
+
+        glBindTexture(GL_TEXTURE_2D, resolved_texture)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, resolved_texture, 0)
+
         if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
-            raise ValueError("Framebuffer not complete!")
+            raise Exception("Resolve framebuffer is not complete!")
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        return resolve_fbo
 
-        return fbo, texture
+    def resolve_multisample_texture( self ):
+        glBindFramebuffer( GL_FRAMEBUFFER, self.main_fbo["resolve"]["fbo"] )
+        glClear( GL_COLOR_BUFFER_BIT )
+
+        self.use_shader( self.resolve )
+
+        glBindVertexArray( self.screenVAO )
+        glDisable(GL_DEPTH_TEST);
+
+        glActiveTexture( GL_TEXTURE0 )
+        glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, self.main_fbo["color_image"] )
+        glUniform1i( glGetUniformLocation( self.shader.program, "msaa_texture"), 0 )
+        glUniform1i( glGetUniformLocation( self.shader.program, "samples"), self.settings.msaa )
+
+        glUniform1i(glGetUniformLocation( self.shader.program, "screenTexture" ), 0)
+        glDrawArrays(GL_TRIANGLES, 0, 6)
+
+        glBindVertexArray(0)
+
+        glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 
     def create_fbo_with_depth( self, size : Vector2 ):
         fbo = glGenFramebuffers( 1 )
         glBindFramebuffer( GL_FRAMEBUFFER, fbo )
-
+        
         # Create a texture to render the color
         color_texture = glGenTextures( 1 )
-        glBindTexture( GL_TEXTURE_2D, color_texture )
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, None )
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
-    
-        # Attach the color texture to the FBO
-        glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0 )
+
+        # Set MSAA
+        if self.settings.msaaEnabled:
+            glEnable( GL_MULTISAMPLE );
+
+            glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, color_texture )
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.settings.msaa, GL_RGBA8, int(size.x), int(size.y), GL_TRUE)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0)
+        else:
+            glBindTexture( GL_TEXTURE_2D, color_texture )
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, int(size.x), int(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, None )
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+            glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0 )
 
         # Create a renderbuffer for depth
         depth_buffer = glGenRenderbuffers( 1 )
         glBindRenderbuffer( GL_RENDERBUFFER, depth_buffer )
-        glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, int(size.x), int(size.y) )
-
-        # Attach the depth renderbuffer to the FBO
-        glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
+        
+        # Set MSAA
+        if self.settings.msaaEnabled:
+            glRenderbufferStorageMultisample( GL_RENDERBUFFER, self.settings.msaa, GL_DEPTH24_STENCIL8, int(size.x), int(size.y) )
+            glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
+        else:
+            glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, int(size.x), int(size.y) )
+            glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
 
         # Check if the FBO is complete
-        if glCheckFramebufferStatus( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE:
-            print( "Framebuffer not complete!" )
+        framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+        if framebuffer_status != GL_FRAMEBUFFER_COMPLETE:
+            if framebuffer_status == GL_FRAMEBUFFER_UNSUPPORTED:
+                print("Framebuffer is unsupported.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                print("Framebuffer incomplete: Attachment is not complete.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                print("Framebuffer incomplete: Missing attachment.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+                print("Framebuffer incomplete: Missing draw buffer.")
+            elif framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+                print("Framebuffer incomplete: Missing read buffer.")
+            else:
+                print("Framebuffer incomplete: Unknown error.")
     
         glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 
@@ -241,7 +295,10 @@ class Renderer:
         glDisable(GL_DEPTH_TEST);
 
         glActiveTexture( GL_TEXTURE0 )
-        glBindTexture( GL_TEXTURE_2D, fbo_texture )
+
+        _texture_type = GL_TEXTURE_2D_MULTISAMPLE if self.settings.msaaEnabled else GL_TEXTURE_2D
+        glBindTexture( _texture_type, fbo_texture )
+
         glUniform1i(glGetUniformLocation( self.shader.program, "screenTexture" ), 0)
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
@@ -256,6 +313,7 @@ class Renderer:
         self.skybox = Shader( self.context, "skybox" )
         self.gamma = Shader( self.context, "gamma" )
         self.color = Shader( self.context, "color" )
+        self.resolve = Shader( self.context, "resolve" )
 
     def setup_projection_matrix( self, size : Vector2 ) -> None:
         glViewport( 0, 0, int(size.x), int(size.y) )
@@ -353,14 +411,31 @@ class Renderer:
         elif self.animSun:
             self.animSun = False
 
+        # bind main FBO
+        self.bind_fbo( self.main_fbo )
+
+        self.view = self.cam.get_view_matrix()
+
     def end_frame( self ) -> None:
+        glUseProgram( 0 )
+        glFlush()
+
+        # stop rendering to main FBO
+        self.unbind_fbo()
+
+        # resolve multisampled main FBO
+        if self.settings.msaaEnabled:
+            self.resolve_multisample_texture()
+
+        self.context.imgui.render()
+
         self.framenum += 1
 
         # clear swapchain
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )
 
         # render fbo texture to swapchain
-        #self.render_fbo( self.main_fbo["texture"] )
+        #self.render_fbo( self.main_fbo["output"] )
    
         # render imgui buffer
         imgui.render()
