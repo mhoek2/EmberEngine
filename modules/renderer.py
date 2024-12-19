@@ -100,13 +100,14 @@ class Renderer:
 
         self.main_fbo = {}
         self.main_fbo["size"] = Vector2( int(self.display_size.x), int(self.display_size.y) )
-        self.main_fbo["fbo"], self.main_fbo["texture"] = self.create_fbo_with_depth( self.main_fbo["size"] )
-        self.main_fbo['output'] = self.main_fbo["texture"]
+        self.main_fbo["fbo"], self.main_fbo["color_image"] = self.create_fbo_with_depth( self.main_fbo["size"] )
+        self.main_fbo['output'] = self.main_fbo["color_image"]
 
         if self.settings.msaaEnabled:
-            self.main_fbo["texture_resolve"] = self.create_resolve_texture( self.main_fbo["size"]  )
-            self.main_fbo["fbo_resolve"] = self.create_resolve_fbo( self.main_fbo["texture_resolve"]  )
-            self.main_fbo['output'] = self.main_fbo["texture_resolve"]
+            self.main_fbo["resolve"] = {}
+            self.main_fbo["resolve"]["color_image"] = self.create_resolve_texture( self.main_fbo["size"]  )
+            self.main_fbo["resolve"]["fbo"] = self.create_resolve_fbo( self.main_fbo["resolve"]["color_image"]  )
+            self.main_fbo['output'] = self.main_fbo["resolve"]["color_image"]
 
         #glClearColor(0.0, 0.3, 0.7, 1)
         glClearColor(0.0, 0.0, 0.0, 1)
@@ -197,7 +198,7 @@ class Renderer:
         return resolve_fbo
 
     def resolve_multisample_texture( self ):
-        glBindFramebuffer( GL_FRAMEBUFFER, self.main_fbo["fbo_resolve"] )
+        glBindFramebuffer( GL_FRAMEBUFFER, self.main_fbo["resolve"]["fbo"] )
         glClear( GL_COLOR_BUFFER_BIT )
 
         self.use_shader( self.resolve )
@@ -206,7 +207,7 @@ class Renderer:
         glDisable(GL_DEPTH_TEST);
 
         glActiveTexture( GL_TEXTURE0 )
-        glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, self.main_fbo["texture"] )
+        glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, self.main_fbo["color_image"] )
         glUniform1i( glGetUniformLocation( self.shader.program, "msaa_texture"), 0 )
         glUniform1i( glGetUniformLocation( self.shader.program, "samples"), self.settings.msaa )
 
@@ -434,7 +435,7 @@ class Renderer:
         glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT )
 
         # render fbo texture to swapchain
-        #self.render_fbo( self.main_fbo["texture"] )
+        #self.render_fbo( self.main_fbo["output"] )
    
         # render imgui buffer
         imgui.render()
