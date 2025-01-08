@@ -22,7 +22,8 @@ The primary goal of this project is to gain more knowledge in Python programming
 
 7. Install dependency: **pyImGui**:
 	1. Get and build [pyImGui docking](https://github.com/pyimgui/pyimgui/tree/docking)
-	2. Replace files in ```C:\Python39\Lib\site-packages\imgui``` with files in ```pyimgui\build\lib.win-amd64-3.9\imgui```
+ 		1. Windows: run ```pip install .``` in root folder of the project 
+	3. Replace files in ```C:\Python39\Lib\site-packages\imgui``` with files in ```pyimgui\build\lib.win-amd64-3.9\imgui```
 
 
 https://github.com/user-attachments/assets/3027674b-0132-4761-9c3c-612fa972be97
