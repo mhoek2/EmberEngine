@@ -1,6 +1,7 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.arrays import vbo
+from pyrr import Matrix44
 
 from modules.context import Context
 from modules.material import Material
@@ -142,48 +143,73 @@ class Models( Context ):
         self._num_models += 1
         return index
 
-    def draw( self, index : int ) -> None:
-        for mesh in self.model[index].meshes:
-            mesh_index = self.model[index].meshes.index(mesh)
+    def render( self, model_index, mesh_index, model_matrix ):
+        """Render the mesh from a node"""
+        mesh_gl = self.model_mesh[model_index][mesh_index]
+        vbo = mesh_gl["vbo"]
+        vbo.bind()
 
-            mesh_gl = self.model_mesh[index][mesh_index]
-            vbo = mesh_gl["vbo"]
-            vbo.bind()
-
-            size = mesh_gl["vbo_size"]
-            stride = size * mesh_gl["vbo_shape"]
+        size = mesh_gl["vbo_size"]
+        stride = size * mesh_gl["vbo_shape"]
             
-            # vertex
-            glEnableVertexAttribArray( 0 )
-            glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, stride, None )
+        # vertex
+        glEnableVertexAttribArray( 0 )
+        glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, stride, None )
 
-            # normal
-            glEnableVertexAttribArray( 2 )
-            glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 3 ) )
+        # normal
+        glEnableVertexAttribArray( 2 )
+        glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 3 ) )
 
-            # uv
-            glEnableVertexAttribArray( 1 )
-            glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 6 ) )
+        # uv
+        glEnableVertexAttribArray( 1 )
+        glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 6 ) )
 
-            # tangents
-            glEnableVertexAttribArray( 3 )
-            glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 9 ) )
+        # tangents
+        glEnableVertexAttribArray( 3 )
+        glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 9 ) )
 
-            # bitangents
-            glEnableVertexAttribArray( 4 )
-            glVertexAttribPointer( 4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 12 ) )
+        # bitangents
+        glEnableVertexAttribArray( 4 )
+        glVertexAttribPointer( 4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 12 ) )
 
-            # material
-            self.materials.bind( mesh_gl["material"] )
+        # material
+        self.materials.bind( mesh_gl["material"] )
 
-            if self.settings.drawWireframe:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        if self.settings.drawWireframe:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_gl["faces"])
-            glDrawElements(GL_TRIANGLES, mesh_gl["nbfaces"] * 3, GL_UNSIGNED_INT, None)
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
 
-            if self.settings.drawWireframe:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_gl["faces"])
+        glDrawElements(GL_TRIANGLES, mesh_gl["nbfaces"] * 3, GL_UNSIGNED_INT, None)
 
-            vbo.unbind()
+        if self.settings.drawWireframe:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+        vbo.unbind()
+
+    def draw_node( self, node, model_index, model_matrix ):
+        """Recursivly process nodes (parent and child nodes)"""
+
+        # apply transformation matrices recursivly
+        global_transform = model_matrix * Matrix44(node.transformation).transpose()
+
+        for mesh in node.meshes:
+            mesh_index = self.model[model_index].meshes.index(mesh)
+            self.render( model_index, mesh_index, global_transform )
+
+        # process child nodes
+        for child in node.children:
+            self.draw_node( child, model_index, global_transform )
+
+    def draw( self, index : int, model_matrix ) -> None:
+        
+        self.draw_node( self.model[index].root_node, index, model_matrix )
+        return
+    
+        #for mesh in self.model[index].meshes:
+        #    mesh_index = self.model[index].meshes.index(mesh)
+        #
+        #    self.render( index, mesh_index, model_matrix )
+
         return

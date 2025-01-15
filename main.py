@@ -134,6 +134,13 @@ class EmberEngine:
                 # general
                 #
                 self.renderer.use_shader( self.renderer.general )
+
+                # environment
+                self.cubemaps.bind( self.environment_map, GL_TEXTURE4, "sEnvironment", 4 )
+
+                # brdf lut
+                self.images.bind( self.cubemaps.brdf_lut, GL_TEXTURE5, "sBRDF", 5 )
+
                 glUniform1i( self.renderer.shader.uniforms['in_renderMode'], self.renderer.renderMode )
 
                 # projection matrix can be bound at start
