@@ -63,6 +63,9 @@ class EmberEngine:
         self.light_color     = ( 1.0, 1.0, 1.0, 1.0 )
         self.ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
 
+        self.roughnessOverride = -1
+        self.metallicOverride = -1
+
         self.loadDefaultEnvironment()
 
     def loadDefaultEnvironment( self ) -> None:
@@ -159,6 +162,9 @@ class EmberEngine:
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], self.light_color[0], self.light_color[1], self.light_color[2], 1.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], self.ambient_color[0], self.ambient_color[1], self.ambient_color[2], 1.0 )
+
+                glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
+                glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
 
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:

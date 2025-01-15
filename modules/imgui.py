@@ -337,6 +337,14 @@ class ImGui( Context ):
             "Ambient color", *self.context.ambient_color
         )
 
+        changed, self.context.roughnessOverride = imgui.drag_float(
+                f"Roughness override", self.context.roughnessOverride, 0.01
+        )
+
+        changed, self.context.metallicOverride = imgui.drag_float(
+                f"Metallic override", self.context.metallicOverride, 0.01
+        )
+
         imgui.end()
         return
 

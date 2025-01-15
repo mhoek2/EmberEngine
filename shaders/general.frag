@@ -15,6 +15,8 @@ in vec4 var_Normal;
 in vec4 var_LightDir;
 in vec4 var_ViewDir;
 in vec2 vTexCoord;
+in float var_roughnessOverride;
+in float var_metallicOverride;
 
 in vec4 var_LightColor;
 in vec4 var_AmbientColor;
@@ -145,6 +147,11 @@ void main(){
 	roughness = mix(0.01, 1.0, ORMS.y);
 	AO = min(ORMS.x, AO);
 
+	if ( var_roughnessOverride != -1 )
+		roughness = var_roughnessOverride;
+
+	if ( var_metallicOverride != -1 )
+		specular.rgb = vec3(var_metallicOverride);
 
 	ambientColor *= AO;
 

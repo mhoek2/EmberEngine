@@ -10,6 +10,9 @@ uniform vec4 in_lightdir;
 uniform vec4 in_lightcolor;
 uniform vec4 in_ambientcolor;
 
+uniform float in_roughnessOverride;
+uniform float in_metallicOverride;
+
 layout(location = 0) in vec3 aVertex;
 layout(location = 1) in vec2 aTexCoord;    
 layout(location = 2) in vec3 aNormal;
@@ -17,6 +20,8 @@ layout(location = 3) in vec3 aTangent;
 layout(location = 4) in vec3 aBiTangent;
 
 out vec2 vTexCoord;
+out float var_roughnessOverride;
+out float var_metallicOverride;
 
 out vec4 var_Tangent;
 out vec4 var_BiTangent;
@@ -56,4 +61,8 @@ void main(){
 
 	var_LightColor		= in_lightcolor;
 	var_AmbientColor	= in_ambientcolor;
+
+	var_roughnessOverride = in_roughnessOverride;
+	var_metallicOverride = in_metallicOverride;
+
 }
