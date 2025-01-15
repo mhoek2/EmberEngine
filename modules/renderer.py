@@ -90,6 +90,7 @@ class Renderer:
 	        "VdotH - View direction dot Half vector",
 	        "IBL Contribution",
             "Emissive",
+            "Opacity",
             ]
 
         self.animSun = False

@@ -8,6 +8,7 @@ uniform sampler2D sPhyiscal;
 uniform samplerCube sEnvironment;
 uniform sampler2D sBRDF;
 uniform sampler2D sEmissive;
+uniform sampler2D sOpacity;
 
 in vec4 var_Tangent;
 in vec4 var_BiTangent;
@@ -176,6 +177,11 @@ void main(){
 	out_color.rgb += emissiveColor;
 	out_color.rgb += CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO );
 
+	out_color.a = diffuse.a;
+
+	float opacity = texture( sOpacity, vTexCoord ).r;
+	out_color.a *= opacity;
+
 	if ( in_renderMode > 0 )
 	{
 		switch( in_renderMode )
@@ -203,8 +209,7 @@ void main(){
 			case 21 : out_color.rgb = vec3(VH); break;
 			case 22 : out_color.rgb = CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO ); break;
 			case 23 : out_color.rgb = emissiveColor; break;
+			case 24 : out_color.rgb = vec3(opacity); break;
 		}
 	}
-
-	out_color.a = diffuse.a;
 }

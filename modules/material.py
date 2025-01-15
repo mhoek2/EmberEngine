@@ -49,6 +49,8 @@ class Material( Context ):
         else:
             mat["emissive"] = self.images.blackImage
 
+        mat["opacity"] = self.images.whiteImage
+
         if rmo:
             mat["phyiscal"] = self.images.loadOrFindFullPath( rmo )
         else:
@@ -106,6 +108,11 @@ class Material( Context ):
                     _filename = os.path.basename( prop.data )
                     r = f"{path}\\{_filename}"
 
+                # opacity
+                elif prop.semantic == TextureSemantic.OPACITY:
+                    _filename = os.path.basename( prop.data )
+                    mat["opacity"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+
                 # emissive
                 if prop.semantic == TextureSemantic.EMISSIVE:
                     _filename = os.path.basename( prop.data )
@@ -155,5 +162,10 @@ class Material( Context ):
             self.images.bind( mat["emissive"], GL_TEXTURE3, "sEmissive", 3 )
         else:
             self.images.bind( self.images.blackImage, GL_TEXTURE3, "sEmissive", 3 )
+
+        if 'opacity' in mat:
+            self.images.bind( mat["opacity"], GL_TEXTURE4, "sOpacity", 4 )
+        else:
+            self.images.bind( self.images.whiteImage, GL_TEXTURE4, "sOpacity", 4 )
 
         return
