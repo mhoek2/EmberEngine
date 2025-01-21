@@ -29,6 +29,9 @@ class ImGui( Context ):
 
         self.initialized = False
 
+        self.char_game_state = ["play", "stop"]
+        self.color_game_state = [(0.2, 0.7, 0.2), (0.8, 0.1, 0.15)]
+
     def load_gui_icons( self ) -> None:
         """Load icons from game assets gui folder"""
         self.icons = {}
@@ -127,6 +130,26 @@ class ImGui( Context ):
 
             imgui.end_main_menu_bar()
 
+    def draw_gamestate( self ):
+        width = imgui.get_window_size().x / 2
+        imgui.same_line( width - 50 )
+
+        game_state = int(self.settings.game_running)
+        imgui.push_style_color(imgui.COLOR_BUTTON, 
+                               self.color_game_state[game_state][0], 
+                               self.color_game_state[game_state][1], 
+                               self.color_game_state[game_state][2]
+                               )
+
+        if imgui.button( self.char_game_state[game_state] ):
+            if self.settings.game_running:
+                self.settings.game_running = False
+            else:
+                self.settings.game_start = True
+                self.settings.game_running = True
+
+        imgui.pop_style_color(1)
+
     def draw_viewport( self ) -> None:
 
         imgui.set_next_window_size( 915, 640, imgui.FIRST_USE_EVER )
@@ -139,6 +162,9 @@ class ImGui( Context ):
             "##renderMode", self.renderer.renderMode, self.renderer.renderModes
         )
         imgui.pop_item_width();
+
+        imgui.same_line()
+        self.draw_gamestate()
 
         # resize
         size : Vector2 = imgui.get_window_size()
@@ -477,20 +503,6 @@ class ImGui( Context ):
         imgui.dummy(0, 50)
         imgui.end()
 
-    def draw_gamestate( self ):
-        state = ["play", "stop"]
-
-        imgui.begin( "Game state" )
-
-        if imgui.button( state[int(self.settings.game_running)] ):
-            if self.settings.game_running:
-                self.settings.game_running = False
-            else:
-                self.settings.game_start = True
-                self.settings.game_running = True
-
-        imgui.end()
-
     def render( self ):
         # init
         self.initialize_context()
@@ -510,4 +522,3 @@ class ImGui( Context ):
         self.draw_settings()
         self.draw_inspector()
         self.draw_environment()
-        self.draw_gamestate()
