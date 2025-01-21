@@ -128,7 +128,7 @@ class Models( Context ):
         index = self._num_models
 
         if not os.path.isfile( path ):
-            raise ValueError("Invalid model path!")
+            raise ValueError( f"Invalid model path!{path}" )
 
         self.model[index] = imp.load( path, processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
 
