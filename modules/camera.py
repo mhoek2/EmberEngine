@@ -26,14 +26,20 @@ class Camera:
         self.jaw = y
         self.update_camera_vectors()
 
+    def place_object_in_front_of_another(self, position, rotation, distance) -> Vector3:
+        rotation_matrix = Matrix44.from_eulers(rotation)
+        forward_vector = rotation_matrix * Vector3([0, 0, 1]) # forward is along the Z-axis
+        return position + forward_vector * distance
+
     def get_view_matrix_running(self) -> Matrix44:
         """Get the view matrix from the camera gameObject"""
         camera = self.context.gameObjects[self.context.camera_object]
-            
-        camera_rotation = Matrix44.from_eulers(Vector3([camera.rotation[0], camera.rotation[1], -camera.rotation[2]]))
-        camera_translation = Matrix44.from_translation(Vector3([camera.translate[0], -camera.translate[1], camera.translate[2]]))
+        camera_rotation = Matrix44.from_eulers(camera.rotation)
+        up = camera_rotation * Vector3([0.0, 1.0, 0.0])
 
-        return camera_rotation * camera_translation;
+        target = self.place_object_in_front_of_another( camera.translate, camera.rotation, 10 )
+
+        return matrix44.create_look_at(camera.translate, target, up)
 
     def get_view_matrix(self):
         """Get the current view matrix, based on if game is running,
