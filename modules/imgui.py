@@ -143,12 +143,13 @@ class ImGui( Context ):
         # resize
         size : Vector2 = imgui.get_window_size()
 
+        bias_y = 58
         if size != self.renderer.viewport_size:
             self.renderer.viewport_size = Vector2( int(size.x), int(size.y) )
-            self.renderer.setup_projection_matrix( self.renderer.viewport_size )
+            self.renderer.setup_projection_matrix( self.renderer.viewport_size - Vector2(0, bias_y) )
 
         glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["output"] )
-        imgui.image( self.renderer.main_fbo["output"], self.renderer.viewport_size.x, self.renderer.viewport_size.y, uv0=(0, 1), uv1=(1, 0) )
+        imgui.image( self.renderer.main_fbo["output"], self.renderer.viewport_size.x, (self.renderer.viewport_size.y - bias_y), uv0=(0, 1), uv1=(1, 0) )
 
         imgui.end()
 

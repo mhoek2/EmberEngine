@@ -134,7 +134,10 @@ class Renderer:
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
 
-        self.screen = pygame.display.set_mode( self.display_size, DOUBLEBUF | OPENGL )
+        display = pygame.display.Info()
+        self.display_size = Vector2(display.current_w, display.current_h)
+
+        self.screen = pygame.display.set_mode( self.display_size, SCALED | RESIZABLE | DOUBLEBUF | OPENGL )
         pygame.display.set_caption( "EmberEngine 3D" )
 
         if self.settings.msaaEnabled:
