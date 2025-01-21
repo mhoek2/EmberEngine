@@ -1,8 +1,16 @@
-from pyrr import Vector3, vector, vector3, matrix44
+from pyrr import Vector3, vector, vector3, matrix44, Matrix44
 from math import sin, cos, radians
 
+from modules.settings import Settings
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import EmberEngine
+
 class Camera:
-    def __init__(self):
+    def __init__( self, context ):
+        self.context    : 'EmberEngine' = context
+        self.settings   : Settings = context.settings
+
         self.camera_pos = Vector3([0.0, 1.0, 5.0])
         self.camera_front = Vector3([0.0, 0.0, -1.0])
         self.camera_up = Vector3([0.0, 1.0, 0.0])
@@ -12,7 +20,28 @@ class Camera:
         self.jaw = -90
         self.pitch = 0
 
+    def update_camera_pos( self, pos, p, y, r ):
+        self.camera_pos = pos
+        self.pitch = p
+        self.jaw = y
+        self.update_camera_vectors()
+
+    def get_view_matrix_running(self) -> Matrix44:
+        """Get the view matrix from the camera gameObject"""
+        camera = self.context.gameObjects[self.context.camera_object]
+            
+        camera_rotation = Matrix44.from_eulers(Vector3([camera.rotation[0], camera.rotation[1], -camera.rotation[2]]))
+        camera_translation = Matrix44.from_translation(Vector3([camera.translate[0], -camera.translate[1], camera.translate[2]]))
+
+        return camera_rotation * camera_translation;
+
     def get_view_matrix(self):
+        """Get the current view matrix, based on if game is running,
+        switch between editor and scene camera"""
+        if self.settings.game_running:
+            return self.get_view_matrix_running()
+ 
+        # return editor camera
         return matrix44.create_look_at(self.camera_pos, self.camera_pos + self.camera_front, self.camera_up)
 
     def process_mouse_movement(self, xoffset, yoffset, constrain_pitch=True):

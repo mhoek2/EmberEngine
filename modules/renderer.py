@@ -58,7 +58,7 @@ class Renderer:
         pygame.mouse.set_pos( self.screen_center )
 
         # camera
-        self.cam = Camera()
+        self.cam = Camera( context )
 
         # shaders
         self.create_shaders()
@@ -401,7 +401,7 @@ class Renderer:
 
         imgui.new_frame()
 
-        if not self.ImGuiInput:
+        if not self.ImGuiInput and not self.settings.game_running:
             self.do_movement()
             self.do_mouse()
 

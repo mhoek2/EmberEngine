@@ -5,6 +5,9 @@ class Settings:
     def __init__( self ) -> None:
         """Global applictaion settings"""
 
+        self.game_running = False
+        self.game_start = False
+
         self.msaa = 8
         self.msaaEnabled = True if self.msaa > 0 else False
 

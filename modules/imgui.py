@@ -476,6 +476,20 @@ class ImGui( Context ):
         imgui.dummy(0, 50)
         imgui.end()
 
+    def draw_gamestate( self ):
+        state = ["play", "stop"]
+
+        imgui.begin( "Game state" )
+
+        if imgui.button( state[int(self.settings.game_running)] ):
+            if self.settings.game_running:
+                self.settings.game_running = False
+            else:
+                self.settings.game_start = True
+                self.settings.game_running = True
+
+        imgui.end()
+
     def render( self ):
         # init
         self.initialize_context()
@@ -495,3 +509,4 @@ class ImGui( Context ):
         self.draw_settings()
         self.draw_inspector()
         self.draw_environment()
+        self.draw_gamestate()

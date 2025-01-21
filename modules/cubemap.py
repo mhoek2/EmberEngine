@@ -94,7 +94,7 @@ class Cubemap( Context ):
         return
 
     def loadDefaultCubemap( self ) -> int:
-        return self.loadOrFind( f"{self.settings.engineAssets}\\cubemaps\\stars" )
+        return self.loadOrFind( f"{self.settings.engineAssets}\\cubemaps\\default" )
 
     def loadOrFind( self, path : str ) -> int:
         """Load or find an image, implement find later"""

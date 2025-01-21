@@ -27,6 +27,7 @@ from modules.models import Models
 from modules.material import Material
 
 from gameObjects.gameObject import GameObject
+from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
 from gameObjects.sun import Sun
 from gameObjects.skybox import Skybox
@@ -45,17 +46,26 @@ class EmberEngine:
         self.models     : Models = Models( self )
         self.cubemaps   : Cubemap = Cubemap( self )
         self.skybox     : Skybox = Skybox( self )
-        
+
         # default material
         self.defaultMaterial = self.materials.buildMaterial( )
 
         #default object
-        self.addGameObject( Mesh( self,
+        self.default_cube = self.addGameObject( Mesh( self,
                         name        = "Default cube",
                         material    = self.defaultMaterial,
                         translate   = [ 0, 1, 0 ],
                         scale       = [ 1, 1, 1 ],
-                        rotation    = [ 0.0, 0.0, 80.0 ]
+                        rotation    = [ 0.0, 0.0, 0.0 ],
+                    ) )
+        # camera object 
+        self.camera_object = self.addGameObject( Camera( self,
+                        name        = "Camera",
+                        model_file  = f"{self.settings.engineAssets}models\\camera\\model.fbx",
+                        material    = self.defaultMaterial,
+                        translate   = [ 0, 5, -10 ],
+                        scale       = [ 1, 1, 1 ],
+                        rotation    = [ -0.4, 0.0, 0.0 ],
                     ) )
 
         self.setupSun()
@@ -169,6 +179,13 @@ class EmberEngine:
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:
                     gameObject.onUpdate();
+
+                    if self.settings.game_start:
+                        gameObject.onStartScripts();
+                        self.settings.game_start = False
+
+                    if self.settings.game_running:
+                        gameObject.onUpdateScripts();
 
                 self.renderer.end_frame()
 
