@@ -334,10 +334,10 @@ class Renderer:
             self.ImGuiInput = True
             pygame.mouse.set_visible( True )
 
-    def event_handler( self, events ) -> None:
+    def event_handler( self ) -> None:
         mouse_moving = False
 
-        for event in events:
+        for event in self.context.events.get():
             if event.type == pygame.QUIT:
                 self.running = False
 
@@ -369,7 +369,7 @@ class Renderer:
             pygame.mouse.set_pos( self.screen_center )
 
     def do_movement(self) -> None:
-        keypress = pygame.key.get_pressed()
+        keypress = self.context.key.get_pressed()
         velocity = 0.05;
 
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
@@ -385,7 +385,7 @@ class Renderer:
             self.cam.process_keyboard( "LEFT", velocity )
         
     def do_mouse( self ):
-        xpos, ypos = pygame.mouse.get_rel()
+        xpos, ypos = self.context.mouse.get_rel()
 
         if self.ImGuiInputFocussed:
             """Input state changed, dont process mouse movement on the first """

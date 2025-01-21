@@ -36,6 +36,10 @@ class EmberEngine:
     def __init__( self ) -> None:
         self.settings   : Settings = Settings()
 
+        self.events     = pygame.event
+        self.key        = pygame.key
+        self.mouse      = pygame.mouse
+
         self.renderer   : Renderer = Renderer( self )
         self.imgui      : ImGui = ImGui( self )
 
@@ -50,15 +54,6 @@ class EmberEngine:
         # default material
         self.defaultMaterial = self.materials.buildMaterial( )
 
-        #default object
-        self.default_cube = self.addGameObject( Mesh( self,
-                        name        = "Default cube",
-                        material    = self.defaultMaterial,
-                        translate   = [ 0, 1, 0 ],
-                        scale       = [ 1, 1, 1 ],
-                        rotation    = [ 0.0, 0.0, 0.0 ],
-                        scripts     = [ Path(f"{self.settings.rootdir}\\script.py") ]
-                    ) )
         # camera object 
         self.camera_object = self.addGameObject( Camera( self,
                         name        = "Camera",
@@ -70,6 +65,15 @@ class EmberEngine:
                         scripts     = [ Path(f"{self.settings.rootdir}\\camera.py") ]
                     ) )
 
+        #default object
+        self.default_cube = self.addGameObject( Mesh( self,
+                        name        = "Default cube",
+                        material    = self.defaultMaterial,
+                        translate   = [ 0, 1, 0 ],
+                        scale       = [ 1, 1, 1 ],
+                        rotation    = [ 0.0, 0.0, 0.0 ],
+                        scripts     = [ Path(f"{self.settings.rootdir}\\script.py") ]
+                    ) )
         self.setupSun()
 
         self.light_color     = ( 1.0, 1.0, 1.0, 1.0 )
@@ -129,8 +133,7 @@ class EmberEngine:
 
     def run( self ) -> None:
         while self.renderer.running:
-            events = pygame.event.get()
-            self.renderer.event_handler( events )
+            self.renderer.event_handler()
 
             if not self.renderer.paused:
                 self.renderer.begin_frame()
@@ -180,14 +183,17 @@ class EmberEngine:
 
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:
-                    gameObject.onUpdate();
+                    gameObject.onUpdate();  # editor update
 
+                    # scene
                     if self.settings.game_start:
                         gameObject.onStartScripts();
-                        self.settings.game_start = False
-
+     
                     if self.settings.game_running:
                         gameObject.onUpdateScripts();
+
+                if self.settings.game_start:
+                    self.settings.game_start = False
 
                 self.renderer.end_frame()
 

@@ -57,8 +57,7 @@ class GameObject( Context ):
             class ClassPlaceholder( ScriptClass, ScriptBehaivior ):
                 pass
 
-            script["obj"] = ClassPlaceholder( self )
-            script["obj"].onStart()
+            script["obj"] = ClassPlaceholder( self.context, self )
 
     def onStartScripts( self ):
         for script in self.scripts:
