@@ -15,5 +15,5 @@ void main()
 	//vTexCoord = vec3(aVertex.x, aVertex.y, -aVertex.z);
 
     vTexCoord = aVertex;
-    gl_Position = ( uPMatrix * uVMatrix ) * vec4( aVertex, 1.0 );
+    gl_Position = ( uPMatrix * uVMatrix ) * vec4( -aVertex, 1.0 );
 }

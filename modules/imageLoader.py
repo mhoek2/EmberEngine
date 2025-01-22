@@ -49,7 +49,7 @@ def load_cubemap_pygame( path, extension, texture ):
     import pygame
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture)
 
-    faces = ( "left", "right", "down", "up", "front", "back" )
+    faces = ( "right", "left", "down", "up", "front", "back" )
 
     for i, face in enumerate(faces):
         filepath = f"{path}\\{face}{extension}"

@@ -94,13 +94,13 @@ class Cubemap( Context ):
         return
 
     def loadDefaultCubemap( self ) -> int:
-        return self.loadOrFind( f"{self.settings.engineAssets}\\cubemaps\\default" )
+        return self.loadOrFind( f"{self.settings.engineAssets}\\cubemaps\\day" )
 
     def loadOrFind( self, path : str ) -> int:
         """Load or find an image, implement find later"""
 
         index = self._num_cubemaps
-        load_cubemap( path, ".jpg", self.cubemap[index] )
+        load_cubemap( path, ".bmp", self.cubemap[index] )
 
         self._num_cubemaps += 1
         return index
