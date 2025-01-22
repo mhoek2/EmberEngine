@@ -182,6 +182,9 @@ class EmberEngine:
 
                 glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
                 glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
+                
+                if self.settings.game_start:
+                    self.console.clear()
 
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:
@@ -195,7 +198,6 @@ class EmberEngine:
                         gameObject.onUpdateScripts();
 
                 if self.settings.game_start:
-                    self.console.clear()
                     self.settings.game_start = False
 
                 self.renderer.end_frame()

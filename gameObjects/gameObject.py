@@ -1,4 +1,4 @@
-import os
+import os, sys
 from pathlib import Path
 import pygame
 from pygame.locals import *
@@ -44,11 +44,17 @@ class GameObject( Context ):
 
     def _init_external_scripts( self ):
         for script in self.scripts:
+            script["obj"] = False
+
             _module_name = script["file"].name.replace(".py", "");
             _class_name = self._get_class_name_from_script( script["file"] )
 
             _script_behaivior = importlib.import_module("gameObjects.scriptBehaivior")
             ScriptBehaivior = getattr(_script_behaivior, "ScriptBehaivior")
+
+            # remove from sys modules cache
+            if _module_name in sys.modules:
+                importlib.reload(sys.modules[_module_name])
 
             module = importlib.import_module( _module_name )
             setattr(module, "ScriptBehaivior", ScriptBehaivior)
@@ -61,10 +67,15 @@ class GameObject( Context ):
 
     def onStartScripts( self ):
         for script in self.scripts:
-            script["obj"].onStart()
+            try:
+                self._init_external_scripts()
+            except Exception as e:
+                self.console.addEntry( "Error:", e )
+            else:
+                script["obj"].onStart()
 
     def onUpdateScripts( self ):
-        for script in self.scripts:
+        for script in filter(lambda x: x["obj"] is not False, self.scripts):
             try:
                 script["obj"].onUpdate()
             except Exception as e:
@@ -108,8 +119,6 @@ class GameObject( Context ):
         # external scripts
         for file in scripts:
             self.addScript( file )
-
-        self._init_external_scripts()
 
         return
 
