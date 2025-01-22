@@ -11,6 +11,8 @@ class MyScript:
         keypress = self.key.get_pressed()
         velocity = 0.5
         
+        #time = velocity / 0
+        asasas
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
             velocity *= 10
 

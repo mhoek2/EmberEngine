@@ -1,4 +1,5 @@
 from pickletools import read_stringnl_noescape_pair
+from typing import List
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
@@ -9,6 +10,7 @@ from modules.context import Context
 from modules.material import Material
 from modules.images import Images
 from modules.models import Models
+from modules.console import Console
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
@@ -503,6 +505,15 @@ class ImGui( Context ):
         imgui.dummy(0, 50)
         imgui.end()
 
+    def draw_console( self ):
+        imgui.begin( "Console" )
+        entries : List[Console.Entry] = self.console.getEntries()
+
+        for entry in entries:
+            imgui.text( f"[{entry['type_id']}] {entry['message']}")
+
+        imgui.end()
+
     def render( self ):
         # init
         self.initialize_context()
@@ -522,3 +533,4 @@ class ImGui( Context ):
         self.draw_settings()
         self.draw_inspector()
         self.draw_environment()
+        self.draw_console()

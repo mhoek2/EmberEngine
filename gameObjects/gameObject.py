@@ -65,7 +65,10 @@ class GameObject( Context ):
 
     def onUpdateScripts( self ):
         for script in self.scripts:
-            script["obj"].onUpdate()
+            try:
+                script["obj"].onUpdate()
+            except Exception as e:
+                self.console.addEntry( "Error:", e )
 
     def __init__( self, context, 
                  name = "GameObject",

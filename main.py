@@ -17,6 +17,7 @@ from OpenGL.GLU import *
 import math
 import numpy as np
 
+from modules.console import Console
 from modules.imgui import ImGui
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
@@ -40,6 +41,7 @@ class EmberEngine:
         self.key        = pygame.key
         self.mouse      = pygame.mouse
 
+        self.console    : Console = Console(self)
         self.renderer   : Renderer = Renderer( self )
         self.imgui      : ImGui = ImGui( self )
 
@@ -193,6 +195,7 @@ class EmberEngine:
                         gameObject.onUpdateScripts();
 
                 if self.settings.game_start:
+                    self.console.clear()
                     self.settings.game_start = False
 
                 self.renderer.end_frame()
