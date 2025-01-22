@@ -137,7 +137,10 @@ class Renderer:
         display = pygame.display.Info()
         self.display_size = Vector2(display.current_w, display.current_h)
 
-        self.screen = pygame.display.set_mode( self.display_size, SCALED | RESIZABLE | DOUBLEBUF | OPENGL )
+        # this is a bit of a hack to get windowed fullscreen?
+        self.display_size -= Vector2( 0.0, 60.0 );
+
+        self.screen = pygame.display.set_mode( self.display_size, RESIZABLE | DOUBLEBUF | OPENGL )
         pygame.display.set_caption( "EmberEngine 3D" )
 
         if self.settings.msaaEnabled:
