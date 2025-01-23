@@ -510,7 +510,7 @@ class ImGui( Context ):
    
         _line_height = 17
         _region = imgui.get_content_region_available()
-        _color = self.console.entry_color[entry["type_id"]]
+        _color = self.console.entry_type_color[entry["type_id"]]
 
         # header background
         draw_list = imgui.get_window_draw_list() 
