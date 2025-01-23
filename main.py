@@ -17,6 +17,7 @@ from OpenGL.GLU import *
 import math
 import numpy as np
 
+from modules.scene import SceneManager
 from modules.console import Console
 from modules.imgui import ImGui
 from modules.jsonHandling import JsonHandler
@@ -44,6 +45,7 @@ class EmberEngine:
         self.console    : Console = Console(self)
         self.renderer   : Renderer = Renderer( self )
         self.imgui      : ImGui = ImGui( self )
+        self.scene      : SceneManager = SceneManager( self )
 
         self.gameObjects : List[GameObject] = []
 
@@ -53,10 +55,36 @@ class EmberEngine:
         self.cubemaps   : Cubemap = Cubemap( self )
         self.skybox     : Skybox = Skybox( self )
 
-        # default material
+        self.sun = -1
+        self.camera_object = -1
+
+        self.light_color     = ( 1.0, 1.0, 1.0, 1.0 )
+        self.ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
+        self.roughnessOverride = -1
+        self.metallicOverride = -1
+
         self.defaultMaterial = self.materials.buildMaterial( )
 
-        # camera object 
+        self.scene.getScenes()
+        self.scene.loadScene()
+
+        #self.addDefaultSun()
+
+        self.loadDefaultEnvironment()
+
+    def loadDefaultEnvironment( self ) -> None:
+        self.environment_map = self.cubemaps.loadDefaultCubemap()
+
+    def addDefaultCube( self ):
+        self.addGameObject( Mesh( self,
+            name        = "Default cube",
+            material    = self.defaultMaterial,
+            translate   = [ 0, 1, 0 ],
+            scale       = [ 1, 1, 1 ],
+            rotation    = [ 0.0, 0.0, 0.0 ]
+        ) )
+
+    def addDefaultCamera( self ):
         self.camera_object = self.addGameObject( Camera( self,
                         name        = "Camera",
                         model_file  = f"{self.settings.engineAssets}models\\camera\\model.fbx",
@@ -67,29 +95,7 @@ class EmberEngine:
                         scripts     = [ Path(f"{self.settings.assets}\\camera.py") ]
                     ) )
 
-        #default object
-        self.default_cube = self.addGameObject( Mesh( self,
-                        name        = "Default cube",
-                        material    = self.defaultMaterial,
-                        translate   = [ 0, 1, 0 ],
-                        scale       = [ 1, 1, 1 ],
-                        rotation    = [ 0.0, 0.0, 0.0 ],
-                        scripts     = [ Path(f"{self.settings.assets}\\script.py") ]
-                    ) )
-        self.setupSun()
-
-        self.light_color     = ( 1.0, 1.0, 1.0, 1.0 )
-        self.ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
-
-        self.roughnessOverride = -1
-        self.metallicOverride = -1
-
-        self.loadDefaultEnvironment()
-
-    def loadDefaultEnvironment( self ) -> None:
-        self.environment_map = self.cubemaps.loadDefaultCubemap()
-
-    def setupSun( self ) -> None:
+    def addDefaultSun( self ) -> None:
         self.sun = self.addGameObject( Sun( self,
                         name        = "sun",
                         model_file  = f"{self.settings.engineAssets}models\\sphere\\model.obj",
@@ -175,7 +181,7 @@ class EmberEngine:
                 glUniform4f( self.renderer.shader.uniforms['u_ViewOrigin'], camera_pos[0], camera_pos[1], camera_pos[2], 0.0 )
 
                 # sun direction/position and color
-                light_dir = self.gameObjects[self.sun].translate
+                light_dir = self.gameObjects[self.sun].translate if self.sun != -1 else (0.0, 0.0, 1.0)
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], self.light_color[0], self.light_color[1], self.light_color[2], 1.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], self.ambient_color[0], self.ambient_color[1], self.ambient_color[2], 1.0 )

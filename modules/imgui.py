@@ -11,6 +11,7 @@ from modules.material import Material
 from modules.images import Images
 from modules.models import Models
 from modules.console import Console
+from modules.scene import SceneManager
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
@@ -55,6 +56,8 @@ class ImGui( Context ):
         self.materials  : Material = self.context.materials
         self.images     : Images = self.context.images
         self.models     : Models = self.context.models
+
+        self.scene      : SceneManager = self.context.scene
 
         self.file_browser_init()
         self.load_gui_icons()
@@ -121,6 +124,13 @@ class ImGui( Context ):
                 if clicked_quit:
                     self.renderer.running = False
 
+                clicked_scene, selected_scebe = imgui.menu_item(
+                    "Scene", '', False, True
+                )
+
+                if clicked_scene:
+                    self.scene.toggleWindow()
+
                 imgui.end_menu()
 
             imgui.same_line( w - 400.0 )
@@ -184,10 +194,15 @@ class ImGui( Context ):
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
+        if imgui.button( "Add gameObject" ):
+            self.context.addDefaultCube()
+
         if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
 
             for n, gameObject in enumerate( self.context.gameObjects ):
                 if isinstance( gameObject, GameObject ): # link class name
+                    imgui.push_id( f"gameObject_{n}" )
+
                     clicked, _ = imgui.selectable(
                         label = gameObject.name,
                         selected = ( self.selectedObjectIndex == n )
@@ -196,7 +211,8 @@ class ImGui( Context ):
                     if clicked:
                         self.selectedObjectIndex = n
                         self.selectedObject = self.context.gameObjects[ n ]
-
+                    
+                    imgui.pop_id()
             imgui.tree_pop()
 
         imgui.end()
@@ -549,6 +565,17 @@ class ImGui( Context ):
         imgui.pop_style_var(1)
         imgui.end()
 
+    def draw_scene_manager(self ):
+        if not self.scene._window_is_open:
+            return
+
+        _, self.scene._window_is_open = imgui.begin( "Scene Manager", closable=True )
+
+        if imgui.button( "Save scene" ):
+            self.scene.saveScene()
+
+        imgui.end()
+
     def render( self ):
         # init
         self.initialize_context()
@@ -569,3 +596,4 @@ class ImGui( Context ):
         self.draw_inspector()
         self.draw_environment()
         self.draw_console()
+        self.draw_scene_manager()
