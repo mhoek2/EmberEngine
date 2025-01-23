@@ -5,14 +5,10 @@ class MyScript:
     def onStart( self ) -> None:
         self.camera = self.context.gameObjects[self.context.camera_object]
 
-        pass
-
     def onUpdate( self ) -> None:
         keypress = self.key.get_pressed()
         velocity = 0.5
         
-        #time = velocity / 0
-        asasas
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
             velocity *= 10
 

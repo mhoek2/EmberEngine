@@ -64,7 +64,7 @@ class EmberEngine:
                         translate   = [ 0, 5, -10 ],
                         scale       = [ 1, 1, 1 ],
                         rotation    = [ -0.4, 0.0, 0.0 ],
-                        scripts     = [ Path(f"{self.settings.rootdir}\\camera.py") ]
+                        scripts     = [ Path(f"{self.settings.assets}\\camera.py") ]
                     ) )
 
         #default object
@@ -74,7 +74,7 @@ class EmberEngine:
                         translate   = [ 0, 1, 0 ],
                         scale       = [ 1, 1, 1 ],
                         rotation    = [ 0.0, 0.0, 0.0 ],
-                        scripts     = [ Path(f"{self.settings.rootdir}\\script.py") ]
+                        scripts     = [ Path(f"{self.settings.assets}\\script.py") ]
                     ) )
         self.setupSun()
 

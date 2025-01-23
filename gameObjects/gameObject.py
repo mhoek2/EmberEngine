@@ -18,6 +18,7 @@ from modules.images import Images
 from modules.models import Models
 
 import importlib
+import traceback
 
 class GameObject( Context ):
     class Scripts(TypedDict):
@@ -52,6 +53,11 @@ class GameObject( Context ):
             _script_behaivior = importlib.import_module("gameObjects.scriptBehaivior")
             ScriptBehaivior = getattr(_script_behaivior, "ScriptBehaivior")
 
+            # module name needs subfolder prefixes with . delimter
+            _module_name_prefix = self.settings.assets.replace( str(self.settings.rootdir), "")
+            _module_name_prefix = _module_name_prefix[1::].replace("\\", ".")
+            _module_name = _module_name_prefix + _module_name
+
             # remove from sys modules cache
             if _module_name in sys.modules:
                 importlib.reload(sys.modules[_module_name])
@@ -70,7 +76,8 @@ class GameObject( Context ):
             try:
                 self._init_external_scripts()
             except Exception as e:
-                self.console.addEntry( "Error:", e )
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
             else:
                 script["obj"].onStart()
 
@@ -79,7 +86,8 @@ class GameObject( Context ):
             try:
                 script["obj"].onUpdate()
             except Exception as e:
-                self.console.addEntry( "Error:", e )
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
 
     def __init__( self, context, 
                  name = "GameObject",

@@ -504,14 +504,49 @@ class ImGui( Context ):
 
         imgui.dummy(0, 50)
         imgui.end()
+       
+    def draw_console_entry( self, i, entry : Console.Entry ):
+        imgui.push_id( f"exception_{i}" )
+   
+        _line_height = 17
+        _region = imgui.get_content_region_available()
+        _color = self.console.entry_color[entry["type_id"]]
+
+        # header background
+        draw_list = imgui.get_window_draw_list() 
+        p_min = imgui.get_cursor_screen_pos()
+        p_max = imgui.Vec2( p_min.x + _region.x, p_min.y + _line_height)
+        draw_list.add_rect_filled(p_min.x, p_min.y, p_max.x, p_max.y, imgui.get_color_u32_rgba(_color[0], _color[1], _color[2], 0.2))
+        
+        # header hover background
+        imgui.push_style_color(imgui.COLOR_HEADER_HOVERED, _color[0], _color[1], _color[2], 0.4 ) 
+
+        if imgui.tree_node( f"{ entry['message'] }" ):
+            # content background
+            _h_cor_bias = 4 # imgui.STYLE_ITEM_SPACING
+            p_min = imgui.Vec2(p_min.x, p_max.y)
+            _height = (_line_height * entry["_n_lines"]) - _h_cor_bias
+            p_max = imgui.Vec2(p_max.x, p_min.y + _height)
+            draw_list.add_rect_filled(p_min.x, p_min.y, p_max.x, p_max.y, imgui.get_color_u32_rgba(_color[0], _color[1], _color[2], 0.1))
+
+            for tb in entry["traceback"]:
+                imgui.text( f"{tb}" )
+
+            imgui.tree_pop()
+
+        imgui.pop_style_color(1)
+        imgui.pop_id()
 
     def draw_console( self ):
         imgui.begin( "Console" )
         entries : List[Console.Entry] = self.console.getEntries()
 
-        for entry in entries:
-            imgui.text( f"[{entry['type_id']}] {entry['message']}")
+        imgui.push_style_var(imgui.STYLE_ITEM_SPACING, (0.0, 6.0))
 
+        for i, entry in enumerate(entries):
+            self.draw_console_entry( i, entry )
+
+        imgui.pop_style_var(1)
         imgui.end()
 
     def render( self ):

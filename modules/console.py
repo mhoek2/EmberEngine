@@ -7,8 +7,10 @@ if TYPE_CHECKING:
 
 class Console:
     class Entry(TypedDict):
-        type_id: str
-        message: str
+        type_id     : str
+        message     : str
+        traceback   : None
+        _n_lines    : int   # imgui info
 
     def __init__( self, context ) -> None:
         """Console manager"""
@@ -17,8 +19,25 @@ class Console:
 
         self.entries    : List[Console.Entry] = []
 
-    def addEntry( self, type_id, message ):
-        self.entries.append( {"type_id": type_id, "message": message} )
+        self.ENTRY_TYPE_ERROR = 0
+        self.ENTRY_TYPE_WARNING = 1
+
+        self.entry_color = [(1.0, 0.0, 0.0), (0, 1.0, 1.0)]
+
+    def addEntry( self, type_id : int, traceback, e ):
+        
+        traceback_filtered = []
+        _n_lines = 0
+        for tb in filter( lambda x: str(self.settings.assets) in x, traceback ):
+            _n_lines += tb.count("\n")
+            traceback_filtered.append( tb )
+
+        self.entries.append( {
+            "type_id"   : type_id, 
+            "message"   : e,
+            "traceback" : traceback_filtered,
+            "_n_lines"   : _n_lines,
+        } )
         pass
 
     def clear( self ):
