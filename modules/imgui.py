@@ -194,13 +194,19 @@ class ImGui( Context ):
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
-        if imgui.button( "Add gameObject" ):
+        if imgui.button( "Add Cube" ):
             self.context.addDefaultCube()
 
         imgui.same_line()
 
         if imgui.button( "Add Light" ):
             self.context.addDefaultLight()
+
+        imgui.same_line()
+
+        if imgui.button( "Empty GameObject" ):
+            self.context.addEmptyGameObject()
+
 
         if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
 

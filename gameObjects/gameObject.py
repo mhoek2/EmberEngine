@@ -116,10 +116,8 @@ class GameObject( Context ):
         self.scale = scale
 
         # model
-        if not model_file:
-            self.model_file = f"{self.settings.engineAssets}models\\cube\\model.obj"
-        else:
-            self.model_file = model_file
+        self.model          : int = -1
+        self.model_file = model_file if model_file else False
 
         self.onStart()
 

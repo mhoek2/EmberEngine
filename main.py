@@ -75,9 +75,19 @@ class EmberEngine:
     def loadDefaultEnvironment( self ) -> None:
         self.environment_map = self.cubemaps.loadDefaultCubemap()
 
+    def addEmptyGameObject( self ):
+        self.addGameObject( Mesh( self,
+            name        = "Empty GameObject",
+            material    = self.defaultMaterial,
+            translate   = [ 0, 0, 0 ],
+            scale       = [ 1, 1, 1 ],
+            rotation    = [ 0.0, 0.0, 0.0 ]
+        ) )
+
     def addDefaultCube( self ):
         self.addGameObject( Mesh( self,
             name        = "Default cube",
+            model_file  = f"{self.settings.engineAssets}models\\cube\\model.obj",
             material    = self.defaultMaterial,
             translate   = [ 0, 1, 0 ],
             scale       = [ 1, 1, 1 ],
