@@ -94,7 +94,7 @@ class SceneManager:
     def loadScene( self, is_default = False ):
         from gameObjects.mesh import Mesh
         from gameObjects.camera import Camera
-        from gameObjects.sun import Sun
+        from gameObjects.light import Light
 
         for i, scene in enumerate(self.scenes):
             try:
@@ -111,7 +111,9 @@ class SceneManager:
                             )
                         )
 
-                        if isinstance( self.context.gameObjects[index], Sun ):
+                        # todo:
+                        # implement scene settings, so a camera or sun can be assigned
+                        if isinstance( self.context.gameObjects[index], Light ):
                             self.context.sun = index
 
                         if isinstance( self.context.gameObjects[index], Camera ):
@@ -125,9 +127,6 @@ class SceneManager:
                 # setup default camera if no camera in the scene
                 if self.context.camera_object == -1:
                    self.context.addDefaultCamera()
-                  
-                # setup default sun?
-                #   self.context.addDefaultSun()
 
                 self.current_scene =  i
                 return

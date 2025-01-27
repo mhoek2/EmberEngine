@@ -31,7 +31,7 @@ from modules.material import Material
 from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
-from gameObjects.sun import Sun
+from gameObjects.light import Light
 from gameObjects.skybox import Skybox
 
 class EmberEngine:
@@ -95,9 +95,9 @@ class EmberEngine:
                         scripts     = [ Path(f"{self.settings.assets}\\camera.py") ]
                     ) )
 
-    def addDefaultSun( self ) -> None:
-        self.sun = self.addGameObject( Sun( self,
-                        name        = "sun",
+    def addDefaultLight( self ) -> None:
+        self.addGameObject( Light( self,
+                        name        = "light",
                         model_file  = f"{self.settings.engineAssets}models\\sphere\\model.obj",
                         translate   = [1, -1, 1],
                         scale       = [ 0.5, 0.5, 0.5 ],

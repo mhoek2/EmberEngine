@@ -15,7 +15,7 @@ from modules.scene import SceneManager
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
-from gameObjects.sun import Sun
+from gameObjects.light import Light
 
 from pathlib import Path
 import textwrap
@@ -199,8 +199,8 @@ class ImGui( Context ):
 
         imgui.same_line()
 
-        if imgui.button( "Add Sun" ):
-            self.context.addDefaultSun()
+        if imgui.button( "Add Light" ):
+            self.context.addDefaultLight()
 
         if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
 
@@ -296,8 +296,8 @@ class ImGui( Context ):
         if isinstance( gameObject, Mesh ):
             imgui.text( f"Mesh" );
 
-        if isinstance( gameObject, Sun ):
-            imgui.text( f"Sun" );
+        if isinstance( gameObject, Light ):
+            imgui.text( f"Light" );
 
         if imgui.tree_node( "Transform", imgui.TREE_NODE_DEFAULT_OPEN ):
 

@@ -50,7 +50,7 @@
             ]
         },
         {
-			"instance": "Sun",
+			"instance": "Light",
             "name": "sun",
             "model_file": "D:\\Github-workspace\\EmberEngine\\engineAssets\\models\\sphere\\model.obj",
             "material": -1,
