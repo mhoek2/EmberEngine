@@ -93,8 +93,6 @@ class Renderer:
             "Opacity",
             ]
 
-        self.animSun = False
-
         # FBO
         self.current_fbo = False;
         self.create_screen_vao()
@@ -410,13 +408,6 @@ class Renderer:
         if not self.ImGuiInput and not self.settings.game_running:
             self.do_movement()
             self.do_mouse()
-
-        # animate sun
-        keypress = pygame.key.get_pressed()
-        if keypress[pygame.K_o]:
-            self.animSun = True
-        elif self.animSun:
-            self.animSun = False
 
         # bind main FBO
         self.bind_fbo( self.main_fbo )

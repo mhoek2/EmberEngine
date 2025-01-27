@@ -15,7 +15,7 @@ from modules.scene import SceneManager
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
-from gameObjects.sun import Sun
+from gameObjects.light import Light
 
 from pathlib import Path
 import textwrap
@@ -117,17 +117,18 @@ class ImGui( Context ):
 
             if imgui.begin_menu("File", True):
 
-                clicked_quit, selected_quit = imgui.menu_item(
-                    "Quit", 'Cmd+Q', False, True
-                )
-
+                # quit
+                clicked_quit, _ = imgui.menu_item( "Quit", '', False, True )
                 if clicked_quit:
                     self.renderer.running = False
 
-                clicked_scene, selected_scebe = imgui.menu_item(
-                    "Scene", '', False, True
-                )
+                # save scene
+                clicked_save, _ = imgui.menu_item( "Save", 'CTRL+S', False, True )
+                if clicked_save:
+                    self.scene.saveScene()
 
+                # scene manager
+                clicked_scene, _ = imgui.menu_item( "Scene Manager", '', False, True )
                 if clicked_scene:
                     self.scene.toggleWindow()
 
@@ -194,13 +195,19 @@ class ImGui( Context ):
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
-        if imgui.button( "Add gameObject" ):
+        if imgui.button( "Add Cube" ):
             self.context.addDefaultCube()
 
         imgui.same_line()
 
-        if imgui.button( "Add Sun" ):
-            self.context.addDefaultSun()
+        if imgui.button( "Add Light" ):
+            self.context.addDefaultLight()
+
+        imgui.same_line()
+
+        if imgui.button( "Empty GameObject" ):
+            self.context.addEmptyGameObject()
+
 
         if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
 
@@ -296,8 +303,8 @@ class ImGui( Context ):
         if isinstance( gameObject, Mesh ):
             imgui.text( f"Mesh" );
 
-        if isinstance( gameObject, Sun ):
-            imgui.text( f"Sun" );
+        if isinstance( gameObject, Light ):
+            imgui.text( f"Light" );
 
         if imgui.tree_node( "Transform", imgui.TREE_NODE_DEFAULT_OPEN ):
 
@@ -398,6 +405,115 @@ class ImGui( Context ):
         imgui.end()
         return
 
+    # combo example
+    #selected = 0
+    #items = self.context.asset_scripts
+    #
+    #if imgui.begin_combo("combo", items[selected]):
+    #    for i, item in enumerate(items):
+    #        is_selected = (i == selected)
+    #        if imgui.selectable(item, is_selected)[0]:
+    #            selected = i
+    #        
+    #        # Set the initial focus when opening the combo (scrolling + keyboard navigation focus)                    
+    #        if is_selected:
+    #            imgui.set_item_default_focus()
+    #
+    #    imgui.end_combo()
+
+    def draw_inspector_scripts( self ):
+        if imgui.tree_node( "Scripts", imgui.TREE_NODE_DEFAULT_OPEN ):
+            assets = Path( self.settings.assets ).resolve()
+            _shift_left = 20.0
+            _region = imgui.get_content_region_available()
+            _region = imgui.Vec2(_region.x + _shift_left, _region.y)
+
+            i = -1
+            for i, script in enumerate(self.selectedObject.scripts):
+                imgui.push_id(f"draw_script_{str(script['file'])}")
+
+                name = str(script['file'].relative_to(assets))
+
+                draw_list = imgui.get_window_draw_list() 
+                draw_list.channels_split(2)
+                draw_list.channels_set_current(1)
+
+                p_min = imgui.get_cursor_screen_pos()
+                p_min = imgui.Vec2( (p_min.x-_shift_left), p_min.y)
+                imgui.set_cursor_screen_pos(p_min)
+                
+                imgui.begin_group()
+
+                imgui.text(name) # should become the Class name
+                imgui.same_line( _region.x - 15 )
+                if not self.settings.game_running and imgui.button("x"):
+                    self.selectedObject.removeScript( script['file'] )
+
+                #imgui.input_text( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+
+                imgui.end_group()
+                _group_height = imgui.get_item_rect_size().y
+
+                # background rect
+                _header_height = 20
+                p_max = imgui.Vec2( p_min.x + _region.x, p_min.y + _group_height)
+
+                draw_list.channels_set_current(0)
+                draw_list.add_rect_filled(p_min.x, p_min.y, p_max.x, (p_min.y + _header_height), imgui.get_color_u32_rgba(1, 1, 1, 0.2))
+                draw_list.add_rect_filled(p_min.x, p_min.y + _header_height, p_max.x, p_max.y, imgui.get_color_u32_rgba(1, 1, 1, 0.1))
+                draw_list.channels_merge()
+   
+                imgui.pop_id()
+
+            if i == -1:
+                imgui.text("No scripts attached")
+
+            imgui.tree_pop()
+
+    def draw_inspector_add_script( self ):
+        path = False
+        
+        _region = imgui.get_content_region_available()
+        pos = imgui.get_cursor_screen_pos()
+        pos = imgui.Vec2( pos.x + (_region.x / 2) - 50, pos.y + _region.y - 20)
+        imgui.set_cursor_screen_pos(pos)
+
+        if imgui.button("Add Script"):
+            imgui.open_popup("add-script")
+
+        imgui.same_line()
+
+        if imgui.begin_popup("add-script"):
+
+            # todo:
+            # perhaps there should be a separate thread for this
+            # that either updates periodicly, or tracks changes in assets folder
+            self.context.findScripts()
+
+            # project assets
+            assets = Path( self.settings.assets ).resolve()
+            for i, script in enumerate(self.context.asset_scripts):
+                imgui.push_id(f"add_script_{str(script)}")
+                clicked = False
+
+                name = str(script.relative_to(assets))
+                _, clicked = imgui.selectable(
+                    f"{name}", clicked
+                )
+
+                if clicked:
+                    path = script
+
+                imgui.pop_id()
+
+            # engine assets not supported yet
+            # ..
+
+            imgui.end_popup()
+
+        if path:
+            self.selectedObject.addScript( path )
+
     def draw_inspector( self ) -> None:
         imgui.begin( "Inspector" )
 
@@ -416,7 +532,13 @@ class ImGui( Context ):
 
             # components
             self.draw_inspector_transform()
+            imgui.separator()
             self.draw_inspector_material()
+            imgui.separator()
+            self.draw_inspector_scripts()
+
+            if not self.settings.game_running:
+                self.draw_inspector_add_script()
 
         imgui.end()
         return

@@ -21,12 +21,19 @@ import importlib
 import traceback
 
 class GameObject( Context ):
-    class Scripts(TypedDict):
+    class Script(TypedDict):
         file: Path
         obj: None
 
     def addScript( self, file : Path ):
         self.scripts.append( { "file": file, "obj": "" } )
+
+    def removeScript( self, file : Path ):
+        #self.scripts = [script for script in self.scripts if script['file'] != file]
+        for script in self.scripts:
+            if script['file'] == file:
+                self.scripts.remove(script)
+                break
 
     def _get_class_name_from_script(self, script: Path) -> str:
         """Scan the content of the script to find the first class name."""
@@ -46,16 +53,14 @@ class GameObject( Context ):
     def _init_external_script( self, script ):
         script["obj"] = False
 
-        _module_name = script["file"].name.replace(".py", "");
+        # module name needs subfolder prefixes with . delimter
+        _module_name = str(script['file'].relative_to(self.settings.rootdir))
+        _module_name = _module_name.replace("\\", ".").replace(".py", "")
+
         _class_name = self._get_class_name_from_script( script["file"] )
 
         _script_behaivior = importlib.import_module("gameObjects.scriptBehaivior")
         ScriptBehaivior = getattr(_script_behaivior, "ScriptBehaivior")
-
-        # module name needs subfolder prefixes with . delimter
-        _module_name_prefix = self.settings.assets.replace( str(self.settings.rootdir), "")
-        _module_name_prefix = _module_name_prefix[1::].replace("\\", ".")
-        _module_name = _module_name_prefix + _module_name
 
         # remove from sys modules cache
         if _module_name in sys.modules:
@@ -105,7 +110,7 @@ class GameObject( Context ):
         self.cubemaps       : Cubemap = context.cubemaps
         self.models         : Models = context.models
 
-        self.scripts        : list[GameObject.Scripts] = []
+        self.scripts        : list[GameObject.Script] = []
 
         self.name           : str = name
         self.material       : int = material
@@ -116,10 +121,8 @@ class GameObject( Context ):
         self.scale = scale
 
         # model
-        if not model_file:
-            self.model_file = f"{self.settings.engineAssets}models\\cube\\model.obj"
-        else:
-            self.model_file = model_file
+        self.model          : int = -1
+        self.model_file = model_file if model_file else False
 
         self.onStart()
 

@@ -31,13 +31,16 @@ from modules.material import Material
 from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
-from gameObjects.sun import Sun
+from gameObjects.light import Light
 from gameObjects.skybox import Skybox
 
 class EmberEngine:
     def __init__( self ) -> None:
         self.settings   : Settings = Settings()
-
+        
+        self.asset_scripts : List[Path] = []
+        self.findScripts()
+        
         self.events     = pygame.event
         self.key        = pygame.key
         self.mouse      = pygame.mouse
@@ -68,16 +71,35 @@ class EmberEngine:
         self.scene.getScenes()
         self.scene.loadScene()
 
-        #self.addDefaultSun()
-
         self.loadDefaultEnvironment()
+
+    def findScripts(self):
+        """scan asset folder for .py files.
+        perhaps there should be a separate thread for this
+        that either updates periodicly, or tracks changes in assets folder
+        - currently this is called every time 'Add Script' popup is opened' """
+        self.asset_scripts = self.findDynamicScripts( self.settings.assets )
+
+    def findDynamicScripts( self, path : str ) -> List[Path]:
+        assets = Path( path ).resolve()
+        return [file for file in assets.rglob("*.py")]
 
     def loadDefaultEnvironment( self ) -> None:
         self.environment_map = self.cubemaps.loadDefaultCubemap()
 
+    def addEmptyGameObject( self ):
+        self.addGameObject( Mesh( self,
+            name        = "Empty GameObject",
+            material    = self.defaultMaterial,
+            translate   = [ 0, 0, 0 ],
+            scale       = [ 1, 1, 1 ],
+            rotation    = [ 0.0, 0.0, 0.0 ]
+        ) )
+
     def addDefaultCube( self ):
         self.addGameObject( Mesh( self,
             name        = "Default cube",
+            model_file  = f"{self.settings.engineAssets}models\\cube\\model.obj",
             material    = self.defaultMaterial,
             translate   = [ 0, 1, 0 ],
             scale       = [ 1, 1, 1 ],
@@ -95,9 +117,9 @@ class EmberEngine:
                         scripts     = [ Path(f"{self.settings.assets}\\camera.py") ]
                     ) )
 
-    def addDefaultSun( self ) -> None:
-        self.sun = self.addGameObject( Sun( self,
-                        name        = "sun",
+    def addDefaultLight( self ) -> None:
+        self.addGameObject( Light( self,
+                        name        = "light",
                         model_file  = f"{self.settings.engineAssets}models\\sphere\\model.obj",
                         translate   = [1, -1, 1],
                         scale       = [ 0.5, 0.5, 0.5 ],
