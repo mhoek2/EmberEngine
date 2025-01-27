@@ -132,6 +132,16 @@ class EmberEngine:
 
         return index
 
+    def removeGameObject( self, obj : GameObject ):
+        try:
+            # we cant directly remove and rebuild the gameObject array.
+            # so mark it removed, and do not store it on save.
+            #self.gameObjects.remove( object )
+            obj._removed = True
+            obj.visible = False
+        except:
+            print("gameobject doesnt exist..")
+
     def draw_grid( self ):
         self.renderer.use_shader( self.renderer.color )
         # bind projection matrix

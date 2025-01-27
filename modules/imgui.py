@@ -16,6 +16,7 @@ from modules.scene import SceneManager
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.light import Light
+from gameObjects.camera import Camera
 
 from pathlib import Path
 import textwrap
@@ -213,17 +214,47 @@ class ImGui( Context ):
 
             for n, gameObject in enumerate( self.context.gameObjects ):
                 if isinstance( gameObject, GameObject ): # link class name
-                    imgui.push_id( f"gameObject_{n}" )
 
-                    clicked, _ = imgui.selectable(
+                    if gameObject._removed:
+                        continue
+
+                    imgui.push_id( f"gameObject_{n}" )
+                    _region = imgui.get_content_region_available()
+
+                    clicked, hover = imgui.selectable(
                         label = gameObject.name,
-                        selected = ( self.selectedObjectIndex == n )
+                        selected = bool( self.selectedObjectIndex == n ),
+                        width = (_region.x - 20.0)
                     )
 
                     if clicked:
                         self.selectedObjectIndex = n
                         self.selectedObject = self.context.gameObjects[ n ]
                     
+                    if isinstance( gameObject, Camera ):
+                        imgui.pop_id()
+                        continue
+
+                    #if self.settings.game_running:
+                    #   imgui.pop_id()
+                    #   continue
+
+                    # checkbox to toggle visibility
+                    imgui.same_line()
+                    pos = imgui.get_cursor_screen_pos()
+                    pos = imgui.Vec2(5, pos.y - 3)
+                    imgui.set_cursor_screen_pos(pos)
+
+                    imgui.push_item_width(5) 
+                    _, self.context.gameObjects[ n ].visible = imgui.checkbox( 
+                        "##visible", self.context.gameObjects[ n ].visible )
+                    imgui.pop_item_width()
+
+                    if not self.settings.game_running:
+                        imgui.same_line(_region.x + 14)
+                        if imgui.button("x"):
+                            self.context.removeGameObject( self.context.gameObjects[ n ] )
+   
                     imgui.pop_id()
             imgui.tree_pop()
 

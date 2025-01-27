@@ -19,6 +19,7 @@ class SceneManager:
 
     class _GameObject(TypedDict):
         instance    : str
+        visible     : bool
         name        : str
         model_file  : str
         material    : int
@@ -54,8 +55,12 @@ class SceneManager:
 
         _gameObjects : List[SceneManager._GameObject] = []
         for obj in self.context.gameObjects:
+            if obj._removed:
+                continue
+
             _gameObjects.append({
                 "instance"      : type(obj).__name__,
+                "visible"       : obj.visible,
                 "name"          : obj.name,
                 "model_file"    : obj.model_file,
                 "material"      : obj.material,
@@ -101,12 +106,13 @@ class SceneManager:
                 if "gameObjects" in scene: 
                     for obj in scene["gameObjects"]:
                         index = self.context.addGameObject( eval(obj["instance"])( self.context,
-                                name        = obj["name"],
-                                model_file  = obj["model_file"],
-                                material    = obj["material"],
-                                translate   = obj["translate"],
-                                scale       = obj["scale"],
-                                rotation    = obj["rotation"],
+                                name        = obj["name"]       if "name"       in obj else "Unknown",
+                                visible     = obj["visible"]    if "visible"    in obj else True,
+                                model_file  = obj["model_file"] if "model_file" in obj else False,
+                                material    = obj["material"]   if "material"   in obj else -1,
+                                translate   = obj["translate"]  if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
+                                scale       = obj["scale"]      if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
+                                rotation    = obj["rotation"]   if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
                                 scripts     = [Path(x) for x in obj["scripts"]]
                             )
                         )
