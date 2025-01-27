@@ -37,9 +37,10 @@ from gameObjects.skybox import Skybox
 class EmberEngine:
     def __init__( self ) -> None:
         self.settings   : Settings = Settings()
-
-        self.asset_scripts : List[Path] = self.findDynamicScripts( self.settings.assets )
-
+        
+        self.asset_scripts : List[Path] = []
+        self.findScripts()
+        
         self.events     = pygame.event
         self.key        = pygame.key
         self.mouse      = pygame.mouse
@@ -71,6 +72,13 @@ class EmberEngine:
         self.scene.loadScene()
 
         self.loadDefaultEnvironment()
+
+    def findScripts(self):
+        """scan asset folder for .py files.
+        perhaps there should be a separate thread for this
+        that either updates periodicly, or tracks changes in assets folder
+        - currently this is called every time 'Add Script' popup is opened' """
+        self.asset_scripts = self.findDynamicScripts( self.settings.assets )
 
     def findDynamicScripts( self, path : str ) -> List[Path]:
         assets = Path( path ).resolve()

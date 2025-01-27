@@ -117,17 +117,18 @@ class ImGui( Context ):
 
             if imgui.begin_menu("File", True):
 
-                clicked_quit, selected_quit = imgui.menu_item(
-                    "Quit", 'Cmd+Q', False, True
-                )
-
+                # quit
+                clicked_quit, _ = imgui.menu_item( "Quit", '', False, True )
                 if clicked_quit:
                     self.renderer.running = False
 
-                clicked_scene, selected_scebe = imgui.menu_item(
-                    "Scene", '', False, True
-                )
+                # save scene
+                clicked_save, _ = imgui.menu_item( "Save", 'CTRL+S', False, True )
+                if clicked_save:
+                    self.scene.saveScene()
 
+                # scene manager
+                clicked_scene, _ = imgui.menu_item( "Scene Manager", '', False, True )
                 if clicked_scene:
                     self.scene.toggleWindow()
 
@@ -429,7 +430,7 @@ class ImGui( Context ):
 
             i = -1
             for i, script in enumerate(self.selectedObject.scripts):
-                imgui.push_id(f"add_script_{str(script['file'])}")
+                imgui.push_id(f"draw_script_{str(script['file'])}")
 
                 name = str(script['file'].relative_to(assets))
 
@@ -483,6 +484,11 @@ class ImGui( Context ):
         imgui.same_line()
 
         if imgui.begin_popup("add-script"):
+
+            # todo:
+            # perhaps there should be a separate thread for this
+            # that either updates periodicly, or tracks changes in assets folder
+            self.context.findScripts()
 
             # project assets
             assets = Path( self.settings.assets ).resolve()
