@@ -33,7 +33,6 @@ class SceneManager:
         self.settings   : Settings = context.settings
         self.console    : Console = context.console
 
-
         self.scenes     : List[SceneManager.Scene] = []
 
         self.current_scene : int = -1

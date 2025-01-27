@@ -13,4 +13,4 @@ class Context:
         self.console    : Console = context.console
         self.renderer   : Renderer = context.renderer
         self.settings   : Settings = context.settings
-        #self.scene      : SceneManager = context.scene
+        self.scene      : SceneManager = context.scene

@@ -197,6 +197,11 @@ class ImGui( Context ):
         if imgui.button( "Add gameObject" ):
             self.context.addDefaultCube()
 
+        imgui.same_line()
+
+        if imgui.button( "Add Sun" ):
+            self.context.addDefaultSun()
+
         if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
 
             for n, gameObject in enumerate( self.context.gameObjects ):

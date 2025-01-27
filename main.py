@@ -43,10 +43,10 @@ class EmberEngine:
         self.mouse      = pygame.mouse
 
         self.console    : Console = Console(self)
+        self.scene      : SceneManager = SceneManager( self )
         self.renderer   : Renderer = Renderer( self )
         self.imgui      : ImGui = ImGui( self )
-        self.scene      : SceneManager = SceneManager( self )
-
+ 
         self.gameObjects : List[GameObject] = []
 
         self.images     : Images = Images( self )
