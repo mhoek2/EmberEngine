@@ -31,6 +31,7 @@ class Console:
         
         traceback_filtered = []
         _n_lines = 0
+        # needs engine assets path too in lambda?
         for tb in filter( lambda x: str(self.settings.assets) in x, traceback ):
             _n_lines += tb.count("\n")
             traceback_filtered.append( tb )

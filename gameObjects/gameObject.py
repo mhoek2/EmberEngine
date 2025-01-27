@@ -28,6 +28,13 @@ class GameObject( Context ):
     def addScript( self, file : Path ):
         self.scripts.append( { "file": file, "obj": "" } )
 
+    def removeScript( self, file : Path ):
+        #self.scripts = [script for script in self.scripts if script['file'] != file]
+        for script in self.scripts:
+            if script['file'] == file:
+                self.scripts.remove(script)
+                break
+
     def _get_class_name_from_script(self, script: Path) -> str:
         """Scan the content of the script to find the first class name."""
         if os.path.isfile(script):

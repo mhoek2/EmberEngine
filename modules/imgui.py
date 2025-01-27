@@ -423,27 +423,60 @@ class ImGui( Context ):
     def draw_inspector_scripts( self ):
         if imgui.tree_node( "Scripts", imgui.TREE_NODE_DEFAULT_OPEN ):
             assets = Path( self.settings.assets ).resolve()
+            _shift_left = 20.0
+            _region = imgui.get_content_region_available()
+            _region = imgui.Vec2(_region.x + _shift_left, _region.y)
 
-            for script in self.selectedObject.scripts:
+            i = -1
+            for i, script in enumerate(self.selectedObject.scripts):
+                imgui.push_id(f"add_script_{str(script['file'])}")
+
                 name = str(script['file'].relative_to(assets))
-                imgui.text( name )
+
+                draw_list = imgui.get_window_draw_list() 
+                draw_list.channels_split(2)
+                draw_list.channels_set_current(1)
+
+                p_min = imgui.get_cursor_screen_pos()
+                p_min = imgui.Vec2( (p_min.x-_shift_left), p_min.y)
+                imgui.set_cursor_screen_pos(p_min)
+                
+                imgui.begin_group()
+
+                imgui.text(name) # should become the Class name
+                imgui.same_line( _region.x - 15 )
+                if not self.settings.game_running and imgui.button("x"):
+                    self.selectedObject.removeScript( script['file'] )
+
+                #imgui.input_text( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+
+                imgui.end_group()
+                _group_height = imgui.get_item_rect_size().y
+
+                # background rect
+                _header_height = 20
+                p_max = imgui.Vec2( p_min.x + _region.x, p_min.y + _group_height)
+
+                draw_list.channels_set_current(0)
+                draw_list.add_rect_filled(p_min.x, p_min.y, p_max.x, (p_min.y + _header_height), imgui.get_color_u32_rgba(1, 1, 1, 0.2))
+                draw_list.add_rect_filled(p_min.x, p_min.y + _header_height, p_max.x, p_max.y, imgui.get_color_u32_rgba(1, 1, 1, 0.1))
+                draw_list.channels_merge()
+   
+                imgui.pop_id()
+
+            if i == -1:
+                imgui.text("No scripts attached")
 
             imgui.tree_pop()
-
-    def add_script( self, path : Path ):
-        if not self.selectedObject:
-            return
-
-        script : GameObject.Script = {
-            "file"  : path,
-            "obj"   : False
-            }
-
-        self.selectedObject.scripts.append( script )
 
     def draw_inspector_add_script( self ):
         path = False
         
+        _region = imgui.get_content_region_available()
+        pos = imgui.get_cursor_screen_pos()
+        pos = imgui.Vec2( pos.x + (_region.x / 2) - 50, pos.y + _region.y - 20)
+        imgui.set_cursor_screen_pos(pos)
+
         if imgui.button("Add Script"):
             imgui.open_popup("add-script")
 
@@ -454,7 +487,7 @@ class ImGui( Context ):
             # project assets
             assets = Path( self.settings.assets ).resolve()
             for i, script in enumerate(self.context.asset_scripts):
-                imgui.push_id(str(script))
+                imgui.push_id(f"add_script_{str(script)}")
                 clicked = False
 
                 name = str(script.relative_to(assets))
@@ -473,7 +506,7 @@ class ImGui( Context ):
             imgui.end_popup()
 
         if path:
-            self.add_script( path )
+            self.selectedObject.addScript( path )
 
     def draw_inspector( self ) -> None:
         imgui.begin( "Inspector" )
@@ -493,9 +526,13 @@ class ImGui( Context ):
 
             # components
             self.draw_inspector_transform()
+            imgui.separator()
             self.draw_inspector_material()
+            imgui.separator()
             self.draw_inspector_scripts()
-            self.draw_inspector_add_script()
+
+            if not self.settings.game_running:
+                self.draw_inspector_add_script()
 
         imgui.end()
         return
