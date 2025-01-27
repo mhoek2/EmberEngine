@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from modules.scene import SceneManager
 from modules.console import Console
 from modules.renderer import Renderer
 from modules.settings import Settings
@@ -12,3 +13,4 @@ class Context:
         self.console    : Console = context.console
         self.renderer   : Renderer = context.renderer
         self.settings   : Settings = context.settings
+        self.scene      : SceneManager = context.scene

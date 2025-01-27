@@ -21,6 +21,8 @@ class Settings:
         self.engine_texture_path    = f"{self.engineAssets}\\textures\\"
         self.engine_gui_path        = f"{self.engineAssets}\\gui\\"
 
+        self.default_scene = f"{self.engineAssets}\\scenes\default.scene"
+
         # wireframe
         self.drawWireframe = False
 

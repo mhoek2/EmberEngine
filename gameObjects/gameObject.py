@@ -43,38 +43,37 @@ class GameObject( Context ):
                 return class_name
         return None
 
-    def _init_external_scripts( self ):
-        for script in self.scripts:
-            script["obj"] = False
+    def _init_external_script( self, script ):
+        script["obj"] = False
 
-            _module_name = script["file"].name.replace(".py", "");
-            _class_name = self._get_class_name_from_script( script["file"] )
+        _module_name = script["file"].name.replace(".py", "");
+        _class_name = self._get_class_name_from_script( script["file"] )
 
-            _script_behaivior = importlib.import_module("gameObjects.scriptBehaivior")
-            ScriptBehaivior = getattr(_script_behaivior, "ScriptBehaivior")
+        _script_behaivior = importlib.import_module("gameObjects.scriptBehaivior")
+        ScriptBehaivior = getattr(_script_behaivior, "ScriptBehaivior")
 
-            # module name needs subfolder prefixes with . delimter
-            _module_name_prefix = self.settings.assets.replace( str(self.settings.rootdir), "")
-            _module_name_prefix = _module_name_prefix[1::].replace("\\", ".")
-            _module_name = _module_name_prefix + _module_name
+        # module name needs subfolder prefixes with . delimter
+        _module_name_prefix = self.settings.assets.replace( str(self.settings.rootdir), "")
+        _module_name_prefix = _module_name_prefix[1::].replace("\\", ".")
+        _module_name = _module_name_prefix + _module_name
 
-            # remove from sys modules cache
-            if _module_name in sys.modules:
-                importlib.reload(sys.modules[_module_name])
+        # remove from sys modules cache
+        if _module_name in sys.modules:
+            importlib.reload(sys.modules[_module_name])
 
-            module = importlib.import_module( _module_name )
-            setattr(module, "ScriptBehaivior", ScriptBehaivior)
-            ScriptClass = getattr(module, _class_name)
+        module = importlib.import_module( _module_name )
+        setattr(module, "ScriptBehaivior", ScriptBehaivior)
+        ScriptClass = getattr(module, _class_name)
 
-            class ClassPlaceholder( ScriptClass, ScriptBehaivior ):
-                pass
+        class ClassPlaceholder( ScriptClass, ScriptBehaivior ):
+            pass
 
-            script["obj"] = ClassPlaceholder( self.context, self )
+        script["obj"] = ClassPlaceholder( self.context, self )
 
     def onStartScripts( self ):
         for script in self.scripts:
             try:
-                self._init_external_scripts()
+                self._init_external_script( script )
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
