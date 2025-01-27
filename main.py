@@ -38,6 +38,8 @@ class EmberEngine:
     def __init__( self ) -> None:
         self.settings   : Settings = Settings()
 
+        self.asset_scripts : List[Path] = self.findDynamicScripts( self.settings.assets )
+
         self.events     = pygame.event
         self.key        = pygame.key
         self.mouse      = pygame.mouse
@@ -68,9 +70,11 @@ class EmberEngine:
         self.scene.getScenes()
         self.scene.loadScene()
 
-        #self.addDefaultSun()
-
         self.loadDefaultEnvironment()
+
+    def findDynamicScripts( self, path : str ) -> List[Path]:
+        assets = Path( path ).resolve()
+        return [file for file in assets.rglob("*.py")]
 
     def loadDefaultEnvironment( self ) -> None:
         self.environment_map = self.cubemaps.loadDefaultCubemap()

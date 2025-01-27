@@ -404,6 +404,77 @@ class ImGui( Context ):
         imgui.end()
         return
 
+    # combo example
+    #selected = 0
+    #items = self.context.asset_scripts
+    #
+    #if imgui.begin_combo("combo", items[selected]):
+    #    for i, item in enumerate(items):
+    #        is_selected = (i == selected)
+    #        if imgui.selectable(item, is_selected)[0]:
+    #            selected = i
+    #        
+    #        # Set the initial focus when opening the combo (scrolling + keyboard navigation focus)                    
+    #        if is_selected:
+    #            imgui.set_item_default_focus()
+    #
+    #    imgui.end_combo()
+
+    def draw_inspector_scripts( self ):
+        if imgui.tree_node( "Scripts", imgui.TREE_NODE_DEFAULT_OPEN ):
+            assets = Path( self.settings.assets ).resolve()
+
+            for script in self.selectedObject.scripts:
+                name = str(script['file'].relative_to(assets))
+                imgui.text( name )
+
+            imgui.tree_pop()
+
+    def add_script( self, path : Path ):
+        if not self.selectedObject:
+            return
+
+        script : GameObject.Script = {
+            "file"  : path,
+            "obj"   : False
+            }
+
+        self.selectedObject.scripts.append( script )
+
+    def draw_inspector_add_script( self ):
+        path = False
+        
+        if imgui.button("Add Script"):
+            imgui.open_popup("add-script")
+
+        imgui.same_line()
+
+        if imgui.begin_popup("add-script"):
+
+            # project assets
+            assets = Path( self.settings.assets ).resolve()
+            for i, script in enumerate(self.context.asset_scripts):
+                imgui.push_id(str(script))
+                clicked = False
+
+                name = str(script.relative_to(assets))
+                _, clicked = imgui.selectable(
+                    f"{name}", clicked
+                )
+
+                if clicked:
+                    path = script
+
+                imgui.pop_id()
+
+            # engine assets not supported yet
+            # ..
+
+            imgui.end_popup()
+
+        if path:
+            self.add_script( path )
+
     def draw_inspector( self ) -> None:
         imgui.begin( "Inspector" )
 
@@ -423,6 +494,8 @@ class ImGui( Context ):
             # components
             self.draw_inspector_transform()
             self.draw_inspector_material()
+            self.draw_inspector_scripts()
+            self.draw_inspector_add_script()
 
         imgui.end()
         return
