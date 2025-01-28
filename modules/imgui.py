@@ -217,10 +217,10 @@ class ImGui( Context ):
 
         if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
 
-            for n, gameObject in enumerate( self.context.gameObjects ):
-                if isinstance( gameObject, GameObject ): # link class name
+            for n, obj in enumerate( self.context.gameObjects ):
+                if isinstance( obj, GameObject ): # link class name
 
-                    if gameObject._removed:
+                    if obj._removed:
                         continue
 
                     can_hide = True
@@ -229,7 +229,7 @@ class ImGui( Context ):
                     _region = imgui.get_content_region_available()
 
                     clicked, hover = imgui.selectable(
-                        label = gameObject.name,
+                        label = obj.name,
                         selected = bool( self.selectedObjectIndex == n ),
                         width = (_region.x - 20.0)
                     )
@@ -238,26 +238,22 @@ class ImGui( Context ):
                         self.selectedObjectIndex = n
                         self.selectedObject = self.context.gameObjects[ n ]
                     
-                    
-                    if isinstance( gameObject, Camera ):
+                    # toggle visibility
+                    if isinstance( obj, Camera ):
                         can_hide = False
 
-                    #if self.settings.game_running:
-                    #   imgui.pop_id()
-                    #   continue
-
-                    # checkbox to toggle visibility
-                    imgui.same_line()
-                    pos = imgui.get_cursor_screen_pos()
-                    pos = imgui.Vec2(5, pos.y - 3)
-                    imgui.set_cursor_screen_pos(pos)
-
                     if can_hide:
+                        imgui.same_line()
+                        pos = imgui.get_cursor_screen_pos()
+                        pos = imgui.Vec2(5, pos.y - 3)
+                        imgui.set_cursor_screen_pos(pos)
+
                         imgui.push_item_width(5) 
                         _, self.context.gameObjects[ n ].visible = imgui.checkbox( 
                             "##visible", self.context.gameObjects[ n ].visible )
                         imgui.pop_item_width()
 
+                    # remove gameObject
                     if not self.settings.game_running:
                         imgui.same_line(_region.x + 14)
                         if imgui.button("x"):
