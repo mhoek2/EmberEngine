@@ -5,8 +5,6 @@ from typing import List
 #import site
 #print(site.getsitepackages())
 
-
-
 import pygame
 from pygame.locals import *
 from pyrr import matrix44, Vector3
@@ -36,6 +34,9 @@ from gameObjects.skybox import Skybox
 
 class EmberEngine:
     def __init__( self ) -> None:
+        """The main context of 'EmberEngine', 
+        initializes required modules like:
+        renderer, console, image loaders, materials, scene manager, pygame events"""
         self.settings   : Settings = Settings()
         
         self.asset_scripts : List[Path] = []
@@ -69,20 +70,31 @@ class EmberEngine:
 
         self.loadDefaultEnvironment()
 
-    def findScripts(self):
+    def findScripts( self ):
         """scan asset folder for .py files.
         perhaps there should be a separate thread for this
         that either updates periodicly, or tracks changes in assets folder
         - currently this is called every time 'Add Script' popup is opened' """
-        self.asset_scripts = self.findDynamicScripts( self.settings.assets )
+        _assets = Path( self.settings.assets ).resolve()
 
-    def findDynamicScripts( self, path : str ) -> List[Path]:
-        assets = Path( path ).resolve()
-        return [file for file in assets.rglob("*.py")]
+        self.asset_scripts = self.findDynamicScripts( _assets )
+
+    def findDynamicScripts( self, path : Path ) -> List[Path]:
+        """Find .py files recursivly in a assets folder, used as dynamic scripts.
+        :param path: This is root folder to scan
+        :type path: Path
+        :return: List of Path's containing each .py script
+        :rtype: List[Path]
+        """
+        return [file for file in path.rglob("*.py")]
 
     def loadDefaultEnvironment( self ) -> None:
-        self.environment_map = self.cubemaps.loadDefaultCubemap()
+        """Load the default environment cubemap"""
+        self.environment_map = self.cubemaps.loadOrFind(self.settings.default_environment)
 
+    ##
+    ## Need to move this to dedicated class
+    ##
     def addEmptyGameObject( self ):
         return self.addGameObject( Mesh( self,
             name        = "Empty GameObject",
@@ -141,8 +153,12 @@ class EmberEngine:
 
         except:
             print("gameobject doesnt exist..")
+    ##
+    ## end
+    ##
 
     def draw_grid( self ):
+        """Draw the horizontal grid to the framebuffer"""
         self.renderer.use_shader( self.renderer.color )
         # bind projection matrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
@@ -172,6 +188,9 @@ class EmberEngine:
             glEnd()
 
     def run( self ) -> None:
+        """The main loop of the appliction, remains active as long as 'self.renderer.running'
+        is True.
+        This handles key, mouse, start, update events and drawing GUI andgameObject"""
         while self.renderer.running:
             self.renderer.event_handler()
 

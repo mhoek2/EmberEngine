@@ -374,7 +374,7 @@ class Renderer:
 
     def do_movement(self) -> None:
         keypress = self.context.key.get_pressed()
-        velocity = 0.05;
+        velocity : float = 0.05;
 
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
             velocity *= 30

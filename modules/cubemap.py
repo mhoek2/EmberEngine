@@ -93,9 +93,6 @@ class Cubemap( Context ):
         self.brdf_lut = self.context.images.loadOrFindFullPath( f"{self.settings.shader_path}brdf.jpg" )
         return
 
-    def loadDefaultCubemap( self ) -> int:
-        return self.loadOrFind( f"{self.settings.engineAssets}\\cubemaps\\day" )
-
     def loadOrFind( self, path : str ) -> int:
         """Load or find an image, implement find later"""
 

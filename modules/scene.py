@@ -14,6 +14,7 @@ import traceback
 
 class SceneManager:
     class Scene(TypedDict):
+        """Typedef for a scene file"""
         name            : str
         gameObjects     : List["_GameObject"]
         camera          : int
@@ -21,6 +22,7 @@ class SceneManager:
         ambient_color   : List[float]
 
     class _GameObject(TypedDict):
+        """Typedef for a gameObjects in a scene file"""
         instance    : str
         visible     : bool
         name        : str
@@ -33,7 +35,10 @@ class SceneManager:
         instance_data : Dict # additional instance data
 
     def __init__( self, context ) -> None:
-        """scene manager"""
+        """scene manager
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        """
         self.context    : 'EmberEngine' = context
         self.settings   : Settings = context.settings
         self.console    : Console = context.console
@@ -41,30 +46,45 @@ class SceneManager:
         self.scenes     : List[SceneManager.Scene] = []
 
         self.current_scene : int = -1
-        self._window_is_open    : bool = False # imgui state
+        self._window_is_open    : bool = False # imgui window state
 
     def toggleWindow( self ):
+        """Toggle imgui window state"""
         self._window_is_open = not self._window_is_open
 
     def getCurrentScene( self ) -> Scene:
+        """Get the current active scene
+        :return: The current scene object, False if this fails
+        :rtype: Scene
+        """
         try:
             return self.scenes[self.current_scene]
         except:
             return False
 
-    def setCamera( self, camera_id : int, scene_id = False):
+    def setCamera( self, uid : int, scene_uid = False):
+        """Set the current camera based on gameObject uid
+        :param uid: The uid of a Camera gameObject
+        :type uid: int
+        :param scene_uid: The scene the camera is set on, current scene when empty
+        :type scene_uid: int, optional
+        """
         from gameObjects.camera import Camera
 
-        _scene_id = scene_id if scene_id != False else self.current_scene
+        scene = scene_uid if scene_uid != False else self.current_scene
 
-        self.scenes[_scene_id]["camera"] = camera_id
+        self.scenes[scene]["camera"] = uid
 
         # mark camera as default/start scene camera
         for i, obj in enumerate(self.context.gameObjects):
-            if isinstance(obj, Camera) and i == camera_id:
+            if isinstance(obj, Camera) and i == uid:
                 obj.is_default_camera = True
 
     def getCamera( self ):
+        """Get the current default/start camera
+        :return: The current scene default/start camera, False if this fails
+        :rtype: Camera or bool
+        """
         try:
             _scene_camera_id = self.scenes[self.current_scene]["camera"]
 
@@ -120,18 +140,23 @@ class SceneManager:
 
         print("save")
 
-    def getScene( self, _scene_filename ):
+    def getScene( self, scene_filename : Path ):
+        """Load and decode JSON from a scene file
+        :param scene_filename: The filename of a .scene
+        :type scene_filename: Path
+        """
         try:
-            with open(_scene_filename, 'r') as buffer:
+            with open(scene_filename, 'r') as buffer:
                 scene = json.load(buffer)
                 self.scenes.append( scene )
 
         except Exception as e:
+            print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
             
     def getScenes( self ):
-        # search assets for .scene files
+        """search assets for .scene files, and calls the getScene to decode them"""
         path = Path(self.settings.assets)
 
         if any(path.glob("*")):
@@ -140,14 +165,18 @@ class SceneManager:
                     self.getScene( file )
 
 
-    def loadScene( self, is_default = False ):
+    def loadScene( self, is_default : bool = False ):
+        """Load scene (does not work with multiple scenes yet), if this fails load the default scene.
+        :param is_default: Used by the engine itself, to prevent infinite loop whenever default scene fails to load
+        :type is_default: bool, optional
+        """
         from gameObjects.mesh import Mesh
         from gameObjects.camera import Camera
         from gameObjects.light import Light
 
         for i, scene in enumerate(self.scenes):
             try:
-                self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
+                self.setCamera( -1, scene_uid = i ) # default to None, find default camera when adding gameObjects
                 
                 scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
                 scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
@@ -175,12 +204,12 @@ class SceneManager:
 
                         if isinstance( self.context.gameObjects[index], Camera ):
                             if obj.get("instance_data", {}).get("is_default_camera", False):
-                                self.setCamera( index, scene_id = i )
+                                self.setCamera( index, scene_uid = i )
 
             except Exception as e:
+                print( e )
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
-            
+                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e ) 
             else:
                 self.current_scene =  i
                 return
