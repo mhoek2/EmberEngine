@@ -20,8 +20,8 @@ class Models( Context ):
 
         self.materials  : Material = context.materials
         
-        self.model = [i for i in range(30)]
-        self.model_mesh = [{} for i in range(30)]
+        self.model = [i for i in range(300)]
+        self.model_mesh = [{} for i in range(300)]
 
         self._num_models = 0
 
