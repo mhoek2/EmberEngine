@@ -95,6 +95,7 @@ class GameObject( Context ):
 
     def __init__( self, context, 
                  name = "GameObject",
+                 visible = True,
                  model_file = False,
                  material = -1,
                  translate = [ 0.0, 0.0, 0.0 ], 
@@ -114,6 +115,9 @@ class GameObject( Context ):
 
         self.name           : str = name
         self.material       : int = material
+        self.visible        : bool = visible
+
+        self._removed        : bool = False
         
         # https://github.com/adamlwgriffiths/Pyrr
         self.translate = translate
