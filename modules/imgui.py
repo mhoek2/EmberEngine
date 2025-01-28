@@ -223,6 +223,8 @@ class ImGui( Context ):
                     if gameObject._removed:
                         continue
 
+                    can_hide = True
+
                     imgui.push_id( f"gameObject_{n}" )
                     _region = imgui.get_content_region_available()
 
@@ -236,9 +238,9 @@ class ImGui( Context ):
                         self.selectedObjectIndex = n
                         self.selectedObject = self.context.gameObjects[ n ]
                     
+                    
                     if isinstance( gameObject, Camera ):
-                        imgui.pop_id()
-                        continue
+                        can_hide = False
 
                     #if self.settings.game_running:
                     #   imgui.pop_id()
@@ -250,10 +252,11 @@ class ImGui( Context ):
                     pos = imgui.Vec2(5, pos.y - 3)
                     imgui.set_cursor_screen_pos(pos)
 
-                    imgui.push_item_width(5) 
-                    _, self.context.gameObjects[ n ].visible = imgui.checkbox( 
-                        "##visible", self.context.gameObjects[ n ].visible )
-                    imgui.pop_item_width()
+                    if can_hide:
+                        imgui.push_item_width(5) 
+                        _, self.context.gameObjects[ n ].visible = imgui.checkbox( 
+                            "##visible", self.context.gameObjects[ n ].visible )
+                        imgui.pop_item_width()
 
                     if not self.settings.game_running:
                         imgui.same_line(_region.x + 14)
@@ -431,11 +434,11 @@ class ImGui( Context ):
             imgui.tree_pop()
         return
 
-    def draw_popup_gameObject( self, id : str, filter = None ):
+    def draw_popup_gameObject( self, uid : str, filter = None ):
         selected = -1
         clicked = False
 
-        if imgui.begin_popup("select-camera"):
+        if imgui.begin_popup( uid ):
 
             _, clicked = imgui.selectable(
                 f"None##object_-1", clicked
@@ -461,25 +464,27 @@ class ImGui( Context ):
 
         return clicked, selected
 
-    def draw_environment( self ) -> None:
-        imgui.begin( "Environment" )
-
+    def draw_camera_selector( self ) -> None:
         imgui.text("camera")
         imgui.same_line(100.0)
 
-        camera : GameObject = self.scene.getCamera()
-        _scene_camera_name : str = camera.name if camera else "None" 
+        _camera : GameObject = self.scene.getCamera()
+        _camera_name : str = _camera.name if _camera else "None" 
 
-        if imgui.button( _scene_camera_name ):
-            imgui.open_popup("select-camera")
+        if imgui.button( _camera_name ):
+            imgui.open_popup("##select_camera")
 
         imgui.same_line()
         changed_camera_gameobject, _changed_id = self.draw_popup_gameObject(
-            "select-camera", filter=lambda obj: isinstance(obj, Camera ))
+            "##select_camera", filter=lambda obj: isinstance(obj, Camera ))
 
         if changed_camera_gameobject:
-            print(_changed_id)
-            self.scene.scenes[self.scene.current_scene]["camera"] = _changed_id
+            self.scene.setCamera( _changed_id )
+
+    def draw_environment( self ) -> None:
+        imgui.begin( "Environment" )
+
+        self.draw_camera_selector()
 
         imgui.separator()
 

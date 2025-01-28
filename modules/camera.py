@@ -36,8 +36,6 @@ class Camera:
 
     def get_view_matrix_running(self) -> Matrix44:
         """Get the view matrix from the camera gameObject"""
-        _scene_camera_id : int = self.scene.scenes[self.scene.current_scene]["camera"] if self.scene.current_scene in self.scene.scenes else -1
-
         camera = self.scene.getCamera()
 
         if not camera:

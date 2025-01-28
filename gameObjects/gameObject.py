@@ -79,11 +79,10 @@ class GameObject( Context ):
         for script in self.scripts:
             try:
                 self._init_external_script( script )
+                script["obj"].onStart()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
-            else:
-                script["obj"].onStart()
 
     def onUpdateScripts( self ):
         for script in filter(lambda x: x["obj"] is not False, self.scripts):

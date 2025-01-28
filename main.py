@@ -138,6 +138,10 @@ class EmberEngine:
             #self.gameObjects.remove( object )
             obj._removed = True
             obj.visible = False
+
+            if isinstance( obj, Camera ) and obj is self.scene.getCamera():
+                self.scene.setCamera( -1 )
+
         except:
             print("gameobject doesnt exist..")
 

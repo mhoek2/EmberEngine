@@ -43,6 +43,11 @@ class SceneManager:
     def toggleWindow( self ):
         self._window_is_open = not self._window_is_open
 
+    def setCamera( self, camera_id : int, scene_id = False):
+        _scene_id = scene_id if scene_id != False else self.current_scene
+
+        self.scenes[_scene_id]["camera"] = camera_id
+
     def getCamera( self ):
         try:
             _scene_camera_id = self.scenes[self.current_scene]["camera"]
@@ -115,7 +120,7 @@ class SceneManager:
 
         for i, scene in enumerate(self.scenes):
             try:
-                self.scenes[i]["camera"] = -1
+                self.setCamera( -1, scene_id = i )
 
                 if "gameObjects" in scene: 
                     for obj in scene["gameObjects"]:
@@ -137,17 +142,13 @@ class SceneManager:
                             self.context.sun = index
 
                         if isinstance( self.context.gameObjects[index], Camera ):
-                            self.scenes[i]["camera"] = index
+                            self.setCamera( index, scene_id = i )
 
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
             
             else:
-                # setup default camera if no camera in the scene
-                #if self.scenes[i]["camera"] == -1:
-                #   self.scenes[i]["camera"] = self.context.addDefaultCamera()
-
                 self.current_scene =  i
                 return
 
