@@ -445,7 +445,7 @@ class ImGui( Context ):
                 return True, -1
 
             for i, obj in enumerate(self.context.gameObjects):
-                if filter is not None and not filter(obj):
+                if filter is not None and not filter(obj) or obj._removed :
                     continue
 
                 _, clicked = imgui.selectable(
