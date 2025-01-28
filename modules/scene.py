@@ -1,7 +1,7 @@
 from pyexpat import model
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, List, TypedDict
+from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
 
 from modules.console import Console
@@ -28,6 +28,7 @@ class SceneManager:
         rotation    : List[int]
         scale       : List[int]
         scripts     : List[str]
+        instance_data : Dict # additional instance data
 
     def __init__( self, context ) -> None:
         """scene manager"""
@@ -44,9 +45,16 @@ class SceneManager:
         self._window_is_open = not self._window_is_open
 
     def setCamera( self, camera_id : int, scene_id = False):
+        from gameObjects.camera import Camera
+
         _scene_id = scene_id if scene_id != False else self.current_scene
 
         self.scenes[_scene_id]["camera"] = camera_id
+
+        # mark camera as default/start scene camera
+        for i, obj in enumerate(self.context.gameObjects):
+            if isinstance(obj, Camera) and i == camera_id:
+                obj.is_default_camera = True
 
     def getCamera( self ):
         try:
@@ -61,6 +69,7 @@ class SceneManager:
 
     def saveScene( self ):
         """Save a scene, only serialize things actually needed"""
+        from gameObjects.camera import Camera
 
         # todo:
         # store path from root dir, not system path
@@ -75,7 +84,7 @@ class SceneManager:
             if obj._removed:
                 continue
 
-            _gameObjects.append({
+            buffer : SceneManager._GameObject = {
                 "instance"      : type(obj).__name__,
                 "visible"       : obj.visible,
                 "name"          : obj.name,
@@ -84,8 +93,15 @@ class SceneManager:
                 "translate"     : obj.translate,
                 "scale"         : obj.scale,
                 "rotation"      : obj.rotation,
-                "scripts"       : [str(x["file"]) for x in obj.scripts]
-                })
+                "scripts"       : [str(x["file"]) for x in obj.scripts],
+                "instance_data" : {}
+            }
+
+            if isinstance( obj, Camera ):
+                buffer["instance_data"]["is_default_camera"] = obj.is_default_camera
+
+            _gameObjects.append( buffer )
+
         scene["gameObjects"] = _gameObjects
 
         with open(_scene_filename, 'w') as buffer:
@@ -120,10 +136,12 @@ class SceneManager:
 
         for i, scene in enumerate(self.scenes):
             try:
-                self.setCamera( -1, scene_id = i )
+                self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
 
                 if "gameObjects" in scene: 
                     for obj in scene["gameObjects"]:
+                        # todo:
+                        # replace ternary with; .get(key, default)
                         index = self.context.addGameObject( eval(obj["instance"])( self.context,
                                 name        = obj["name"]       if "name"       in obj else "Unknown",
                                 visible     = obj["visible"]    if "visible"    in obj else True,
@@ -142,7 +160,8 @@ class SceneManager:
                             self.context.sun = index
 
                         if isinstance( self.context.gameObjects[index], Camera ):
-                            self.setCamera( index, scene_id = i )
+                            if obj.get("instance_data", {}).get("is_default_camera", False):
+                                self.setCamera( index, scene_id = i )
 
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
