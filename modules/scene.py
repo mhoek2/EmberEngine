@@ -14,9 +14,11 @@ import traceback
 
 class SceneManager:
     class Scene(TypedDict):
-        name        : str
-        gameObjects : List["_GameObject"]
-        camera      : int
+        name            : str
+        gameObjects     : List["_GameObject"]
+        camera          : int
+        light_color     : List[float]
+        ambient_color   : List[float]
 
     class _GameObject(TypedDict):
         instance    : str
@@ -24,9 +26,9 @@ class SceneManager:
         name        : str
         model_file  : str
         material    : int
-        translate   : List[int]
-        rotation    : List[int]
-        scale       : List[int]
+        translate   : List[float]
+        rotation    : List[float]
+        scale       : List[float]
         scripts     : List[str]
         instance_data : Dict # additional instance data
 
@@ -43,6 +45,12 @@ class SceneManager:
 
     def toggleWindow( self ):
         self._window_is_open = not self._window_is_open
+
+    def getCurrentScene( self ) -> Scene:
+        try:
+            return self.scenes[self.current_scene]
+        except:
+            return False
 
     def setCamera( self, camera_id : int, scene_id = False):
         from gameObjects.camera import Camera
@@ -75,9 +83,12 @@ class SceneManager:
         # store path from root dir, not system path
 
         _scene_filename = f"{self.settings.assets}\\main.scene"
+        _scene = self.getCurrentScene()
 
         scene : SceneManager.Scene = SceneManager.Scene()
-        scene["name"] = "main scene"
+        scene["name"]           = "main scene"
+        scene["light_color"]    = _scene["light_color"]
+        scene["ambient_color"]  = _scene["ambient_color"]
 
         _gameObjects : List[SceneManager._GameObject] = []
         for obj in self.context.gameObjects:
@@ -137,6 +148,9 @@ class SceneManager:
         for i, scene in enumerate(self.scenes):
             try:
                 self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
+                
+                scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
+                scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
 
                 if "gameObjects" in scene: 
                     for obj in scene["gameObjects"]:

@@ -488,12 +488,14 @@ class ImGui( Context ):
 
         imgui.separator()
 
-        changed, self.context.light_color = imgui.color_edit3(
-            "Light color", *self.context.light_color
+        _scene = self.scene.getCurrentScene()
+
+        changed, _scene["light_color"] = imgui.color_edit3(
+            "Light color", *_scene["light_color"]
         )
 
-        changed, self.context.ambient_color = imgui.color_edit3(
-            "Ambient color", *self.context.ambient_color
+        changed, _scene["ambient_color"] = imgui.color_edit3(
+            "Ambient color", *_scene["ambient_color"]
         )
 
         imgui.end()

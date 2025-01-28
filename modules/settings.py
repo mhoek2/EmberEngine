@@ -23,6 +23,9 @@ class Settings:
 
         self.default_scene = f"{self.engineAssets}\\scenes\default.scene"
 
+        self.default_light_color     = ( 1.0, 1.0, 1.0, 1.0 )
+        self.default_ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
+
         # wireframe
         self.drawWireframe = False
 

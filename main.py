@@ -59,13 +59,10 @@ class EmberEngine:
         self.skybox     : Skybox = Skybox( self )
 
         self.sun = -1
-
-        self.light_color     = ( 1.0, 1.0, 1.0, 1.0 )
-        self.ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
         self.roughnessOverride = -1
         self.metallicOverride = -1
 
-        self.defaultMaterial = self.materials.buildMaterial( )
+        self.defaultMaterial = self.materials.buildMaterial()
 
         self.scene.getScenes()
         self.scene.loadScene()
@@ -179,6 +176,8 @@ class EmberEngine:
             self.renderer.event_handler()
 
             if not self.renderer.paused:
+                _scene = self.scene.getCurrentScene()
+
                 self.renderer.begin_frame()
 
                 #
@@ -218,8 +217,8 @@ class EmberEngine:
                 # sun direction/position and color
                 light_dir = self.gameObjects[self.sun].translate if self.sun != -1 else (0.0, 0.0, 1.0)
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
-                glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], self.light_color[0], self.light_color[1], self.light_color[2], 1.0 )
-                glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], self.ambient_color[0], self.ambient_color[1], self.ambient_color[2], 1.0 )
+                glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], _scene["light_color"][0], _scene["light_color"][1], _scene["light_color"][2], 1.0 )
+                glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )
 
                 glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
                 glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
