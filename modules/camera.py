@@ -2,6 +2,8 @@ from pyrr import Vector3, vector, vector3, matrix44, Matrix44
 from math import sin, cos, radians
 
 from modules.settings import Settings
+from modules.scene import SceneManager
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import EmberEngine
@@ -10,6 +12,7 @@ class Camera:
     def __init__( self, context ):
         self.context    : 'EmberEngine' = context
         self.settings   : Settings = context.settings
+        self.scene      : SceneManager = context.scene
 
         self.camera_pos = Vector3([0.0, 1.0, 5.0])
         self.camera_front = Vector3([0.0, 0.0, -1.0])
@@ -33,7 +36,13 @@ class Camera:
 
     def get_view_matrix_running(self) -> Matrix44:
         """Get the view matrix from the camera gameObject"""
-        camera = self.context.gameObjects[self.context.camera_object]
+        _scene_camera_id : int = self.scene.scenes[self.scene.current_scene]["camera"] if self.scene.current_scene in self.scene.scenes else -1
+
+        camera = self.scene.getCamera()
+
+        if not camera:
+            return Matrix44.identity()
+
         camera_rotation = Matrix44.from_eulers(camera.rotation)
         up = camera_rotation * Vector3([0.0, 1.0, 0.0])
 

@@ -3,6 +3,7 @@ class ScriptBehaivior:
         self.context = context
         self.settings = context.settings
         self.renderer = context.renderer
+        self.scene = context.scene
 
         self.events     = context.events
         self.key        = context.key

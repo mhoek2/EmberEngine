@@ -59,7 +59,6 @@ class EmberEngine:
         self.skybox     : Skybox = Skybox( self )
 
         self.sun = -1
-        self.camera_object = -1
 
         self.light_color     = ( 1.0, 1.0, 1.0, 1.0 )
         self.ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
@@ -88,7 +87,7 @@ class EmberEngine:
         self.environment_map = self.cubemaps.loadDefaultCubemap()
 
     def addEmptyGameObject( self ):
-        self.addGameObject( Mesh( self,
+        return self.addGameObject( Mesh( self,
             name        = "Empty GameObject",
             material    = self.defaultMaterial,
             translate   = [ 0, 0, 0 ],
@@ -97,7 +96,7 @@ class EmberEngine:
         ) )
 
     def addDefaultCube( self ):
-        self.addGameObject( Mesh( self,
+        return self.addGameObject( Mesh( self,
             name        = "Default cube",
             model_file  = f"{self.settings.engineAssets}models\\cube\\model.obj",
             material    = self.defaultMaterial,
@@ -107,7 +106,7 @@ class EmberEngine:
         ) )
 
     def addDefaultCamera( self ):
-        self.camera_object = self.addGameObject( Camera( self,
+        return self.addGameObject( Camera( self,
                         name        = "Camera",
                         model_file  = f"{self.settings.engineAssets}models\\camera\\model.fbx",
                         material    = self.defaultMaterial,
@@ -118,7 +117,7 @@ class EmberEngine:
                     ) )
 
     def addDefaultLight( self ) -> None:
-        self.addGameObject( Light( self,
+        return self.addGameObject( Light( self,
                         name        = "light",
                         model_file  = f"{self.settings.engineAssets}models\\sphere\\model.obj",
                         translate   = [1, -1, 1],

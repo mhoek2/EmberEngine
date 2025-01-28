@@ -16,6 +16,7 @@ from modules.scene import SceneManager
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.light import Light
+from gameObjects.camera import Camera
 
 from pathlib import Path
 import textwrap
@@ -195,18 +196,23 @@ class ImGui( Context ):
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
-        if imgui.button( "Add Cube" ):
+        if imgui.button( "Cube" ):
             self.context.addDefaultCube()
 
         imgui.same_line()
 
-        if imgui.button( "Add Light" ):
+        if imgui.button( "Light" ):
             self.context.addDefaultLight()
 
         imgui.same_line()
 
-        if imgui.button( "Empty GameObject" ):
+        if imgui.button( "Empty" ):
             self.context.addEmptyGameObject()
+
+        imgui.same_line()
+
+        if imgui.button( "Camera" ):
+            self.context.addDefaultCamera()
 
 
         if imgui.tree_node( "Hierarchy", imgui.TREE_NODE_DEFAULT_OPEN ):
@@ -236,7 +242,9 @@ class ImGui( Context ):
         changed, self.settings.drawWireframe = imgui.checkbox( 
             "Wireframe", self.settings.drawWireframe 
         )
-        
+
+        imgui.separator()
+
         changed, self.settings.grid_color = imgui.color_edit3(
             "Grid color", *self.settings.grid_color
         )
@@ -247,6 +255,16 @@ class ImGui( Context ):
 
         changed, self.settings.grid_spacing = imgui.drag_float(
                 f"Grid spacing", self.settings.grid_spacing, 0.01
+        )
+
+        imgui.separator()
+
+        changed, self.context.roughnessOverride = imgui.drag_float(
+                f"Roughness override", self.context.roughnessOverride, 0.01
+        )
+
+        changed, self.context.metallicOverride = imgui.drag_float(
+                f"Metallic override", self.context.metallicOverride, 0.01
         )
 
         imgui.end()
@@ -383,8 +401,57 @@ class ImGui( Context ):
             imgui.tree_pop()
         return
 
+    def draw_popup_gameObject( self, id : str, filter = None ):
+        selected = -1
+        clicked = False
+
+        if imgui.begin_popup("select-camera"):
+
+            _, clicked = imgui.selectable(
+                f"None##object_-1", clicked
+            )
+
+            if clicked:
+                imgui.end_popup()
+                return True, -1
+
+            for i, obj in enumerate(self.context.gameObjects):
+                if filter is not None and not filter(obj):
+                    continue
+
+                _, clicked = imgui.selectable(
+                    f"{obj.name}##object_{i}", clicked
+                )
+
+                if clicked:
+                    selected = i
+                    break;
+
+            imgui.end_popup()
+
+        return clicked, selected
+
     def draw_environment( self ) -> None:
         imgui.begin( "Environment" )
+
+        imgui.text("camera")
+        imgui.same_line(100.0)
+
+        camera : GameObject = self.scene.getCamera()
+        _scene_camera_name : str = camera.name if camera else "None" 
+
+        if imgui.button( _scene_camera_name ):
+            imgui.open_popup("select-camera")
+
+        imgui.same_line()
+        changed_camera_gameobject, _changed_id = self.draw_popup_gameObject(
+            "select-camera", filter=lambda obj: isinstance(obj, Camera ))
+
+        if changed_camera_gameobject:
+            print(_changed_id)
+            self.scene.scenes[self.scene.current_scene]["camera"] = _changed_id
+
+        imgui.separator()
 
         changed, self.context.light_color = imgui.color_edit3(
             "Light color", *self.context.light_color
@@ -392,14 +459,6 @@ class ImGui( Context ):
 
         changed, self.context.ambient_color = imgui.color_edit3(
             "Ambient color", *self.context.ambient_color
-        )
-
-        changed, self.context.roughnessOverride = imgui.drag_float(
-                f"Roughness override", self.context.roughnessOverride, 0.01
-        )
-
-        changed, self.context.metallicOverride = imgui.drag_float(
-                f"Metallic override", self.context.metallicOverride, 0.01
         )
 
         imgui.end()

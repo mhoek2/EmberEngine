@@ -3,7 +3,7 @@ import pygame
 class MyScript:
     """Default script template"""
     def onStart( self ) -> None:
-        self.camera = self.context.gameObjects[self.context.camera_object]
+        self.camera = self.scene.getCamera()
 
     def onUpdate( self ) -> None:
         keypress = self.key.get_pressed()

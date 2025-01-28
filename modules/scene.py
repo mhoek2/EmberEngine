@@ -16,6 +16,7 @@ class SceneManager:
     class Scene(TypedDict):
         name        : str
         gameObjects : List["_GameObject"]
+        camera      : int
 
     class _GameObject(TypedDict):
         instance    : str
@@ -40,6 +41,17 @@ class SceneManager:
 
     def toggleWindow( self ):
         self._window_is_open = not self._window_is_open
+
+    def getCamera( self ):
+        try:
+            _scene_camera_id = self.scenes[self.current_scene]["camera"]
+
+            if _scene_camera_id == -1:
+                raise IndexError("invalid camera")
+
+            return self.context.gameObjects[_scene_camera_id]
+        except IndexError:
+            return False
 
     def saveScene( self ):
         """Save a scene, only serialize things actually needed"""
@@ -98,6 +110,8 @@ class SceneManager:
 
         for i, scene in enumerate(self.scenes):
             try:
+                self.scenes[i]["camera"] = -1
+
                 if "gameObjects" in scene: 
                     for obj in scene["gameObjects"]:
                         index = self.context.addGameObject( eval(obj["instance"])( self.context,
@@ -117,7 +131,7 @@ class SceneManager:
                             self.context.sun = index
 
                         if isinstance( self.context.gameObjects[index], Camera ):
-                            self.context.camera_object = index
+                            self.scenes[i]["camera"] = index
 
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
@@ -125,8 +139,8 @@ class SceneManager:
             
             else:
                 # setup default camera if no camera in the scene
-                if self.context.camera_object == -1:
-                   self.context.addDefaultCamera()
+                #if self.scenes[i]["camera"] == -1:
+                #   self.scenes[i]["camera"] = self.context.addDefaultCamera()
 
                 self.current_scene =  i
                 return
