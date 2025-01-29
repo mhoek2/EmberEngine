@@ -1,5 +1,6 @@
 from pyrr import Vector3, vector, vector3, matrix44, Matrix44
 from math import sin, cos, radians
+import pygame
 
 from modules.settings import Settings
 from modules.scene import SceneManager
@@ -74,20 +75,23 @@ class Camera:
         # return editor camera
         return matrix44.create_look_at(self.camera_pos, self.camera_pos + self.camera_front, self.camera_up)
 
-    def process_mouse_movement( self, xoffset : int, yoffset : int, constrain_pitch : bool = True ):
+    def process_mouse_movement( self, constrain_pitch : bool = True ):
         """Handle mouse events for the editor camera, with constraints and sensitivity bias.
-        :param xoffset: The horizontal mousemovement factor
-        :type xoffset: int
-        :param yoffset: The horizontal mousemovement factor
-        :type yoffset: int
         :param constrain_pitch: Enable to contraint the pitch to 45degrees both directions
         :type constrain_pitch: bool
         """
+        xoffset, yoffset = self.context.mouse.get_rel()
+
+        if self.context.renderer.ImGuiInputFocussed:
+            """Input state changed, dont process mouse movement on the first """
+            self.context.renderer.ImGuiInputFocussed = False
+            return
+
         xoffset *= self.mouse_sensitivity
         yoffset *= self.mouse_sensitivity
 
         self.jaw += xoffset
-        self.pitch += yoffset
+        self.pitch += -yoffset
 
         if constrain_pitch:
             if self.pitch > 45:
@@ -108,21 +112,27 @@ class Camera:
         self.camera_right = vector.normalise(vector3.cross(self.camera_front, Vector3([0.0, 1.0, 0.0])))
         self.camera_up = vector.normalise(vector3.cross(self.camera_right, self.camera_front))
 
-    def process_keyboard( self, direction : str, velocity : float ):
-        """Handle key events for the editor camera
-        :param direction: The direction a keypress event represents
-        :type direction: str
-        :param velocity: The speed the camera moves in that direction
-        :type velocity: float
-        """
-        if direction == "FORWARD":
+    def process_keyboard( self ):
+        """Handle key events for the editor camera"""
+        keypress = self.context.key.get_pressed()
+        velocity : float = 0.05;
+
+        if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
+            velocity *= 30
+
+        if keypress[pygame.K_w]:
             self.camera_pos += self.camera_front * velocity
-        if direction == "BACKWARD":
+        if keypress[pygame.K_s]:
             self.camera_pos -= self.camera_front * velocity
-        if direction == "LEFT":
+        if keypress[pygame.K_a]:
             self.camera_pos -= self.camera_right * velocity
-        if direction == "RIGHT":
+        if keypress[pygame.K_d]:
             self.camera_pos += self.camera_right * velocity
+
+    def new_frame( self ):
+        if not self.context.renderer.ImGuiInput and not self.settings.game_running:
+            self.context.camera.process_keyboard()
+            self.context.camera.process_mouse_movement()
 
 
 

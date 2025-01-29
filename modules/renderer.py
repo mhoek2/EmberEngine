@@ -25,7 +25,12 @@ if TYPE_CHECKING:
 class Renderer:
     """The rendering backend"""
     def __init__( self, context ):
+        """Renderer backend, creating window instance, openGL, FBO's, shaders and rendertargets
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        """
         self.context    : 'EmberEngine' = context
+        self.camera     : Camera = context.camera
         self.settings   : Settings = context.settings
 
         # window
@@ -56,9 +61,6 @@ class Renderer:
         # init mouse movement and center mouse on screen
         self.screen_center = [self.screen.get_size()[i] // 2 for i in range(2)]
         pygame.mouse.set_pos( self.screen_center )
-
-        # camera
-        self.cam = Camera( context )
 
         # shaders
         self.create_shaders()
@@ -108,7 +110,6 @@ class Renderer:
             self.main_fbo["resolve"]["fbo"] = self.create_resolve_fbo( self.main_fbo["resolve"]["color_image"]  )
             self.main_fbo['output'] = self.main_fbo["resolve"]["color_image"]
 
-        #glClearColor(0.0, 0.3, 0.7, 1)
         glClearColor(0.0, 0.0, 0.0, 1)
 
         glEnable(GL_DEPTH_TEST)
@@ -124,10 +125,10 @@ class Renderer:
             print(  f"OpenGL Error: {err}" )
 
     def create_instance( self ) -> None:
+        """Create the window and instance with openGL"""
         pygame.init()
 
         gl_version = (3, 3)
-
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, gl_version[0])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
@@ -145,10 +146,12 @@ class Renderer:
             glEnable( GL_MULTISAMPLE )
      
     def shutdown( self ) -> None:
+        """Quit the application"""
         self.imgui_renderer.shutdown()
         pygame.quit()
 
     def create_screen_vao( self ):
+        """Create vertex buffer for 2d operations like gamma, msaa resolve"""
         quad = np.array([
             # positions        # texCoords
             -1.0,  1.0,  0.0, 1.0,
@@ -181,7 +184,13 @@ class Renderer:
         glBindVertexArray(0)
 
     def create_resolve_texture( self, size : Vector2 ):
-        texture_id  = glGenTextures( 1 )
+        """Create a image attachment used as the resolved MSAA
+        :param size: The dimensions of the image
+        :type size: Vector2
+        :return: The uid of the texture in GPU memory
+        :rtype: uint32/uintc
+        """
+        texture_id = glGenTextures( 1 )
         glBindTexture(GL_TEXTURE_2D, texture_id)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, int(size.x), int(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -190,6 +199,12 @@ class Renderer:
         return texture_id
 
     def create_resolve_fbo( self, resolved_texture ):
+        """Create the resolve framebuffer (FBO) and bind the resolve image attachment
+        :param resolved_texture: The image attachment MSAA should resolve to (not sample from)
+        :type resolved_texture: uint32/uintc
+        :return: The uid of the framebuffer (FBO)
+        :rtype: uint32/uintc
+        """
         resolve_fbo = glGenFramebuffers(1)
         glBindFramebuffer(GL_FRAMEBUFFER, resolve_fbo)
 
@@ -203,6 +218,7 @@ class Renderer:
         return resolve_fbo
 
     def resolve_multisample_texture( self ):
+        """The 'renderpass' that samples from main framebuffer and resolves to MSAA"""
         glBindFramebuffer( GL_FRAMEBUFFER, self.main_fbo["resolve"]["fbo"] )
         glClear( GL_COLOR_BUFFER_BIT )
 
@@ -224,10 +240,17 @@ class Renderer:
         glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 
     def create_fbo_with_depth( self, size : Vector2 ):
+        """Create the a framebuffer (FBO) with a bound image attachment.
+        Adjust image attachment properties based on MSAA state. 
+        :param size: The dimensions of the texture
+        :type size: Vector2
+        :return: The uid of the texture in GPU memory
+        :rtype: uint32/uintc
+        """
         fbo = glGenFramebuffers( 1 )
         glBindFramebuffer( GL_FRAMEBUFFER, fbo )
         
-        # Create a texture to render the color
+        # Create the image attachment
         color_texture = glGenTextures( 1 )
 
         # Set MSAA
@@ -277,6 +300,10 @@ class Renderer:
         return fbo, color_texture
 
     def bind_fbo( self, fbo ) -> None:
+        """Bind a framebuffer (FBO) to the command buffer. 
+        :param fbo: The framebuffer uid
+        :type fbo: uint32/uintc
+        """
         # if rendering to a FBO, stop ..
         self.unbind_fbo()
 
@@ -287,13 +314,17 @@ class Renderer:
         glEnable(GL_DEPTH_TEST);
 
     def unbind_fbo( self ) -> None:
-        """Stop rending to current fbo"""
+        """Stop rending to current fbo, and unbind framebuffer (FBO)"""
         if self.current_fbo:
             self.current_fbo = False
 
         glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 
-    def render_fbo( self, fbo_texture ):
+    def render_fbo( self, fbo ):
+        """Render a framebuffer to the swapchain using the 2d VAO
+        :param fbo: The framebuffer uid
+        :type fbo: uint32/uintc
+        """
         self.use_shader( self.gamma )
 
         glBindVertexArray( self.screenVAO )
@@ -302,18 +333,23 @@ class Renderer:
         glActiveTexture( GL_TEXTURE0 )
 
         _texture_type = GL_TEXTURE_2D_MULTISAMPLE if self.settings.msaaEnabled else GL_TEXTURE_2D
-        glBindTexture( _texture_type, fbo_texture )
+        glBindTexture( _texture_type, fbo )
 
         glUniform1i(glGetUniformLocation( self.shader.program, "screenTexture" ), 0)
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
         glBindVertexArray(0)
 
-    def use_shader( self, shader ) -> None:
+    def use_shader( self, shader : Shader ) -> None:
+        """Bind a shader program to the command buffer
+        :param shader: the shader object containing the program
+        :type shader: Shader
+        """
         self.shader : Shader = shader
         glUseProgram( self.shader.program )
 
     def create_shaders( self ) -> None:
+        """Create the GLSL shaders used for the editor and general pipeline"""
         self.general = Shader( self.context, "general" )
         self.skybox = Shader( self.context, "skybox" )
         self.gamma = Shader( self.context, "gamma" )
@@ -321,6 +357,10 @@ class Renderer:
         self.resolve = Shader( self.context, "resolve" )
 
     def setup_projection_matrix( self, size : Vector2 ) -> None:
+        """Setup the viewport and projection matrix using Matrix44
+        :param size: The dimensions of the current viewport
+        :type size: Vector2
+        """
         glViewport( 0, 0, int(size.x), int(size.y) )
 
         self.aspect_ratio = size.x / size.y
@@ -328,7 +368,8 @@ class Renderer:
         self.view = matrix44.create_identity() # identity as placeholder
 
     def toggle_input_state( self ) -> None:
-        """Toggle input between application and viewport"""
+        """Toggle input between application and viewport
+        Toggling visibility and position of the mouse"""
         if self.ImGuiInput:
             self.ImGuiInput = False
             self.ImGuiInputFocussed = True
@@ -339,6 +380,8 @@ class Renderer:
             pygame.mouse.set_visible( True )
 
     def event_handler( self ) -> None:
+        """The main event handler for the application itself, handling input event states
+        eg. Keep mouse hidden and in center of window when F1 is pressed to go into 3D space."""
         mouse_moving = False
 
         for event in self.context.events.get():
@@ -372,49 +415,24 @@ class Renderer:
         if not self.ImGuiInput and not mouse_moving:
             pygame.mouse.set_pos( self.screen_center )
 
-    def do_movement(self) -> None:
-        keypress = self.context.key.get_pressed()
-        velocity : float = 0.05;
-
-        if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
-            velocity *= 30
-
-        if keypress[pygame.K_w]:
-            self.cam.process_keyboard( "FORWARD", velocity )
-        if keypress[pygame.K_s]:
-            self.cam.process_keyboard( "BACKWARD", velocity )
-        if keypress[pygame.K_d]:
-            self.cam.process_keyboard( "RIGHT", velocity )
-        if keypress[pygame.K_a]:
-            self.cam.process_keyboard( "LEFT", velocity )
-        
-    def do_mouse( self ):
-        xpos, ypos = self.context.mouse.get_rel()
-
-        if self.ImGuiInputFocussed:
-            """Input state changed, dont process mouse movement on the first """
-            self.ImGuiInputFocussed = False
-            return
-
-        self.cam.process_mouse_movement( xpos, -ypos )
-        return
-
     def begin_frame( self ) -> None:
+        """Start for each frame, but triggered after the event_handler.
+        Bind framebuffer (FBO), view matrix, frame&delta time"""
         self.frameTime = self.clock.tick(60)
         self.deltaTime = self.frameTime / self.DELTA_SHIFT
 
         imgui.new_frame()
-
-        if not self.ImGuiInput and not self.settings.game_running:
-            self.do_movement()
-            self.do_mouse()
+        self.camera.new_frame()
 
         # bind main FBO
         self.bind_fbo( self.main_fbo )
 
-        self.view = self.cam.get_view_matrix()
+        self.view = self.context.camera.get_view_matrix()
 
     def end_frame( self ) -> None:
+        """End for each frame, clear GL states, resolve MSAA if enabled, draw ImGui.
+        ImGui in will draw the 3D viewport.
+        otherwise render_fbo() will directly render to the swapchain"""
         glUseProgram( 0 )
         glFlush()
 

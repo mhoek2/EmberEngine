@@ -20,11 +20,13 @@ from modules.console import Console
 from modules.imgui import ImGui
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
+from modules.camera import Camera as CameraHandler
 from modules.settings import Settings
 from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
 from modules.material import Material
+
 
 from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera
@@ -48,6 +50,7 @@ class EmberEngine:
 
         self.console    : Console = Console(self)
         self.scene      : SceneManager = SceneManager( self )
+        self.camera     : CameraHandler = CameraHandler( self )
         self.renderer   : Renderer = Renderer( self )
         self.imgui      : ImGui = ImGui( self )
  
@@ -230,7 +233,7 @@ class EmberEngine:
                 glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
                 
                 # camera
-                camera_pos = self.renderer.cam.camera_pos
+                camera_pos = self.camera.camera_pos
                 glUniform4f( self.renderer.shader.uniforms['u_ViewOrigin'], camera_pos[0], camera_pos[1], camera_pos[2], 0.0 )
 
                 # sun direction/position and color
