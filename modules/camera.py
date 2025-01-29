@@ -32,11 +32,11 @@ class Camera:
     def place_object_in_front_of_another( self, position, rotation, distance ) -> Vector3:
         """ *This should become a scriptable function perhaps
         :param position: The position of the parent object
-        :type: Vector3
+        :type position: Vector3
         :param rotation: The rotation of the parent object
-        :type: Vector3
+        :type rotation: Vector3
         :param distance: The distance the object is placed from the parent on the Z-axis
-        :type: float
+        :type distance: float
         :return: The position of an object placed in front of another object
                  along the Z-axis at a defined distance
         :rtype: Vector3
