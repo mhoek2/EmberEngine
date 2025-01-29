@@ -7,7 +7,7 @@ from OpenGL.arrays import vbo
 from pyrr import Matrix44
 
 from modules.context import Context
-from modules.material import Material
+from modules.material import Materials
 
 import impasse as imp
 from impasse.constants import MaterialPropertyKey, ProcessingStep
@@ -19,7 +19,7 @@ class Models( Context ):
     def __init__( self, context ):
         super().__init__( context )
 
-        self.materials  : Material = context.materials
+        self.materials  : Materials = context.materials
         
         self.model = [i for i in range(300)]
         self.model_mesh = [{} for i in range(300)]

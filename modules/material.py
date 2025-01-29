@@ -4,22 +4,33 @@ from pathlib import Path
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from typing import TYPE_CHECKING, TypedDict
+
 from impasse.structs import Material as ImpasseMaterial, MaterialProperty
 from impasse.constants import MaterialPropertyKey, TextureSemantic
 
 from modules.context import Context
 from modules.images import Images
 
-class Material( Context ):
+class Materials( Context ):
+    class Material(TypedDict):
+        albedo      : int # uint32/uintc
+        normal      : int # uint32/uintc
+        emissive    : int # uint32/uintc
+        opacity     : int # uint32/uintc
+        phyiscal    : int # uint32/uintc
+
     def __init__( self, context ):
+        """Material loader for models
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        """
         super().__init__( context )
 
         self.images     : Images = context.images
 
-        self.materials = [{} for i in range(300)]
+        self.materials = [Materials.Material() for i in range(300)]
         self._num_materials : int = 0;
-
-        return
 
     @staticmethod
     def add_ao_suffix( filename ):
@@ -34,22 +45,35 @@ class Material( Context ):
                        m        : Path = False, 
                        o        : Path = False,
                        rmo      : Path = False ) -> int:
-        """Build a material based on defined textures"""
-
+        """Build a material based on defined textures
+        :param albedo: diffuse/albedo/base color map
+        :type abledo: Path
+        :param normal: normal map 
+        :type normal: Path
+        :param emissive: emissive map 
+        :type emissive: Path
+        :param r: roughness map 
+        :type r: Path
+        :param m: metallic map
+        :type m: Path
+        :param o: occlusion map
+        :type o: Path
+        :param rmo: already packed roughness/metallic/occlused map 
+        :type rmo: Path
+        :return: The index in the material buffer
+        :rtype: int
+        """
         index = self._num_materials
-        mat = self.materials[index]
+        mat : Materials.Material = self.materials[index]
 
-        mat["albedo"] = self.images.loadOrFindFullPath( albedo )
+        if albedo:
+            mat["albedo"] = self.images.loadOrFindFullPath( albedo )
 
         if normal:
             mat["normal"] = self.images.loadOrFindFullPath( normal )
-        else:
-            mat["normal"] = self.images.defaultNormal
 
         if emissive:
             mat["emissive"] = self.images.loadOrFindFullPath( emissive )
-        else:
-            mat["emissive"] = self.images.blackImage
 
         mat["opacity"] = self.images.whiteImage
 
@@ -62,18 +86,30 @@ class Material( Context ):
                 mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
         self._num_materials += 1
+
         return index
 
-    def getMaterialByIndex( self, index : int ):
-        """Get material by index, return default material if out of scope"""
+    def getMaterialByIndex( self, index : int ) -> Material:
+        """Get material by index, return default material if out of scope
+        :param index: The index of the material in the buffer
+        :type index: int
+        :return: The material data
+        :rtype: Dict, no TypedDict yet
+        """
         if index < self._num_materials:
             return self.materials[index]
-        else:
-            return self.materials[self.context.defaultMaterial]
+        
+        return self.materials[self.context.defaultMaterial]
 
-    def loadOrFind( self, material, path : Path ) -> int:
-        """Create a material by parsing model material info and loading textures"""
-
+    def loadOrFind( self, material : ImpasseMaterial, path : Path ) -> int:
+        """Create a material by parsing model material info and loading textures
+        :param material: the material data from Impasse/assimp
+        :type material: Material as ImpasseMaterial
+        :param path: the path where the textures should be located
+        :type path: Path
+        :return: The index of the material in the buffer
+        :rtype: int
+        """
         # find
         #for i, mat in self.materials:
         #    if mat == material:
@@ -136,35 +172,14 @@ class Material( Context ):
         return index
 
     def bind( self, index ):
-
+        """Bind the textures to the commmand buffer"""
         if index < self._num_materials:
             mat = self.materials[index]
         else:
             mat = self.materials[self.context.defaultMaterial]
 
-        if 'albedo' in mat:
-            self.images.bind( mat["albedo"], GL_TEXTURE0, "sTexture", 0 )
-        else:
-            self.images.bind( self.images.defaultImage, GL_TEXTURE0, "sTexture", 0 )
-
-        if 'normal' in mat:
-            self.images.bind( mat["normal"], GL_TEXTURE1, "sNormal", 1 )
-        else:
-            self.images.bind( self.images.defaultNormal, GL_TEXTURE1, "sNormal", 1 )
-
-        if 'phyiscal' in mat:
-            self.images.bind( mat["phyiscal"], GL_TEXTURE2, "sPhyiscal", 2 )
-        else:
-            self.images.bind( self.images.defaultRMO, GL_TEXTURE2, "sPhyiscal", 2 )
-
-        if 'emissive' in mat:
-            self.images.bind( mat["emissive"], GL_TEXTURE3, "sEmissive", 3 )
-        else:
-            self.images.bind( self.images.blackImage, GL_TEXTURE3, "sEmissive", 3 )
-
-        if 'opacity' in mat:
-            self.images.bind( mat["opacity"], GL_TEXTURE4, "sOpacity", 4 )
-        else:
-            self.images.bind( self.images.whiteImage, GL_TEXTURE4, "sOpacity", 4 )
-
-        return
+        self.images.bind( mat.get("albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
+        self.images.bind( mat.get("normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )
+        self.images.bind( mat.get("phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhyiscal",    2 )
+        self.images.bind( mat.get("emissive",   self.images.blackImage),    GL_TEXTURE3, "sEmissive",    3 )
+        self.images.bind( mat.get("opacity",    self.images.whiteImage),    GL_TEXTURE4, "sOpacity",     4 )

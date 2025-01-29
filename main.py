@@ -25,7 +25,7 @@ from modules.settings import Settings
 from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
-from modules.material import Material
+from modules.material import Materials
 
 
 from gameObjects.gameObject import GameObject
@@ -57,7 +57,7 @@ class EmberEngine:
         self.gameObjects : List[GameObject] = []
 
         self.images     : Images = Images( self )
-        self.materials  : Material = Material( self )
+        self.materials  : Materials = Materials( self )
         self.models     : Models = Models( self )
         self.cubemaps   : Cubemap = Cubemap( self )
         self.skybox     : Skybox = Skybox( self )

@@ -88,7 +88,6 @@ class Images( Context ):
         :param shader_index: Represent the number also indicated with 'texture_index'. revisit this?
         :type shader_index: int
         """
-
         glActiveTexture( texture_index )
         glBindTexture( GL_TEXTURE_2D, texture_id )
         glUniform1i(glGetUniformLocation( self.renderer.shader.program, shader_uniform ), shader_index)

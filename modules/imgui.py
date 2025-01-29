@@ -7,7 +7,7 @@ import imgui
 from pygame import Vector2
 
 from modules.context import Context
-from modules.material import Material
+from modules.material import Materials
 from modules.images import Images
 from modules.models import Models
 from modules.console import Console
@@ -54,7 +54,7 @@ class ImGui( Context ):
         if self.initialized:
             return
 
-        self.materials  : Material = self.context.materials
+        self.materials  : Materials = self.context.materials
         self.images     : Images = self.context.images
         self.models     : Models = self.context.models
 
@@ -400,7 +400,7 @@ class ImGui( Context ):
             multi_mat : bool = True if len(materials) > 1 else False
 
             for material_id in materials:
-                mat = self.materials.getMaterialByIndex( material_id )
+                mat : Materials.Material = self.materials.getMaterialByIndex( material_id )
 
                 is_open : bool = False
 

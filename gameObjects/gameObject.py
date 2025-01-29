@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, TypedDict
 from modules.context import Context
 
 from modules.cubemap import Cubemap
-from modules.material import Material
+from modules.material import Materials
 from modules.images import Images
 from modules.models import Models
 
@@ -105,7 +105,7 @@ class GameObject( Context ):
 
         super().__init__( context )
 
-        self.materials      : Material = context.materials
+        self.materials      : Materials = context.materials
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps
         self.models         : Models = context.models
