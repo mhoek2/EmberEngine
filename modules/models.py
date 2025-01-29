@@ -1,5 +1,5 @@
-import os
 from pathlib import Path
+from typing import TYPE_CHECKING, TypedDict, Any, List, Dict
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -16,25 +16,49 @@ import numpy as np
 from modules.settings import Settings
 
 class Models( Context ):
+    class Mesh(TypedDict):
+        vbo         : vbo.VBO
+        vbo_size    : int
+        vbo_shape   : Any # np._shape
+        faces       : int # uint32/uintc
+        nbfaces     : int
+        material    : int
+
     def __init__( self, context ):
+        """Setup model buffers, containg mesh and material information 
+        required to render.
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        """
         super().__init__( context )
 
         self.materials  : Materials = context.materials
         
         self.model = [i for i in range(300)]
-        self.model_mesh = [{} for i in range(300)]
+        #self.model_mesh = [{} for i in range(300)]
+        self.model_mesh: List[List[Models.Mesh]] = [{} for _ in range(300)]
 
         self._num_models = 0
 
         return
 
     @staticmethod
-    def normalize(vectors):
-        # Normalize a vector array
+    def normalize( vectors ):
+        """Normalize a vector array"""
         lengths = np.linalg.norm(vectors, axis=1, keepdims=True)
         return np.divide(vectors, lengths, where=lengths != 0)
 
-    def compute_tangents_bitangents(self, vertices, tex_coords, indices):
+    def compute_tangents_bitangents( self, vertices, tex_coords, indices ):
+        """Compute tangent spaces for vertices
+        :param vertices: The vertices in the mesh
+        :type vertices: ndarray - shape 3. 
+        :param tex_coords: The texture coordinates
+        :type tex_coords: ndarray - shape 2. 
+        :param indices: The indices for the mesh
+        :type indices: ndarray - c. 
+        :returns: tangents, bitanges 
+        :rtype: ndarray; shape 3, ndarray; shape 3
+        """
         # Create empty tangent and bitangent arrays
         tangents = np.zeros_like(vertices)
         bitangents = np.zeros_like(vertices)
@@ -80,9 +104,19 @@ class Models( Context ):
 
         return tangents, bitangents
 
-
-    def prepare_gl_buffers( self, mesh, path : Path, material : int = -1 ):
-        gl = {}
+    def prepare_gl_buffers( self, mesh, path : Path, material : int = -1 ) -> Mesh:
+        """Prepare and store mesh in a vertex buffer, along with meta data like 
+        size or material id
+        :param mesh: The mesh loaded from Impasse
+        :type mesh:
+        :param path: The path of the folder the model is stored in, used to lookup textures
+        :type path: Path
+        :param material: Could contain a material override if not -1
+        :type material: int
+        :return: The meta data for this mesh, containing uid where VBO is stored along with size, shape, material id
+        :rtype: Mesh
+        """
+        _mesh : Models.Mesh = Models.Mesh()
 
         v = np.array( mesh.vertices, dtype='f' )  # Shape: (n_vertices, 3)
         n = np.array( mesh.normals, dtype='f' )    # Shape: (n_vertices, 3)
@@ -98,19 +132,19 @@ class Models( Context ):
 
         combined = np.hstack( ( v, n, t, tangents, bitangents ) )  # Shape: (n_vertices, 8)
 
-        gl["vbo"] = vbo.VBO( combined )
-        gl["vbo_size"] = combined.itemsize
-        gl["vbo_shape"] = combined.shape[1]
+        _mesh["vbo"] = vbo.VBO( combined )
+        _mesh["vbo_size"] = combined.itemsize
+        _mesh["vbo_shape"] = combined.shape[1]
 
         # Fill the buffer for vertex positions
-        gl["faces"] = glGenBuffers(1)
+        _mesh["faces"] = glGenBuffers(1)
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl["faces"])
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh["faces"])
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                      np.array(mesh.faces, dtype=np.int32),
                      GL_STATIC_DRAW)
 
-        gl["nbfaces"] = len(mesh.faces)
+        _mesh["nbfaces"] = len(mesh.faces)
 
         # Unbind buffers
         glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -118,14 +152,19 @@ class Models( Context ):
 
         # material
         if material == -1:
-            gl["material"] = self.materials.loadOrFind( mesh.material, path )
+            _mesh["material"] = self.materials.loadOrFind( mesh.material, path )
         else:
-            gl["material"] = material
+            _mesh["material"] = material
 
-        return gl
+        return _mesh
 
     def loadOrFind( self, file : Path, material : int = -1 ) -> int:
-        """Load or find an model, implement find later"""
+        """Load or find an model, implement find later
+        :param file: The path to the model file
+        :type file: Path
+        :param material: Could contain a material override if not -1
+        :type material: int
+        """
         index = self._num_models
 
         if not file.is_file():
@@ -136,19 +175,25 @@ class Models( Context ):
         for mesh_idx, mesh in enumerate( self.model[index].meshes ):
             self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers( mesh, file.parent, material=material )
 
-        # need to release?
-
         self._num_models += 1
         return index
 
-    def render( self, model_index, mesh_index, model_matrix ):
-        """Render the mesh from a node"""
-        mesh_gl = self.model_mesh[model_index][mesh_index]
-        vbo = mesh_gl["vbo"]
+    def render( self, model_index : int , mesh_index : int , model_matrix : Matrix44 ):
+        """Render the mesh from a node
+        :param model_index: The index of a loaded model
+        :type model_index: int
+        :param mesh_index:  The index of a mesh within that model
+        :type mesh_index: int
+        :param model_matrix: The transformation model matrix, used along with view and projection matrices
+        :type model_matrix: matrix44
+        """
+        mesh : Models.Mesh = self.model_mesh[model_index][mesh_index]
+
+        vbo = mesh["vbo"]
         vbo.bind()
 
-        size = mesh_gl["vbo_size"]
-        stride = size * mesh_gl["vbo_shape"]
+        size = mesh["vbo_size"]
+        stride = size * mesh["vbo_shape"]
             
         # vertex
         glEnableVertexAttribArray( 0 )
@@ -171,24 +216,30 @@ class Models( Context ):
         glVertexAttribPointer( 4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 12 ) )
 
         # material
-        self.materials.bind( mesh_gl["material"] )
+        self.materials.bind( mesh["material"] )
 
         if self.settings.drawWireframe:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
         glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_gl["faces"])
-        glDrawElements(GL_TRIANGLES, mesh_gl["nbfaces"] * 3, GL_UNSIGNED_INT, None)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh["faces"])
+        glDrawElements(GL_TRIANGLES, mesh["nbfaces"] * 3, GL_UNSIGNED_INT, None)
 
         if self.settings.drawWireframe:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
         vbo.unbind()
 
-    def draw_node( self, node, model_index, model_matrix ):
-        """Recursivly process nodes (parent and child nodes)"""
-
+    def draw_node( self, node, model_index : int, model_matrix : Matrix44 ):
+        """Recursivly process nodes (parent and child nodes)
+        :param node: A node of model
+        :type node: int
+        :param model_index: The index of a loaded model
+        :type model_index: int
+        :param model_matrix: The transformation model matrix, used along with view and projection matrices
+        :type model_matrix: matrix44
+        """
         # apply transformation matrices recursivly
         global_transform = model_matrix * Matrix44(node.transformation).transpose()
 
@@ -200,14 +251,16 @@ class Models( Context ):
         for child in node.children:
             self.draw_node( child, model_index, global_transform )
 
-    def draw( self, index : int, model_matrix ) -> None:
-        
-        self.draw_node( self.model[index].root_node, index, model_matrix )
-        return
-    
+    def draw( self, model_index : int, model_matrix : Matrix44 ) -> None:
+        """Begin drawing a model by index
+        :param model_index: The index of a loaded model
+        :type model_index: int
+        :param model_matrix: The transformation model matrix, used along with view and projection matrices
+        :type model_matrix: matrix44
+        """
+        self.draw_node( self.model[model_index].root_node, model_index, model_matrix )
+
         #for mesh in self.model[index].meshes:
         #    mesh_index = self.model[index].meshes.index(mesh)
         #
         #    self.render( index, mesh_index, model_matrix )
-
-        return

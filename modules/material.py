@@ -4,7 +4,7 @@ from pathlib import Path
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, List
 
 from impasse.structs import Material as ImpasseMaterial, MaterialProperty
 from impasse.constants import MaterialPropertyKey, TextureSemantic
@@ -29,7 +29,7 @@ class Materials( Context ):
 
         self.images     : Images = context.images
 
-        self.materials = [Materials.Material() for i in range(300)]
+        self.materials : List[Materials.Material] = [{} for i in range(300)]
         self._num_materials : int = 0;
 
     @staticmethod
@@ -171,8 +171,11 @@ class Materials( Context ):
 
         return index
 
-    def bind( self, index ):
-        """Bind the textures to the commmand buffer"""
+    def bind( self, index : int ):
+        """Bind the textures to the commmand buffer
+        :param index: The index of the material in the buffer
+        :type index: int
+        """
         if index < self._num_materials:
             mat = self.materials[index]
         else:

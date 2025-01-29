@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import List
 
@@ -12,7 +11,6 @@ from pyrr import matrix44, Vector3
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import math
 import numpy as np
 
 from modules.scene import SceneManager
@@ -26,7 +24,6 @@ from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
 from modules.material import Materials
-
 
 from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera

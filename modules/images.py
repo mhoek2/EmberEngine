@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import List
 
@@ -48,8 +47,6 @@ class Images( Context ):
         self.images_paths.append( f"rmomap_placeholder_{texture_id}" )
         self.images.append( texture_id )
 
-        print( f"[TEST] - {roughness_path}" )
-
         return texture_id
 
     def loadOrFindFullPath( self, path : Path, flip_x: bool = False, flip_y: bool = True ):
@@ -74,7 +71,6 @@ class Images( Context ):
         self.images_paths.append( str(path) )
         self.images.append( texture_id )
 
-        print(f"[TEST] - {path}")
         return texture_id
 
     def bind( self, texture_id, texture_index, shader_uniform : str, shader_index : int ):

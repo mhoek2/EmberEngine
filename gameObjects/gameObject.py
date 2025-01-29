@@ -135,7 +135,7 @@ class GameObject( Context ):
 
         return
 
-    def _createModelMatrix( self ):
+    def _createModelMatrix( self ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
         model = Matrix44.identity()
         model = model * Matrix44.from_translation( Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
