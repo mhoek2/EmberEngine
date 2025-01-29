@@ -125,7 +125,7 @@ class GameObject( Context ):
 
         # model
         self.model          : int = -1
-        self.model_file = model_file if model_file else False
+        self.model_file = Path(model_file) if model_file else False
 
         self.onStart()
 

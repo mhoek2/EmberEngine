@@ -1,6 +1,8 @@
+import os
+from pathlib import Path
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
-import os
 
 from impasse.structs import Material as ImpasseMaterial, MaterialProperty
 from impasse.constants import MaterialPropertyKey, TextureSemantic
@@ -15,7 +17,7 @@ class Material( Context ):
         self.images     : Images = context.images
 
         self.materials = [{} for i in range(300)]
-        self._num_materials = 0;
+        self._num_materials : int = 0;
 
         return
 
@@ -25,13 +27,13 @@ class Material( Context ):
         return f"{base}_ao{ext}"
 
     def buildMaterial( self, 
-                       albedo   : str = False, 
-                       normal   : str = False, 
-                       emissive : str = False, 
-                       r        : str = False, 
-                       m        : str = False, 
-                       o        : str = False,
-                       rmo      : str = False ) -> int:
+                       albedo   : Path = False, 
+                       normal   : Path = False, 
+                       emissive : Path = False, 
+                       r        : Path = False, 
+                       m        : Path = False, 
+                       o        : Path = False,
+                       rmo      : Path = False ) -> int:
         """Build a material based on defined textures"""
 
         index = self._num_materials
@@ -69,7 +71,7 @@ class Material( Context ):
         else:
             return self.materials[self.context.defaultMaterial]
 
-    def loadOrFind( self, material, path ) -> int:
+    def loadOrFind( self, material, path : Path ) -> int:
         """Create a material by parsing model material info and loading textures"""
 
         # find
@@ -77,7 +79,7 @@ class Material( Context ):
         #    if mat == material:
         #        return i
 
-        # initiliate empty material
+        # initialize empty material
         index = self.buildMaterial()
         mat = self.materials[index]
   
@@ -85,48 +87,45 @@ class Material( Context ):
         m = False
         o = False
 
+        load_texture = lambda prop, path: self.images.loadOrFindFullPath( 
+            path / Path(prop.data).name
+        )
+
         for prop in material.properties:
 
             if prop.key == MaterialPropertyKey.TEXTURE:
                 # albedo
                 if prop.semantic == TextureSemantic.DIFFUSE:
-                    _filename = os.path.basename( prop.data )
-                    mat["albedo"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+                    mat["albedo"] = load_texture( prop, path )
 
                     # find ambient occlusion
-                    _filepath_ao = f"{path}\\{ self.add_ao_suffix( _filename )}"
+                    _filepath_ao = Path( f"{path}\\{ self.add_ao_suffix( os.path.basename(prop.data) )}" )
                     if os.path.isfile( _filepath_ao ):
                         o = _filepath_ao
         
                 # normals
                 elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
-                    _filename = os.path.basename( prop.data )
-                    mat["normal"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+                    mat["normal"] = load_texture( prop, path )
         
                 # roughness
                 elif prop.semantic == TextureSemantic.SHININESS: 
-                    _filename = os.path.basename( prop.data )
-                    r = f"{path}\\{_filename}"
+                    r = path / Path(prop.data).name
 
                 # opacity
                 elif prop.semantic == TextureSemantic.OPACITY:
-                    _filename = os.path.basename( prop.data )
-                    mat["opacity"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+                    mat["opacity"] = load_texture( prop, path )
 
                 # emissive
                 if prop.semantic == TextureSemantic.EMISSIVE:
-                    _filename = os.path.basename( prop.data )
-                    mat["emissive"] = self.images.loadOrFindFullPath( f"{path}\\{_filename}")
+                    mat["emissive"] = load_texture( prop, path )
 
                 # ambient occlusion
                 elif prop.semantic == TextureSemantic.AMBIENT: 
-                    _filename = os.path.basename( prop.data )
-                    o = f"{path}\\{_filename}"
+                    o = path / Path(prop.data).name
 
             # metallic
             if prop.key == "$raw.ReflectionFactor|file":  # hmmm... 
-                _filename = os.path.basename( prop.data )
-                m = f"{path}\\{_filename}"
+                m = path / Path(prop.data).name
 
         # r, m and o should be packed into a new _rmo file.
         if not r and not m and not o:

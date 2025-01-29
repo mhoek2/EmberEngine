@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
 class Camera:
     def __init__( self, context ):
-        """Camera handler
-        :param context: This class is responsible for creating the viewmatrix,
-                        Based on what camera is active, either from scene or editor
+        """This class is responsible for creating the viewmatrix,
+        Based on what camera is active, either from scene or editor
+        :param context: This is the main context of the application
         :type context: EmberEngine
         """
         self.context    : 'EmberEngine' = context

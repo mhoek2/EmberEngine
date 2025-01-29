@@ -39,7 +39,7 @@ class ImGui( Context ):
     def load_gui_icons( self ) -> None:
         """Load icons from game assets gui folder"""
         self.icons = {}
-        self.icon_dir = Path( f"{self.settings.engine_gui_path}\\icons" ).resolve()
+        self.icon_dir = Path( f"{self.settings.engine_gui_path}\\icons" )
 
         if any( self.icon_dir.glob("*") ):
             for path in self.icon_dir.glob("*"):
@@ -47,7 +47,7 @@ class ImGui( Context ):
                     continue
                 
                 icon_id = path.name.replace( path.suffix, "")
-                self.icons[f".{icon_id}"] = self.context.images.loadOrFindFullPath( str(path), flip_y=False )
+                self.icons[f".{icon_id}"] = self.context.images.loadOrFindFullPath( path, flip_y=False )
 
 
     def initialize_context( self ) -> None:

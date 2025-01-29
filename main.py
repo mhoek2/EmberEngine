@@ -198,8 +198,6 @@ class EmberEngine:
             self.renderer.event_handler()
 
             if not self.renderer.paused:
-                _scene = self.scene.getCurrentScene()
-
                 self.renderer.begin_frame()
 
                 #
@@ -233,8 +231,12 @@ class EmberEngine:
                 glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
                 
                 # camera
-                camera_pos = self.camera.camera_pos
-                glUniform4f( self.renderer.shader.uniforms['u_ViewOrigin'], camera_pos[0], camera_pos[1], camera_pos[2], 0.0 )
+                glUniform4f( self.renderer.shader.uniforms['u_ViewOrigin'], self.camera.camera_pos[0], self.camera.camera_pos[1], self.camera.camera_pos[2], 0.0 )
+
+                #
+                # setup scene
+                #
+                _scene = self.scene.getCurrentScene()
 
                 # sun direction/position and color
                 light_dir = self.gameObjects[self.sun].translate if self.sun != -1 else (0.0, 0.0, 1.0)

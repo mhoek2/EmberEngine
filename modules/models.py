@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.arrays import vbo
@@ -6,11 +9,9 @@ from pyrr import Matrix44
 from modules.context import Context
 from modules.material import Material
 
-import impasse  as imp
+import impasse as imp
 from impasse.constants import MaterialPropertyKey, ProcessingStep
 import numpy as np
-
-import os
 
 from modules.settings import Settings
 
@@ -80,7 +81,7 @@ class Models( Context ):
         return tangents, bitangents
 
 
-    def prepare_gl_buffers( self, mesh, material : int = -1 ):
+    def prepare_gl_buffers( self, mesh, path : Path, material : int = -1 ):
         gl = {}
 
         v = np.array( mesh.vertices, dtype='f' )  # Shape: (n_vertices, 3)
@@ -117,26 +118,23 @@ class Models( Context ):
 
         # material
         if material == -1:
-            gl["material"] = self.materials.loadOrFind( mesh.material, self.path_dir )
+            gl["material"] = self.materials.loadOrFind( mesh.material, path )
         else:
             gl["material"] = material
 
         return gl
 
-    def loadOrFind( self, path : str, material : int = -1 ) -> int:
+    def loadOrFind( self, file : Path, material : int = -1 ) -> int:
         """Load or find an model, implement find later"""
         index = self._num_models
 
-        if not os.path.isfile( path ):
-            raise ValueError( f"Invalid model path!{path}" )
+        if not file.is_file():
+            raise ValueError( f"Invalid model path!{str(file)}" )
 
-        self.model[index] = imp.load( path, processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
-
-        # used for textures
-        self.path_dir = os.path.dirname( path )
-
+        self.model[index] = imp.load( str(file), processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
+        
         for mesh_idx, mesh in enumerate( self.model[index].meshes ):
-            self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers( mesh, material )
+            self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers( mesh, file.parent, material=material )
 
         # need to release?
 

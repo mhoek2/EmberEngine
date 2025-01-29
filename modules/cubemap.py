@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -90,7 +92,7 @@ class Cubemap( Context ):
         #data = self.create_brdf_texture( size )
         #create_image( size, data, self.brdf_lut )
         #load_image( f"{self.basepath}brdf.jpg", self.brdf_lut_texture )
-        self.brdf_lut = self.context.images.loadOrFindFullPath( f"{self.settings.shader_path}brdf.jpg" )
+        self.brdf_lut = self.context.images.loadOrFindFullPath( Path(f"{self.settings.shader_path}brdf.jpg") )
         return
 
     def loadOrFind( self, path : str ) -> int:
