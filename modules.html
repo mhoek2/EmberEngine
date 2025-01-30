@@ -353,22 +353,47 @@
 <dt class="sig sig-object py" id="modules.console.Console.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Console manager</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.addEntry">
-<span class="sig-name descname"><span class="pre">addEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.addEntry" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">addEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Exception</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.addEntry" title="Link to this definition">#</a></dt>
+<dd><p>Add entry to the console entries buffer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type_id</strong> (<em>int</em>) – The type of a entry, ENTRY_TYPE_ERROR or ENTRY_TYPE_WARNING</p></li>
+<li><p><strong>traceback</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A list that contains detailed information of a raised Exception</p></li>
+<li><p><strong>e</strong> (<em>Exception</em>) – The final raised Exception</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.clear">
 <span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.clear" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Clear the console entries buffer</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.getEntries">
 <span class="sig-name descname"><span class="pre">getEntries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#modules.console.Console.Entry" title="modules.console.Console.Entry"><span class="pre">Entry</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#modules.console.Console.getEntries" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Get console entries buffer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A reference to the entries buffer</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="#modules.console.Console.Entry" title="modules.console.Console.Entry">Entry</a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
