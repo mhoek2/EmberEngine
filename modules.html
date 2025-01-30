@@ -335,7 +335,13 @@
 Based on what camera is active, either from scene or editor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p></li>
+<li><p><strong>*args</strong> – <p>Additional positional arguments to be passed to the parent class or other parts of the system</p>
+</p></li>
+<li><p><strong>**kwargs</strong> – <p>Additional keyword arguments to be passed to the parent class or other parts of the system</p>
+</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -373,7 +379,8 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.camera.Camera.new_frame">
 <span class="sig-name descname"><span class="pre">new_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.camera.Camera.new_frame" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Called on beginning of a frame, trigger keyboard and mouse processing when in editor mode</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.camera.Camera.place_object_in_front_of_another">
@@ -450,22 +457,47 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 <dt class="sig sig-object py" id="modules.console.Console.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Console manager</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.addEntry">
-<span class="sig-name descname"><span class="pre">addEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.addEntry" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">addEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Exception</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.addEntry" title="Link to this definition">#</a></dt>
+<dd><p>Add entry to the console entries buffer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type_id</strong> (<em>int</em>) – The type of a entry, ENTRY_TYPE_ERROR or ENTRY_TYPE_WARNING</p></li>
+<li><p><strong>traceback</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A list that contains detailed information of a raised Exception</p></li>
+<li><p><strong>e</strong> (<em>Exception</em>) – The final raised Exception</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.clear">
 <span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.clear" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Clear the console entries buffer</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.getEntries">
 <span class="sig-name descname"><span class="pre">getEntries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#modules.console.Console.Entry" title="modules.console.Console.Entry"><span class="pre">Entry</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#modules.console.Console.getEntries" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Get console entries buffer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A reference to the entries buffer</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="#modules.console.Console.Entry" title="modules.console.Console.Entry">Entry</a>]</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -476,28 +508,54 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.cubemap.Cubemap.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.cubemap.Cubemap.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Cubemap loader class, which loads cubemaps and sets up IBL requirements like BRDF lut</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.cubemap.Cubemap.bind">
-<span class="sig-name descname"><span class="pre">bind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_uniform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.cubemap.Cubemap.bind" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">bind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texture_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_uniform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.cubemap.Cubemap.bind" title="Link to this definition">#</a></dt>
 <dd><p>Bind texture using OpenGL with image index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texture_id</strong> (<em>uint32/uintc</em>) – the texture uid in GPU memory</p></li>
+<li><p><strong>texture_index</strong> (<em>uint32/uintc</em>) – The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)</p></li>
+<li><p><strong>shader_uniform</strong> (<em>str</em>) – The varaible name of the GLSL uniform sampler</p></li>
+<li><p><strong>shader_index</strong> (<em>int</em>) – Represent the number also indicated with ‘texture_index’. revisit this?</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.cubemap.Cubemap.create_brdf_lut">
 <span class="sig-name descname"><span class="pre">create_brdf_lut</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.cubemap.Cubemap.create_brdf_lut" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Load the BRDF lut used for IBL contributions
+Should be generated, but staticly loaded for now</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.cubemap.Cubemap.create_brdf_texture">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_brdf_texture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.cubemap.Cubemap.create_brdf_texture" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_brdf_texture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.cubemap.Cubemap.create_brdf_texture" title="Link to this definition">#</a></dt>
+<dd><p>Create the BRDF lut used for IBL contributions - Currently unused</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>size</strong> (<em>int</em>) – the dimension of the LUT, required to calculate each pixel</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.cubemap.Cubemap.loadOrFind">
 <span class="sig-name descname"><span class="pre">loadOrFind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#modules.cubemap.Cubemap.loadOrFind" title="Link to this definition">#</a></dt>
-<dd><p>Load or find an image, implement find later</p>
+<dd><p>Load or find an image, implement find later
+:param path: The path to the the folder containing 6 textures, 1 for each side
+:type path: str</p>
 </dd></dl>
 
 </dd></dl>
@@ -1496,33 +1554,73 @@ Toggling visibility and position of the mouse</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.shader.Shader.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.shader.Shader.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Load and parse GLSL shaders from .vert and .frag files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p></li>
+<li><p><strong>uid</strong> (<em>str</em>) – The unique idenifier of the shader being initialized</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.shader.Shader.bind_uniforms">
 <span class="sig-name descname"><span class="pre">bind_uniforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.shader.Shader.bind_uniforms" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Bind the found uniforms to the this shader program</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.shader.Shader.load_program">
-<span class="sig-name descname"><span class="pre">load_program</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_vert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_frag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.shader.Shader.load_program" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">load_program</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_vert</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_frag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#modules.shader.Shader.load_program" title="Link to this definition">#</a></dt>
+<dd><p>Build and create the shader program from .vert and .frag shader</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_vert</strong> (<em>str</em>) – The content of a vertex shader</p></li>
+<li><p><strong>in_vert</strong> – The content of a fragment shader</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The index to a valid shader program in GPU memory</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.shader.Shader.load_shader">
-<span class="sig-name descname"><span class="pre">load_shader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shader_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.shader.Shader.load_shader" title="Link to this definition">#</a></dt>
-<dd><p>Test</p>
+<span class="sig-name descname"><span class="pre">load_shader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shader_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenGL.constant.IntConstant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.shader.Shader.load_shader" title="Link to this definition">#</a></dt>
+<dd><p>Compile shader from string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shader_type</strong> (<em>OpenGL.constant.IntConstant</em>) – The type of the shader: GL_VERTEX_SHADER or GL_FRAGMENT_SHADER</p></li>
+<li><p><strong>source</strong> (<em>str</em>) – The content of a shader file</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.shader.Shader.parse_uniforms">
-<span class="sig-name descname"><span class="pre">parse_uniforms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shader</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.shader.Shader.parse_uniforms" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">parse_uniforms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.shader.Shader.parse_uniforms" title="Link to this definition">#</a></dt>
+<dd><p>Dynamicly find and parse uniforms required by the shader</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shader</strong> (<em>str</em>) – The content if a GLSL shader as string</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.shader.Shader.printOpenGLError">
 <span class="sig-name descname"><span class="pre">printOpenGLError</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.shader.Shader.printOpenGLError" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Print any raised errors during GLSL parsing</p>
+</dd></dl>
 
 </dd></dl>
 

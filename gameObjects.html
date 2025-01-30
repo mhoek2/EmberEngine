@@ -330,19 +330,15 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.camera.Camera.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.camera.Camera.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Base class for gameObjects</p>
+<dd><p>Class that handles camera objects, Derived from GameObject Class</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – The name that is stored with the gameObject</p></li>
-<li><p><strong>visible</strong> (<em>bool</em>) – If the gameObject is drawn</p></li>
-<li><p><strong>model_file</strong> (<em>Path</em><em> | </em><em>bool</em>) – The file path to a model file</p></li>
-<li><p><strong>material</strong> (<em>int</em>) – The index in the material buffer as override, -1 is default</p></li>
-<li><p><strong>translate</strong> (<em>Vector3</em>) – The position of the object</p></li>
-<li><p><strong>rotation</strong> (<em>Vector3</em>) – The rotation of the object</p></li>
-<li><p><strong>scale</strong> (<em>Vector3</em>) – The scale of the object</p></li>
-<li><p><strong>scripts</strong> (<em>List</em><em>[</em><em>scripts</em><em>]</em>) – A list containing Paths to dynamic scripts</p></li>
+<li><p><strong>*args</strong> – <p>Additional positional arguments to be passed to the parent class or other parts of the system</p>
+</p></li>
+<li><p><strong>**kwargs</strong> – <p>Additional keyword arguments to be passed to the parent class or other parts of the system</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -351,13 +347,13 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.camera.Camera.onStart">
 <span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.camera.Camera.onStart" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
+<dd><p>Executes whenever the object is added to scene</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.camera.Camera.onUpdate">
 <span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.camera.Camera.onUpdate" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
+<dd><p>Executes every frame, issuing draw commands</p>
 </dd></dl>
 
 </dd></dl>
@@ -366,6 +362,7 @@
 <dt class="sig sig-object py" id="gameObjects.gameObject.GameObject">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.gameObject.</span></span><span class="sig-name descname"><span class="pre">GameObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.gameObject.GameObject" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
+<p>Base class for gameObjects</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.Script">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Script</span></span><a class="headerlink" href="#gameObjects.gameObject.GameObject.Script" title="Link to this definition">#</a></dt>
@@ -487,19 +484,15 @@ Try to load and parse the script, then convert to module in sys.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.light.Light.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.light.Light.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Base class for gameObjects</p>
+<dd><p>Base class for Light gameObjects, holds the various light types</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – The name that is stored with the gameObject</p></li>
-<li><p><strong>visible</strong> (<em>bool</em>) – If the gameObject is drawn</p></li>
-<li><p><strong>model_file</strong> (<em>Path</em><em> | </em><em>bool</em>) – The file path to a model file</p></li>
-<li><p><strong>material</strong> (<em>int</em>) – The index in the material buffer as override, -1 is default</p></li>
-<li><p><strong>translate</strong> (<em>Vector3</em>) – The position of the object</p></li>
-<li><p><strong>rotation</strong> (<em>Vector3</em>) – The rotation of the object</p></li>
-<li><p><strong>scale</strong> (<em>Vector3</em>) – The scale of the object</p></li>
-<li><p><strong>scripts</strong> (<em>List</em><em>[</em><em>scripts</em><em>]</em>) – A list containing Paths to dynamic scripts</p></li>
+<li><p><strong>*args</strong> – <p>Additional positional arguments to be passed to the parent class or other parts of the system</p>
+</p></li>
+<li><p><strong>**kwargs</strong> – <p>Additional keyword arguments to be passed to the parent class or other parts of the system</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -508,13 +501,13 @@ Try to load and parse the script, then convert to module in sys.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.light.Light.onStart">
 <span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.light.Light.onStart" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
+<dd><p>Executes whenever the object is added to scene</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.light.Light.onUpdate">
 <span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.light.Light.onUpdate" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
+<dd><p>Executes every frame, issuing draw commands</p>
 </dd></dl>
 
 </dd></dl>
@@ -523,16 +516,17 @@ Try to load and parse the script, then convert to module in sys.</p>
 <dt class="sig sig-object py" id="gameObjects.mesh.Mesh">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.mesh.</span></span><span class="sig-name descname"><span class="pre">Mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.mesh.Mesh" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameObject</span></code></a></p>
+<p>Base class for regular gameObjects, with mesh or empty, Derived from GameObject Class</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.mesh.Mesh.onStart">
 <span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.mesh.Mesh.onStart" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
+<dd><p>Executes whenever the object is added to scene</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.mesh.Mesh.onUpdate">
 <span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.mesh.Mesh.onUpdate" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
+<dd><p>Executes every frame, issuing draw commands</p>
 </dd></dl>
 
 </dd></dl>
@@ -544,7 +538,17 @@ Try to load and parse the script, then convert to module in sys.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Base class for dynamic loaded scripts, 
+setting up references to context, events and the gameObject itself</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p></li>
+<li><p><strong>gameObject</strong> (<a class="reference internal" href="#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><em>GameObject</em></a>) – A reference to the gameObject the script is attached to</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -552,15 +556,23 @@ Try to load and parse the script, then convert to module in sys.</p>
 <dt class="sig sig-object py" id="gameObjects.skybox.Skybox">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.skybox.</span></span><span class="sig-name descname"><span class="pre">Skybox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.skybox.Skybox" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
+<p>This class is responsible for setting up the VAO and VBO for the skybox, also rendering commands to draw the skybox</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.skybox.Skybox.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.skybox.Skybox.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Handles VAO, VBO creation for the skybox</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.skybox.Skybox.draw">
 <span class="sig-name descname"><span class="pre">draw</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.skybox.Skybox.draw" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Issue render commands to draw the skybox</p>
+</dd></dl>
 
 </dd></dl>
 
