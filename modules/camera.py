@@ -13,6 +13,7 @@ class Camera:
     def __init__( self, context ):
         """This class is responsible for creating the viewmatrix,
         Based on what camera is active, either from scene or editor
+
         :param context: This is the main context of the application
         :type context: EmberEngine
         """
@@ -30,15 +31,15 @@ class Camera:
         self.pitch = 0
 
     def place_object_in_front_of_another( self, position, rotation, distance ) -> Vector3:
-        """ *This should become a scriptable function perhaps
+        """-This should become a scriptable function perhaps
+
         :param position: The position of the parent object
         :type position: Vector3
         :param rotation: The rotation of the parent object
         :type rotation: Vector3
         :param distance: The distance the object is placed from the parent on the Z-axis
         :type distance: float
-        :return: The position of an object placed in front of another object
-                 along the Z-axis at a defined distance
+        :return: The position of an object placed in front of another object along the Z-axis at a defined distance
         :rtype: Vector3
         """
         rotation_matrix = Matrix44.from_eulers(rotation)
@@ -48,6 +49,7 @@ class Camera:
     def get_view_matrix_running( self ) -> Matrix44:
         """Get the view matrix from the camera gameObject when the game is running.
         Do this by placing an object in front of the cameras direction, and use lookAt.
+
         :return: The viewmatrix from the active Camera gameobject, return Identity when no camera
         :rtype: matrix44 or Matrix44
         """
@@ -66,6 +68,7 @@ class Camera:
     def get_view_matrix( self ):
         """Get the current view matrix, based on if game is running,
         switch between editor and scene camera
+
         :return: The viewmatrix from the current active camera
         :rtype: matrix44 or Matrix44
         """
@@ -77,6 +80,7 @@ class Camera:
 
     def process_mouse_movement( self, constrain_pitch : bool = True ):
         """Handle mouse events for the editor camera, with constraints and sensitivity bias.
+
         :param constrain_pitch: Enable to contraint the pitch to 45degrees both directions
         :type constrain_pitch: bool
         """

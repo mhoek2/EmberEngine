@@ -27,6 +27,7 @@ class GameObject( Context ):
 
     def addScript( self, file : Path ):
         """Add script to a gameObject
+
         :param file: The path to a .py script file
         :type file: Path
         """
@@ -34,6 +35,7 @@ class GameObject( Context ):
 
     def removeScript( self, file : Path ):
         """Remove script from a gameObject
+
         :param file: The path to a .py script file
         :type file: Path
         """
@@ -43,8 +45,9 @@ class GameObject( Context ):
                 self.scripts.remove(script)
                 break
 
-    def _get_class_name_from_script(self, script: Path) -> str:
+    def get_class_name_from_script(self, script: Path) -> str:
         """Scan the content of the script to find the first class name.
+
         :param script: The path to a .py script file
         :type script: Path
         :return: A class name if its found, return None otherwise
@@ -64,9 +67,10 @@ class GameObject( Context ):
 
         return None
 
-    def _init_external_script( self, script : Script ):
+    def init_external_script( self, script : Script ):
         """Initialize script attached to this gameObject,
         Try to load and parse the script, then convert to module in sys.
+
         :param script: The Script object containing a file path
         :type script: GameObject.Script
         """
@@ -76,7 +80,7 @@ class GameObject( Context ):
         _module_name = str(script['file'].relative_to(self.settings.rootdir))
         _module_name = _module_name.replace("\\", ".").replace(".py", "")
 
-        _class_name = self._get_class_name_from_script( script["file"] )
+        _class_name = self.get_class_name_from_script( script["file"] )
 
         _script_behaivior = importlib.import_module("gameObjects.scriptBehaivior")
         ScriptBehaivior = getattr(_script_behaivior, "ScriptBehaivior")
@@ -98,7 +102,7 @@ class GameObject( Context ):
         """Call onStart() function in all dynamic scripts attached to this gameObject"""
         for script in self.scripts:
             try:
-                self._init_external_script( script )
+                self.init_external_script( script )
                 script["obj"].onStart()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
@@ -124,6 +128,7 @@ class GameObject( Context ):
                  scripts : List[Path] = []
                  ) -> None:
         """Base class for gameObjects 
+
         :param context: This is the main context of the application
         :type context: EmberEngine
         :param name: The name that is stored with the gameObject

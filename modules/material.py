@@ -22,6 +22,7 @@ class Materials( Context ):
 
     def __init__( self, context ):
         """Material loader for models
+
         :param context: This is the main context of the application
         :type context: EmberEngine
         """
@@ -46,7 +47,9 @@ class Materials( Context ):
                        o        : Path = False,
                        rmo      : Path = False ) -> int:
         """Build a material based on defined textures
+
         :param albedo: diffuse/albedo/base color map
+
         :type abledo: Path
         :param normal: normal map 
         :type normal: Path
@@ -91,6 +94,7 @@ class Materials( Context ):
 
     def getMaterialByIndex( self, index : int ) -> Material:
         """Get material by index, return default material if out of scope
+
         :param index: The index of the material in the buffer
         :type index: int
         :return: The material data
@@ -103,6 +107,7 @@ class Materials( Context ):
 
     def loadOrFind( self, material : ImpasseMaterial, path : Path ) -> int:
         """Create a material by parsing model material info and loading textures
+
         :param material: the material data from Impasse/assimp
         :type material: Material as ImpasseMaterial
         :param path: the path where the textures should be located
@@ -173,6 +178,7 @@ class Materials( Context ):
 
     def bind( self, index : int ):
         """Bind the textures to the commmand buffer
+
         :param index: The index of the material in the buffer
         :type index: int
         """

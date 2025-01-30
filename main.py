@@ -81,6 +81,7 @@ class EmberEngine:
 
     def findDynamicScripts( self, path : Path ) -> List[Path]:
         """Find .py files recursivly in a assets folder, used as dynamic scripts.
+
         :param path: This is root folder to scan
         :type path: Path
         :return: List of Path's containing each .py script

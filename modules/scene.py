@@ -36,6 +36,7 @@ class SceneManager:
 
     def __init__( self, context ) -> None:
         """scene manager
+
         :param context: This is the main context of the application
         :type context: EmberEngine
         """
@@ -54,6 +55,7 @@ class SceneManager:
 
     def getCurrentScene( self ) -> Scene:
         """Get the current active scene
+
         :return: The current scene object, False if this fails
         :rtype: Scene
         """
@@ -64,6 +66,7 @@ class SceneManager:
 
     def setCamera( self, uid : int, scene_uid = False):
         """Set the current camera based on gameObject uid
+
         :param uid: The uid of a Camera gameObject
         :type uid: int
         :param scene_uid: The scene the camera is set on, current scene when empty
@@ -82,6 +85,7 @@ class SceneManager:
 
     def getCamera( self ):
         """Get the current default/start camera
+
         :return: The current scene default/start camera, False if this fails
         :rtype: Camera or bool
         """
@@ -142,6 +146,7 @@ class SceneManager:
 
     def getScene( self, scene_filename : Path ):
         """Load and decode JSON from a scene file
+
         :param scene_filename: The filename of a .scene
         :type scene_filename: Path
         """
@@ -167,6 +172,7 @@ class SceneManager:
 
     def loadScene( self, is_default : bool = False ):
         """Load scene (does not work with multiple scenes yet), if this fails load the default scene.
+
         :param is_default: Used by the engine itself, to prevent infinite loop whenever default scene fails to load
         :type is_default: bool, optional
         """

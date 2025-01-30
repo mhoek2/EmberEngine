@@ -26,6 +26,7 @@ class Renderer:
     """The rendering backend"""
     def __init__( self, context ):
         """Renderer backend, creating window instance, openGL, FBO's, shaders and rendertargets
+
         :param context: This is the main context of the application
         :type context: EmberEngine
         """
@@ -185,6 +186,7 @@ class Renderer:
 
     def create_resolve_texture( self, size : Vector2 ):
         """Create a image attachment used as the resolved MSAA
+
         :param size: The dimensions of the image
         :type size: Vector2
         :return: The uid of the texture in GPU memory
@@ -200,6 +202,7 @@ class Renderer:
 
     def create_resolve_fbo( self, resolved_texture ):
         """Create the resolve framebuffer (FBO) and bind the resolve image attachment
+
         :param resolved_texture: The image attachment MSAA should resolve to (not sample from)
         :type resolved_texture: uint32/uintc
         :return: The uid of the framebuffer (FBO)
@@ -242,6 +245,7 @@ class Renderer:
     def create_fbo_with_depth( self, size : Vector2 ):
         """Create the a framebuffer (FBO) with a bound image attachment.
         Adjust image attachment properties based on MSAA state. 
+
         :param size: The dimensions of the texture
         :type size: Vector2
         :return: The uid of the texture in GPU memory
@@ -300,7 +304,8 @@ class Renderer:
         return fbo, color_texture
 
     def bind_fbo( self, fbo ) -> None:
-        """Bind a framebuffer (FBO) to the command buffer. 
+        """Bind a framebuffer (FBO) to the command buffer.
+        
         :param fbo: The framebuffer uid
         :type fbo: uint32/uintc
         """
@@ -322,6 +327,7 @@ class Renderer:
 
     def render_fbo( self, fbo ):
         """Render a framebuffer to the swapchain using the 2d VAO
+
         :param fbo: The framebuffer uid
         :type fbo: uint32/uintc
         """
@@ -342,6 +348,7 @@ class Renderer:
 
     def use_shader( self, shader : Shader ) -> None:
         """Bind a shader program to the command buffer
+
         :param shader: the shader object containing the program
         :type shader: Shader
         """
@@ -358,6 +365,7 @@ class Renderer:
 
     def setup_projection_matrix( self, size : Vector2 ) -> None:
         """Setup the viewport and projection matrix using Matrix44
+
         :param size: The dimensions of the current viewport
         :type size: Vector2
         """

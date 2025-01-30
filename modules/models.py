@@ -27,6 +27,7 @@ class Models( Context ):
     def __init__( self, context ):
         """Setup model buffers, containg mesh and material information 
         required to render.
+
         :param context: This is the main context of the application
         :type context: EmberEngine
         """
@@ -50,6 +51,7 @@ class Models( Context ):
 
     def compute_tangents_bitangents( self, vertices, tex_coords, indices ):
         """Compute tangent spaces for vertices
+
         :param vertices: The vertices in the mesh
         :type vertices: ndarray - shape 3. 
         :param tex_coords: The texture coordinates
@@ -107,6 +109,7 @@ class Models( Context ):
     def prepare_gl_buffers( self, mesh, path : Path, material : int = -1 ) -> Mesh:
         """Prepare and store mesh in a vertex buffer, along with meta data like 
         size or material id
+
         :param mesh: The mesh loaded from Impasse
         :type mesh:
         :param path: The path of the folder the model is stored in, used to lookup textures
@@ -160,6 +163,7 @@ class Models( Context ):
 
     def loadOrFind( self, file : Path, material : int = -1 ) -> int:
         """Load or find an model, implement find later
+
         :param file: The path to the model file
         :type file: Path
         :param material: Could contain a material override if not -1
@@ -180,6 +184,7 @@ class Models( Context ):
 
     def render( self, model_index : int , mesh_index : int , model_matrix : Matrix44 ):
         """Render the mesh from a node
+
         :param model_index: The index of a loaded model
         :type model_index: int
         :param mesh_index:  The index of a mesh within that model
@@ -233,6 +238,7 @@ class Models( Context ):
 
     def draw_node( self, node, model_index : int, model_matrix : Matrix44 ):
         """Recursivly process nodes (parent and child nodes)
+
         :param node: A node of model
         :type node: int
         :param model_index: The index of a loaded model
@@ -253,6 +259,7 @@ class Models( Context ):
 
     def draw( self, model_index : int, model_matrix : Matrix44 ) -> None:
         """Begin drawing a model by index
+
         :param model_index: The index of a loaded model
         :type model_index: int
         :param model_matrix: The transformation model matrix, used along with view and projection matrices

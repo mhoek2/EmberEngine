@@ -12,6 +12,7 @@ class Images( Context ):
     def __init__( self, context ):
         """Setup image buffers that store the GPU texture uid's and paths for fast loading
         Also create the defaul, white, black and PBR textures
+
         :param context: This is the main context of the application
         :type context: EmberEngine
         """
@@ -29,6 +30,7 @@ class Images( Context ):
     def loadOrFindPhysicalMap( self, roughness_path : Path, metallic_path : Path, ao_path : Path ):
         """Load/Create/Combine a physical RMO texture.
         Find from cache is not implemented yet.
+
         :param roughness_path: 
         :type roughness_path: Path
         :param metallic_path: 
@@ -51,6 +53,7 @@ class Images( Context ):
 
     def loadOrFindFullPath( self, path : Path, flip_x: bool = False, flip_y: bool = True ):
         """Load or find existing texture
+
         :param path: The path to the texture
         :type path: Path
         :return: the texture uid in GPU memory
@@ -75,6 +78,7 @@ class Images( Context ):
 
     def bind( self, texture_id, texture_index, shader_uniform : str, shader_index : int ):
         """Bind texture using OpenGL with image index
+
         :param texture_id: the texture uid in GPU memory
         :type texture_id: uint32/uintc
         :param texture_index: The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)
