@@ -16,6 +16,10 @@ class Camera:
 
         :param context: This is the main context of the application
         :type context: EmberEngine
+        :param *args: Additional positional arguments to be passed to the parent class or other parts of the system
+        :type *args: tuple
+        :param **kwargs: Additional keyword arguments to be passed to the parent class or other parts of the system
+        :type **kwargs: dict
         """
         self.context    : 'EmberEngine' = context
         self.settings   : Settings      = context.settings

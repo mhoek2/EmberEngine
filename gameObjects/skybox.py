@@ -10,7 +10,13 @@ from modules.context import Context
 import numpy as np
 
 class Skybox( Context ):
+    """This class is responsible for setting up the VAO and VBO for the skybox, also rendering commands to draw the skybox"""
     def __init__( self, context ):
+        """Handles VAO, VBO creation for the skybox
+        
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        """
         super().__init__( context )
 
         size = 200
@@ -74,6 +80,7 @@ class Skybox( Context ):
         glBindVertexArray( 0 );
 
     def draw( self ) -> None:
+        """Issue render commands to draw the skybox"""
         self.renderer.use_shader( self.renderer.skybox )
 
         # bind projection matrix

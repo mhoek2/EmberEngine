@@ -1,5 +1,13 @@
 class ScriptBehaivior:
     def __init__( self, context, gameObject ):
+        """Base class for dynamic loaded scripts, 
+        setting up references to context, events and the gameObject itself
+        
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        :param gameObject: A reference to the gameObject the script is attached to
+        :type gameObject: GameObject
+        """
         self.context = context
         self.settings = context.settings
         self.renderer = context.renderer

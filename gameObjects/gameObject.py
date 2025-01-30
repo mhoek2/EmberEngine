@@ -21,6 +21,8 @@ import importlib
 import traceback
 
 class GameObject( Context ):
+    """Base class for gameObjects """
+
     class Script(TypedDict):
         file: Path
         obj: None
