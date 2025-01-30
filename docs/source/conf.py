@@ -24,7 +24,7 @@ release = '1.0.0'
 extensions = [
     'sphinx.ext.autodoc',
 ]
-autodoc_mock_imports = ['imgui', 'modules.context']
+autodoc_mock_imports = ['imgui', 'modules.context', 'pygame', 'OpenGL', 'impasse']
 
 autodoc_default_options = {
     'special-members': '__init__',  # Explicitly include __init__
