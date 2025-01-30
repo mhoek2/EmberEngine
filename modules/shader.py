@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import math
+from OpenGL.constant import IntConstant
 import pygame
 from pygame.locals import *
 
@@ -17,6 +18,13 @@ if TYPE_CHECKING:
 
 class Shader:
     def __init__( self, context, uid : str ):
+        """Load and parse GLSL shaders from .vert and .frag files
+        
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        :param uid: The unique idenifier of the shader being initialized
+        :type uid: str
+        """
         self.context    : 'EmberEngine' = context
         self.settings   : Settings = context.settings
 
@@ -35,15 +43,22 @@ class Shader:
         return
 
     def printOpenGLError( self ):
+        """Print any raised errors during GLSL parsing"""
         err = glGetError() # pylint: disable=E1111
         if (err != GL_NO_ERROR):
             print('GLERROR: ', gluErrorString(err)) # pylint: disable=E1101
 
     def bind_uniforms( self ) -> None:
+        """Bind the found uniforms to the this shader program"""
         for uniform in self.uniforms:
             self.uniforms[uniform] = glGetUniformLocation( self.program, uniform )
 
-    def parse_uniforms( self, shader ) -> None:
+    def parse_uniforms( self, shader : str ) -> None:
+        """Dynamicly find and parse uniforms required by the shader
+        
+        :param shader: The content if a GLSL shader as string
+        :type shader: str
+        """
         for line in shader.split('\n'):
             if not line.startswith('uniform'):
                 continue
@@ -55,7 +70,16 @@ class Shader:
             if _keyword not in self.uniforms:
                 self.uniforms[_keyword] = False
 
-    def load_program( self, in_vert, in_frag ):
+    def load_program( self, in_vert : str, in_frag : str ) -> int:
+        """Build and create the shader program from .vert and .frag shader
+        
+        :param in_vert: The content of a vertex shader
+        :type in_vert: str
+        :param in_vert: The content of a fragment shader
+        :type in_vert: str
+        :return: The index to a valid shader program in GPU memory
+        :rtype: int
+        """
         vert = self.load_shader( GL_VERTEX_SHADER, in_vert )
         if vert == 0:
             return 0
@@ -85,7 +109,14 @@ class Shader:
 
         return program
 
-    def load_shader( self, shader_type, source ):
+    def load_shader( self, shader_type : IntConstant, source : str ):
+        """Compile shader from string
+        
+        :param shader_type: The type of the shader: GL_VERTEX_SHADER or GL_FRAGMENT_SHADER
+        :type shader_type:  OpenGL.constant.IntConstant
+        :param source: The content of a shader file
+        :type source: str
+        """
         shader = glCreateShader( shader_type )
 
         if shader == 0:

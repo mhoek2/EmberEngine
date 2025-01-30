@@ -134,6 +134,7 @@ class Camera:
             self.camera_pos += self.camera_right * velocity
 
     def new_frame( self ):
+        """Called on beginning of a frame, trigger keyboard and mouse processing when in editor mode"""
         if not self.context.renderer.ImGuiInput and not self.settings.game_running:
             self.context.camera.process_keyboard()
             self.context.camera.process_mouse_movement()

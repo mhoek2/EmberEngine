@@ -12,6 +12,11 @@ import numpy as np
 
 class Cubemap( Context ):
     def __init__( self, context ):
+        """Cubemap loader class, which loads cubemaps and sets up IBL requirements like BRDF lut
+        
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        """
         super().__init__( context )
 
         self.cubemap = glGenTextures(30)
@@ -25,7 +30,12 @@ class Cubemap( Context ):
         return
 
     @staticmethod
-    def create_brdf_texture( size ):
+    def create_brdf_texture( size : int ):
+        """Create the BRDF lut used for IBL contributions - Currently unused
+        
+        :param size: the dimension of the LUT, required to calculate each pixel
+        :type size: int
+        """
         brdf_texture = np.zeros((size, size, 4), dtype=np.float32)
 
         for i in range( size ):
@@ -88,6 +98,8 @@ class Cubemap( Context ):
         return brdf_texture
 
     def create_brdf_lut( self ) -> None:
+        """Load the BRDF lut used for IBL contributions
+        Should be generated, but staticly loaded for now"""
         #self.brdf_lut_texture  = glGenTextures(1)
         #data = self.create_brdf_texture( size )
         #create_image( size, data, self.brdf_lut )
@@ -96,7 +108,10 @@ class Cubemap( Context ):
         return
 
     def loadOrFind( self, path : str ) -> int:
-        """Load or find an image, implement find later"""
+        """Load or find an image, implement find later
+        :param path: The path to the the folder containing 6 textures, 1 for each side
+        :type path: str
+        """
 
         index = self._num_cubemaps
         load_cubemap( path, ".bmp", self.cubemap[index] )
@@ -104,10 +119,20 @@ class Cubemap( Context ):
         self._num_cubemaps += 1
         return index
 
-    def bind( self, index : int, texture_index, shader_uniform, shader_index ):
-        """Bind texture using OpenGL with image index"""
-        
+
+    def bind( self, texture_id, texture_index, shader_uniform : str, shader_index : int ):
+        """Bind texture using OpenGL with image index
+
+        :param texture_id: the texture uid in GPU memory
+        :type texture_id: uint32/uintc
+        :param texture_index: The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)
+        :type texture_index: uint32/uintc
+        :param shader_uniform: The varaible name of the GLSL uniform sampler
+        :type shader_uniform: str
+        :param shader_index: Represent the number also indicated with 'texture_index'. revisit this?
+        :type shader_index: int
+        """
         glActiveTexture( texture_index )
-        glBindTexture( GL_TEXTURE_CUBE_MAP, self.cubemap[index] )
+        glBindTexture( GL_TEXTURE_CUBE_MAP, self.cubemap[texture_id] )
         glUniform1i(glGetUniformLocation( self.renderer.shader.program, shader_uniform ), shader_index)
 

@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 class Context:
     def __init__( self, context ):
+        """Base class that sets context references for console, renderer, settings an scene"""
         self.context    : 'EmberEngine' = context
         self.console    : Console = context.console
         self.renderer   : Renderer = context.renderer
