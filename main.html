@@ -320,8 +320,98 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="main">
-<h1>Main<a class="headerlink" href="#main" title="Link to this heading">#</a></h1>
+  <section id="module-main">
+<span id="main"></span><h1>Main<a class="headerlink" href="#module-main" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="main.EmberEngine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">main.</span></span><span class="sig-name descname"><span class="pre">EmberEngine</span></span><a class="headerlink" href="#main.EmberEngine" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#main.EmberEngine.__init__" title="Link to this definition">#</a></dt>
+<dd><p>The main context of ‘EmberEngine’, 
+initializes required modules like:
+renderer, console, image loaders, materials, scene manager, pygame events</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.addDefaultCamera">
+<span class="sig-name descname"><span class="pre">addDefaultCamera</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.EmberEngine.addDefaultCamera" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.addDefaultCube">
+<span class="sig-name descname"><span class="pre">addDefaultCube</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.EmberEngine.addDefaultCube" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.addDefaultLight">
+<span class="sig-name descname"><span class="pre">addDefaultLight</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#main.EmberEngine.addDefaultLight" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.addEmptyGameObject">
+<span class="sig-name descname"><span class="pre">addEmptyGameObject</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.EmberEngine.addEmptyGameObject" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.addGameObject">
+<span class="sig-name descname"><span class="pre">addGameObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gameObjects.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#main.EmberEngine.addGameObject" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.draw_grid">
+<span class="sig-name descname"><span class="pre">draw_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.EmberEngine.draw_grid" title="Link to this definition">#</a></dt>
+<dd><p>Draw the horizontal grid to the framebuffer</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.findDynamicScripts">
+<span class="sig-name descname"><span class="pre">findDynamicScripts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#main.EmberEngine.findDynamicScripts" title="Link to this definition">#</a></dt>
+<dd><p>Find .py files recursivly in a assets folder, used as dynamic scripts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – This is root folder to scan</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of Path’s containing each .py script</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Path]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.findScripts">
+<span class="sig-name descname"><span class="pre">findScripts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#main.EmberEngine.findScripts" title="Link to this definition">#</a></dt>
+<dd><p>scan asset folder for .py files.
+perhaps there should be a separate thread for this
+that either updates periodicly, or tracks changes in assets folder
+- currently this is called every time ‘Add Script’ popup is opened’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.loadDefaultEnvironment">
+<span class="sig-name descname"><span class="pre">loadDefaultEnvironment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#main.EmberEngine.loadDefaultEnvironment" title="Link to this definition">#</a></dt>
+<dd><p>Load the default environment cubemap</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.removeGameObject">
+<span class="sig-name descname"><span class="pre">removeGameObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gameObjects.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#main.EmberEngine.removeGameObject" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="main.EmberEngine.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#main.EmberEngine.run" title="Link to this definition">#</a></dt>
+<dd><p>The main loop of the appliction, remains active as long as ‘self.renderer.running’
+is True.
+This handles key, mouse, start, update events and drawing GUI andgameObject</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 
@@ -362,6 +452,32 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine"><code class="docutils literal notranslate"><span class="pre">EmberEngine</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.__init__"><code class="docutils literal notranslate"><span class="pre">EmberEngine.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.addDefaultCamera"><code class="docutils literal notranslate"><span class="pre">EmberEngine.addDefaultCamera()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.addDefaultCube"><code class="docutils literal notranslate"><span class="pre">EmberEngine.addDefaultCube()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.addDefaultLight"><code class="docutils literal notranslate"><span class="pre">EmberEngine.addDefaultLight()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.addEmptyGameObject"><code class="docutils literal notranslate"><span class="pre">EmberEngine.addEmptyGameObject()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.addGameObject"><code class="docutils literal notranslate"><span class="pre">EmberEngine.addGameObject()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.draw_grid"><code class="docutils literal notranslate"><span class="pre">EmberEngine.draw_grid()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.findDynamicScripts"><code class="docutils literal notranslate"><span class="pre">EmberEngine.findDynamicScripts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.findScripts"><code class="docutils literal notranslate"><span class="pre">EmberEngine.findScripts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.loadDefaultEnvironment"><code class="docutils literal notranslate"><span class="pre">EmberEngine.loadDefaultEnvironment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.removeGameObject"><code class="docutils literal notranslate"><span class="pre">EmberEngine.removeGameObject()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#main.EmberEngine.run"><code class="docutils literal notranslate"><span class="pre">EmberEngine.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
