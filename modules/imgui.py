@@ -122,6 +122,7 @@ class ImGui( Context ):
     def draw_menu_bar( self, frame_time, fps ) -> None:
         _open_save_scene_as_modal = False
         _open_new_scene_modal = False
+        _open_project_settings = False
 
         if imgui.begin_main_menu_bar():
 
@@ -144,10 +145,9 @@ class ImGui( Context ):
                 if imgui.menu_item( "Save Scene as", '', False, True )[0]:
                     _open_save_scene_as_modal = True
       
-                if imgui.menu_item( "Scene Manager", '', False, True )[0]:
-                    self.scene.getScenes()
-                    self.scene.toggleWindow()
-
+                if imgui.menu_item( "Project Settings", '', False, True )[0]:
+                    _open_project_settings = True
+    
                 imgui.end_menu()
 
             imgui.same_line( w - 400.0 )
@@ -167,6 +167,9 @@ class ImGui( Context ):
 
             if _open_new_scene_modal:
                 imgui.open_popup("New Scene##Modal")
+
+            if _open_project_settings:
+                imgui.open_popup("Project Settings")
 
     def draw_gamestate( self ):
         width = imgui.get_window_size().x / 2
@@ -829,47 +832,54 @@ class ImGui( Context ):
 
             imgui.end_popup()
 
-    def draw_scene_manager(self ):
-        if not self.scene._window_is_open:
-            return
-        _, self.scene._window_is_open = imgui.begin( "Scene Manager", closable=True )
+    def draw_project_settings_modal( self ):
+        if imgui.begin_popup_modal(
+            title="Project Settings", visible=None, flags=imgui.WINDOW_NO_RESIZE,
+        )[0]:
+            # keep updating the scenes List?
+            # or just on open?
+            self.scene.getScenes()
 
-        _region = imgui.get_content_region_available()
-        pos = imgui.get_cursor_screen_pos()
+            imgui.set_window_size(600, 400)  # Example: width=4
 
-        for scene in self.scene.scenes:
-            scene_uid : str = scene["uid"]
-            imgui.push_id( f"scne_{scene_uid}" )
+            imgui.same_line(imgui.get_window_width() - 30) 
+            if imgui.button("X", width=20, height=20):
+                imgui.close_current_popup()
 
             _region = imgui.get_content_region_available()
+            pos = imgui.get_cursor_screen_pos()
 
-            imgui.text(scene["name"])
-            print(self.project.meta["default_scene"])
-            if scene["uid"] == self.project.meta["default_scene"]:
-                imgui.same_line( _region.x - 175 )
-                imgui.text("default")
+            for scene in self.scene.scenes:
+                scene_uid : str = scene["uid"]
+                imgui.push_id( f"scne_{scene_uid}" )
 
-            imgui.same_line( _region.x - 115 )
-            if imgui.button( "Load" ):
-                self.scene.clearEditorScene()
-                self.scene.loadScene( scene["uid"] )
+                imgui.text(scene["name"])
+                print(self.project.meta["default_scene"])
+                if scene["uid"] == self.project.meta["default_scene"]:
+                    imgui.same_line( _region.x - 175 )
+                    imgui.text("default")
 
-            if scene_uid != self.settings.default_scene.stem:
-                imgui.same_line( _region.x - 75 )
+                imgui.same_line( _region.x - 115 )
+                if imgui.button( "Load" ):
+                    self.scene.clearEditorScene()
+                    self.scene.loadScene( scene["uid"] )
 
-                if imgui.button( "Set default" ):
-                    self.project.setDefaultScene( scene["uid"] )
+                if scene_uid != self.settings.default_scene.stem:
+                    imgui.same_line( _region.x - 75 )
 
-            imgui.separator()
-            imgui.pop_id()
+                    if imgui.button( "Set default" ):
+                        self.project.setDefaultScene( scene["uid"] )
 
-        pos = imgui.Vec2( pos.x, pos.y + _region.y + 35)
-        imgui.set_cursor_screen_pos(pos)  
+                imgui.separator()
+                imgui.pop_id()
 
-        if imgui.button( "Save Project" ):
-            self.project.save()
+            pos = imgui.Vec2( pos.x, pos.y + _region.y - 20)
+            imgui.set_cursor_screen_pos(pos)  
 
-        imgui.end()
+            if imgui.button( "Save Project" ):
+                self.project.save()
+
+            imgui.end_popup()
 
     def render( self ):
         # init
@@ -891,8 +901,8 @@ class ImGui( Context ):
         self.draw_inspector()
         self.draw_environment()
         self.draw_console()
-        self.draw_scene_manager()
 
         # popups
         self.save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
         self.save_scene_modal( "New Scene##Modal", "Choose a name for the scene\n\n", self.scene.newScene )
+        self.draw_project_settings_modal()

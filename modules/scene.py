@@ -48,11 +48,6 @@ class SceneManager:
         self.scenes     : List[SceneManager.Scene] = []
 
         self.current_scene : int = -1
-        self._window_is_open    : bool = False # imgui window state
-
-    def toggleWindow( self ):
-        """Toggle imgui window state"""
-        self._window_is_open = not self._window_is_open
 
     def getCurrentScene( self ) -> Scene:
         """Get the current active scene
@@ -247,6 +242,7 @@ class SceneManager:
                     self.getScene( file )
 
     def clearEditorScene( self ):
+        """Clear the scene in the editor, prepares loading a new scene"""
         self.context.sun = -1
         self.setCamera( -1 )
         self.context.imgui.set_selected_object( -1 )
