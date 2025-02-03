@@ -71,6 +71,22 @@ class SceneManager:
         except:
             return self.settings.default_scene.stem
 
+    def getSceneById( self, scene_id : int ) -> Scene:
+        try:
+            return self.scenes[self.current_scene]
+        except:
+            return False
+
+    def getSceneByUID( self, scene_uid : str ) -> Scene:
+        try:
+            for scene in self.scenes:
+                if scene["uid"] == scene_uid:
+                    return scene
+            return False
+        except:
+            return False
+        pass
+
     def setCamera( self, uid : int, scene_id = -1):
         """Set the current camera based on gameObject uid
 
@@ -109,6 +125,50 @@ class SceneManager:
             #self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
             return False
 
+    def newScene( self, name : str ):
+        _scene_uid = self.context.sanitize_filename(name)
+        
+        #_scene = self.getDefaultScene()
+        #if not _scene:
+        #    self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], f"Couldn't load default scene'" )
+        #
+        #_current_name = _scene["name"] # temporary store current scene's name
+        
+        # save current scene
+        self.saveScene()
+
+        try:
+            with open(self.settings.default_scene, 'r') as buffer:
+                scene : SceneManager.Scene = json.load(buffer)
+                scene["name"] = name
+
+            _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
+            with open(_scene_filename, 'w') as buffer:
+                json.dump(scene, buffer, indent=4)
+
+            # reload scenes in assets, will load it into the List
+            self.getScenes()
+
+            # load the new scene
+            self.clearEditorScene() # clear editor scene first
+            self.loadScene( _scene_uid )
+
+        except Exception as e:
+            print( e )
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+     
+    def saveSceneAs( self, name : str ):
+        _scene_uid = self.context.sanitize_filename(name)
+        _scene = self.getCurrentScene()
+
+        _current_name = _scene["name"] # temporary store current scene's name
+
+        _scene["name"] = name
+        self.saveScene(_scene_uid)
+
+        _scene["name"] = _current_name # restore current scenes's name
+
     def saveScene( self, scene_uid : str = False ):
         """Save a scene, only serialize things actually needed"""
         from gameObjects.camera import Camera
@@ -125,7 +185,7 @@ class SceneManager:
         _scene = self.getCurrentScene()
 
         scene : SceneManager.Scene = SceneManager.Scene()
-        scene["name"]           = "main scene"
+        scene["name"]           = _scene["name"]
         scene["light_color"]    = _scene["light_color"]
         scene["ambient_color"]  = _scene["ambient_color"]
 
@@ -157,7 +217,7 @@ class SceneManager:
         with open(_scene_filename, 'w') as buffer:
             json.dump(scene, buffer, indent=4)
 
-        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saving scene: {_scene_uid}" )
+        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Save scene: {_scene_uid}" )
 
     def getScene( self, scene_filename : Path ):
         """Load and decode JSON from a scene file
@@ -169,7 +229,8 @@ class SceneManager:
             with open(scene_filename, 'r') as buffer:
                 scene : SceneManager.Scene = json.load(buffer)
                 scene["uid"] = scene_filename.stem
-                self.scenes.append( scene )
+                if not any(existing_scene["uid"] == scene["uid"] for existing_scene in self.scenes):
+                    self.scenes.append( scene )
 
         except Exception as e:
             print( e )
@@ -185,14 +246,14 @@ class SceneManager:
                 if file.is_file() and file.suffix == ".scene":
                     self.getScene( file )
 
-    def clearScene( self ):
-        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Clear current scene in editor" )
-
+    def clearEditorScene( self ):
         self.context.sun = -1
         self.setCamera( -1 )
         self.context.imgui.set_selected_object( -1 )
         self.context.gameObjects.clear()
         self.current_scene = -1
+
+        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Clear current scene in editor" )
 
     def loadScene( self, scene_uid : str ) -> bool:
         """Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene."""
@@ -207,6 +268,8 @@ class SceneManager:
             try:
                 self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
                 
+                scene["name"]    = scene.get("name", "default scene")
+
                 scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
                 scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
 
@@ -241,11 +304,16 @@ class SceneManager:
                 self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e ) 
             else:
                 self.current_scene =  i
+                self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Load scene: {scene_uid}" )
                 return True
 
         # load default scene
         if self.current_scene < 0:
+            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Could not find scene: {scene_uid}" )
             return False
 
     def loadDefaultScene( self ):
         self.loadScene( self.settings.default_scene.stem )
+
+    def getDefaultScene( self ) -> Scene:
+        return self.getSceneByUID( self.settings.default_scene.stem )

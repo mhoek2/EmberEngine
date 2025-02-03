@@ -1,5 +1,5 @@
 from pickletools import read_stringnl_noescape_pair
-from typing import List
+from typing import Callable, List
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
@@ -35,6 +35,9 @@ class ImGui( Context ):
 
         self.char_game_state = ["play", "stop"]
         self.color_game_state = [(0.2, 0.7, 0.2), (0.8, 0.1, 0.15)]
+
+        # text_input placeholders
+        self.save_as_name = "Scene Name"
 
     def set_selected_object( self, uid : int ):
         self.selectedObjectIndex = uid
@@ -117,6 +120,9 @@ class ImGui( Context ):
         imgui.end()
 
     def draw_menu_bar( self, frame_time, fps ) -> None:
+        _open_save_scene_as_modal = False
+        _open_new_scene_modal = False
+
         if imgui.begin_main_menu_bar():
 
             viewport = imgui.get_main_viewport()
@@ -125,20 +131,21 @@ class ImGui( Context ):
 
             if imgui.begin_menu("File", True):
 
-                # quit
-                clicked_quit, _ = imgui.menu_item( "Quit", '', False, True )
-                if clicked_quit:
+                if imgui.menu_item( "Quit", '', False, True )[0]:
                     self.renderer.running = False
 
-                # save project and scene
-                clicked_save, _ = imgui.menu_item( "Save", 'CTRL+S', False, True )
-                if clicked_save:
+                if imgui.menu_item( "New Scene", '', False, True )[0]:
+                    _open_new_scene_modal = True
+
+                if imgui.menu_item( "Save", '', False, True )[0]:
                     self.project.save()
                     self.scene.saveScene()
 
-                # scene manager
-                clicked_scene, _ = imgui.menu_item( "Scene Manager", '', False, True )
-                if clicked_scene:
+                if imgui.menu_item( "Save Scene as", '', False, True )[0]:
+                    _open_save_scene_as_modal = True
+      
+                if imgui.menu_item( "Scene Manager", '', False, True )[0]:
+                    self.scene.getScenes()
                     self.scene.toggleWindow()
 
                 imgui.end_menu()
@@ -154,6 +161,12 @@ class ImGui( Context ):
             imgui.text(f"Scene: {self.scene.getCurrentSceneUID()}")
 
             imgui.end_main_menu_bar()
+
+            if _open_save_scene_as_modal:
+                imgui.open_popup("Save Scene As##Modal")
+
+            if _open_new_scene_modal:
+                imgui.open_popup("New Scene##Modal")
 
     def draw_gamestate( self ):
         width = imgui.get_window_size().x / 2
@@ -551,7 +564,7 @@ class ImGui( Context ):
                 if not self.settings.game_running and imgui.button("x"):
                     self.selectedObject.removeScript( script['file'] )
 
-                #imgui.input_text( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+                #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
 
                 imgui.end_group()
                 _group_height = imgui.get_item_rect_size().y
@@ -794,10 +807,35 @@ class ImGui( Context ):
         imgui.pop_style_var(1)
         imgui.end()
 
+    def save_scene_modal( self, popup_uid : str, note : str, callback : Callable = None ):
+        if imgui.begin_popup_modal(
+            title=popup_uid, visible=None, flags=imgui.WINDOW_ALWAYS_AUTO_RESIZE
+        )[0]:
+            imgui.text( note )
+            imgui.separator()
+
+            changed, self.save_as_name = imgui.input_text(
+                label="Name##SceneName", value=self.save_as_name, buffer_length=400
+            )
+
+            if imgui.button(label="Save", width=120, height=0):
+                callback( self.save_as_name )
+                imgui.close_current_popup()
+
+            imgui.set_item_default_focus()
+            imgui.same_line()
+            if imgui.button(label="Cancel", width=120, height=0):
+                imgui.close_current_popup()
+
+            imgui.end_popup()
+
     def draw_scene_manager(self ):
         if not self.scene._window_is_open:
             return
         _, self.scene._window_is_open = imgui.begin( "Scene Manager", closable=True )
+
+        _region = imgui.get_content_region_available()
+        pos = imgui.get_cursor_screen_pos()
 
         for scene in self.scene.scenes:
             scene_uid : str = scene["uid"]
@@ -813,7 +851,7 @@ class ImGui( Context ):
 
             imgui.same_line( _region.x - 115 )
             if imgui.button( "Load" ):
-                self.scene.clearScene()
+                self.scene.clearEditorScene()
                 self.scene.loadScene( scene["uid"] )
 
             if scene_uid != self.settings.default_scene.stem:
@@ -824,6 +862,12 @@ class ImGui( Context ):
 
             imgui.separator()
             imgui.pop_id()
+
+        pos = imgui.Vec2( pos.x, pos.y + _region.y + 35)
+        imgui.set_cursor_screen_pos(pos)  
+
+        if imgui.button( "Save Project" ):
+            self.project.save()
 
         imgui.end()
 
@@ -848,3 +892,7 @@ class ImGui( Context ):
         self.draw_environment()
         self.draw_console()
         self.draw_scene_manager()
+
+        # popups
+        self.save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
+        self.save_scene_modal( "New Scene##Modal", "Choose a name for the scene\n\n", self.scene.newScene )

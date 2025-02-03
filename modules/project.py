@@ -44,7 +44,8 @@ class ProjectManager:
         with open(self.project_cfg, 'w') as buffer:
             json.dump(meta, buffer, indent=4)
 
-        print("save")
+
+        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saved project" )
 
     def load( self ):
         """Load and decode JSON from the project config file"""

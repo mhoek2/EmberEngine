@@ -12,6 +12,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import numpy as np
+import re
 
 from modules.project import ProjectManager
 from modules.scene import SceneManager
@@ -73,6 +74,13 @@ class EmberEngine:
             self.scene.loadDefaultScene()
 
         self.loadDefaultEnvironment()
+
+    def sanitize_filename( self, string : str ):
+        string = re.sub(r'[^a-zA-Z0-9_\-.]', '', string)
+        string = string.replace(' ', '_')
+        string = string.lower()
+
+        return string
 
     def findScripts( self ):
         """scan asset folder for .py files.
