@@ -15,6 +15,7 @@ import traceback
 class SceneManager:
     class Scene(TypedDict):
         """Typedef for a scene file"""
+        uid             : str
         name            : str
         gameObjects     : List["_GameObject"]
         camera          : int
@@ -64,17 +65,23 @@ class SceneManager:
         except:
             return False
 
-    def setCamera( self, uid : int, scene_uid = False):
+    def getCurrentSceneUID( self ) -> str:
+        try:
+            return self.scenes[self.current_scene]["uid"]
+        except:
+            return self.settings.default_scene.stem
+
+    def setCamera( self, uid : int, scene_id = -1):
         """Set the current camera based on gameObject uid
 
         :param uid: The uid of a Camera gameObject
         :type uid: int
-        :param scene_uid: The scene the camera is set on, current scene when empty
-        :type scene_uid: int, optional
+        :param scene_id: The index in scens List of the scene the camera is set on, current scene when empty
+        :type scene_id: int, optional
         """
         from gameObjects.camera import Camera
 
-        scene = scene_uid if scene_uid != False else self.current_scene
+        scene = scene_id if scene_id >= 0 else self.current_scene
 
         self.scenes[scene]["camera"] = uid
 
@@ -96,7 +103,10 @@ class SceneManager:
                 raise IndexError("invalid camera")
 
             return self.context.gameObjects[_scene_camera_id]
-        except IndexError:
+        except Exception as e:
+            #print( e )
+            #exc_type, exc_value, exc_tb = sys.exc_info()
+            #self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
             return False
 
     def saveScene( self ):
@@ -123,7 +133,7 @@ class SceneManager:
                 "instance"      : type(obj).__name__,
                 "visible"       : obj.visible,
                 "name"          : obj.name,
-                "model_file"    : obj.model_file,
+                "model_file"    : str(obj.model_file),
                 "material"      : obj.material,
                 "translate"     : obj.translate,
                 "scale"         : obj.scale,
@@ -152,7 +162,8 @@ class SceneManager:
         """
         try:
             with open(scene_filename, 'r') as buffer:
-                scene = json.load(buffer)
+                scene : SceneManager.Scene = json.load(buffer)
+                scene["uid"] = scene_filename.stem
                 self.scenes.append( scene )
 
         except Exception as e:
@@ -169,20 +180,18 @@ class SceneManager:
                 if file.is_file() and file.suffix == ".scene":
                     self.getScene( file )
 
-
-    def loadScene( self, is_default : bool = False ):
-        """Load scene (does not work with multiple scenes yet), if this fails load the default scene.
-
-        :param is_default: Used by the engine itself, to prevent infinite loop whenever default scene fails to load
-        :type is_default: bool, optional
-        """
+    def loadScene( self, scene_uid : str ) -> bool:
+        """Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene."""
         from gameObjects.mesh import Mesh
         from gameObjects.camera import Camera
         from gameObjects.light import Light
 
         for i, scene in enumerate(self.scenes):
+            if scene["uid"] != scene_uid:
+                continue
+
             try:
-                self.setCamera( -1, scene_uid = i ) # default to None, find default camera when adding gameObjects
+                self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
                 
                 scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
                 scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
@@ -210,7 +219,7 @@ class SceneManager:
 
                         if isinstance( self.context.gameObjects[index], Camera ):
                             if obj.get("instance_data", {}).get("is_default_camera", False):
-                                self.setCamera( index, scene_uid = i )
+                                self.setCamera( index, scene_id = i )
 
             except Exception as e:
                 print( e )
@@ -218,10 +227,11 @@ class SceneManager:
                 self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e ) 
             else:
                 self.current_scene =  i
-                return
+                return True
 
         # load default scene
-        if self.current_scene < 0 and not is_default:
-            self.getScene( self.settings.default_scene )
-            self.loadScene( is_default=True )
-        print("save")
+        if self.current_scene < 0:
+            return False
+
+    def loadDefaultScene( self ):
+        self.loadScene( self.settings.default_scene.stem )

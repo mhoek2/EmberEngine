@@ -13,6 +13,7 @@ from OpenGL.GLU import *
 
 import numpy as np
 
+from modules.project import ProjectManager
 from modules.scene import SceneManager
 from modules.console import Console
 from modules.imgui import ImGui
@@ -46,6 +47,7 @@ class EmberEngine:
         self.mouse      = pygame.mouse
 
         self.console    : Console = Console(self)
+        self.project    : ProjectManager = ProjectManager(self)
         self.scene      : SceneManager = SceneManager( self )
         self.camera     : CameraHandler = CameraHandler( self )
         self.renderer   : Renderer = Renderer( self )
@@ -64,9 +66,11 @@ class EmberEngine:
         self.metallicOverride = -1
 
         self.defaultMaterial = self.materials.buildMaterial()
+        self.scene.getScene( self.settings.default_scene )
 
         self.scene.getScenes()
-        self.scene.loadScene()
+        if not self.scene.loadScene( self.project.meta["default_scene"]):
+            self.scene.loadDefaultScene()
 
         self.loadDefaultEnvironment()
 

@@ -21,8 +21,8 @@ class Settings:
         self.engine_texture_path    = f"{self.engineAssets}\\textures\\"
         self.engine_gui_path        = f"{self.engineAssets}\\gui\\"
 
-        self.default_scene = f"{self.engineAssets}\\scenes\default.scene"
-        self.default_environment = f"{self.engineAssets}\\cubemaps\\day"
+        self.default_scene          = Path(f"{self.engineAssets}\\scenes\engine_default.scene")
+        self.default_environment    = f"{self.engineAssets}\\cubemaps\\day"
 
         self.default_light_color     = ( 1.0, 1.0, 1.0, 1.0 )
         self.default_ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )

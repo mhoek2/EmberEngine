@@ -123,9 +123,10 @@ class ImGui( Context ):
                 if clicked_quit:
                     self.renderer.running = False
 
-                # save scene
+                # save project and scene
                 clicked_save, _ = imgui.menu_item( "Save", 'CTRL+S', False, True )
                 if clicked_save:
+                    self.project.save()
                     self.scene.saveScene()
 
                 # scene manager
@@ -141,6 +142,10 @@ class ImGui( Context ):
 
             imgui.same_line( w - 200.0 )
             imgui.text( f"{frame_time:.3f} ms/frame ({fps:.1f} FPS)" )
+
+
+            imgui.same_line( (w / 2) - 100 )
+            imgui.text(f"Scene: {self.scene.getCurrentSceneUID()}")
 
             imgui.end_main_menu_bar()
 
@@ -787,11 +792,27 @@ class ImGui( Context ):
     def draw_scene_manager(self ):
         if not self.scene._window_is_open:
             return
-
         _, self.scene._window_is_open = imgui.begin( "Scene Manager", closable=True )
 
-        if imgui.button( "Save scene" ):
-            self.scene.saveScene()
+        for scene in self.scene.scenes:
+            scene_uid : str = scene["uid"]
+            imgui.push_id( f"scne_{scene_uid}" )
+
+            _region = imgui.get_content_region_available()
+
+            imgui.text(scene["name"])
+            print(self.project.meta["default_scene"])
+            if scene["uid"] == self.project.meta["default_scene"]:
+                imgui.same_line( _region.x - 175 )
+                imgui.text("default")
+
+            imgui.same_line( _region.x - 75 )
+
+            if imgui.button( "Set default" ):
+                self.project.setDefaultScene( scene["uid"] )
+
+            imgui.separator()
+            imgui.pop_id()
 
         imgui.end()
 
