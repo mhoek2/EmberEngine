@@ -61,26 +61,45 @@ class SceneManager:
             return False
 
     def getCurrentSceneUID( self ) -> str:
+        """Get the current scene UID.
+        
+        :return: The UID of the current scene, usualy this represents the filename of a .scene
+        :rtype: str
+        """
         try:
             return self.scenes[self.current_scene]["uid"]
         except:
             return self.settings.default_scene.stem
 
     def getSceneById( self, scene_id : int ) -> Scene:
+        """Get a scene by the index it is in the scenes List
+        
+        :param scene_id: The index of the scene
+        :type scene_id: int
+        :return: The scene at that location, False if invalid
+        :rtype: Scene or bool
+        """
         try:
             return self.scenes[self.current_scene]
         except:
             return False
 
     def getSceneByUID( self, scene_uid : str ) -> Scene:
+        """Get a scene by the UID, which is the filename withouth .scene
+        
+        :param scene_uid: The name of the .scene file
+        :type scene_id: str
+        :return: The scene at that location, False if invalid
+        :rtype: Scene or bool
+        """
         try:
             for scene in self.scenes:
                 if scene["uid"] == scene_uid:
                     return scene
+
             return False
         except:
             return False
-        pass
 
     def setCamera( self, uid : int, scene_id = -1):
         """Set the current camera based on gameObject uid
@@ -121,6 +140,11 @@ class SceneManager:
             return False
 
     def newScene( self, name : str ):
+        """Creates a new scene based on the engines default empty scene
+        
+        :param name: The name of the scene, which is also sanitized and use as filename for the .scene file.
+        :type name: str
+        """
         _scene_uid = self.context.sanitize_filename(name)
         
         #_scene = self.getDefaultScene()
@@ -154,6 +178,11 @@ class SceneManager:
             self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
      
     def saveSceneAs( self, name : str ):
+        """Duplicate the current scene under a diffrent filename
+        
+        :param name: The name of the scene, which is also sanitized and use as filename for the .scene file.
+        :type name: str
+        """
         _scene_uid = self.context.sanitize_filename(name)
         _scene = self.getCurrentScene()
 
@@ -165,7 +194,11 @@ class SceneManager:
         _scene["name"] = _current_name # restore current scenes's name
 
     def saveScene( self, scene_uid : str = False ):
-        """Save a scene, only serialize things actually needed"""
+        """Save a scene, only serialize things actually needed
+        
+        :param scene_uid: The name the scene is saved under, meaning the filename of .scene file. Use current scene name if this is empty
+        :type scene_uid: str, optional
+        """
         from gameObjects.camera import Camera
 
         # todo:
@@ -242,7 +275,9 @@ class SceneManager:
                     self.getScene( file )
 
     def clearEditorScene( self ):
-        """Clear the scene in the editor, prepares loading a new scene"""
+        """Clear the scene in the editor, prepares loading a new scene
+        This removes gameObjects, clears editor GUI state, resets camera index.
+        """
         self.context.sun = -1
         self.setCamera( -1 )
         self.context.imgui.set_selected_object( -1 )
@@ -252,7 +287,13 @@ class SceneManager:
         self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Clear current scene in editor" )
 
     def loadScene( self, scene_uid : str ) -> bool:
-        """Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene."""
+        """Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene.
+        
+        :param scene_uid: The name the scene is saved under, meaning the filename of .scene file.
+        :type scene_uid: str
+        :return: True of the scene loaded succesfully, False if was not found or errors occured
+        :rtype: bool
+        """
         from gameObjects.mesh import Mesh
         from gameObjects.camera import Camera
         from gameObjects.light import Light
@@ -309,7 +350,13 @@ class SceneManager:
             return False
 
     def loadDefaultScene( self ):
+        """Load the default scene, meaing the engine empty scene"""
         self.loadScene( self.settings.default_scene.stem )
 
     def getDefaultScene( self ) -> Scene:
+        """Get reference to the default engine empty scene
+        
+        :return: reference to scene
+        :rtype: Scene
+        """
         return self.getSceneByUID( self.settings.default_scene.stem )

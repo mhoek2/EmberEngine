@@ -36,7 +36,7 @@ class Console:
     def addEntry( self, type_id : int, traceback : List[str], e : Exception ):
         """Add entry to the console entries buffer
         
-        :param type_id: The type of a entry, ENTRY_TYPE_ERROR or ENTRY_TYPE_WARNING
+        :param type_id: The type of a entry, ENTRY_TYPE_ERROR ENTRY_TYPE_WARNING, or ENTRY_TYPE_NOTE
         :type type_id: int
         :param traceback: A list that contains detailed information of a raised Exception
         :type traceback: List[str]

@@ -33,6 +33,11 @@ class ProjectManager:
         self.load()
 
     def setDefaultScene( self, scene_uid : str ):
+        """Set default/startup scene of the project
+        
+        :param scene_uid: The scene UID of the to be default scene
+        :type scene_uid: str
+        """
         self.meta["default_scene"] = scene_uid
 
     def save( self ):

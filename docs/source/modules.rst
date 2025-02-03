@@ -55,6 +55,11 @@ Modules
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: modules.project
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. automodule:: modules.renderer
    :members:
    :undoc-members:

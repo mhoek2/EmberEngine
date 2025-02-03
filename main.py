@@ -76,6 +76,14 @@ class EmberEngine:
         self.loadDefaultEnvironment()
 
     def sanitize_filename( self, string : str ):
+        """Sanitize a string for use of a filename, 
+        by allowing underscore, hypen, period, numbers and letters (both cases)
+        
+        :param string: The input string to be sanitized
+        :type string: str
+        :return: A sanitized string that can be used as filename.
+        :rtype: str:
+        """
         string = re.sub(r'[^a-zA-Z0-9_\-.]', '', string)
         string = string.replace(' ', '_')
         string = string.lower()
