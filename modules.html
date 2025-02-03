@@ -335,13 +335,7 @@
 Based on what camera is active, either from scene or editor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p></li>
-<li><p><strong>*args</strong> – <p>Additional positional arguments to be passed to the parent class or other parts of the system</p>
-</p></li>
-<li><p><strong>**kwargs</strong> – <p>Additional keyword arguments to be passed to the parent class or other parts of the system</p>
-</p></li>
-</ul>
+<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -471,7 +465,7 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>type_id</strong> (<em>int</em>) – The type of a entry, ENTRY_TYPE_ERROR or ENTRY_TYPE_WARNING</p></li>
+<li><p><strong>type_id</strong> (<em>int</em>) – The type of a entry, ENTRY_TYPE_ERROR ENTRY_TYPE_WARNING, or ENTRY_TYPE_NOTE</p></li>
 <li><p><strong>traceback</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A list that contains detailed information of a raised Exception</p></li>
 <li><p><strong>e</strong> (<em>Exception</em>) – The final raised Exception</p></li>
 </ul>
@@ -831,8 +825,8 @@ Find from cache is not implemented yet.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_scene_manager">
-<span class="sig-name descname"><span class="pre">draw_scene_manager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_scene_manager" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_project_settings_modal">
+<span class="sig-name descname"><span class="pre">draw_project_settings_modal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_project_settings_modal" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -897,8 +891,18 @@ Find from cache is not implemented yet.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="modules.imgui.ImGui.save_scene_modal">
+<span class="sig-name descname"><span class="pre">save_scene_modal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">popup_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.save_scene_modal" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="modules.imgui.ImGui.set_file_browser_path">
 <span class="sig-name descname"><span class="pre">set_file_browser_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.set_file_browser_path" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.imgui.ImGui.set_selected_object">
+<span class="sig-name descname"><span class="pre">set_selected_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.set_selected_object" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1220,6 +1224,63 @@ size or material id</p>
 
 </dd></dl>
 
+<dl class="py class" id="module-modules.project">
+<dt class="sig sig-object py" id="modules.project.ProjectManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.project.</span></span><span class="sig-name descname"><span class="pre">ProjectManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="modules.project.ProjectManager.Project">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Project</span></span><a class="headerlink" href="#modules.project.ProjectManager.Project" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<p>Typedef for a scene file</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.project.ProjectManager.Project.default_scene">
+<span class="sig-name descname"><span class="pre">default_scene</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.project.ProjectManager.Project.default_scene" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.project.ProjectManager.Project.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.project.ProjectManager.Project.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.project.ProjectManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.project.ProjectManager.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Project manager</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.project.ProjectManager.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager.load" title="Link to this definition">#</a></dt>
+<dd><p>Load and decode JSON from the project config file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.project.ProjectManager.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager.save" title="Link to this definition">#</a></dt>
+<dd><p>Save the project settings</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.project.ProjectManager.setDefaultScene">
+<span class="sig-name descname"><span class="pre">setDefaultScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager.setDefaultScene" title="Link to this definition">#</a></dt>
+<dd><p>Set default/startup scene of the project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_uid</strong> (<em>str</em>) – The scene UID of the to be default scene</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class" id="module-modules.renderer">
 <dt class="sig sig-object py" id="modules.renderer.Renderer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.renderer.</span></span><span class="sig-name descname"><span class="pre">Renderer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer" title="Link to this definition">#</a></dt>
@@ -1438,6 +1499,11 @@ Toggling visibility and position of the mouse</p>
 <span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.uid">
+<span class="sig-name descname"><span class="pre">uid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.uid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py method">
@@ -1449,6 +1515,13 @@ Toggling visibility and position of the mouse</p>
 <dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.clearEditorScene">
+<span class="sig-name descname"><span class="pre">clearEditorScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.clearEditorScene" title="Link to this definition">#</a></dt>
+<dd><p>Clear the scene in the editor, prepares loading a new scene
+This removes gameObjects, clears editor GUI state, resets camera index.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1480,6 +1553,34 @@ Toggling visibility and position of the mouse</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getCurrentSceneUID">
+<span class="sig-name descname"><span class="pre">getCurrentSceneUID</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.getCurrentSceneUID" title="Link to this definition">#</a></dt>
+<dd><p>Get the current scene UID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The UID of the current scene, usualy this represents the filename of a .scene</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getDefaultScene">
+<span class="sig-name descname"><span class="pre">getDefaultScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene"><span class="pre">Scene</span></a></span></span><a class="headerlink" href="#modules.scene.SceneManager.getDefaultScene" title="Link to this definition">#</a></dt>
+<dd><p>Get reference to the default engine empty scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>reference to scene</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene">Scene</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.getScene">
 <span class="sig-name descname"><span class="pre">getScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.getScene" title="Link to this definition">#</a></dt>
 <dd><p>Load and decode JSON from a scene file</p>
@@ -1491,46 +1592,113 @@ Toggling visibility and position of the mouse</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getSceneById">
+<span class="sig-name descname"><span class="pre">getSceneById</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene"><span class="pre">Scene</span></a></span></span><a class="headerlink" href="#modules.scene.SceneManager.getSceneById" title="Link to this definition">#</a></dt>
+<dd><p>Get a scene by the index it is in the scenes List</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_id</strong> (<em>int</em>) – The index of the scene</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The scene at that location, False if invalid</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene">Scene</a> or bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getSceneByUID">
+<span class="sig-name descname"><span class="pre">getSceneByUID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene"><span class="pre">Scene</span></a></span></span><a class="headerlink" href="#modules.scene.SceneManager.getSceneByUID" title="Link to this definition">#</a></dt>
+<dd><p>Get a scene by the UID, which is the filename withouth .scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_uid</strong> – The name of the .scene file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The scene at that location, False if invalid</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene">Scene</a> or bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.getScenes">
 <span class="sig-name descname"><span class="pre">getScenes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.getScenes" title="Link to this definition">#</a></dt>
 <dd><p>search assets for .scene files, and calls the getScene to decode them</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.loadDefaultScene">
+<span class="sig-name descname"><span class="pre">loadDefaultScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.loadDefaultScene" title="Link to this definition">#</a></dt>
+<dd><p>Load the default scene, meaing the engine empty scene</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.loadScene">
-<span class="sig-name descname"><span class="pre">loadScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.loadScene" title="Link to this definition">#</a></dt>
-<dd><p>Load scene (does not work with multiple scenes yet), if this fails load the default scene.</p>
+<span class="sig-name descname"><span class="pre">loadScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.loadScene" title="Link to this definition">#</a></dt>
+<dd><p>Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>is_default</strong> (<em>bool</em><em>, </em><em>optional</em>) – Used by the engine itself, to prevent infinite loop whenever default scene fails to load</p>
+<dd class="field-odd"><p><strong>scene_uid</strong> (<em>str</em>) – The name the scene is saved under, meaning the filename of .scene file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True of the scene loaded succesfully, False if was not found or errors occured</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.newScene">
+<span class="sig-name descname"><span class="pre">newScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.newScene" title="Link to this definition">#</a></dt>
+<dd><p>Creates a new scene based on the engines default empty scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the scene, which is also sanitized and use as filename for the .scene file.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.saveScene">
-<span class="sig-name descname"><span class="pre">saveScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.saveScene" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">saveScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.saveScene" title="Link to this definition">#</a></dt>
 <dd><p>Save a scene, only serialize things actually needed</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.scene.SceneManager.setCamera">
-<span class="sig-name descname"><span class="pre">setCamera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.setCamera" title="Link to this definition">#</a></dt>
-<dd><p>Set the current camera based on gameObject uid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>uid</strong> (<em>int</em>) – The uid of a Camera gameObject</p></li>
-<li><p><strong>scene_uid</strong> (<em>int</em><em>, </em><em>optional</em>) – The scene the camera is set on, current scene when empty</p></li>
-</ul>
+<dd class="field-odd"><p><strong>scene_uid</strong> (<em>str</em><em>, </em><em>optional</em>) – The name the scene is saved under, meaning the filename of .scene file. Use current scene name if this is empty</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="modules.scene.SceneManager.toggleWindow">
-<span class="sig-name descname"><span class="pre">toggleWindow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.toggleWindow" title="Link to this definition">#</a></dt>
-<dd><p>Toggle imgui window state</p>
+<dt class="sig sig-object py" id="modules.scene.SceneManager.saveSceneAs">
+<span class="sig-name descname"><span class="pre">saveSceneAs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.saveSceneAs" title="Link to this definition">#</a></dt>
+<dd><p>Duplicate the current scene under a diffrent filename</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the scene, which is also sanitized and use as filename for the .scene file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.setCamera">
+<span class="sig-name descname"><span class="pre">setCamera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.setCamera" title="Link to this definition">#</a></dt>
+<dd><p>Set the current camera based on gameObject uid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uid</strong> (<em>int</em>) – The uid of a Camera gameObject</p></li>
+<li><p><strong>scene_id</strong> (<em>int</em><em>, </em><em>optional</em>) – The index in scens List of the scene the camera is set on, current scene when empty</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -1752,7 +1920,7 @@ Toggling visibility and position of the mouse</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_inspector_transform"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_inspector_transform()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_menu_bar"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_menu_bar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_popup_gameObject"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_popup_gameObject()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_scene_manager"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_scene_manager()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_project_settings_modal"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_project_settings_modal()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_settings"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_settings()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_thumb"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_thumb()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_vec3_control"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_vec3_control()</span></code></a></li>
@@ -1765,7 +1933,9 @@ Toggling visibility and position of the mouse</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.load_gui_icons"><code class="docutils literal notranslate"><span class="pre">ImGui.load_gui_icons()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.open_file"><code class="docutils literal notranslate"><span class="pre">ImGui.open_file()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.render"><code class="docutils literal notranslate"><span class="pre">ImGui.render()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.save_scene_modal"><code class="docutils literal notranslate"><span class="pre">ImGui.save_scene_modal()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.set_file_browser_path"><code class="docutils literal notranslate"><span class="pre">ImGui.set_file_browser_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.set_selected_object"><code class="docutils literal notranslate"><span class="pre">ImGui.set_selected_object()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.jsonHandling.JsonHandler"><code class="docutils literal notranslate"><span class="pre">JsonHandler</span></code></a><ul class="nav section-nav flex-column">
@@ -1812,6 +1982,18 @@ Toggling visibility and position of the mouse</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.render"><code class="docutils literal notranslate"><span class="pre">Models.render()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager"><code class="docutils literal notranslate"><span class="pre">ProjectManager</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.Project"><code class="docutils literal notranslate"><span class="pre">ProjectManager.Project</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.Project.default_scene"><code class="docutils literal notranslate"><span class="pre">ProjectManager.Project.default_scene</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.Project.name"><code class="docutils literal notranslate"><span class="pre">ProjectManager.Project.name</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.__init__"><code class="docutils literal notranslate"><span class="pre">ProjectManager.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.load"><code class="docutils literal notranslate"><span class="pre">ProjectManager.load()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.save"><code class="docutils literal notranslate"><span class="pre">ProjectManager.save()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.setDefaultScene"><code class="docutils literal notranslate"><span class="pre">ProjectManager.setDefaultScene()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer"><code class="docutils literal notranslate"><span class="pre">Renderer</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.__init__"><code class="docutils literal notranslate"><span class="pre">Renderer.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.begin_frame"><code class="docutils literal notranslate"><span class="pre">Renderer.begin_frame()</span></code></a></li>
@@ -1841,17 +2023,25 @@ Toggling visibility and position of the mouse</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.gameObjects"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.gameObjects</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.light_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.light_color</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.name"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.uid"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.uid</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.__init__"><code class="docutils literal notranslate"><span class="pre">SceneManager.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.clearEditorScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.clearEditorScene()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getCamera"><code class="docutils literal notranslate"><span class="pre">SceneManager.getCamera()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getCurrentScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.getCurrentScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getCurrentSceneUID"><code class="docutils literal notranslate"><span class="pre">SceneManager.getCurrentSceneUID()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getDefaultScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.getDefaultScene()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.getScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getSceneById"><code class="docutils literal notranslate"><span class="pre">SceneManager.getSceneById()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getSceneByUID"><code class="docutils literal notranslate"><span class="pre">SceneManager.getSceneByUID()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getScenes"><code class="docutils literal notranslate"><span class="pre">SceneManager.getScenes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadDefaultScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadDefaultScene()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.newScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.newScene()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveSceneAs"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveSceneAs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.setCamera"><code class="docutils literal notranslate"><span class="pre">SceneManager.setCamera()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.toggleWindow"><code class="docutils literal notranslate"><span class="pre">SceneManager.toggleWindow()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.settings.Settings"><code class="docutils literal notranslate"><span class="pre">Settings</span></code></a><ul class="nav section-nav flex-column">

@@ -290,9 +290,44 @@
                   
   <section id="emberengine-documentation">
 <h1>EmberEngine documentation<a class="headerlink" href="#emberengine-documentation" title="Link to this heading">#</a></h1>
-<p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
-<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
-documentation for details.</p>
+<p>This 3D engine is developed using Python, OpenGL, Pygame, ImGui docking, and Impasse. It demonstrates the core principles of 3D rendering and interactive graphics.</p>
+<p>The primary goal of this project is to gain more knowledge in Python programming.</p>
+<p>“Because of Python’s limitations, it is not typically used for 3D graphics applications. However, I still value it as a good exercise!</p>
+</section>
+<section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
+<ol class="arabic simple">
+<li><p>Download this repository</p></li>
+<li><p>Open a terminal of your choice</p></li>
+<li><p>Browse to the root folder of the downloaded project files</p></li>
+<li><p>install dependencies using: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></p></li>
+<li><dl class="simple">
+<dt>Install dependency: <strong>Assimp</strong> - <em>requirement for [Impasse](https://github.com/SaladDais/Impasse)</em>:</dt><dd><ol class="arabic simple">
+<li><p>Get and build [Assimp](<a class="github reference external" href="https://github.com/assimp/assimp/tree/master">assimp/assimp</a>)</p></li>
+<li><p>Copy <code class="docutils literal notranslate"><span class="pre">assimp\bin\Release\assimp-vc143-mt.dll`</span></code> to the python install location: eg. <code class="docutils literal notranslate"><span class="pre">C:\Python39</span></code></p></li>
+</ol>
+</dd>
+</dl>
+</li>
+</ol>
+<ol class="arabic" start="7">
+<li><dl>
+<dt>Install dependency: <strong>pyImGui</strong>:</dt><dd><ol class="arabic simple">
+<li><dl class="simple">
+<dt>Get and build [pyImGui docking](<a class="github reference external" href="https://github.com/pyimgui/pyimgui/tree/docking">pyimgui/pyimgui</a>)</dt><dd><ol class="arabic simple">
+<li><p>Windows: run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code> in root folder of the project</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+</ol>
+<ol class="arabic simple" start="3">
+<li><p>Replace files in <code class="docutils literal notranslate"><span class="pre">C:\Python39\Lib\site-packages\imgui</span></code> with files in <code class="docutils literal notranslate"><span class="pre">pyimgui\build\lib.win-amd64-3.9\imgui</span></code></p></li>
+</ol>
+</dd>
+</dl>
+</li>
+</ol>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -317,6 +352,7 @@ documentation for details.</p>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#modules.jsonHandling.JsonHandler"><code class="docutils literal notranslate"><span class="pre">JsonHandler</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#modules.material.Materials"><code class="docutils literal notranslate"><span class="pre">Materials</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#modules.models.Models"><code class="docutils literal notranslate"><span class="pre">Models</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#modules.project.ProjectManager"><code class="docutils literal notranslate"><span class="pre">ProjectManager</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#modules.renderer.Renderer"><code class="docutils literal notranslate"><span class="pre">Renderer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#modules.scene.SceneManager"><code class="docutils literal notranslate"><span class="pre">SceneManager</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#modules.settings.Settings"><code class="docutils literal notranslate"><span class="pre">Settings</span></code></a></li>
@@ -365,6 +401,20 @@ documentation for details.</p>
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">EmberEngine documentation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+</ul>
+
+  </nav></div>
 
   <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
