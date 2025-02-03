@@ -36,6 +36,13 @@ class ImGui( Context ):
         self.char_game_state = ["play", "stop"]
         self.color_game_state = [(0.2, 0.7, 0.2), (0.8, 0.1, 0.15)]
 
+    def set_selected_object( self, uid : int ):
+        self.selectedObjectIndex = uid
+        if uid >= 0:
+            self.selectedObject = self.context.gameObjects[ uid ]
+        else:
+            self.selectedObject = False
+
     def load_gui_icons( self ) -> None:
         """Load icons from game assets gui folder"""
         self.icons = {}
@@ -143,7 +150,6 @@ class ImGui( Context ):
             imgui.same_line( w - 200.0 )
             imgui.text( f"{frame_time:.3f} ms/frame ({fps:.1f} FPS)" )
 
-
             imgui.same_line( (w / 2) - 100 )
             imgui.text(f"Scene: {self.scene.getCurrentSceneUID()}")
 
@@ -240,8 +246,7 @@ class ImGui( Context ):
                     )
 
                     if clicked:
-                        self.selectedObjectIndex = n
-                        self.selectedObject = self.context.gameObjects[ n ]
+                        self.set_selected_object( n )
                     
                     # toggle visibility
                     if isinstance( obj, Camera ):
@@ -806,10 +811,16 @@ class ImGui( Context ):
                 imgui.same_line( _region.x - 175 )
                 imgui.text("default")
 
-            imgui.same_line( _region.x - 75 )
+            imgui.same_line( _region.x - 115 )
+            if imgui.button( "Load" ):
+                self.scene.clearScene()
+                self.scene.loadScene( scene["uid"] )
 
-            if imgui.button( "Set default" ):
-                self.project.setDefaultScene( scene["uid"] )
+            if scene_uid != self.settings.default_scene.stem:
+                imgui.same_line( _region.x - 75 )
+
+                if imgui.button( "Set default" ):
+                    self.project.setDefaultScene( scene["uid"] )
 
             imgui.separator()
             imgui.pop_id()

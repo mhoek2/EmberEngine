@@ -25,10 +25,12 @@ class Console:
 
         self.ENTRY_TYPE_ERROR = 0
         self.ENTRY_TYPE_WARNING = 1
+        self.ENTRY_TYPE_NOTE = 2
 
         self.entry_type_color = [
             (1.0, 0.0, 0.0),        # ENTRY_TYPE_ERROR
-            (0, 1.0, 1.0)           # ENTRY_TYPE_WARNING
+            (0, 1.0, 1.0),           # ENTRY_TYPE_WARNING
+            (0, 0.6, 0.3),           # ENTRY_TYPE_NOTE
         ]
 
     def addEntry( self, type_id : int, traceback : List[str], e : Exception ):

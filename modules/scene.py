@@ -109,14 +109,19 @@ class SceneManager:
             #self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
             return False
 
-    def saveScene( self ):
+    def saveScene( self, scene_uid : str = False ):
         """Save a scene, only serialize things actually needed"""
         from gameObjects.camera import Camera
 
         # todo:
         # store path from root dir, not system path
+        _scene_uid = scene_uid if scene_uid != False else self.getCurrentSceneUID()
 
-        _scene_filename = f"{self.settings.assets}\\main.scene"
+        if _scene_uid == self.settings.default_scene.stem:
+            self.console.addEntry( self.console.ENTRY_TYPE_WARNING, [], "Cannot overwrite engine's default empty scene" )
+            return
+        
+        _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
         _scene = self.getCurrentScene()
 
         scene : SceneManager.Scene = SceneManager.Scene()
@@ -152,7 +157,7 @@ class SceneManager:
         with open(_scene_filename, 'w') as buffer:
             json.dump(scene, buffer, indent=4)
 
-        print("save")
+        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saving scene: {_scene_uid}" )
 
     def getScene( self, scene_filename : Path ):
         """Load and decode JSON from a scene file
@@ -179,6 +184,15 @@ class SceneManager:
             for file in path.glob("*"):
                 if file.is_file() and file.suffix == ".scene":
                     self.getScene( file )
+
+    def clearScene( self ):
+        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Clear current scene in editor" )
+
+        self.context.sun = -1
+        self.setCamera( -1 )
+        self.context.imgui.set_selected_object( -1 )
+        self.context.gameObjects.clear()
+        self.current_scene = -1
 
     def loadScene( self, scene_uid : str ) -> bool:
         """Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene."""
