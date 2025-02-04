@@ -675,6 +675,9 @@ class ImGui( Context ):
                     scale       = [ 1, 1, 1 ],
                     rotation    = [ 0.0, 0.0, 0.0 ]
             ) )
+        if path.suffix == ".scene":
+            self.scene.clearEditorScene()
+            self.scene.loadScene( path.stem )
 
     def file_browser_rootpath( self ) -> Path:
         return Path( self.settings.assets ).resolve()
