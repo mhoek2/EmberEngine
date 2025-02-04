@@ -25,5 +25,8 @@ The primary goal of this project is to gain more knowledge in Python programming
  		1. Windows: run ```pip install .``` in root folder of the project 
 	3. Replace files in ```C:\Python39\Lib\site-packages\imgui``` with files in ```pyimgui\build\lib.win-amd64-3.9\imgui```
 
+## Latest version:
+https://github.com/user-attachments/assets/7746df9e-e854-4730-9cb1-69f35433d842
 
+## Older version:
 https://github.com/user-attachments/assets/3027674b-0132-4761-9c3c-612fa972be97
