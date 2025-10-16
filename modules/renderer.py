@@ -262,11 +262,11 @@ class Renderer:
             glEnable( GL_MULTISAMPLE );
 
             glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, color_texture )
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.settings.msaa, GL_RGBA8, int(size.x), int(size.y), GL_TRUE)
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.settings.msaa, GL_RGBA16F, int(size.x), int(size.y), GL_TRUE)
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0)
         else:
             glBindTexture( GL_TEXTURE_2D, color_texture )
-            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, int(size.x), int(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, None )
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA16F, int(size.x), int(size.y), 0, GL_RGBA, GL_FLOAT, None )
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
             glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0 )

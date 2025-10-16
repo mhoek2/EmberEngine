@@ -1,23 +1,26 @@
 #version 330 core
 
+precision highp float;
+
 #define PI 3.1415926535897932384626433832795
 
 uniform sampler2D sTexture;
 uniform sampler2D sNormal;
 uniform sampler2D sPhyiscal;
-uniform samplerCube sEnvironment;
-uniform sampler2D sBRDF;
 uniform sampler2D sEmissive;
 uniform sampler2D sOpacity;
+uniform samplerCube sEnvironment;
+uniform sampler2D sBRDF;
+
+in vec2 vTexCoord;
+in float var_roughnessOverride;
+in float var_metallicOverride;
 
 in vec4 var_Tangent;
 in vec4 var_BiTangent;
 in vec4 var_Normal;
 in vec4 var_LightDir;
 in vec4 var_ViewDir;
-in vec2 vTexCoord;
-in float var_roughnessOverride;
-in float var_metallicOverride;
 
 in vec4 var_LightColor;
 in vec4 var_AmbientColor;
@@ -148,11 +151,13 @@ void main(){
 	roughness = mix(0.01, 1.0, ORMS.y);
 	AO = min(ORMS.x, AO);
 
-	if ( var_roughnessOverride != -1 )
+	if ( var_roughnessOverride > 0.0 ) {
 		roughness = var_roughnessOverride;
+	}
 
-	if ( var_metallicOverride != -1 )
+	if ( var_metallicOverride > 0.0 ) {
 		specular.rgb = vec3(var_metallicOverride);
+	}
 
 	ambientColor *= AO;
 

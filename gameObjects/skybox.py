@@ -69,7 +69,8 @@ class Skybox( Context ):
         self.VAO = glGenVertexArrays( 1 );
 
         glBindBuffer( GL_ARRAY_BUFFER, self.VBO );
-        glBufferData( GL_ARRAY_BUFFER, self.skyboxVertices, GL_STATIC_DRAW );
+        #glBufferData( GL_ARRAY_BUFFER, self.skyboxVertices, GL_STATIC_DRAW );
+        glBufferData(GL_ARRAY_BUFFER, self.skyboxVertices.nbytes, self.skyboxVertices, GL_STATIC_DRAW)
         glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
         glBindVertexArray( self.VAO );

@@ -1,8 +1,10 @@
 from pathlib import Path
 
-from OpenGL.GL import glBindTexture, glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, \
-    GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R, GL_REPEAT, GL_CLAMP_TO_EDGE, GL_LINEAR, GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR,\
-    glTexImage2D, GL_RGBA, GL_UNSIGNED_BYTE, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_CUBE_MAP_POSITIVE_X 
+from OpenGL.GL import glGetError, GL_NO_ERROR, glGenerateMipmap, glBindTexture, glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, \
+    GL_TEXTURE_WRAP_T, GL_TEXTURE_WRAP_R, GL_REPEAT, GL_CLAMP_TO_EDGE, GL_LINEAR, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR, GL_TEXTURE_MAG_FILTER, GL_LINEAR,\
+    glTexImage2D, GL_RGBA, GL_RGBA16F, GL_RGBA32F, GL_FLOAT, GL_UNSIGNED_BYTE, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_CUBE_MAP_POSITIVE_X 
+
+from OpenGL.GLU import gluErrorString
 
 def create_image_pygame( size, data, texture ):
     import numpy as np
@@ -100,7 +102,6 @@ def create_rmo_map( roughness_path, metallic_path, ao_path, texture ):
     import pygame
     import numpy as np
 
-    glBindTexture(GL_TEXTURE_2D, texture)
 
     size = (-1, -1)
     # Load images and get highest dimension
@@ -148,29 +149,25 @@ def create_rmo_map( roughness_path, metallic_path, ao_path, texture ):
     ambient_occlusion.lock()
     combined_image.lock()
 
-    roughness_array = pygame.surfarray.array3d(roughness)
-    metallic_array = pygame.surfarray.array3d(metallic)
-    ambient_occlusion_array = pygame.surfarray.array3d(ambient_occlusion)
+    roughness_array = pygame.surfarray.array3d(roughness).astype(np.float32) / 255.0
+    metallic_array = pygame.surfarray.array3d(metallic).astype(np.float32) / 255.0
+    ambient_occlusion_array = pygame.surfarray.array3d(ambient_occlusion).astype(np.float32) / 255.0
 
     # you may need to transpose based on your orientation.
-    combined_array = np.zeros((image_width, image_height, 3), dtype=np.uint8)
+    combined_array = np.zeros((image_width, image_height, 4), dtype=np.float32)
     combined_array[..., 0] = roughness_array[..., 0]                            # Roughness from R channel
     combined_array[..., 1] = metallic_array[..., 1]                             # Metallic from G channel
     combined_array[..., 2] = ambient_occlusion_array[..., 2]                    # AO from B channel
-    #combined_array[..., 3] = 255 
-    
-    combined_image = pygame.surfarray.make_surface(combined_array)
-    #pygame.image.save(combined_image, 'combined.png')
-    #img_data = combined_image.flatten()
-    
+    combined_array[..., 3] = 1.0
+    combined_array = np.rot90(combined_array, k=1)
+
     # Unlock surfaces
     roughness.unlock()
     metallic.unlock()
     ambient_occlusion.unlock()
     combined_image.unlock()
 
-    # Convert the surface to a string suitable for OpenGL
-    img_data = pygame.image.tostring( combined_image, "RGBA", True )
+    glBindTexture(GL_TEXTURE_2D, texture)
 
     # Set the texture wrapping parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
@@ -180,5 +177,14 @@ def create_rmo_map( roughness_path, metallic_path, ao_path, texture ):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, image_width, image_height, 0, GL_RGBA, GL_FLOAT, combined_array.tobytes())
+    
+    glGenerateMipmap(GL_TEXTURE_2D)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+
+    err = glGetError()
+    if (err != GL_NO_ERROR):
+        print('GLERROR: ', gluErrorString(err)) # pylint: disable=E1101
+
+
     return texture

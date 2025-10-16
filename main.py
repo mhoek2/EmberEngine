@@ -63,8 +63,8 @@ class EmberEngine:
         self.skybox     : Skybox = Skybox( self )
 
         self.sun = -1
-        self.roughnessOverride = -1
-        self.metallicOverride = -1
+        self.roughnessOverride = -1.0
+        self.metallicOverride = -1.0
 
         self.defaultMaterial = self.materials.buildMaterial()
         self.scene.getScene( self.settings.default_scene )
@@ -234,10 +234,10 @@ class EmberEngine:
                 self.renderer.use_shader( self.renderer.general )
 
                 # environment
-                self.cubemaps.bind( self.environment_map, GL_TEXTURE4, "sEnvironment", 4 )
+                self.cubemaps.bind( self.environment_map, GL_TEXTURE5, "sEnvironment", 5 )
 
                 # brdf lut
-                self.images.bind( self.cubemaps.brdf_lut, GL_TEXTURE5, "sBRDF", 5 )
+                self.images.bind( self.cubemaps.brdf_lut, GL_TEXTURE6, "sBRDF", 6 )
 
                 glUniform1i( self.renderer.shader.uniforms['in_renderMode'], self.renderer.renderMode )
 

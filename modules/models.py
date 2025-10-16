@@ -17,12 +17,13 @@ from modules.settings import Settings
 
 class Models( Context ):
     class Mesh(TypedDict):
-        vbo         : vbo.VBO
-        vbo_size    : int
-        vbo_shape   : Any # np._shape
-        faces       : int # uint32/uintc
-        nbfaces     : int
-        material    : int
+        vao             : int
+        vbo             : vbo.VBO
+        vbo_size        : int
+        vbo_shape       : Any # np._shape
+        indices         : int # uint32/uintc
+        num_indices     : int
+        material        : int
 
     def __init__( self, context ):
         """Setup model buffers, containg mesh and material information 
@@ -139,15 +140,42 @@ class Models( Context ):
         _mesh["vbo_size"] = combined.itemsize
         _mesh["vbo_shape"] = combined.shape[1]
 
+        _mesh["vao"] = glGenVertexArrays(1)
+        glBindVertexArray(_mesh["vao"])
+
+        _mesh["vbo"].bind()
+
+        stride = _mesh["vbo_size"] * _mesh["vbo_shape"]
+
         # Fill the buffer for vertex positions
-        _mesh["faces"] = glGenBuffers(1)
+        _mesh["indices"] = glGenBuffers(1)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh["indices"])
+        indices  = np.array(mesh.faces, dtype=np.uint32).flatten()
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
+        _mesh["num_indices"] = len(mesh.faces) * 3
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh["faces"])
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     np.array(mesh.faces, dtype=np.int32),
-                     GL_STATIC_DRAW)
+        # Vertex Positions
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(0))
 
-        _mesh["nbfaces"] = len(mesh.faces)
+        # Normals
+        glEnableVertexAttribArray(2)
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 3))
+
+        # UVs
+        glEnableVertexAttribArray(1)
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 6))
+
+        # Tangents
+        glEnableVertexAttribArray(3)
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 9))
+
+        # Bitangents
+        glEnableVertexAttribArray(4)
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 12))
+
+        # Unbind VAO (which also unbinds the VBO from ARRAY_BUFFER target)
+        glBindVertexArray(0)
 
         # Unbind buffers
         glBindBuffer(GL_ARRAY_BUFFER, 0)
@@ -194,32 +222,6 @@ class Models( Context ):
         """
         mesh : Models.Mesh = self.model_mesh[model_index][mesh_index]
 
-        vbo = mesh["vbo"]
-        vbo.bind()
-
-        size = mesh["vbo_size"]
-        stride = size * mesh["vbo_shape"]
-            
-        # vertex
-        glEnableVertexAttribArray( 0 )
-        glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, stride, None )
-
-        # normal
-        glEnableVertexAttribArray( 2 )
-        glVertexAttribPointer( 2, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 3 ) )
-
-        # uv
-        glEnableVertexAttribArray( 1 )
-        glVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 6 ) )
-
-        # tangents
-        glEnableVertexAttribArray( 3 )
-        glVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 9 ) )
-
-        # bitangents
-        glEnableVertexAttribArray( 4 )
-        glVertexAttribPointer( 4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p( size * 12 ) )
-
         # material
         self.materials.bind( mesh["material"] )
 
@@ -228,13 +230,16 @@ class Models( Context ):
 
         glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh["faces"])
-        glDrawElements(GL_TRIANGLES, mesh["nbfaces"] * 3, GL_UNSIGNED_INT, None)
+        # Bind VAO that stores all attribute and buffer state
+        assert glIsVertexArray(mesh["vao"])
+        glBindVertexArray(mesh["vao"])
+
+        glDrawElements(GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT, None)
 
         if self.settings.drawWireframe:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
-        vbo.unbind()
+        glBindVertexArray(0)
 
     def draw_node( self, node, model_index : int, model_matrix : Matrix44 ):
         """Recursivly process nodes (parent and child nodes)
