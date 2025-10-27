@@ -550,7 +550,7 @@ class ImGui( Context ):
             for i, script in enumerate(self.selectedObject.scripts):
                 imgui.push_id(f"draw_script_{str(script['file'])}")
 
-                name = str(script['file'].relative_to(assets))
+                name = str(script['file'])
 
                 draw_list = imgui.get_window_draw_list() 
                 draw_list.channels_split(2)

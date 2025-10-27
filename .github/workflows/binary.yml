@@ -1,0 +1,89 @@
+name: Build binaries
+
+on:
+  push:
+    branches:
+      - binary-update-cicd
+  pull_request:
+    branches:
+      - binary-update-cicd
+
+jobs:
+  deploy-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.7"
+
+      - name: Add assimp to PATH
+        shell: pwsh
+        run: |
+          $assimpPath = "$(pwd)\assimp"
+          echo "PATH=$assimpPath;$env:PATH" >> $env:GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install pyinstaller
+        run: |
+          pip install -U pyinstaller
+
+      - name: Get latest Assimp release (v6.0.2, Windows x64)
+        run: |
+          echo "Get prebuilt Assimp 6.0.2 (Windows x64)..."
+          curl -L -o assimp.zip https://github.com/assimp/assimp/releases/download/v6.0.2/windows-x64-v6.0.2.zip
+          echo "Extracting..."
+          powershell -Command "Expand-Archive -Path assimp.zip -DestinationPath assimp-temp"
+          mkdir -Force assimp
+          copy assimp-temp\Release\assimp-vc143-mt.dll assimp\assimp.dll
+          echo "Assimp DLL ready at assimp\assimp.dll"
+
+      - name: Install pyimgui (docking branch)
+        run: |
+          echo "Installing pyimgui (docking branch)..."
+          pip uninstall -y imgui || echo "imgui not installed"
+          pip install "git+https://github.com/pyimgui/pyimgui.git@docking#egg=imgui"
+
+      - name: Build executable
+        run: |
+          echo "Running PyInstaller..."
+          pyinstaller main.spec
+
+      - name: Zip the dist folder
+        run: |
+          powershell Compress-Archive -Path dist/* -DestinationPath windows-package.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: windows-package.zip
+
+  create-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+    needs: [deploy-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-package
+          path: ./windows-dist
+
+      - name: Create Release
+        id: create_release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GH_TOKEN }}
+          automatic_release_tag: "beta"
+          prerelease: true
+          title: "Beta"
+          files: |
+            ./windows-dist/package.zip

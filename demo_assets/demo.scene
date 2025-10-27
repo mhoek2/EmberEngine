@@ -1,15 +1,26 @@
 {
-    "name": "Empty Scene",
+    "name": "demo",
+    "light_color": [
+        1.0,
+        1.0,
+        1.0
+    ],
+    "ambient_color": [
+        0.30000001192092896,
+        0.30000001192092896,
+        0.30000001192092896
+    ],
     "gameObjects": [
         {
-			"instance": "Camera",
+            "instance": "Camera",
+            "visible": true,
             "name": "Camera",
             "model_file": "engineAssets\\models\\camera\\model.fbx",
             "material": 0,
             "translate": [
-                0,
+                0.19500000000000012,
                 5,
-                -10
+                -10.237499999999981
             ],
             "scale": [
                 1,
@@ -21,19 +32,21 @@
                 0.0,
                 0.0
             ],
-            "scripts": [
-                "assets\\camera.py"
-            ]
+            "scripts": [],
+            "instance_data": {
+                "is_default_camera": true
+            }
         },
         {
-			"instance": "Mesh",
+            "instance": "Mesh",
+            "visible": true,
             "name": "Default cube",
             "model_file": "engineAssets\\models\\cube\\model.obj",
             "material": 0,
             "translate": [
-                0,
+                0.19500000000000012,
                 1,
-                0
+                -0.23750000000000016
             ],
             "scale": [
                 1,
@@ -47,17 +60,19 @@
             ],
             "scripts": [
                 "assets\\script.py"
-            ]
+            ],
+            "instance_data": {}
         },
         {
-			"instance": "Light",
+            "instance": "Light",
+            "visible": true,
             "name": "sun",
             "model_file": "engineAssets\\models\\sphere\\model.obj",
             "material": -1,
             "translate": [
-                1,
-                -1,
-                1
+                1.0,
+                6.80684232711792,
+                -4.203200817108154
             ],
             "scale": [
                 0.5,
@@ -69,7 +84,10 @@
                 0.0,
                 80.0
             ],
-            "scripts": []
+            "scripts": [
+                "assets\\sun.py"
+            ],
+            "instance_data": {}
         }
     ]
 }

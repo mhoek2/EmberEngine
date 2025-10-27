@@ -302,6 +302,8 @@ class SceneManager:
             if scene["uid"] != scene_uid:
                 continue
 
+            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Loading scene: {scene_uid}" )
+
             try:
                 self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
                 
@@ -314,17 +316,22 @@ class SceneManager:
                     for obj in scene["gameObjects"]:
                         # todo:
                         # replace ternary with; .get(key, default)
+                        model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
+
                         index = self.context.addGameObject( eval(obj["instance"])( self.context,
                                 name        = obj["name"]       if "name"       in obj else "Unknown",
                                 visible     = obj["visible"]    if "visible"    in obj else True,
-                                model_file  = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False,
+                                model_file  = model,
                                 material    = obj["material"]   if "material"   in obj else -1,
                                 translate   = obj["translate"]  if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
                                 scale       = obj["scale"]      if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
                                 rotation    = obj["rotation"]   if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
-                                scripts     = [Path(x) for x in obj["scripts"]]
+                                scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
                             )
                         )
+
+                        if model:
+                            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Load model: {model.relative_to(self.settings.rootdir)}" )
 
                         # todo:
                         # implement scene settings, so a camera or sun can be assigned
@@ -341,7 +348,7 @@ class SceneManager:
                 self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e ) 
             else:
                 self.current_scene =  i
-                self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Load scene: {scene_uid}" )
+                self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Scene {scene_uid} loaded successfully" )
                 return True
 
         # load default scene
