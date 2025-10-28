@@ -88,4 +88,4 @@ jobs:
           prerelease: true
           title: "Beta"
           files: |
-            ./windows-dist/package.zip
+            ./windows-dist/windows-package.zip
