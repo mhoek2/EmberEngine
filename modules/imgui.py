@@ -148,6 +148,9 @@ class ImGui( Context ):
                 if imgui.menu_item( "Project Settings", '', False, True )[0]:
                     _open_project_settings = True
     
+                if imgui.menu_item( "Export", '', False, True )[0]:
+                    self.project.export()
+
                 imgui.end_menu()
 
             imgui.same_line( w - 400.0 )

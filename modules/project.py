@@ -1,4 +1,14 @@
+import io
+import os
+import threading
+import subprocess
 import sys
+import logging
+import PyInstaller.__main__
+
+import subprocess
+from build_scripts import installer
+
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
@@ -65,3 +75,65 @@ class ProjectManager:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+
+    def run_pyinstaller( self, console : Console ):
+        if getattr(sys, "frozen", False):
+            #python_exe = sys._MEIPASS + "/python/python.exe"
+            python_exe = os.path.join(os.getcwd(), "python", "python.exe")
+        else:
+            python_exe = sys.executable
+
+
+
+        #python_exe = installer.get_embedded_python_exe()
+
+        #installer.ensure_embedded_python()
+
+        cmd = [
+            python_exe, "-m", "PyInstaller",
+            "export.spec",
+            "--noconfirm",
+            "--clean",
+            "--distpath", "output",
+        ]
+        #            "--log-level=DEBUG"
+
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True
+        )
+
+        for line in process.stdout:
+            line = line.strip()
+            if not line:
+                continue
+
+            if "ERROR" in line:
+                console.addEntry(console.ENTRY_TYPE_ERROR, [], line)
+            elif "WARNING" in line or "WARN" in line:
+                console.addEntry(console.ENTRY_TYPE_WARNING, [], line)
+            else:
+                console.addEntry(console.ENTRY_TYPE_NOTE, [], line)
+
+        process.wait()
+
+        if process.returncode == 0:
+            console.addEntry(console.ENTRY_TYPE_NOTE, [], "Export complete.")
+        else:
+            console.addEntry(console.ENTRY_TYPE_ERROR, [], f"PyInstaller failed with code {process.returncode}")
+
+
+    def export( self ):
+        self.console.addEntry(self.console.ENTRY_TYPE_NOTE, [], "Exporting project...")
+
+        try:
+            thread = threading.Thread(target=self.run_pyinstaller, args=(self.console,), daemon=True)
+            thread.start()
+        except Exception as e:
+            print( e )
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+

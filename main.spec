@@ -1,23 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
-import os
-import shutil
 
-folders_to_copy = {
-    "demo_assets": "dist/assets",
-    "shaders": "dist/shaders",
-    "engineAssets": "dist/engineAssets"
-}
+import sys, os
 
-for src, dst in folders_to_copy.items():
-    if os.path.exists(dst):
-        shutil.rmtree(dst)
-    shutil.copytree(src, dst)
+try:
+    base_dir = os.path.dirname(__file__)
+except NameError:
+    base_dir = os.getcwd()  # fallback if __file__ isn't defined
 
-# move imgui.ini
-imgui_ini_src = os.path.join("dist", "assets", "imgui.ini")
-imgui_ini_dst = os.path.join("dist", "imgui.ini")
-if os.path.exists(imgui_ini_src):
-    shutil.move(imgui_ini_src, imgui_ini_dst)
+sys.path.append(os.path.join(base_dir, "build_scripts"))
+
+import installer
+
+# ------------------------------------------------------
+# Setup environment (download + configure embedded Python)
+# ------------------------------------------------------
+installer.ensure_embedded_python()
+
+# ------------------------------------------------------
+# Copy asset folders
+# ------------------------------------------------------
+installer.copy_data_folders()
 
 #datas=[('engineAssets', 'engineAssets')],
 

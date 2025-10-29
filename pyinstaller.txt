@@ -1,1 +1,0 @@
-pyinstaller --onefile --additional-hooks-dir=./hooks --add-binary "assimp/assimp.dll;pygame." main.py
