@@ -7,6 +7,8 @@ import logging
 import PyInstaller.__main__
 
 import subprocess
+import ssl
+import certifi
 import urllib.request
 import zipfile
 import shutil
@@ -122,10 +124,15 @@ class ProjectManager:
         if os.path.exists(self.EMBED_EXE):
             return  # already exists
 
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
+
         print("[installer] Downloading embedded Python...")
         os.makedirs(self.EMBED_DIR, exist_ok=True)
         zip_path = os.path.join(self.EMBED_DIR, "python_embed.zip")
-        urllib.request.urlretrieve(self.EMBED_PYTHON_ZIP_URL, zip_path)
+        #urllib.request.urlretrieve(self.EMBED_PYTHON_ZIP_URL, zip_path, context=ssl_context)
+        with urllib.request.urlopen(self.EMBED_PYTHON_ZIP_URL, context=ssl_context) as response:
+            with open(zip_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
 
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(self.EMBED_DIR)
@@ -146,11 +153,13 @@ class ProjectManager:
         print("[installer] Installing pip in embedded Python...")
         url = "https://bootstrap.pypa.io/get-pip.py"
         save_path = os.path.join(self.EMBED_DIR, "get-pip.py")
-        urllib.request.urlretrieve(url, save_path)
+        #urllib.request.urlretrieve(url, save_path, context=ssl_context)
+        with urllib.request.urlopen(url, context=ssl_context) as response:
+            with open(save_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
 
         self.run_process( console, [self.EMBED_EXE, save_path], "pip install")
         self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "--upgrade", "pip"], "pip upgrade")
-        #self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "pyinstaller"], "pyinstaller install")
 
         print("[installer] Embedded Python setup complete.")
 
