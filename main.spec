@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import urllib.request
 import zipfile
+from PyInstaller.utils.hooks import collect_data_files
 
 #try:
 #    base_dir = os.path.dirname(__file__)
@@ -50,6 +51,8 @@ datas = [
     ('gameObjects',    'core/gameObjects'),
     ('assimp',         'core/assimp'),
 ]
+
+datas += collect_data_files('certifi')
 
 a = Analysis(
     ['main.py'],
