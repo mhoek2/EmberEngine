@@ -42,8 +42,11 @@ class Renderer:
         # imgui
         imgui.create_context()
         imgui.get_io().display_size = self.display_size
-        imgui.get_io().config_flags |= imgui.CONFIG_DOCKING_ENABLE
-        imgui.get_io().config_flags |= imgui.CONFIG_VIEWPORTS_ENABLE
+
+        # exported apps do not use imgui docking
+        if not self.settings.is_exported:
+            imgui.get_io().config_flags |= imgui.CONFIG_DOCKING_ENABLE
+            imgui.get_io().config_flags |= imgui.CONFIG_VIEWPORTS_ENABLE
 
         self.imgui_renderer = PygameRenderer()
 

@@ -7,29 +7,27 @@ import subprocess
 import urllib.request
 import zipfile
 
-#try:
-#    base_dir = os.path.dirname(__file__)
-#except NameError:
-#    base_dir = os.getcwd()  # fallback if __file__ isn't defined
 #
-#sys.path.append(os.path.join(base_dir, "build_scripts"))
+# Get the core dir, development is root of git project
+# when frozen/packaged its MEIPASS folder
 #
-#import installer
+EE_CORE = os.environ.get("EE_CORE_DIR", os.getcwd())
+print("Detected core path:", EE_CORE)
 
 # ------------------------------------------------------
-# Copy asset folders
+# Copy dependency files and folders
 # ------------------------------------------------------
 files_to_copy = {
-    os.path.join("imgui.ini"):         "dist/imgui.ini",
-    os.path.join("export.spec"):       "dist/export.spec",
-    os.path.join("requirements.txt"):  "dist/requirements.txt",
+    os.path.join(EE_CORE, "main.py"):       "temp/main.py",
 }
 
 folders_to_copy = {
-    "demo_assets": "dist/assets",
-    "shaders": "dist/shaders",
-    "engineAssets": "dist/engineAssets",
-    "hooks": "dist/hooks"
+    os.path.join(EE_CORE, "modules"):       "temp/modules",
+    os.path.join(EE_CORE, "gameObjects"):   "temp/gameObjects",
+    os.path.join(EE_CORE, "assimp"):        "temp/assimp",
+    "assets":                               "export/assets",
+    "shaders":                              "export/shaders",
+    "engineAssets":                         "export/engineAssets",
 }
 
 for src, dst in folders_to_copy.items():
@@ -44,22 +42,15 @@ for src, dst in files_to_copy.items():
 # ------------------------------------------------------
 # Configuration
 # ------------------------------------------------------
-datas = [
-    ('main.py',        'core'),
-    ('modules',        'core/modules'),
-    ('gameObjects',    'core/gameObjects'),
-    ('assimp',         'core/assimp'),
-]
-
 a = Analysis(
-    ['main.py'],
+    ['temp/main.py'],
     pathex=[],
-    binaries=[('assimp/assimp.dll', 'pygame.')],
-    datas=datas,
+    binaries=[('temp/assimp/assimp.dll', 'pygame.')],
+    datas=[],
     hiddenimports=['gameObjects.scriptBehaivior'],
     hookspath=['./hooks'],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=['hooks/hook_ee_export.py'],
     excludes=[],
     noarchive=False,
     optimize=0,

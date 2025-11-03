@@ -134,7 +134,7 @@ class PygameRenderer(ProgrammablePipelineRenderer):
             return True
 
     def process_inputs(self):
-        io = imgui.get_io()
+        io = self.io
         
         current_time = pygame.time.get_ticks() / 1000.0
 

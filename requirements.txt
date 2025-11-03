@@ -4,3 +4,4 @@ pygame>=2.6.0
 PyOpenGL
 PyOpenGL-accelerate
 impasse
+pyinstaller
