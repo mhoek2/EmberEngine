@@ -1,4 +1,18 @@
+import io
+import os
+import threading
+import subprocess
 import sys
+import logging
+import PyInstaller.__main__
+
+import subprocess
+import ssl
+import certifi
+import urllib.request
+import zipfile
+import shutil
+
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
@@ -65,3 +79,130 @@ class ProjectManager:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+
+
+
+
+    #
+    # Exporting project
+    #
+    EMBED_PYTHON_VERSION = "3.11.7"
+    EMBED_PYTHON_ZIP_URL = f"https://www.python.org/ftp/python/{EMBED_PYTHON_VERSION}/python-{EMBED_PYTHON_VERSION}-embed-amd64.zip"
+
+    EMBED_DIR       = "python"
+    EMBED_EXE       = os.path.join(EMBED_DIR, "python.exe")
+    EMBED_PTH       = os.path.join(EMBED_DIR, f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}._pth")
+    EMBED_DLL       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.dll"
+    EMBED_ZIP       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.zip"
+
+    def run_process( self, console : Console, command, label ):
+        """Helper to run a subprocess with live stdout streaming."""
+        print(f"[installer] Running: {' '.join(command)}")
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True
+        )
+        for line in process.stdout:
+            line = line.strip()
+            if not line:
+                continue
+
+            console.addEntry(console.ENTRY_TYPE_NOTE, [], line)
+
+        process.wait()
+                
+        if process.returncode == 0:
+            console.addEntry(console.ENTRY_TYPE_NOTE, [], f"{label} complete.")
+        else:
+            console.addEntry(console.ENTRY_TYPE_ERROR, [], f"{label} failed with code {process.returncode}")
+
+    def ensure_embedded_python( self, console : Console ):
+        """Download embedded Python and install PyInstaller if not already present."""
+        if os.path.exists(self.EMBED_EXE):
+            return  # already exists
+
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
+
+        print("[installer] Downloading embedded Python...")
+        os.makedirs(self.EMBED_DIR, exist_ok=True)
+        zip_path = os.path.join(self.EMBED_DIR, "python_embed.zip")
+        #urllib.request.urlretrieve(self.EMBED_PYTHON_ZIP_URL, zip_path, context=ssl_context)
+        with urllib.request.urlopen(self.EMBED_PYTHON_ZIP_URL, context=ssl_context) as response:
+            with open(zip_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(self.EMBED_DIR)
+        os.remove(zip_path)
+
+        print("[installer] Configuring embedded Python...")
+        # update _pth file
+        with open(self.EMBED_PTH, "w", encoding="utf-8") as f:
+            f.write(
+                f"{self.EMBED_ZIP}\n"
+                ".\n"
+                "Lib\n"
+                "Lib\\site-packages\n"
+                "import site"
+            )
+
+        # Install PyInstaller
+        print("[installer] Installing pip in embedded Python...")
+        url = "https://bootstrap.pypa.io/get-pip.py"
+        save_path = os.path.join(self.EMBED_DIR, "get-pip.py")
+        #urllib.request.urlretrieve(url, save_path, context=ssl_context)
+        with urllib.request.urlopen(url, context=ssl_context) as response:
+            with open(save_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+
+        self.run_process( console, [self.EMBED_EXE, save_path], "pip install")
+        self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "--upgrade", "pip"], "pip upgrade")
+
+        print("[installer] Embedded Python setup complete.")
+
+    def ensure_embedded_python_requirements( self, console : Console ):
+        self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "-r", "requirements.txt"], "ensure dependencies")
+        self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "--only-binary=:all:", "imgui"], "pyimgui")
+
+    def run_pyinstaller( self, console : Console ):
+        if getattr(sys, "frozen", False):
+            # for packaged version, install embedded python.
+            self.ensure_embedded_python( console )
+            self.ensure_embedded_python_requirements( console)
+
+            python_exe = os.path.join(os.getcwd(), "python", "python.exe")
+            os.environ["EE_CORE_DIR"] = os.path.join(sys._MEIPASS, "core")
+        else:
+            python_exe = sys.executable
+            os.environ["EE_CORE_DIR"] = os.getcwd()
+
+        cmd = [
+            python_exe, "-m", "PyInstaller",
+            "export.spec",
+            "--noconfirm",
+            "--clean",
+            "--distpath", "export",
+        ]
+        #            "--log-level=DEBUG"
+
+        self.run_process( console, cmd, "PyInstaller")
+
+        console.addEntry(console.ENTRY_TYPE_NOTE, [], "Cleanup temporary file")
+        for src in ["temp", "build"]:
+            if os.path.exists(src):
+                shutil.rmtree(src)
+
+    def export( self ):
+        self.console.addEntry(self.console.ENTRY_TYPE_NOTE, [], "Exporting project...")
+
+        try:
+            thread = threading.Thread(target=self.run_pyinstaller, args=(self.console,), daemon=True)
+            thread.start()
+        except Exception as e:
+            print( e )
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+

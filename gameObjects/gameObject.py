@@ -17,6 +17,7 @@ from modules.material import Materials
 from modules.images import Images
 from modules.models import Models
 
+import inspect
 import importlib
 import traceback
 
@@ -33,7 +34,11 @@ class GameObject( Context ):
         :param file: The path to a .py script file
         :type file: Path
         """
-        self.scripts.append( { "file": file, "obj": "" } )
+        relative_path = file.relative_to(self.settings.rootdir)
+
+        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Load script: {relative_path}" )
+
+        self.scripts.append( { "file": relative_path, "obj": "" } )
 
     def removeScript( self, file : Path ):
         """Remove script from a gameObject
@@ -55,8 +60,10 @@ class GameObject( Context ):
         :return: A class name if its found, return None otherwise
         :rtype: str | None
         """
-        if os.path.isfile(script):
-            code = script.read_text()
+        file = (self.settings.rootdir / script).resolve()
+
+        if os.path.isfile(file):
+            code = file.read_text()
 
         for line in code.splitlines():
             if line.strip().startswith("class "):
@@ -76,29 +83,63 @@ class GameObject( Context ):
         :param script: The Script object containing a file path
         :type script: GameObject.Script
         """
+        __func_name__ = inspect.currentframe().f_code.co_name
+
         script["obj"] = False
 
-        # module name needs subfolder prefixes with . delimter
-        _module_name = str(script['file'].relative_to(self.settings.rootdir))
-        _module_name = _module_name.replace("\\", ".").replace(".py", "")
+        # Get full file path
+        file_path = script['file']
 
-        _class_name = self.get_class_name_from_script( script["file"] )
+        # Resolve relative paths (important when running from .exe)
+        if not os.path.isabs(file_path):
+            # Assuming your engine has a context.project_root or similar path
+            base_path = getattr(self.context, "project_root", os.getcwd())
+            file_path = os.path.join(base_path, file_path)
 
-        _script_behaivior = importlib.import_module("gameObjects.scriptBehaivior")
-        ScriptBehaivior = getattr(_script_behaivior, "ScriptBehaivior")
+        if not os.path.isfile(file_path):
+            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+                f"[{__func_name__}] Script file not found: {file_path}")
+            return
 
-        # remove from sys modules cache
-        if _module_name in sys.modules:
-            importlib.reload(sys.modules[_module_name])
+        # Derive a simple module name from the file name
+        module_name = os.path.splitext(os.path.basename(file_path))[0]
 
-        module = importlib.import_module( _module_name )
-        setattr(module, "ScriptBehaivior", ScriptBehaivior)
+        # Remove from sys.modules if already loaded (hot reload)
+        if module_name in sys.modules:
+            del sys.modules[module_name]
+
+        # Load the module from the file path
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        if spec is None or spec.loader is None:
+            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+                f"[{__func_name__}] Failed to load spec for {file_path}")
+            return
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+
+        # Load ScriptBehaivior
+        _script_behavior = importlib.import_module("gameObjects.scriptBehaivior")
+        ScriptBehaivior = getattr(_script_behavior, "ScriptBehaivior")
+
+
+        _class_name = self.get_class_name_from_script(script["file"])
+
+        if not hasattr(module, _class_name):
+            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+                f"[{__func_name__}] No class named '{_class_name}' found in {file_path}")
+            return
+
         ScriptClass = getattr(module, _class_name)
 
-        class ClassPlaceholder( ScriptClass, ScriptBehaivior ):
+        class ClassPlaceholder(ScriptClass, ScriptBehaivior):
             pass
 
-        script["obj"] = ClassPlaceholder( self.context, self )
+        script["obj"] = ClassPlaceholder(self.context, self)
+
+        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+            f"[{__func_name__}] Loaded script '{_class_name}' from {file_path}")
 
     def onStartScripts( self ):
         """Call onStart() function in all dynamic scripts attached to this gameObject"""

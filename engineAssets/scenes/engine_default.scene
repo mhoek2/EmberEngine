@@ -4,7 +4,7 @@
         {
 			"instance": "Camera",
             "name": "Camera",
-            "model_file": "D:\\Github-workspace\\EmberEngine\\engineAssets\\models\\camera\\model.fbx",
+            "model_file": "engineAssets\\models\\camera\\model.fbx",
             "material": 0,
             "translate": [
                 0,
@@ -22,13 +22,13 @@
                 0.0
             ],
             "scripts": [
-                "D:\\Github-workspace\\EmberEngine\\assets\\camera.py"
+                "assets\\camera.py"
             ]
         },
         {
 			"instance": "Mesh",
             "name": "Default cube",
-            "model_file": "D:\\Github-workspace\\EmberEngine\\engineAssets\\models\\cube\\model.obj",
+            "model_file": "engineAssets\\models\\cube\\model.obj",
             "material": 0,
             "translate": [
                 0,
@@ -46,13 +46,13 @@
                 0.0
             ],
             "scripts": [
-                "D:\\Github-workspace\\EmberEngine\\assets\\script.py"
+                "assets\\script.py"
             ]
         },
         {
 			"instance": "Light",
             "name": "sun",
-            "model_file": "D:\\Github-workspace\\EmberEngine\\engineAssets\\models\\sphere\\model.obj",
+            "model_file": "engineAssets\\models\\sphere\\model.obj",
             "material": -1,
             "translate": [
                 1,

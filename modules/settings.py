@@ -1,5 +1,5 @@
+import os
 from pathlib import Path
-from tkinter import IntVar
 
 class Settings:
     def __init__( self ) -> None:
@@ -34,3 +34,10 @@ class Settings:
         self.grid_color = ( 0.83, 0.74, 94.0, 1.0 )
         self.grid_size = 10.0
         self.grid_spacing = 0.5
+
+        # exported application
+        self.is_exported = self.is_app_exported()
+
+    def is_app_exported( self ):
+        """Wheter the appliction as exported using Ember Engine"""
+        return os.getenv("EE_EXPORTED") == "1"
