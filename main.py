@@ -288,4 +288,9 @@ class EmberEngine:
 
 if __name__ == '__main__':
     app = EmberEngine()
+
+    # debug
+    if getattr(sys, "frozen", False):
+        print(sys._MEIPASS)
+
     app.run()

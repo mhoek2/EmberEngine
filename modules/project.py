@@ -7,7 +7,9 @@ import logging
 import PyInstaller.__main__
 
 import subprocess
-from build_scripts import installer
+import urllib.request
+import zipfile
+import shutil
 
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, TypedDict
@@ -76,25 +78,76 @@ class ProjectManager:
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
 
+
+
+
+    #
+    # Exporting project
+    #
+    def ensure_embedded_python( self ):
+        EMBED_PYTHON_VERSION = "3.12.7"
+        EMBED_PYTHON_ZIP_URL = f"https://www.python.org/ftp/python/{EMBED_PYTHON_VERSION}/python-{EMBED_PYTHON_VERSION}-embed-amd64.zip"
+
+        EMBED_DIR       = "python"
+        EMBED_EXE       = os.path.join(EMBED_DIR, "python.exe")
+        EMBED_PTH       = os.path.join(EMBED_DIR, f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}._pth")
+        EMBED_DLL       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.dll"
+        EMBED_ZIP       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.zip"
+
+        """Download embedded Python and install PyInstaller if not already present."""
+        if os.path.exists(EMBED_EXE):
+            return  # already exists
+
+        print("[installer] Downloading embedded Python...")
+        os.makedirs(EMBED_DIR, exist_ok=True)
+        zip_path = os.path.join(EMBED_DIR, "python_embed.zip")
+        urllib.request.urlretrieve(EMBED_PYTHON_ZIP_URL, zip_path)
+
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(EMBED_DIR)
+        os.remove(zip_path)
+
+        print("[installer] Configuring embedded Python...")
+        # update _pth file
+        with open(EMBED_PTH, "w", encoding="utf-8") as f:
+            f.write(
+                f"{EMBED_ZIP}\n"
+                ".\n"
+                "Lib\n"
+                "Lib\\site-packages\n"
+                "import site"
+            )
+
+        # Install PyInstaller
+        print("[installer] Installing pip in embedded Python...")
+        url = "https://bootstrap.pypa.io/get-pip.py"
+        save_path = os.path.join(EMBED_DIR, "get-pip.py")
+        urllib.request.urlretrieve(url, save_path)
+        subprocess.run([EMBED_EXE, save_path], check=True)
+
+        print("[installer] Upgrade pip in embedded Python...")
+        subprocess.run([EMBED_EXE, "-m", "pip", "install", "--upgrade", "pip"], check=True)
+    
+        print("[installer] Installing PyInstaller in embedded Python...")
+        subprocess.run([EMBED_EXE, "-m", "pip", "install", "pyinstaller"], check=True)
+
     def run_pyinstaller( self, console : Console ):
         if getattr(sys, "frozen", False):
-            #python_exe = sys._MEIPASS + "/python/python.exe"
+            self.ensure_embedded_python() # setup embedded python
+
             python_exe = os.path.join(os.getcwd(), "python", "python.exe")
+            os.environ["EE_CORE_DIR"] = os.path.join(sys._MEIPASS, "core")
         else:
             python_exe = sys.executable
+            os.environ["EE_CORE_DIR"] = os.getcwd()
 
-
-
-        #python_exe = installer.get_embedded_python_exe()
-
-        #installer.ensure_embedded_python()
 
         cmd = [
             python_exe, "-m", "PyInstaller",
             "export.spec",
             "--noconfirm",
             "--clean",
-            "--distpath", "output",
+            "--distpath", "export",
         ]
         #            "--log-level=DEBUG"
 
@@ -119,6 +172,12 @@ class ProjectManager:
                 console.addEntry(console.ENTRY_TYPE_NOTE, [], line)
 
         process.wait()
+
+        console.addEntry(console.ENTRY_TYPE_NOTE, [], "Cleanup temporary file")
+        for src in ["temp", "build"]:
+            if os.path.exists(src):
+                shutil.rmtree(src)
+                
 
         if process.returncode == 0:
             console.addEntry(console.ENTRY_TYPE_NOTE, [], "Export complete.")

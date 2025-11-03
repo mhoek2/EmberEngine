@@ -1,37 +1,47 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import sys, os, shutil, subprocess
+import os
+import sys
+import shutil
+import subprocess
+import urllib.request
+import zipfile
 
-temp_dir = "temp"
-if os.path.exists(temp_dir):
-    shutil.rmtree(temp_dir)
-os.makedirs(temp_dir)
-
-
-git_repo_url = "https://github.com/mhoek2/EmberEngine"  
-branch_name = "beta"
-clone_dest = os.path.join(temp_dir, "")
-
-subprocess.run([
-    "git", "clone", "-b", branch_name, "--single-branch", git_repo_url, clone_dest
-], check=True)
+#
+# Get the core dir, development is root of git project
+# when frozen/packaged its MEIPASS folder
+#
+EE_CORE = os.environ.get("EE_CORE_DIR", os.getcwd())
+print("Detected core path:", EE_CORE)
 
 # ------------------------------------------------------
-# Copy asset folders
+# Copy dependency files and folders
 # ------------------------------------------------------
-folders_to_copy = {
-    "assets": "temp/assets",
+files_to_copy = {
+    os.path.join(EE_CORE, "main.py"):       "temp/main.py",
 }
-#    "shaders": "temp/shaders",
-#    "engineAssets": "temp/engineAssets",
+
+folders_to_copy = {
+    os.path.join(EE_CORE, "modules"):       "temp/modules",
+    os.path.join(EE_CORE, "gameObjects"):   "temp/gameObjects",
+    os.path.join(EE_CORE, "assimp"):        "temp/assimp",
+    "assets":                               "temp/assets",
+    "shaders":                              "temp/shaders",
+    "engineAssets":                         "temp/engineAssets",
+}
 
 for src, dst in folders_to_copy.items():
     if os.path.exists(dst):
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
 
-#datas=[('engineAssets', 'engineAssets')],
+for src, dst in files_to_copy.items():
+    if os.path.isfile(src):
+        shutil.copy2(src, dst)
 
+# ------------------------------------------------------
+# Configuration
+# ------------------------------------------------------
 a = Analysis(
     ['temp/main.py'],
     pathex=[],
