@@ -13,6 +13,7 @@ from OpenGL.GLU import *
 
 import numpy as np
 import re
+import sys
 
 from modules.project import ProjectManager
 from modules.scene import SceneManager
@@ -74,7 +75,7 @@ class EmberEngine:
             self.scene.loadDefaultScene()
 
         self.loadDefaultEnvironment()
-
+ 
     def sanitize_filename( self, string : str ):
         """Sanitize a string for use of a filename, 
         by allowing underscore, hypen, period, numbers and letters (both cases)

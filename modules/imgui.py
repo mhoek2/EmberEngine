@@ -194,6 +194,27 @@ class ImGui( Context ):
 
         imgui.pop_style_color(1)
 
+    def draw_exported_viewport( self ) -> None:
+        window_size = imgui.get_io().display_size  # full screen size
+
+        # bind your FBO texture
+        glBindTexture(GL_TEXTURE_2D, self.renderer.main_fbo["output"])
+
+        # draw fullscreen image
+        imgui.set_next_window_position(0, 0)
+        imgui.set_next_window_size(window_size.x, window_size.y)
+        imgui.begin("ExportedViewport", flags=imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_SCROLLBAR)
+    
+        imgui.image(
+            self.renderer.main_fbo["output"],
+            window_size.x,
+            window_size.y,
+            uv0=(0, 1),
+            uv1=(1, 0)
+        )
+
+        imgui.end()
+
     def draw_viewport( self ) -> None:
 
         imgui.set_next_window_size( 915, 640, imgui.FIRST_USE_EVER )
@@ -808,12 +829,21 @@ class ImGui( Context ):
         imgui.begin( "Console" )
         entries : List[Console.Entry] = self.console.getEntries()
 
+        if not hasattr(self, "_last_console_count"):
+            self._last_console_count = 0
+
         imgui.push_style_var(imgui.STYLE_ITEM_SPACING, (0.0, 6.0))
 
         for i, entry in enumerate(entries):
             self.draw_console_entry( i, entry )
 
         imgui.pop_style_var(1)
+
+        # scroll to bottom
+        if len(entries) > self._last_console_count:
+            imgui.set_scroll_here_y(1.0)
+            self._last_console_count = len(entries)
+
         imgui.end()
 
     def save_scene_modal( self, popup_uid : str, note : str, callback : Callable = None ):
@@ -895,20 +925,26 @@ class ImGui( Context ):
         frame_time = 1000.0 / self.io.framerate
         fps = self.io.framerate
 
-        self.docking_space('docking_space')
+        # exported apps draw directly
+        if self.settings.is_exported:
+            self.draw_exported_viewport()
+
+        # draw engine GUI
+        else:
+            self.docking_space('docking_space')
         
-        self.draw_menu_bar( frame_time, fps )
+            self.draw_menu_bar( frame_time, fps )
 
-        # windows
-        self.draw_viewport()
-        self.draw_file_browser()
-        self.draw_hierarchy()
-        self.draw_settings()
-        self.draw_inspector()
-        self.draw_environment()
-        self.draw_console()
+            # windows
+            self.draw_viewport()
+            self.draw_file_browser()
+            self.draw_hierarchy()
+            self.draw_settings()
+            self.draw_inspector()
+            self.draw_environment()
+            self.draw_console()
 
-        # popups
-        self.save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
-        self.save_scene_modal( "New Scene##Modal", "Choose a name for the scene\n\n", self.scene.newScene )
-        self.draw_project_settings_modal()
+            # popups
+            self.save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
+            self.save_scene_modal( "New Scene##Modal", "Choose a name for the scene\n\n", self.scene.newScene )
+            self.draw_project_settings_modal()

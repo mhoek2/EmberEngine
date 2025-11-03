@@ -19,10 +19,17 @@ import zipfile
 # ------------------------------------------------------
 # Copy asset folders
 # ------------------------------------------------------
+files_to_copy = {
+    os.path.join("imgui.ini"):         "dist/imgui.ini",
+    os.path.join("export.spec"):       "dist/export.spec",
+    os.path.join("requirements.txt"):  "dist/requirements.txt",
+}
+
 folders_to_copy = {
     "demo_assets": "dist/assets",
     "shaders": "dist/shaders",
-    "engineAssets": "dist/engineAssets"
+    "engineAssets": "dist/engineAssets",
+    "hooks": "dist/hooks"
 }
 
 for src, dst in folders_to_copy.items():
@@ -30,14 +37,9 @@ for src, dst in folders_to_copy.items():
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
 
-# move imgui.ini
-imgui_ini_src = os.path.join("dist", "assets", "imgui.ini")
-imgui_ini_dst = os.path.join("dist", "imgui.ini")
-if os.path.exists(imgui_ini_src):
-    shutil.move(imgui_ini_src, imgui_ini_dst)
-
-# copy export.spec
-shutil.copy("export.spec", "dist/export.spec")
+for src, dst in files_to_copy.items():
+    if os.path.isfile(src):
+        shutil.copy2(src, dst)
 
 # ------------------------------------------------------
 # Configuration

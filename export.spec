@@ -25,9 +25,9 @@ folders_to_copy = {
     os.path.join(EE_CORE, "modules"):       "temp/modules",
     os.path.join(EE_CORE, "gameObjects"):   "temp/gameObjects",
     os.path.join(EE_CORE, "assimp"):        "temp/assimp",
-    "assets":                               "temp/assets",
-    "shaders":                              "temp/shaders",
-    "engineAssets":                         "temp/engineAssets",
+    "assets":                               "export/assets",
+    "shaders":                              "export/shaders",
+    "engineAssets":                         "export/engineAssets",
 }
 
 for src, dst in folders_to_copy.items():
@@ -50,7 +50,7 @@ a = Analysis(
     hiddenimports=['gameObjects.scriptBehaivior'],
     hookspath=['./hooks'],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=['hooks/hook_ee_export.py'],
     excludes=[],
     noarchive=False,
     optimize=0,

@@ -84,34 +84,58 @@ class ProjectManager:
     #
     # Exporting project
     #
-    def ensure_embedded_python( self ):
-        EMBED_PYTHON_VERSION = "3.12.7"
-        EMBED_PYTHON_ZIP_URL = f"https://www.python.org/ftp/python/{EMBED_PYTHON_VERSION}/python-{EMBED_PYTHON_VERSION}-embed-amd64.zip"
+    EMBED_PYTHON_VERSION = "3.11.7"
+    EMBED_PYTHON_ZIP_URL = f"https://www.python.org/ftp/python/{EMBED_PYTHON_VERSION}/python-{EMBED_PYTHON_VERSION}-embed-amd64.zip"
 
-        EMBED_DIR       = "python"
-        EMBED_EXE       = os.path.join(EMBED_DIR, "python.exe")
-        EMBED_PTH       = os.path.join(EMBED_DIR, f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}._pth")
-        EMBED_DLL       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.dll"
-        EMBED_ZIP       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.zip"
+    EMBED_DIR       = "python"
+    EMBED_EXE       = os.path.join(EMBED_DIR, "python.exe")
+    EMBED_PTH       = os.path.join(EMBED_DIR, f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}._pth")
+    EMBED_DLL       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.dll"
+    EMBED_ZIP       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.zip"
 
+    def run_process( self, console : Console, command, label ):
+        """Helper to run a subprocess with live stdout streaming."""
+        print(f"[installer] Running: {' '.join(command)}")
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True
+        )
+        for line in process.stdout:
+            line = line.strip()
+            if not line:
+                continue
+
+            console.addEntry(console.ENTRY_TYPE_NOTE, [], line)
+
+        process.wait()
+                
+        if process.returncode == 0:
+            console.addEntry(console.ENTRY_TYPE_NOTE, [], f"{label} complete.")
+        else:
+            console.addEntry(console.ENTRY_TYPE_ERROR, [], f"{label} failed with code {process.returncode}")
+
+    def ensure_embedded_python( self, console : Console ):
         """Download embedded Python and install PyInstaller if not already present."""
-        if os.path.exists(EMBED_EXE):
+        if os.path.exists(self.EMBED_EXE):
             return  # already exists
 
         print("[installer] Downloading embedded Python...")
-        os.makedirs(EMBED_DIR, exist_ok=True)
-        zip_path = os.path.join(EMBED_DIR, "python_embed.zip")
-        urllib.request.urlretrieve(EMBED_PYTHON_ZIP_URL, zip_path)
+        os.makedirs(self.EMBED_DIR, exist_ok=True)
+        zip_path = os.path.join(self.EMBED_DIR, "python_embed.zip")
+        urllib.request.urlretrieve(self.EMBED_PYTHON_ZIP_URL, zip_path)
 
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(EMBED_DIR)
+            zip_ref.extractall(self.EMBED_DIR)
         os.remove(zip_path)
 
         print("[installer] Configuring embedded Python...")
         # update _pth file
-        with open(EMBED_PTH, "w", encoding="utf-8") as f:
+        with open(self.EMBED_PTH, "w", encoding="utf-8") as f:
             f.write(
-                f"{EMBED_ZIP}\n"
+                f"{self.EMBED_ZIP}\n"
                 ".\n"
                 "Lib\n"
                 "Lib\\site-packages\n"
@@ -121,26 +145,30 @@ class ProjectManager:
         # Install PyInstaller
         print("[installer] Installing pip in embedded Python...")
         url = "https://bootstrap.pypa.io/get-pip.py"
-        save_path = os.path.join(EMBED_DIR, "get-pip.py")
+        save_path = os.path.join(self.EMBED_DIR, "get-pip.py")
         urllib.request.urlretrieve(url, save_path)
-        subprocess.run([EMBED_EXE, save_path], check=True)
 
-        print("[installer] Upgrade pip in embedded Python...")
-        subprocess.run([EMBED_EXE, "-m", "pip", "install", "--upgrade", "pip"], check=True)
-    
-        print("[installer] Installing PyInstaller in embedded Python...")
-        subprocess.run([EMBED_EXE, "-m", "pip", "install", "pyinstaller"], check=True)
+        self.run_process( console, [self.EMBED_EXE, save_path], "pip install")
+        self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "--upgrade", "pip"], "pip upgrade")
+        #self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "pyinstaller"], "pyinstaller install")
+
+        print("[installer] Embedded Python setup complete.")
+
+    def ensure_embedded_python_requirements( self, console : Console ):
+        self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "-r", "requirements.txt"], "ensure dependencies")
+        self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "--only-binary=:all:", "imgui"], "pyimgui")
 
     def run_pyinstaller( self, console : Console ):
         if getattr(sys, "frozen", False):
-            self.ensure_embedded_python() # setup embedded python
+            # for packaged version, install embedded python.
+            self.ensure_embedded_python( console )
+            self.ensure_embedded_python_requirements( console)
 
             python_exe = os.path.join(os.getcwd(), "python", "python.exe")
             os.environ["EE_CORE_DIR"] = os.path.join(sys._MEIPASS, "core")
         else:
             python_exe = sys.executable
             os.environ["EE_CORE_DIR"] = os.getcwd()
-
 
         cmd = [
             python_exe, "-m", "PyInstaller",
@@ -151,39 +179,12 @@ class ProjectManager:
         ]
         #            "--log-level=DEBUG"
 
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=1,
-            universal_newlines=True
-        )
-
-        for line in process.stdout:
-            line = line.strip()
-            if not line:
-                continue
-
-            if "ERROR" in line:
-                console.addEntry(console.ENTRY_TYPE_ERROR, [], line)
-            elif "WARNING" in line or "WARN" in line:
-                console.addEntry(console.ENTRY_TYPE_WARNING, [], line)
-            else:
-                console.addEntry(console.ENTRY_TYPE_NOTE, [], line)
-
-        process.wait()
+        self.run_process( console, cmd, "PyInstaller")
 
         console.addEntry(console.ENTRY_TYPE_NOTE, [], "Cleanup temporary file")
         for src in ["temp", "build"]:
             if os.path.exists(src):
                 shutil.rmtree(src)
-                
-
-        if process.returncode == 0:
-            console.addEntry(console.ENTRY_TYPE_NOTE, [], "Export complete.")
-        else:
-            console.addEntry(console.ENTRY_TYPE_ERROR, [], f"PyInstaller failed with code {process.returncode}")
-
 
     def export( self ):
         self.console.addEntry(self.console.ENTRY_TYPE_NOTE, [], "Exporting project...")
