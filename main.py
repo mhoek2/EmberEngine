@@ -294,4 +294,9 @@ if __name__ == '__main__':
     if getattr(sys, "frozen", False):
         print(sys._MEIPASS)
 
+    # start runtime for exported apps
+    if app.settings.is_exported:
+        app.settings.game_start = True
+        app.settings.game_running = True 
+
     app.run()
