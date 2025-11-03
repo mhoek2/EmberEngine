@@ -335,7 +335,7 @@
 Based on what camera is active, either from scene or editor</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -453,7 +453,7 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 <dd><p>Console manager</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -505,7 +505,7 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 <dd><p>Cubemap loader class, which loads cubemaps and sets up IBL requirements like BRDF lut</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -668,7 +668,7 @@ Should be generated, but staticly loaded for now</p>
 Also create the defaul, white, black and PBR textures</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -762,6 +762,11 @@ Find from cache is not implemented yet.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.imgui.ImGui.draw_environment">
 <span class="sig-name descname"><span class="pre">draw_environment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_environment" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_exported_viewport">
+<span class="sig-name descname"><span class="pre">draw_exported_viewport</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_exported_viewport" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -978,7 +983,7 @@ Find from cache is not implemented yet.</p>
 <dd><p>Material loader for models</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1115,7 +1120,7 @@ Find from cache is not implemented yet.</p>
 required to render.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1229,63 +1234,6 @@ size or material id</p>
 
 </dd></dl>
 
-<dl class="py class" id="module-modules.project">
-<dt class="sig sig-object py" id="modules.project.ProjectManager">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.project.</span></span><span class="sig-name descname"><span class="pre">ProjectManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py class">
-<dt class="sig sig-object py" id="modules.project.ProjectManager.Project">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Project</span></span><a class="headerlink" href="#modules.project.ProjectManager.Project" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
-<p>Typedef for a scene file</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.project.ProjectManager.Project.default_scene">
-<span class="sig-name descname"><span class="pre">default_scene</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.project.ProjectManager.Project.default_scene" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.project.ProjectManager.Project.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.project.ProjectManager.Project.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.project.ProjectManager.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.project.ProjectManager.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Project manager</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.project.ProjectManager.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager.load" title="Link to this definition">#</a></dt>
-<dd><p>Load and decode JSON from the project config file</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.project.ProjectManager.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager.save" title="Link to this definition">#</a></dt>
-<dd><p>Save the project settings</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.project.ProjectManager.setDefaultScene">
-<span class="sig-name descname"><span class="pre">setDefaultScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.project.ProjectManager.setDefaultScene" title="Link to this definition">#</a></dt>
-<dd><p>Set default/startup scene of the project</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>scene_uid</strong> (<em>str</em>) – The scene UID of the to be default scene</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class" id="module-modules.renderer">
 <dt class="sig sig-object py" id="modules.renderer.Renderer">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.renderer.</span></span><span class="sig-name descname"><span class="pre">Renderer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer" title="Link to this definition">#</a></dt>
@@ -1297,7 +1245,7 @@ size or material id</p>
 <dd><p>Renderer backend, creating window instance, openGL, FBO’s, shaders and rendertargets</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1517,7 +1465,7 @@ Toggling visibility and position of the mouse</p>
 <dd><p>scene manager</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1718,6 +1666,12 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <dd><p>Global applictaion settings</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.settings.Settings.is_app_exported">
+<span class="sig-name descname"><span class="pre">is_app_exported</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.settings.Settings.is_app_exported" title="Link to this definition">#</a></dt>
+<dd><p>Wheter the appliction as exported using Ember Engine</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class" id="module-modules.shader">
@@ -1731,7 +1685,7 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>context</strong> (<a class="reference internal" href="main.html#main.EmberEngine" title="main.EmberEngine"><em>EmberEngine</em></a>) – This is the main context of the application</p></li>
+<li><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p></li>
 <li><p><strong>uid</strong> (<em>str</em>) – The unique idenifier of the shader being initialized</p></li>
 </ul>
 </dd>
@@ -1913,6 +1867,7 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_console"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_console()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_console_entry"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_console_entry()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_environment"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_environment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_exported_viewport"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_exported_viewport()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_file_browser"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_file_browser()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_file_browser_item"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_file_browser_item()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_gamestate"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_gamestate()</span></code></a></li>
@@ -1988,18 +1943,6 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.render"><code class="docutils literal notranslate"><span class="pre">Models.render()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager"><code class="docutils literal notranslate"><span class="pre">ProjectManager</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.Project"><code class="docutils literal notranslate"><span class="pre">ProjectManager.Project</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.Project.default_scene"><code class="docutils literal notranslate"><span class="pre">ProjectManager.Project.default_scene</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.Project.name"><code class="docutils literal notranslate"><span class="pre">ProjectManager.Project.name</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.__init__"><code class="docutils literal notranslate"><span class="pre">ProjectManager.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.load"><code class="docutils literal notranslate"><span class="pre">ProjectManager.load()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.save"><code class="docutils literal notranslate"><span class="pre">ProjectManager.save()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.project.ProjectManager.setDefaultScene"><code class="docutils literal notranslate"><span class="pre">ProjectManager.setDefaultScene()</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer"><code class="docutils literal notranslate"><span class="pre">Renderer</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.__init__"><code class="docutils literal notranslate"><span class="pre">Renderer.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.begin_frame"><code class="docutils literal notranslate"><span class="pre">Renderer.begin_frame()</span></code></a></li>
@@ -2052,6 +1995,7 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.settings.Settings"><code class="docutils literal notranslate"><span class="pre">Settings</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.settings.Settings.__init__"><code class="docutils literal notranslate"><span class="pre">Settings.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.settings.Settings.is_app_exported"><code class="docutils literal notranslate"><span class="pre">Settings.is_app_exported()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.shader.Shader"><code class="docutils literal notranslate"><span class="pre">Shader</span></code></a><ul class="nav section-nav flex-column">
