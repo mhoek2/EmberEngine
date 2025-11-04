@@ -20,6 +20,7 @@ from gameObjects.camera import Camera
 
 from pathlib import Path
 import textwrap
+import re
 
 class ImGui( Context ):
     def __init__( self, context ):
@@ -564,53 +565,55 @@ class ImGui( Context ):
     #    imgui.end_combo()
 
     def draw_inspector_scripts( self ):
-        if imgui.tree_node( "Scripts", imgui.TREE_NODE_DEFAULT_OPEN ):
-            assets = Path( self.settings.assets ).resolve()
-            _shift_left = 20.0
-            _region = imgui.get_content_region_available()
-            _region = imgui.Vec2(_region.x + _shift_left, _region.y)
+        if not imgui.tree_node( "Scripts", imgui.TREE_NODE_DEFAULT_OPEN ):
+            return
 
-            i = -1
-            for i, script in enumerate(self.selectedObject.scripts):
-                imgui.push_id(f"draw_script_{str(script['file'])}")
+        assets = Path( self.settings.assets ).resolve()
+        _shift_left = 20.0
+        _region = imgui.get_content_region_available()
+        _region = imgui.Vec2(_region.x + _shift_left, _region.y)
 
-                name = str(script['file'])
+        i = -1
+        for i, script in enumerate(self.selectedObject.scripts):
+            imgui.push_id(f"draw_script_{str(script['file'])}")
 
-                draw_list = imgui.get_window_draw_list() 
-                draw_list.channels_split(2)
-                draw_list.channels_set_current(1)
+            name = str(script['file'])
 
-                p_min = imgui.get_cursor_screen_pos()
-                p_min = imgui.Vec2( (p_min.x-_shift_left), p_min.y)
-                imgui.set_cursor_screen_pos(p_min)
+            draw_list = imgui.get_window_draw_list() 
+            draw_list.channels_split(2)
+            draw_list.channels_set_current(1)
+
+            p_min = imgui.get_cursor_screen_pos()
+            p_min = imgui.Vec2( (p_min.x-_shift_left), p_min.y)
+            imgui.set_cursor_screen_pos(p_min)
                 
-                imgui.begin_group()
+            imgui.begin_group()
 
-                imgui.text(name) # should become the Class name
-                imgui.same_line( _region.x - 15 )
-                if not self.settings.game_running and imgui.button("x"):
-                    self.selectedObject.removeScript( script['file'] )
+            imgui.text(name) # should become the Class name
+            imgui.same_line( _region.x - 15 )
+            if not self.settings.game_running and imgui.button("x"):
+                self.selectedObject.removeScript( script['file'] )
 
-                #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+            #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
 
-                imgui.end_group()
-                _group_height = imgui.get_item_rect_size().y
+            imgui.end_group()
+            _group_height = imgui.get_item_rect_size().y
 
-                # background rect
-                _header_height = 20
-                p_max = imgui.Vec2( p_min.x + _region.x, p_min.y + _group_height)
+            # background rect
+            _header_height = 20
+            p_max = imgui.Vec2( p_min.x + _region.x, p_min.y + _group_height)
 
-                draw_list.channels_set_current(0)
-                draw_list.add_rect_filled(p_min.x, p_min.y, p_max.x, (p_min.y + _header_height), imgui.get_color_u32_rgba(1, 1, 1, 0.2))
-                draw_list.add_rect_filled(p_min.x, p_min.y + _header_height, p_max.x, p_max.y, imgui.get_color_u32_rgba(1, 1, 1, 0.1))
-                draw_list.channels_merge()
+            draw_list.channels_set_current(0)
+            draw_list.add_rect_filled(p_min.x, p_min.y, p_max.x, (p_min.y + _header_height), imgui.get_color_u32_rgba(1, 1, 1, 0.2))
+            draw_list.add_rect_filled(p_min.x, p_min.y + _header_height, p_max.x, p_max.y, imgui.get_color_u32_rgba(1, 1, 1, 0.1))
+            draw_list.channels_merge()
    
-                imgui.pop_id()
+            imgui.pop_id()
 
-            if i == -1:
-                imgui.text("No scripts attached")
+        if i == -1:
+            imgui.text("No scripts attached")
 
-            imgui.tree_pop()
+        imgui.tree_pop()
 
     def draw_inspector_add_script( self ):
         path = False
@@ -844,6 +847,7 @@ class ImGui( Context ):
             imgui.set_scroll_here_y(1.0)
             self._last_console_count = len(entries)
 
+        imgui.dummy( 0, 15 )
         imgui.end()
 
     def save_scene_modal( self, popup_uid : str, note : str, callback : Callable = None ):
@@ -868,14 +872,53 @@ class ImGui( Context ):
 
             imgui.end_popup()
 
+    def draw_project_settings_export( self, _region ):
+        """Display export settings, eg: name"""
+        changed, project_name = imgui.input_text(
+            label="Name##ProjectName", 
+            value=self.project.meta.get("name"), 
+            buffer_length=400
+        )
+
+        if changed:
+            filtered_name = re.sub(self.settings.executable_format, "", project_name)
+
+            if filtered_name != self.project.meta["name"]:
+                self.project.meta["name"] = filtered_name
+
+    def draw_project_settings_scenes( self, _region ):
+        # keep updating the scenes List?
+        # or just on open?
+        self.scene.getScenes()
+
+        for scene in self.scene.scenes:
+            scene_uid : str = scene["uid"]
+            imgui.push_id( f"scne_{scene_uid}" )
+
+            imgui.text(scene["name"])
+
+            if scene["uid"] == self.project.meta["default_scene"]:
+                imgui.same_line( _region.x - 175 )
+                imgui.text("default")
+
+            imgui.same_line( _region.x - 115 )
+            if imgui.button( "Load" ):
+                self.scene.clearEditorScene()
+                self.scene.loadScene( scene["uid"] )
+
+            if scene_uid != self.settings.default_scene.stem:
+                imgui.same_line( _region.x - 75 )
+
+                if imgui.button( "Set default" ):
+                    self.project.setDefaultScene( scene["uid"] )
+
+            imgui.separator()
+            imgui.pop_id()
+
     def draw_project_settings_modal( self ):
         if imgui.begin_popup_modal(
             title="Project Settings", visible=None, flags=imgui.WINDOW_NO_RESIZE,
         )[0]:
-            # keep updating the scenes List?
-            # or just on open?
-            self.scene.getScenes()
-
             imgui.set_window_size(600, 400)  # Example: width=4
 
             imgui.same_line(imgui.get_window_width() - 30) 
@@ -885,29 +928,9 @@ class ImGui( Context ):
             _region = imgui.get_content_region_available()
             pos = imgui.get_cursor_screen_pos()
 
-            for scene in self.scene.scenes:
-                scene_uid : str = scene["uid"]
-                imgui.push_id( f"scne_{scene_uid}" )
+            self.draw_project_settings_export( _region )
 
-                imgui.text(scene["name"])
-                print(self.project.meta["default_scene"])
-                if scene["uid"] == self.project.meta["default_scene"]:
-                    imgui.same_line( _region.x - 175 )
-                    imgui.text("default")
-
-                imgui.same_line( _region.x - 115 )
-                if imgui.button( "Load" ):
-                    self.scene.clearEditorScene()
-                    self.scene.loadScene( scene["uid"] )
-
-                if scene_uid != self.settings.default_scene.stem:
-                    imgui.same_line( _region.x - 75 )
-
-                    if imgui.button( "Set default" ):
-                        self.project.setDefaultScene( scene["uid"] )
-
-                imgui.separator()
-                imgui.pop_id()
+            self.draw_project_settings_scenes( _region )
 
             pos = imgui.Vec2( pos.x, pos.y + _region.y - 20)
             imgui.set_cursor_screen_pos(pos)  

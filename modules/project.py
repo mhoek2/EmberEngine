@@ -16,6 +16,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
+import re
 
 from modules.console import Console
 from modules.settings import Settings
@@ -57,12 +58,11 @@ class ProjectManager:
     def save( self ):
         """Save the project settings"""
         meta : ProjectManager.Project = ProjectManager.Project()
-        meta["name"]           = "New project"
-        meta["default_scene"]  = self.meta["default_scene"]
+        meta["name"]           = self.meta.get("name") or self.settings.project_default_name
+        meta["default_scene"]  = self.meta.get("default_scene")
 
         with open(self.project_cfg, 'w') as buffer:
             json.dump(meta, buffer, indent=4)
-
 
         self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saved project" )
 
@@ -94,6 +94,19 @@ class ProjectManager:
     EMBED_PTH       = os.path.join(EMBED_DIR, f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}._pth")
     EMBED_DLL       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.dll"
     EMBED_ZIP       = f"python{EMBED_PYTHON_VERSION[:4].replace('.', '')}.zip"
+
+    def sanitize_executable_filename( self, name: str ) -> str:
+
+        name = re.sub(self.settings.executable_format, "", name) 
+        name = name.strip()
+
+        if not name:
+            name = "export"
+
+        # replace spaces with underscores
+        name = name.replace(" ", "_")
+
+        return name
 
     def run_process( self, console : Console, command, label ):
         """Helper to run a subprocess with live stdout streaming."""
@@ -168,6 +181,9 @@ class ProjectManager:
         self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "--only-binary=:all:", "imgui"], "pyimgui")
 
     def run_pyinstaller( self, console : Console ):
+        # project settings
+        os.environ["EE_EXPORT_EXEC_NAME"] = self.sanitize_executable_filename( self.meta.get("name") );
+
         if getattr(sys, "frozen", False):
             # for packaged version, install embedded python.
             self.ensure_embedded_python( console )

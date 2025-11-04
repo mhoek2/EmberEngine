@@ -8,6 +8,12 @@ import urllib.request
 import zipfile
 
 #
+# Project settings
+#
+EE_EXPORT_EXEC_NAME = os.environ.get("EE_EXPORT_EXEC_NAME", os.getcwd())
+print("Project name:", EE_EXPORT_EXEC_NAME)
+
+#
 # Get the core dir, development is root of git project
 # when frozen/packaged its MEIPASS folder
 #
@@ -63,7 +69,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='EmberEngine',
+    name=EE_EXPORT_EXEC_NAME,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
