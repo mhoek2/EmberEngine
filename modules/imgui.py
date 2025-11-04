@@ -874,6 +874,8 @@ class ImGui( Context ):
 
     def draw_project_settings_export( self, _region ):
         """Display export settings, eg: name"""
+
+        # project name
         changed, project_name = imgui.input_text(
             label="Name##ProjectName", 
             value=self.project.meta.get("name"), 
@@ -885,6 +887,15 @@ class ImGui( Context ):
 
             if filtered_name != self.project.meta["name"]:
                 self.project.meta["name"] = filtered_name
+
+        # export using pyinstaller --clean flag
+        _, self.project.meta["export_clean"] = imgui.checkbox( 
+            "Clean on export##export_clean", self.project.meta["export_clean"] )
+       
+       # export using pyinstaller console enable
+        _, self.project.meta["export_debug"] = imgui.checkbox( 
+            "Debug export##export_debug", self.project.meta["export_debug"] )
+
 
     def draw_project_settings_scenes( self, _region ):
         # keep updating the scenes List?
@@ -937,6 +948,12 @@ class ImGui( Context ):
 
             if imgui.button( "Save Project" ):
                 self.project.save()
+
+            imgui.same_line()
+
+            if imgui.button( "Export Project" ):
+                self.project.save()
+                self.project.export()
 
             imgui.end_popup()
 

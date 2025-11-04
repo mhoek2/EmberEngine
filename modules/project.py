@@ -31,6 +31,8 @@ class ProjectManager:
         """Typedef for a scene file"""
         name            : str
         default_scene   : str
+        export_clean    : bool
+        export_debug    : bool
 
     def __init__( self, context ) -> None:
         """Project manager
@@ -60,6 +62,8 @@ class ProjectManager:
         meta : ProjectManager.Project = ProjectManager.Project()
         meta["name"]           = self.meta.get("name") or self.settings.project_default_name
         meta["default_scene"]  = self.meta.get("default_scene")
+        meta["export_clean"]   = self.meta.get("export_clean")
+        meta["export_debug"]   = self.meta.get("export_debug")
 
         with open(self.project_cfg, 'w') as buffer:
             json.dump(meta, buffer, indent=4)
@@ -71,9 +75,13 @@ class ProjectManager:
         try:
             with open(self.project_cfg, 'r') as buffer:
                 meta : ProjectManager.Project = json.load(buffer)
-                self.meta["name"] = meta["name"]
-                self.meta["default_scene"] = meta.get("default_scene", "engine_default")
-                print(self.meta)
+                self.meta["name"]           = meta.get("name", self.settings.project_default_name)
+                self.meta["default_scene"]  = meta.get("default_scene", "engine_default")
+                self.meta["export_clean"]   = meta.get("export_clean", self.settings.export_clean)
+                self.meta["export_debug"]   = meta.get("export_debug", self.settings.export_debug)
+                
+                print("------------ loaded project configuration ------------")
+                print( self.meta )
 
         except Exception as e:
             print( e )
@@ -183,6 +191,7 @@ class ProjectManager:
     def run_pyinstaller( self, console : Console ):
         # project settings
         os.environ["EE_EXPORT_EXEC_NAME"] = self.sanitize_executable_filename( self.meta.get("name") );
+        os.environ["EE_EXPORT_DEBUG_MODE"] = "1" if self.meta.get("export_debug") else "0"
 
         if getattr(sys, "frozen", False):
             # for packaged version, install embedded python.
@@ -199,10 +208,12 @@ class ProjectManager:
             python_exe, "-m", "PyInstaller",
             "export.spec",
             "--noconfirm",
-            "--clean",
             "--distpath", "export",
         ]
         #            "--log-level=DEBUG"
+
+        if self.meta.get("export_clean"):
+            cmd.append("--clean")
 
         self.run_process( console, cmd, "PyInstaller")
 

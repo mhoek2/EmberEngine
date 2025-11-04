@@ -37,9 +37,11 @@ class Settings:
         self.grid_spacing = 0.5
 
         # exported application
+        self.is_exported            = self.is_app_exported()
         self.project_default_name   = "New Project"
         self.executable_format      = r"[^a-zA-Z0-9 _-]"
-        self.is_exported            = self.is_app_exported()
+        self.export_clean           = True
+        self.export_debug           = False
 
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""
