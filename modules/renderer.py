@@ -15,6 +15,7 @@ import numpy as np
 import imgui
 
 from modules.settings import Settings
+from modules.project import ProjectManager
 from modules.shader import Shader
 from modules.camera import Camera
 from modules.pyimgui_renderer import PygameRenderer
@@ -33,6 +34,7 @@ class Renderer:
         self.context    : 'EmberEngine' = context
         self.camera     : Camera = context.camera
         self.settings   : Settings = context.settings
+        self.project    : ProjectManager = context.project
 
         # window
         self.display_size : Vector2 = Vector2( 1500, 1000 )
@@ -128,6 +130,9 @@ class Renderer:
         if err != GL_NO_ERROR:
             print(  f"OpenGL Error: {err}" )
 
+    def get_window_title(self) -> str:
+        return self.project.meta.get("name") if self.settings.is_exported else self.settings.application_name
+    
     def create_instance( self ) -> None:
         """Create the window and instance with openGL"""
         pygame.init()
@@ -144,7 +149,8 @@ class Renderer:
         self.display_size -= Vector2( 0.0, 60.0 );
 
         self.screen = pygame.display.set_mode( self.display_size, RESIZABLE | DOUBLEBUF | OPENGL )
-        pygame.display.set_caption( "EmberEngine 3D" )
+        
+        pygame.display.set_caption( self.get_window_title() )
 
         if self.settings.msaaEnabled:
             glEnable( GL_MULTISAMPLE )

@@ -15,6 +15,8 @@ import numpy as np
 import re
 import sys
 
+from modules.settings import Settings
+
 from modules.project import ProjectManager
 from modules.scene import SceneManager
 from modules.console import Console
@@ -22,7 +24,6 @@ from modules.imgui import ImGui
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
 from modules.camera import Camera as CameraHandler
-from modules.settings import Settings
 from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
