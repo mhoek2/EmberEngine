@@ -410,6 +410,8 @@ class Renderer:
         mouse_moving = False
 
         for event in self.context.events.get():
+            self.render_backend.process_event(event)
+
             if event.type == pygame.QUIT:
                 self.running = False
 
@@ -430,12 +432,27 @@ class Renderer:
                         self.paused = not self.paused
                         pygame.mouse.set_pos( self.screen_center ) 
 
+                # handle custom events
+                if (event.mod & pygame.KMOD_CTRL):
+                    if event.key == pygame.K_s:
+                        self.context.imgui_ce.add("save")
+
+                    if event.key == pygame.K_c:
+                        self.context.imgui_ce.add("copy")
+
+                    if event.key == pygame.K_v:
+                        self.context.imgui_ce.add("paste")
+
+                    if event.key == pygame.K_z:
+                        self.context.imgui_ce.add("undo")
+
+                    if event.key == pygame.K_y:
+                        self.context.imgui_ce.add("redo")
+
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
                     mouse_moving = True
-
-            self.render_backend.process_event(event)
 
         if not self.ImGuiInput and not mouse_moving:
             pygame.mouse.set_pos( self.screen_center )

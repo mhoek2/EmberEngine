@@ -24,19 +24,30 @@ from pathlib import Path
 import textwrap
 import re
 
-class ImGuiHelpers:
-    @staticmethod
-    def color_edit3_safe(label, *color):
-        """
-        Safe wrapper for imgui.color_edit3 that accepts arbitrary numbers
-        and ensures all elements are floats. Returns (changed, new_color).
-        
-        Usage:
-            changed, new_color = MyImGuiHelpers.color_edit3_safe("Grid color", *grid_color)
-        """
-        #color = [float(c) for c in color]
-        #changed, new_color = imgui.color_edit3(label, color)
-        #return changed, new_color
+class ImGuiCustomEvent( Context ):
+    def __init__(self):
+        self._queue : List = []
+
+    def add(self, name: str, data=None):
+        self._queue.append((name, data))
+
+    def has(self, name: str) -> bool:
+        """Return True if queue has given entry, Fales if not"""
+        return any(event[0] == name for event in self._queue)
+
+    def clear(self, name: str = None):
+        """Clear given entry by rebuilding and excluding, no argument will clear entire queue"""
+        if name is None: 
+            self._queue.clear()
+
+        else:
+            self._queue = [e for e in self._queue if e[0] != name]
+
+    def handle(self, name: str, func):
+        """Call the given function if the event exists, then clear it automatically."""
+        if self.has(name):
+            func()
+            self.clear(name)
 
 class ImGui( Context ):
     def __init__( self, context ):
@@ -121,14 +132,13 @@ class ImGui( Context ):
 
         self.text_editor.render("Code")
 
-        # save logic
+        # handle events
         if imgui.is_window_focused(imgui.FocusedFlags_.root_and_child_windows):
-            keypress = self.context.key.get_pressed()
-             
-            if keypress[pygame.K_LCTRL]:
-                for event in self.context.events.get():
-                    if event.type == pygame.KEYDOWN and event.key == pygame.K_s:
-                        self.save_text_editor()
+            self.context.imgui_ce.handle("save", self.save_text_editor )
+            self.context.imgui_ce.handle("copy", self.text_editor.copy )
+            self.context.imgui_ce.handle("paste", self.text_editor.paste )
+            self.context.imgui_ce.handle("undo", self.text_editor.undo )
+            self.context.imgui_ce.handle("redo", self.text_editor.redo )
 
         imgui.end()
 
