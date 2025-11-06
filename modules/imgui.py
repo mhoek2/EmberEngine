@@ -80,67 +80,70 @@ class ImGui( Context ):
     #
     # text editor
     #
-    def reset_text_editor( self ) -> None:
-        """Completely clears the text editor and resets its state."""
-        self.text_editor.set_text("")
-        self.text_editor.set_cursor_position(0, 0)
-        self.text_editor.clear_selections()
-        self.text_editor.clear_extra_cursors()
+    class CTE( Context ):
+        def __init__( self, context ):
+            super().__init__( context )
 
-        self.text_editor_current_file = None
+            #with open(__file__, encoding="utf8") as f:
+            #    this_file_code = f.read()
 
-    def save_text_editor( self ) -> None:
-        text = self.text_editor.get_text()
-
-        if self.text_editor_current_file:
-            with open(self.text_editor_current_file, "w", encoding="utf8") as f:
-             f.write(text)
-            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saved to {self.text_editor_current_file}")
+            self.text_editor : imgui_cte.TextEditor = imgui_cte.TextEditor()
+            self.text_editor.set_text("")
+            self.text_editor.set_palette(imgui_cte.TextEditor.PaletteId.dark)
+            self.text_editor.set_language_definition(imgui_cte.TextEditor.LanguageDefinitionId.python)
         
-        else:
-            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], "No file selected yet.")
+            self.text_editor_current_file : Path = None
 
-    def open_file_in_text_editor( self, path : Path ) -> None:
-        """Opens a file and make its content the current text of the text editor"""
-        buffer = None
+        def reset( self ) -> None:
+            """Completely clears the text editor and resets its state."""
+            self.text_editor.set_text("")
+            self.text_editor.set_cursor_position(0, 0)
+            self.text_editor.clear_selections()
+            self.text_editor.clear_extra_cursors()
 
-        if not path.is_file():
-            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], f"File: {path} does not exist!" )
-            return
+            self.text_editor_current_file = None
 
-        with open(path, encoding="utf8") as f:
-            buffer = f.read()
+        def save( self ) -> None:
+            text = self.text_editor.get_text()
 
-        self.reset_text_editor();
-        self.text_editor.set_text( buffer )
-        self.text_editor_current_file = path
-
-    def load_text_editor( self ) -> None:
-        #with open(__file__, encoding="utf8") as f:
-        #    this_file_code = f.read()
-
-        self.text_editor : imgui_cte.TextEditor = imgui_cte.TextEditor()
-        self.text_editor.set_text("")
-        self.text_editor.set_palette(imgui_cte.TextEditor.PaletteId.dark)
-        self.text_editor.set_language_definition(imgui_cte.TextEditor.LanguageDefinitionId.python)
+            if self.text_editor_current_file:
+                with open(self.text_editor_current_file, "w", encoding="utf8") as f:
+                 f.write(text)
+                self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saved to {self.text_editor_current_file}")
         
-        self.text_editor_current_file : Path = None
+            else:
+                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], "No file selected yet.")
 
-    def draw_text_editor( self ) -> None: 
-        """handles ImGuiColorTextEdit rendering and logic"""
-        imgui.begin( "IDE" )
+        def open_file( self, path : Path ) -> None:
+            """Opens a file and make its content the current text of the text editor"""
+            buffer = None
 
-        self.text_editor.render("Code")
+            if not path.is_file():
+                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], f"File: {path} does not exist!" )
+                return
 
-        # handle events
-        if imgui.is_window_focused(imgui.FocusedFlags_.root_and_child_windows):
-            self.context.imgui_ce.handle("save", self.save_text_editor )
-            self.context.imgui_ce.handle("copy", self.text_editor.copy )
-            self.context.imgui_ce.handle("paste", self.text_editor.paste )
-            self.context.imgui_ce.handle("undo", self.text_editor.undo )
-            self.context.imgui_ce.handle("redo", self.text_editor.redo )
+            with open(path, encoding="utf8") as f:
+                buffer = f.read()
 
-        imgui.end()
+            self.reset();
+            self.text_editor.set_text( buffer )
+            self.text_editor_current_file = path
+
+        def render( self ) -> None: 
+            """handles ImGuiColorTextEdit rendering and logic"""
+            imgui.begin( "IDE" )
+
+            self.text_editor.render("Code")
+
+            # handle events
+            if imgui.is_window_focused(imgui.FocusedFlags_.root_and_child_windows):
+                self.context.imgui_ce.handle("save", self.save )
+                self.context.imgui_ce.handle("copy", self.text_editor.copy )
+                self.context.imgui_ce.handle("paste", self.text_editor.paste )
+                self.context.imgui_ce.handle("undo", self.text_editor.undo )
+                self.context.imgui_ce.handle("redo", self.text_editor.redo )
+
+            imgui.end()
 
     def load_gui_icons( self ) -> None:
         """Load icons from game assets gui folder"""
@@ -167,7 +170,9 @@ class ImGui( Context ):
 
         self.file_browser_init()
         self.load_gui_icons()
-        self.load_text_editor()
+
+        # user inferface modules
+        self.cte        : ImGui.CTE = self.CTE( self.context )
 
         self.initialized = True
 
@@ -711,7 +716,7 @@ class ImGui( Context ):
 
             imgui.same_line( _region.x - 35 )
             if not self.settings.game_running and imgui.button("E"):
-                self.open_file_in_text_editor( script['file'] )
+                self.cte.open_file( script['file'] )
 
             #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
 
@@ -912,6 +917,9 @@ class ImGui( Context ):
         imgui.dummy( imgui.ImVec2(0, 50) )
         imgui.end()
        
+    #
+    # Console
+    #
     def draw_console_entry( self, i, entry : Console.Entry ):
         imgui.push_id( f"exception_{i}" )
    
@@ -986,6 +994,9 @@ class ImGui( Context ):
 
             imgui.end_popup()
 
+    #
+    # Project
+    #
     def draw_project_settings_export( self, _region ):
         """Display export settings, eg: name"""
 
@@ -1005,7 +1016,6 @@ class ImGui( Context ):
        # export using pyinstaller console enable
         _, self.project.meta["export_debug"] = imgui.checkbox( 
             "Debug export##export_debug", self.project.meta["export_debug"] )
-
 
     def draw_project_settings_scenes( self, _region ):
         # keep updating the scenes List?
@@ -1102,7 +1112,8 @@ class ImGui( Context ):
             self.draw_inspector()
             self.draw_environment()
             self.draw_console()
-            self.draw_text_editor()
+
+            self.cte.render()
 
             # popups
             self.save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
