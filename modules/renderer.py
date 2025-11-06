@@ -7,18 +7,17 @@ from pyrr import matrix44, Vector3
 import pygame
 from pygame.locals import *
 
+from imgui_bundle.python_backends.pygame_backend import imgui, PygameRenderer
+
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 import numpy as np
 
-import imgui
-
 from modules.settings import Settings
 from modules.project import ProjectManager
 from modules.shader import Shader
 from modules.camera import Camera
-from modules.pyimgui_renderer import PygameRenderer
 
 if TYPE_CHECKING:
     from main import EmberEngine
@@ -37,20 +36,21 @@ class Renderer:
         self.project    : ProjectManager = context.project
 
         # window
-        self.display_size : Vector2 = Vector2( 1500, 1000 )
-        self.viewport_size : Vector2 = Vector2( 600, 800 )
+        self.display_size : imgui.ImVec2 = imgui.ImVec2( 1500, 1000 )
+        self.viewport_size : imgui.ImVec2 = imgui.ImVec2( 600, 800 )
         self.create_instance()
 
         # imgui
         imgui.create_context()
-        imgui.get_io().display_size = self.display_size
+        io = imgui.get_io()
+        io.display_size = imgui.ImVec2(self.display_size.x, self.display_size.y)
 
         # exported apps do not use imgui docking
         if not self.settings.is_exported:
-            imgui.get_io().config_flags |= imgui.CONFIG_DOCKING_ENABLE
-            imgui.get_io().config_flags |= imgui.CONFIG_VIEWPORTS_ENABLE
+            io.config_flags |= imgui.ConfigFlags_.docking_enable
+            io.config_flags |= imgui.ConfigFlags_.viewports_enable
 
-        self.imgui_renderer = PygameRenderer()
+        self.render_backend = PygameRenderer()
 
         self.paused = False
         self.running = True
@@ -136,28 +136,36 @@ class Renderer:
     def create_instance( self ) -> None:
         """Create the window and instance with openGL"""
         pygame.init()
+        pygame.display.set_caption( self.get_window_title() )
 
         gl_version = (3, 3)
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, gl_version[0])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
 
+        if self.settings.msaaEnabled:
+            pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
+            pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLESAMPLES, 4)
+
         display = pygame.display.Info()
-        self.display_size = Vector2(display.current_w, display.current_h)
+        self.display_size = imgui.ImVec2(display.current_w, display.current_h)
 
         # this is a bit of a hack to get windowed fullscreen?
-        self.display_size -= Vector2( 0.0, 60.0 );
+        self.display_size -= imgui.ImVec2( 0.0, 80.0 );
 
         self.screen = pygame.display.set_mode( self.display_size, RESIZABLE | DOUBLEBUF | OPENGL )
         
-        pygame.display.set_caption( self.get_window_title() )
+        # frozen-exported set fullscreen here ..
+        #if self.settings.is_exported:
+            #self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            #pygame.display.toggle_fullscreen()
 
         if self.settings.msaaEnabled:
             glEnable( GL_MULTISAMPLE )
      
     def shutdown( self ) -> None:
         """Quit the application"""
-        self.imgui_renderer.shutdown()
+        self.render_backend.shutdown()
         pygame.quit()
 
     def create_screen_vao( self ):
@@ -402,6 +410,8 @@ class Renderer:
         mouse_moving = False
 
         for event in self.context.events.get():
+            self.render_backend.process_event(event)
+
             if event.type == pygame.QUIT:
                 self.running = False
 
@@ -422,12 +432,27 @@ class Renderer:
                         self.paused = not self.paused
                         pygame.mouse.set_pos( self.screen_center ) 
 
+                # handle custom events
+                if (event.mod & pygame.KMOD_CTRL):
+                    if event.key == pygame.K_s:
+                        self.context.imgui_ce.add("save")
+
+                    if event.key == pygame.K_c:
+                        self.context.imgui_ce.add("copy")
+
+                    if event.key == pygame.K_v:
+                        self.context.imgui_ce.add("paste")
+
+                    if event.key == pygame.K_z:
+                        self.context.imgui_ce.add("undo")
+
+                    if event.key == pygame.K_y:
+                        self.context.imgui_ce.add("redo")
+
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
                     mouse_moving = True
-
-            self.imgui_renderer.process_event(event)
 
         if not self.ImGuiInput and not mouse_moving:
             pygame.mouse.set_pos( self.screen_center )
@@ -472,7 +497,7 @@ class Renderer:
    
         # render imgui buffer
         imgui.render()
-        self.imgui_renderer.render( imgui.get_draw_data() )
+        self.render_backend.render( imgui.get_draw_data() )
 
         self.check_opengl_error()
 

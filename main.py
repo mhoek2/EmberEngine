@@ -20,7 +20,7 @@ from modules.settings import Settings
 from modules.project import ProjectManager
 from modules.scene import SceneManager
 from modules.console import Console
-from modules.imgui import ImGui
+from modules.imgui import ImGui, ImGuiCustomEvent
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
 from modules.camera import Camera as CameraHandler
@@ -48,6 +48,7 @@ class EmberEngine:
         self.events     = pygame.event
         self.key        = pygame.key
         self.mouse      = pygame.mouse
+        self.imgui_ce   : ImGuiCustomEvent = ImGuiCustomEvent()
 
         self.console    : Console = Console(self)
         self.project    : ProjectManager = ProjectManager(self)

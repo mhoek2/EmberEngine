@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - beta
+      - text-editor
   pull_request:
     branches:
       - main
@@ -33,10 +34,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install pyinstaller
-        run: |
-          pip install -U pyinstaller
-
       - name: Get latest Assimp release (v6.0.2, Windows x64)
         run: |
           echo "Get prebuilt Assimp 6.0.2 (Windows x64)..."
@@ -46,12 +43,6 @@ jobs:
           mkdir -Force assimp
           copy assimp-temp\Release\assimp-vc143-mt.dll assimp\assimp.dll
           echo "Assimp DLL ready at assimp\assimp.dll"
-
-      - name: Install pyimgui (docking branch)
-        run: |
-          echo "Installing pyimgui (docking branch)..."
-          pip uninstall -y imgui || echo "imgui not installed"
-          pip install "git+https://github.com/pyimgui/pyimgui.git@docking#egg=imgui"
 
       - name: Build executable
         run: |

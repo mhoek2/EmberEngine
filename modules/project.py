@@ -184,9 +184,9 @@ class ProjectManager:
 
         print("[installer] Embedded Python setup complete.")
 
-    def ensure_embedded_python_requirements( self, console : Console ):
+    def ensure_embedded_python_requirements( self, console : Console ) -> None:
+        """Installs python requirements needed to package the application"""
         self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "-r", "requirements.txt"], "ensure dependencies")
-        self.run_process( console, [self.EMBED_EXE, "-m", "pip", "install", "--only-binary=:all:", "imgui"], "pyimgui")
 
     def run_pyinstaller( self, console : Console ):
         # project settings
