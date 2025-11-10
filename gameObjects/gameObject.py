@@ -225,8 +225,6 @@ class GameObject( Context ):
         self._translate = self.vectorInterface( translate, self._update_physics_body )
         self._rotation  = self.vectorInterface( rotation, self._update_physics_body )
 
-        print(type(self._translate), id(self._translate))
-
         self.scale      = scale
         self.mass       = mass
 
@@ -253,9 +251,25 @@ class GameObject( Context ):
                 self._callback()
 
         def __setitem__(self, key, value):
-            print("(gui-script)");
+            """
+            !important
+            only update physics when value changed (gui or script)
+            this is detected by the data type specifier,
+            physics engine : tuple
+            gui or scripts : list, int, float
+            """
+            update_physics : bool = isinstance(value, (list, int, float));
+
+            if isinstance(key, slice):
+                if not isinstance(value, type(self)):
+                    value = type(self)( value, self._callback )
+                    #print("(physics engine)");
+
             super().__setitem__(key, value)
-            self._trigger()
+
+            if update_physics:
+                self._trigger()
+                #print("(gui-script)");
 
         def __iadd__(self, other):
             result = super().__iadd__(other)
@@ -267,56 +281,21 @@ class GameObject( Context ):
             self._trigger()
             return result
 
-        def set(self, data):
-            test : bool = False;
-            if isinstance(data, list):
-                test = True
-
-            if not isinstance(data, type(self)):
-                data = type(self)( data, self._callback )
-                print("(physics engine)");
-
-            super().__setitem__(slice(None), data)
-
-            if test:
-                self._trigger()
-                print("(gui-script)");
-
     @property
     def translate(self):
         return self._translate
     
     @translate.setter
-    def translate(self, value):
-        """
-        !important
-        only update physics when value changed (gui or script)
-        this is detected by the data type specifier in vectorInterface.set(),
-        physics engine : tuple
-        gui or scripts : list.
-        """
-        #if not isinstance(value, self.vectorInterface):
-        #    value = self.vectorInterface( value, self._update_physics_body )
-
-        self._translate.set( value )
-
-        if not isinstance(value, tuple):
-            self._translate._trigger()
+    def translate(self, data):
+        self._translate.__setitem__(slice(None), data)
 
     @property
     def rotation(self):
         return self._rotation
     
     @rotation.setter
-    def rotation(self, value):
-        """
-        !important
-        only update physics when value changed (gui or script)
-        this is detected by the data type specifier,
-        physics engine : tuple
-        gui or scripts : list.
-        """
-        self._rotation.set( value )
+    def rotation(self, data):
+        self._rotation.__setitem__(slice(None), data)
 
     def _update_physics_body(self):
         """
@@ -337,12 +316,12 @@ class GameObject( Context ):
         """Save a snapshot of the full GameObject state."""
 
         self._state_snapshot = {
-            "translate": list(self.translate),
-            "rotation": list(self.rotation),
-            "scale": copy.deepcopy(self.scale),
-            "visible": self.visible,
-            "material": self.material,
-            "scripts": copy.deepcopy(self.scripts),
+            "translate" : list(self.translate),
+            "rotation"  : list(self.rotation),
+            "scale"     : copy.deepcopy(self.scale),
+            "visible"   : self.visible,
+            "material"  : self.material,
+            "scripts"   : copy.deepcopy(self.scripts),
         }
         print("here")
 
@@ -352,20 +331,12 @@ class GameObject( Context ):
             return
 
         state = self._state_snapshot
-        self.translate.set( state["translate"] )
-        self.rotation.set( state["rotation"] )
-        self.scale = copy.deepcopy(state["scale"])
-        self.visible = state["visible"]
-        self.material = state["material"]
-        self.scripts = copy.deepcopy(state["scripts"])
-
-        # reset physics
-        #if self.physics_id is not None:
-        #    p.resetBasePositionAndOrientation(
-        #        self.physics_id,
-        #        self.translate,
-        #        p.getQuaternionFromEuler(self.rotation)
-        #    )
+        self.translate  = state["translate"]
+        self.rotation   = state["rotation"]
+        self.scale      = copy.deepcopy(state["scale"])
+        self.visible    = state["visible"]
+        self.material   = state["material"]
+        self.scripts    = copy.deepcopy(state["scripts"])
 
     def _createModelMatrix( self ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
@@ -407,10 +378,10 @@ class GameObject( Context ):
         rotation_quat = p.getEulerFromQuaternion( rot )
 
         #if list(pos) != list(self._translate):
-        self.translate.set( pos )
+        self.translate = pos
 
         #if list(rotation_quat) != list(self.rotation):
-        self.rotation.set( rotation_quat )
+        self.rotation = rotation_quat
 
     def onStart( self ) -> None:
         """Implemented by inherited class"""

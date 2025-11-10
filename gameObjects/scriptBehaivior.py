@@ -18,24 +18,6 @@ class ScriptBehaivior:
         self.mouse      = context.mouse
 
         self.gameObject = gameObject
-        self._translate = self.gameObject._translate
-        self._rotation   = self.gameObject._rotation
+        self.translate  = self.gameObject.translate
+        self.rotation   = self.gameObject.rotation
         self.scale      = self.gameObject.scale
-
-    # translate
-    @property
-    def translate(self):
-        return self._translate
-    
-    @translate.setter
-    def translate(self, value):
-        self._translate.set(value)
-
-    # rotation
-    @property
-    def rotation(self):
-        return self._rotation
-    
-    @rotation.setter
-    def rotation(self, value):
-        self._rotation.set(value)
