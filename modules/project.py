@@ -68,7 +68,7 @@ class ProjectManager:
         with open(self.project_cfg, 'w') as buffer:
             json.dump(meta, buffer, indent=4)
 
-        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saved project" )
+        self.console.log( self.console.Type_.note, [], f"Saved project" )
 
     def load( self ):
         """Load and decode JSON from the project config file"""
@@ -86,7 +86,7 @@ class ProjectManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+            self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
 
 
@@ -131,14 +131,14 @@ class ProjectManager:
             if not line:
                 continue
 
-            console.addEntry(console.ENTRY_TYPE_NOTE, [], line)
+            console.log(console.Type_.note, [], line)
 
         process.wait()
                 
         if process.returncode == 0:
-            console.addEntry(console.ENTRY_TYPE_NOTE, [], f"{label} complete.")
+            console.log(console.Type_.note, [], f"{label} complete.")
         else:
-            console.addEntry(console.ENTRY_TYPE_ERROR, [], f"{label} failed with code {process.returncode}")
+            console.log(console.Type_.error, [], f"{label} failed with code {process.returncode}")
 
     def ensure_embedded_python( self, console : Console ):
         """Download embedded Python and install PyInstaller if not already present."""
@@ -217,13 +217,13 @@ class ProjectManager:
 
         self.run_process( console, cmd, "PyInstaller")
 
-        console.addEntry(console.ENTRY_TYPE_NOTE, [], "Cleanup temporary file")
+        console.log(console.Type_.note, [], "Cleanup temporary file")
         for src in ["temp", "build"]:
             if os.path.exists(src):
                 shutil.rmtree(src)
 
     def export( self ):
-        self.console.addEntry(self.console.ENTRY_TYPE_NOTE, [], "Exporting project...")
+        self.console.log(self.console.Type_.note, [], "Exporting project...")
 
         try:
             thread = threading.Thread(target=self.run_pyinstaller, args=(self.console,), daemon=True)
@@ -231,5 +231,5 @@ class ProjectManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+            self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 

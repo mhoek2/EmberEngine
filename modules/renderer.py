@@ -1,13 +1,15 @@
 from typing import TYPE_CHECKING
 
+import os
 import math
 from OpenGL.arrays import returnPointer
 from pygame.math import Vector2
-from pyrr import matrix44, Vector3
+from pyrr import matrix44
 import pygame
 from pygame.locals import *
 
 from imgui_bundle.python_backends.pygame_backend import imgui, PygameRenderer
+from imgui_bundle import icons_fontawesome_6 as fa
 
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
@@ -49,6 +51,18 @@ class Renderer:
         if not self.settings.is_exported:
             io.config_flags |= imgui.ConfigFlags_.docking_enable
             io.config_flags |= imgui.ConfigFlags_.viewports_enable
+
+        # fonts
+        io.fonts.add_font_default()
+
+        _font_cfg = imgui.ImFontConfig()
+        _font_cfg.merge_mode = True
+        _font_cfg.pixel_snap_h = True
+        _icon_ranges = [fa.ICON_MIN_FA, fa.ICON_MAX_FA, 0]
+        _font_file : str = str(os.path.join(self.settings.engineAssets, "gui/fonts/Font_Awesome_6_Free-Solid-900.otf"))
+        io.fonts.add_font_from_file_ttf(
+            _font_file, 16.0, _font_cfg
+        )
 
         self.render_backend = PygameRenderer()
 
@@ -435,19 +449,19 @@ class Renderer:
                 # handle custom events
                 if (event.mod & pygame.KMOD_CTRL):
                     if event.key == pygame.K_s:
-                        self.context.imgui_ce.add("save")
+                        self.context.cevent.add("save")
 
                     if event.key == pygame.K_c:
-                        self.context.imgui_ce.add("copy")
+                        self.context.cevent.add("copy")
 
                     if event.key == pygame.K_v:
-                        self.context.imgui_ce.add("paste")
+                        self.context.cevent.add("paste")
 
                     if event.key == pygame.K_z:
-                        self.context.imgui_ce.add("undo")
+                        self.context.cevent.add("undo")
 
                     if event.key == pygame.K_y:
-                        self.context.imgui_ce.add("redo")
+                        self.context.cevent.add("redo")
 
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
@@ -485,7 +499,7 @@ class Renderer:
         if self.settings.msaaEnabled:
             self.resolve_multisample_texture()
 
-        self.context.imgui.render()
+        self.context.gui.render()
 
         self.framenum += 1
 

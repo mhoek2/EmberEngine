@@ -36,7 +36,7 @@ class GameObject( Context ):
         """
         relative_path = file.relative_to(self.settings.rootdir)
 
-        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Load script: {relative_path}" )
+        self.console.log( self.console.Type_.note, [], f"Load script: {relative_path}" )
 
         self.scripts.append( { "file": relative_path, "obj": "" } )
 
@@ -97,7 +97,7 @@ class GameObject( Context ):
             file_path = os.path.join(base_path, file_path)
 
         if not os.path.isfile(file_path):
-            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+            self.console.log( self.console.Type_.note, [], 
                 f"[{__func_name__}] Script file not found: {file_path}")
             return
 
@@ -111,7 +111,7 @@ class GameObject( Context ):
         # Load the module from the file path
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         if spec is None or spec.loader is None:
-            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+            self.console.log( self.console.Type_.note, [], 
                 f"[{__func_name__}] Failed to load spec for {file_path}")
             return
 
@@ -127,7 +127,7 @@ class GameObject( Context ):
         _class_name = self.get_class_name_from_script(script["file"])
 
         if not hasattr(module, _class_name):
-            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+            self.console.log( self.console.Type_.note, [], 
                 f"[{__func_name__}] No class named '{_class_name}' found in {file_path}")
             return
 
@@ -138,7 +138,7 @@ class GameObject( Context ):
 
         script["obj"] = ClassPlaceholder(self.context, self)
 
-        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], 
+        self.console.log( self.console.Type_.note, [], 
             f"[{__func_name__}] Loaded script '{_class_name}' from {file_path}")
 
     def onStartScripts( self ):
@@ -149,7 +149,7 @@ class GameObject( Context ):
                 script["obj"].onStart()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
     def onUpdateScripts( self ):
         """Call onUpdate() function in all dynamic scripts attached to this gameObject"""
@@ -158,7 +158,7 @@ class GameObject( Context ):
                 script["obj"].onUpdate()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
     def __init__( self, context, 
                  name = "GameObject",
