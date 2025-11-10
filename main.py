@@ -48,22 +48,22 @@ class EmberEngine:
         self.events     = pygame.event
         self.key        = pygame.key
         self.mouse      = pygame.mouse
-        self.imgui_ce   : CustomEvent = CustomEvent()
+        self.cevent     : CustomEvent = CustomEvent()
 
-        self.console    : Console = Console(self)
-        self.project    : ProjectManager = ProjectManager(self)
-        self.scene      : SceneManager = SceneManager( self )
-        self.camera     : CameraHandler = CameraHandler( self )
-        self.renderer   : Renderer = Renderer( self )
-        self.gui        : UserInterface = UserInterface( self )
+        self.console    : Console           = Console(self)
+        self.project    : ProjectManager    = ProjectManager(self)
+        self.scene      : SceneManager      = SceneManager( self )
+        self.camera     : CameraHandler     = CameraHandler( self )
+        self.renderer   : Renderer          = Renderer( self )
+        self.gui        : UserInterface     = UserInterface( self )
  
         self.gameObjects : List[GameObject] = []
 
-        self.images     : Images = Images( self )
-        self.materials  : Materials = Materials( self )
-        self.models     : Models = Models( self )
-        self.cubemaps   : Cubemap = Cubemap( self )
-        self.skybox     : Skybox = Skybox( self )
+        self.images     : Images            = Images( self )
+        self.materials  : Materials         = Materials( self )
+        self.models     : Models            = Models( self )
+        self.cubemaps   : Cubemap           = Cubemap( self )
+        self.skybox     : Skybox            = Skybox( self )
 
         self.sun = -1
         self.roughnessOverride = -1.0

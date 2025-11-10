@@ -435,19 +435,19 @@ class Renderer:
                 # handle custom events
                 if (event.mod & pygame.KMOD_CTRL):
                     if event.key == pygame.K_s:
-                        self.context.imgui_ce.add("save")
+                        self.context.cevent.add("save")
 
                     if event.key == pygame.K_c:
-                        self.context.imgui_ce.add("copy")
+                        self.context.cevent.add("copy")
 
                     if event.key == pygame.K_v:
-                        self.context.imgui_ce.add("paste")
+                        self.context.cevent.add("paste")
 
                     if event.key == pygame.K_z:
-                        self.context.imgui_ce.add("undo")
+                        self.context.cevent.add("undo")
 
                     if event.key == pygame.K_y:
-                        self.context.imgui_ce.add("redo")
+                        self.context.cevent.add("redo")
 
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:

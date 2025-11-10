@@ -4,7 +4,7 @@ from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 from imgui_bundle import imgui
-from imgui_bundle import imgui_color_text_edit as imgui_cte
+from imgui_bundle import imgui_color_text_edit as ImGuiColorTextEdit
 
 import pygame
 
@@ -80,34 +80,38 @@ class UserInterface( Context ):
     #
     # text editor
     #
-    class CTE( Context ):
+    class TextEditor( Context ):
         def __init__( self, context ):
             super().__init__( context )
 
             #with open(__file__, encoding="utf8") as f:
             #    this_file_code = f.read()
 
-            self.text_editor : imgui_cte.TextEditor = imgui_cte.TextEditor()
-            self.text_editor.set_text("")
-            self.text_editor.set_palette(imgui_cte.TextEditor.PaletteId.dark)
-            self.text_editor.set_language_definition(imgui_cte.TextEditor.LanguageDefinitionId.python)
-        
-            self.text_editor_current_file : Path = None
+            self._current_file : Path = None
+
+            self.ed : ImGuiColorTextEdit.TextEditor = ImGuiColorTextEdit.TextEditor()
+            self.ed.set_text("")
+            self.ed.set_palette(ImGuiColorTextEdit.TextEditor.PaletteId.dark)
+            self.ed.set_language_definition(ImGuiColorTextEdit.TextEditor.LanguageDefinitionId.python)
+  
+        def get_current_file( self ) -> None:
+            """"Returns Path of current file, None if no file selected"""
+            return self._current_file
 
         def reset( self ) -> None:
             """Completely clears the text editor and resets its state."""
-            self.text_editor.set_text("")
-            self.text_editor.set_cursor_position(0, 0)
-            self.text_editor.clear_selections()
+            self.ed.set_text("")
+            self.ed.set_cursor_position(0, 0)
+            self.ed.clear_selections()
             self.text_editor.clear_extra_cursors()
 
-            self.text_editor_current_file = None
+            self._current_file = None
 
         def save( self ) -> None:
-            text = self.text_editor.get_text()
+            text = self.ed.get_text()
 
-            if self.text_editor_current_file:
-                with open(self.text_editor_current_file, "w", encoding="utf8") as f:
+            if self._current_file:
+                with open(self._current_file, "w", encoding="utf8") as f:
                  f.write(text)
                 self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saved to {self.text_editor_current_file}")
         
@@ -126,22 +130,22 @@ class UserInterface( Context ):
                 buffer = f.read()
 
             self.reset();
-            self.text_editor.set_text( buffer )
-            self.text_editor_current_file = path
+            self.ed.set_text( buffer )
+            self.ed = path
 
         def render( self ) -> None: 
             """handles ImGuiColorTextEdit rendering and logic"""
             imgui.begin( "IDE" )
 
-            self.text_editor.render("Code")
+            self.ed.render("Code")
 
             # handle events
             if imgui.is_window_focused(imgui.FocusedFlags_.root_and_child_windows):
-                self.context.imgui_ce.handle("save", self.save )
-                self.context.imgui_ce.handle("copy", self.text_editor.copy )
-                self.context.imgui_ce.handle("paste", self.text_editor.paste )
-                self.context.imgui_ce.handle("undo", self.text_editor.undo )
-                self.context.imgui_ce.handle("redo", self.text_editor.redo )
+                self.context.cevent.handle( "save",   self.save )
+                self.context.cevent.handle( "copy",   self.ed.copy )
+                self.context.cevent.handle( "paste",  self.ed.paste )
+                self.context.cevent.handle( "undo",   self.ed.undo )
+                self.context.cevent.handle( "redo",   self.ed.redo )
 
             imgui.end()
 
@@ -168,11 +172,12 @@ class UserInterface( Context ):
 
         self.scene      : SceneManager = self.context.scene
 
-        self.file_browser_init()
+       # self.file_browser_init()
         self.load_gui_icons()
 
         # user inferface modules
-        self.cte        : ImGui.CTE = self.CTE( self.context )
+        self.asset_browser  : UserInterface.AssetBrowser = self.AssetBrowser( self.context )
+        self.text_editor    : UserInterface.TextEditor = self.TextEditor( self.context )
 
         self.initialized = True
 
@@ -785,7 +790,7 @@ class UserInterface( Context ):
 
     def draw_inspector( self ) -> None:
         imgui.begin( "Inspector" )
-
+  
         if not self.selectedObject:
             imgui.end()
             return
@@ -813,110 +818,116 @@ class UserInterface( Context ):
     #
     # asset explorer
     #
-    def open_file( self, path ) -> None:
-        if path.suffix == ".fbx" or path.suffix == ".obj":
-            game_object_name = path.name.replace(path.suffix, "")
-            self.context.addGameObject( 
-                    Mesh( self.context,
-                    name        = game_object_name,
-                    model_file  = str( path ),
-                    translate   = [ 0, 0, 0 ],
-                    scale       = [ 1, 1, 1 ],
-                    rotation    = [ 0.0, 0.0, 0.0 ]
-            ) )
-        if path.suffix == ".scene":
-            self.scene.clearEditorScene()
-            self.scene.loadScene( path.stem )
+    class AssetBrowser( Context ):
+        def __init__( self, context ):
+            super().__init__( context )
 
-    def file_browser_rootpath( self ) -> Path:
-        return Path( self.settings.assets ).resolve()
+            self._file_browser_dir = self.file_browser_rootpath()
+            self.icon_dim = imgui.ImVec2(75.0, 75.0)  
 
-    def file_browser_init( self ):
-        self._file_browser_dir = self.file_browser_rootpath()
-        self.icon_dim = imgui.ImVec2(75.0, 75.0)
+        def open_file( self, path ) -> None:
+            if path.suffix == ".fbx" or path.suffix == ".obj":
+                game_object_name = path.name.replace(path.suffix, "")
+                self.context.addGameObject( 
+                        Mesh( self.context,
+                        name        = game_object_name,
+                        model_file  = str( path ),
+                        translate   = [ 0, 0, 0 ],
+                        scale       = [ 1, 1, 1 ],
+                        rotation    = [ 0.0, 0.0, 0.0 ]
+                ) )
+            if path.suffix == ".scene":
+                self.scene.clearEditorScene()
+                self.scene.loadScene( path.stem )
 
-    def get_file_browser_item_icon( self, path ) -> None:
-        icon = self.icons['.unknown']
+        def file_browser_rootpath( self ) -> Path:
+            return Path( self.settings.assets ).resolve()
 
-        if path.is_file() and path.suffix in self.icons:
-            icon = self.icons[path.suffix]
+        def get_file_browser_item_icon( self, path ) -> None:
+            _icons = self.context.gui.icons
 
-        if path.is_dir() and ".folder" in self.icons:
-            icon = self.icons['.folder']
+            icon = _icons['.unknown']
 
-        return icon
+            if path.is_file() and path.suffix in _icons:
+                icon = _icons[path.suffix]
 
-    def set_file_browser_path( self, path ) -> None:
-        self._file_browser_dir = path
+            if path.is_dir() and ".folder" in _icons:
+                icon = _icons['.folder']
 
-    def file_browser_go_back( self ) -> None:
-        path = self._file_browser_dir.parent
-        self.set_file_browser_path( path )
+            return icon
 
-    def draw_file_browser_item( self, path ):
-        imgui.push_style_color(imgui.Col_.button,          imgui.ImVec4(1.0, 1.0, 1.0, 0.0) ) 
-        imgui.push_style_color(imgui.Col_.button_hovered,  imgui.ImVec4(1.0, 1.0, 1.0, 0.1) ) 
-        imgui.push_style_color(imgui.Col_.button_active,   imgui.ImVec4(1.0, 1.0, 1.0, 0.2) ) 
+        def set_file_browser_path( self, path ) -> None:
+            self._file_browser_dir = path
+
+        def file_browser_go_back( self ) -> None:
+            path = self._file_browser_dir.parent
+            self.set_file_browser_path( path )
+
+        def draw_file_browser_item( self, path ):
+            imgui.push_style_color(imgui.Col_.button,          imgui.ImVec4(1.0, 1.0, 1.0, 0.0) ) 
+            imgui.push_style_color(imgui.Col_.button_hovered,  imgui.ImVec4(1.0, 1.0, 1.0, 0.1) ) 
+            imgui.push_style_color(imgui.Col_.button_active,   imgui.ImVec4(1.0, 1.0, 1.0, 0.2) ) 
                
-        icon = imgui.ImTextureRef(self.get_file_browser_item_icon( path ))
+            icon = imgui.ImTextureRef(self.get_file_browser_item_icon( path ))
 
-        if imgui.image_button( f"file##{path}", icon, self.icon_dim, self.icon_dim):
-            if path.is_file():
-                self.open_file( path )
+            if imgui.image_button( f"file##{path}", icon, self.icon_dim, self.icon_dim):
+                if path.is_file():
+                    self.open_file( path )
 
-            elif path.is_dir():
-                self.set_file_browser_path( path )
+                elif path.is_dir():
+                    self.set_file_browser_path( path )
         
-        hovered : bool = imgui.is_item_hovered()
+            hovered : bool = imgui.is_item_hovered()
 
-        draw_list = imgui.get_window_draw_list()  # Get the draw list for the current window
-        button_size = imgui.get_item_rect_size()
-        button_pos = imgui.get_item_rect_max()
-        #window_pos = imgui.get_window_position()
+            draw_list = imgui.get_window_draw_list()  # Get the draw list for the current window
+            button_size = imgui.get_item_rect_size()
+            button_pos = imgui.get_item_rect_max()
+            #window_pos = imgui.get_window_position()
 
-        # Get path name and text wrap centered
-        path_name = textwrap.fill( str(path.name), width=10 )
-        text_size = imgui.calc_text_size( path_name )
-        text_pos = imgui.ImVec2((button_pos.x - button_size.x) + (button_size.x - text_size.x) * 0.5, button_pos.y)
+            # Get path name and text wrap centered
+            path_name = textwrap.fill( str(path.name), width=10 )
+            text_size = imgui.calc_text_size( path_name )
+            text_pos = imgui.ImVec2((button_pos.x - button_size.x) + (button_size.x - text_size.x) * 0.5, button_pos.y)
 
-        alpha = 1.0 if hovered else 0.7
-        text_color = imgui.color_convert_float4_to_u32((1.0, 1.0, 1.0, alpha))
+            alpha = 1.0 if hovered else 0.7
+            text_color = imgui.color_convert_float4_to_u32((1.0, 1.0, 1.0, alpha))
 
-        draw_list.add_text( text_pos, text_color, path_name )
+            draw_list.add_text( text_pos, text_color, path_name )
 
-        imgui.pop_style_color(3)
+            imgui.pop_style_color(3)
 
-    def draw_file_browser( self ) -> None:
-        imgui.begin( "Project Assets" )
+        def render( self ) -> None:
+            imgui.begin( "Project Assets" )
 
-        imgui.text( str(self._file_browser_dir) )
+            imgui.text( str(self._file_browser_dir) )
 
-        if self._file_browser_dir != self.file_browser_rootpath():
-            if imgui.button( "Page up ^" ):
-                self.file_browser_go_back()
+            if self._file_browser_dir != self.file_browser_rootpath():
+                if imgui.button( "Page up ^" ):
+                    self.file_browser_go_back()
 
-        if any( self._file_browser_dir.glob("*") ):
-            row_width = 0
-            for i, path in enumerate(self._file_browser_dir.glob("*")):
-                imgui.push_id( str(path.name) )
+            if any( self._file_browser_dir.glob("*") ):
+                row_width = 0
+                for i, path in enumerate(self._file_browser_dir.glob("*")):
+                    imgui.push_id( str(path.name) )
 
-                # wrapping
-                if i > 0 and ( row_width + self.icon_dim.x ) < imgui.get_window_size().x:
-                    imgui.same_line()
-                elif i > 0:
-                    row_width = 0
-                    imgui.dummy( imgui.ImVec2(0, 35) )
+                    # wrapping
+                    if i > 0 and ( row_width + self.icon_dim.x ) < imgui.get_window_size().x:
+                        imgui.same_line()
+                    elif i > 0:
+                        row_width = 0
+                        imgui.dummy( imgui.ImVec2(0, 35) )
 
 
-                row_width += (self.icon_dim.x + 18.0)
+                    row_width += (self.icon_dim.x + 18.0)
                 
-                self.draw_file_browser_item( path )
+                    self.draw_file_browser_item( path )
 
-                imgui.pop_id()
+                    imgui.pop_id()
 
-        imgui.dummy( imgui.ImVec2(0, 50) )
-        imgui.end()
-       
+            imgui.dummy( imgui.ImVec2(0, 50) )
+            imgui.end()
+    
+
     #
     # Console
     #
@@ -976,6 +987,10 @@ class UserInterface( Context ):
         imgui.dummy( imgui.ImVec2(0, 15) )
         imgui.end()
 
+
+    #
+    # Project
+    #
     def save_scene_modal( self, popup_uid : str, note : str, callback : Callable = None ):
         if imgui.begin_popup_modal( popup_uid, None, imgui.WindowFlags_.always_auto_resize)[0]:
             imgui.text( note )
@@ -994,9 +1009,6 @@ class UserInterface( Context ):
 
             imgui.end_popup()
 
-    #
-    # Project
-    #
     def draw_project_settings_export( self, _region ):
         """Display export settings, eg: name"""
 
@@ -1075,17 +1087,6 @@ class UserInterface( Context ):
 
             imgui.end_popup()
 
-    #def _prepare_text_editor( self ):
-    #    #with open(__file__, encoding="utf8") as f:
-    #    #    this_file_code = f.read()
-    #
-    #    editor = self.TextEditor()
-    #    editor.set_text("test")
-    #    editor.set_palette(imgui_cte.TextEditor.PaletteId.dark)
-    #    editor.set_language_definition(self.TextEditor.LanguageDefinitionId.python)
-    #    
-    #    return editor
-
     def render( self ):
         # init
         self.initialize_context()
@@ -1106,14 +1107,14 @@ class UserInterface( Context ):
 
             # windows
             self.draw_viewport()
-            self.draw_file_browser()
+            self.asset_browser.render()
             self.draw_hierarchy()
             self.draw_settings()
             self.draw_inspector()
             self.draw_environment()
             self.draw_console()
 
-            self.cte.render()
+            self.text_editor.render()
 
             # popups
             self.save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
