@@ -281,6 +281,12 @@ class GameObject( Context ):
             self._trigger()
             return result
 
+        def __ne__(self, other):
+            return list(self) != list(other)
+
+        def __eq__(self, other):
+            return list(self) == list(other)
+
     @property
     def translate(self):
         return self._translate
@@ -302,7 +308,6 @@ class GameObject( Context ):
         Physics engine requires are update call 
         whenever translation or rotation has changed externally (gui or script)
         """
-        print("update")
         if self.physics_id is None or self.mass < 0.0:
             return
         
@@ -377,10 +382,10 @@ class GameObject( Context ):
         pos, rot = p.getBasePositionAndOrientation( self.physics_id )
         rotation_quat = p.getEulerFromQuaternion( rot )
 
-        #if list(pos) != list(self._translate):
+        #if self.translate != pos:
         self.translate = pos
 
-        #if list(rotation_quat) != list(self.rotation):
+        #if self.rotation != rotation_quat:
         self.rotation = rotation_quat
 
     def onStart( self ) -> None:
