@@ -67,6 +67,18 @@ class UserInterface( Context ):
             imgui.ImVec4(0.8, 0.1, 0.15, 1.0)
         ]
 
+        self.color_button_trash : List[imgui.ImVec4] = [
+            imgui.ImVec4(1.0, 0.0, 0.0, 0.6),   # default   
+            imgui.ImVec4(1.0, 0.0, 0.0, 1.0)    # hover
+        ]
+
+        self.color_button_edit_ide : List[imgui.ImVec4] = [
+            imgui.ImVec4(0.988, 0.729, 0.012, 0.6),   # default   
+            imgui.ImVec4(0.988, 0.729, 0.012, 1.0)    # hover
+        ]
+
+        self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
+
         # text_input placeholders
         self.save_as_name : str = "Scene Name"
 
@@ -437,10 +449,9 @@ class UserInterface( Context ):
 
                     # remove gameObject
                     if not self.settings.game_running:
-                        imgui.same_line(_region.x + 14)
-                        if imgui.button("x"):
+                        if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
                             self.context.removeGameObject( self.context.gameObjects[ n ] )
-   
+
                     imgui.pop_id()
             imgui.tree_pop()
 
@@ -479,6 +490,7 @@ class UserInterface( Context ):
         imgui.end()
         return
 
+    # helper
     def draw_vec3_control( self, label, vector, resetValue = 0.0 ):
 
         labels = ["X", "Y", "Z"]
@@ -556,6 +568,50 @@ class UserInterface( Context ):
             imgui.end_popup()
 
         return clicked, selected
+
+    # helper
+    def draw_button( self, uid : str, region : float = -1.0, colors : List[imgui.ImVec4] = None ) -> bool:
+        called : bool = False
+
+        imgui.same_line( region )
+
+        imgui.push_style_color( imgui.Col_.button, self.context.gui.empty_vec4 )
+        imgui.push_style_color( imgui.Col_.button_hovered, self.context.gui.empty_vec4 )
+        imgui.push_style_color( imgui.Col_.button_active, self.context.gui.empty_vec4 )
+                        
+        if imgui.button(f"{uid}"):
+            called = True
+   
+        imgui.push_style_color( imgui.Col_.text, colors[1 if imgui.is_item_hovered() else 0] )
+
+        imgui.same_line( region + 4 )
+        imgui.text(f"{uid}")
+
+        imgui.pop_style_color(4)
+
+        return called
+
+    # helper
+    def draw_trash_button( self, uid : str, region : float = -1.0 ) -> bool:
+        return self.draw_button( 
+            uid     = uid, 
+            region  = region,
+            colors  = self.context.gui.color_button_trash
+        )
+
+    def draw_edit_button( self, uid : str, region : float = -1.0 ) -> bool:
+        return self.draw_button( 
+            uid     = uid, 
+            region  = region,
+            colors  = self.context.gui.color_button_edit_ide
+        )
+
+    def draw_close_button( self, uid : str, region : float = -1.0 ) -> bool:
+        return self.draw_button( 
+            uid     = uid, 
+            region  = region,
+            colors  = self.context.gui.color_button_trash
+        )
 
     def draw_camera_selector( self ) -> None:
         imgui.text("camera")
@@ -730,13 +786,14 @@ class UserInterface( Context ):
                 imgui.begin_group()
 
                 imgui.text(name) # should become the Class name
-                imgui.same_line( _region.x - 15 )
-                if not self.settings.game_running and imgui.button("x"):
-                    self.context.gui.selectedObject.removeScript( script['file'] )
 
-                imgui.same_line( _region.x - 35 )
-                if not self.settings.game_running and imgui.button("E"):
-                    self.context.gui.text_editor.open_file( script['file'] )
+                # actions
+                if not self.settings.game_running: 
+                    if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                        self.context.gui.selectedObject.removeScript( script['file'] )
+
+                    if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
+                        self.context.gui.text_editor.open_file( script['file'] )
 
                 #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
 
@@ -1085,8 +1142,7 @@ class UserInterface( Context ):
             if imgui.begin_popup_modal("Project Settings", None, imgui.WindowFlags_.no_resize)[0]:
                 imgui.set_window_size( imgui.ImVec2(600, 400) )  # Example: width=4
 
-                imgui.same_line(imgui.get_window_width() - 30) 
-                if imgui.button("X", imgui.ImVec2(20, 20)):
+                if self.context.gui.draw_close_button( f"{fa.ICON_FA_CIRCLE_XMARK}", imgui.get_window_width() - 30 ):
                     imgui.close_current_popup()
 
                 _region = imgui.get_content_region_avail()
