@@ -485,7 +485,7 @@ class Renderer:
         if self.settings.msaaEnabled:
             self.resolve_multisample_texture()
 
-        self.context.imgui.render()
+        self.context.gui.render()
 
         self.framenum += 1
 

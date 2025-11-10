@@ -24,7 +24,7 @@ from pathlib import Path
 import textwrap
 import re
 
-class ImGuiCustomEvent( Context ):
+class CustomEvent( Context ):
     def __init__(self):
         self._queue : List = []
 
@@ -49,7 +49,7 @@ class ImGuiCustomEvent( Context ):
             func()
             self.clear(name)
 
-class ImGui( Context ):
+class UserInterface( Context ):
     def __init__( self, context ):
         super().__init__( context )
         

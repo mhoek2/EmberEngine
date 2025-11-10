@@ -280,7 +280,7 @@ class SceneManager:
         """
         self.context.sun = -1
         self.setCamera( -1 )
-        self.context.imgui.set_selected_object( -1 )
+        self.context.gui.set_selected_object( -1 )
         self.context.gameObjects.clear()
         self.current_scene = -1
 
