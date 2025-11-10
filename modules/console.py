@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, List, TypedDict
+import enum
 
 from modules.settings import Settings
 
@@ -23,20 +24,30 @@ class Console:
 
         self.entries    : List[Console.Entry] = []
 
-        self.ENTRY_TYPE_ERROR = 0
-        self.ENTRY_TYPE_WARNING = 1
-        self.ENTRY_TYPE_NOTE = 2
-
-        self.entry_type_color = [
-            (1.0, 0.0, 0.0),        # ENTRY_TYPE_ERROR
-            (0, 1.0, 1.0),           # ENTRY_TYPE_WARNING
-            (0, 0.6, 0.3),           # ENTRY_TYPE_NOTE
+        self._entry_type_color = [
+            (0.0, 0.0, 0.0),         # Type_.none
+            (1.0, 0.0, 0.0),         # Type_.error
+            (0, 1.0, 1.0),           # Type_.warning
+            (0, 0.6, 0.3),           # Type_.note
         ]
 
-    def addEntry( self, type_id : int, traceback : List[str], e : Exception ):
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class Type_(enum.IntEnum):
+        none    = enum.auto()    # (= 0)
+        error   = enum.auto()    # (= 1)
+        warning = enum.auto()    # (= 2)
+        note    = enum.auto()    # (= 3)
+
+    def get_entry_color( self, entry : Entry ) -> None:
+        """Get the color of a given entry"""
+        return self._entry_type_color[ (entry["type_id"] - 1) ]
+    
+
+    def log( self, type_id : int, traceback : List[str], e : Exception ):
         """Add entry to the console entries buffer
         
-        :param type_id: The type of a entry, ENTRY_TYPE_ERROR ENTRY_TYPE_WARNING, or ENTRY_TYPE_NOTE
+        :param type_id: The type of a entry, Type_.error Type_.warning, or Type_.note
         :type type_id: int
         :param traceback: A list that contains detailed information of a raised Exception
         :type traceback: List[str]

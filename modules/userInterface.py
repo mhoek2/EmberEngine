@@ -4,6 +4,7 @@ from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 from imgui_bundle import imgui
+from imgui_bundle import icons_fontawesome_6 as fa
 from imgui_bundle import imgui_color_text_edit as ImGuiColorTextEdit
 
 import pygame
@@ -103,7 +104,7 @@ class UserInterface( Context ):
             self.ed.set_text("")
             self.ed.set_cursor_position(0, 0)
             self.ed.clear_selections()
-            self.text_editor.clear_extra_cursors()
+            self.ed.clear_extra_cursors()
 
             self._current_file = None
 
@@ -113,17 +114,17 @@ class UserInterface( Context ):
             if self._current_file:
                 with open(self._current_file, "w", encoding="utf8") as f:
                  f.write(text)
-                self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Saved to {self.text_editor_current_file}")
+                self.console.log( self.console.Type_.note, [], f"Saved to {self._current_file}")
         
             else:
-                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], "No file selected yet.")
+                self.console.log( self.console.Type_.error, [], "No file selected yet.")
 
         def open_file( self, path : Path ) -> None:
             """Opens a file and make its content the current text of the text editor"""
             buffer = None
 
             if not path.is_file():
-                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], f"File: {path} does not exist!" )
+                self.console.log( self.console.Type_.error, [], f"File: {path} does not exist!" )
                 return
 
             with open(path, encoding="utf8") as f:
@@ -131,7 +132,7 @@ class UserInterface( Context ):
 
             self.reset();
             self.ed.set_text( buffer )
-            self.ed = path
+            self._current_file = path
 
         def render( self ) -> None: 
             """handles ImGuiColorTextEdit rendering and logic"""
@@ -176,8 +177,11 @@ class UserInterface( Context ):
         self.load_gui_icons()
 
         # user inferface modules
+        self.console_window : UserInterface.ConsoleWindow = self.ConsoleWindow( self.context )
         self.asset_browser  : UserInterface.AssetBrowser = self.AssetBrowser( self.context )
         self.text_editor    : UserInterface.TextEditor = self.TextEditor( self.context )
+        self.project        : UserInterface.Project = self.Project( self.context )
+        self.inspector      : UserInterface.Inspector = self.Inspector( self.context )
 
         self.initialized = True
 
@@ -517,95 +521,12 @@ class UserInterface( Context ):
         imgui.pop_id()
         return
 
-    def draw_inspector_transform( self ) -> None:
-        if not self.selectedObject:
-            return
-
-        gameObject = self.selectedObject
-
-        if isinstance( gameObject, Mesh ):
-            imgui.text( f"Mesh" );
-
-        if isinstance( gameObject, Light ):
-            imgui.text( f"Light" );
-
-        if imgui.tree_node_ex( "Transform", imgui.TreeNodeFlags_.default_open ):
-
-            self.draw_vec3_control( "Position", gameObject.translate, 0.0 )
-            self.draw_vec3_control( "Rotation", gameObject.rotation, 0.0 )
-            self.draw_vec3_control( "Scale", gameObject.scale, 0.0 )
-
-            imgui.tree_pop()
-
-        return
-
+    # helper
     def draw_thumb( self, image : int, size : imgui.ImVec2 ):
         #glBindTexture( GL_TEXTURE_2D, image )
         imgui.image( imgui.ImTextureRef(image), size )
 
-    def draw_inspector_material_thumb( self, label, texture_id ) -> None:
-        imgui.text( f"{label}" );
-        imgui.next_column()
-        self.draw_thumb( texture_id, imgui.ImVec2(75.0, 75.0) )
-        imgui.next_column()
-
-    def draw_inspector_material( self ) -> None:
-        if imgui.tree_node( "Material" ):
-
-            if not self.selectedObject:
-                imgui.tree_pop()
-                return
-
-            gameObject = self.selectedObject
-
-            if not isinstance( gameObject, GameObject ):
-                imgui.tree_pop()
-                return
-
-            # collect material(s)
-            materials = []
-
-            for mesh in self.models.model[gameObject.model].meshes:
-                mesh_index = self.models.model[gameObject.model].meshes.index(mesh)
-                mesh_gl = self.models.model_mesh[gameObject.model][mesh_index]
-      
-                if mesh_gl["material"] >= 0:
-                    materials.append( mesh_gl["material"] )
-
-            # visualize material(s)
-            multi_mat : bool = True if len(materials) > 1 else False
-
-            for material_id in materials:
-                mat : Materials.Material = self.materials.getMaterialByIndex( material_id )
-
-                is_open : bool = False
-
-                # use tree node of this mesh has multiple materials
-                if multi_mat:
-                    if imgui.tree_node( f"Material ID: { material_id }" ):
-                        is_open = True
-                else:
-                    imgui.text( f"Material ID: { material_id }" );
-                    imgui.separator()
-                    is_open = True
-
-                if is_open:
-                    imgui.columns( count=2, borders=False )
-                    imgui.set_column_width (0, 70.0 )
-
-                    self.draw_inspector_material_thumb( "Albedo", mat["albedo"] if 'albedo' in mat else self.images.defaultImage )
-                    self.draw_inspector_material_thumb( "Normal", mat["normal"] if 'normal' in mat else self.images.defaultNormal )
-                    self.draw_inspector_material_thumb( "Phyiscal", mat["phyiscal"] if 'phyiscal' in mat else self.images.defaultRMO )
-                    self.draw_inspector_material_thumb( "Emissive", mat["emissive"] if 'emissive' in mat else self.images.blackImage )
-            
-                    imgui.columns( count=1 )
-
-                if multi_mat and is_open:
-                    imgui.tree_pop()
-
-            imgui.tree_pop()
-        return
-
+    # helper
     def draw_popup_gameObject( self, uid : str, filter = None ):
         selected = -1
         clicked = False
@@ -689,131 +610,227 @@ class UserInterface( Context ):
     #
     #    imgui.end_combo()
 
-    def draw_inspector_scripts( self ):
-        if not imgui.tree_node_ex( "Scripts", imgui.TreeNodeFlags_.default_open ):
+
+    class Inspector( Context ):
+        def __init__( self, context ):
+            super().__init__( context )
+
+        def _transform( self ) -> None:
+            if not self.context.gui.selectedObject:
+                return
+
+            gameObject = self.context.gui.selectedObject
+
+            if isinstance( gameObject, Mesh ):
+                imgui.text( f"Mesh" );
+
+            if isinstance( gameObject, Light ):
+                imgui.text( f"Light" );
+
+            if imgui.tree_node_ex( "Transform", imgui.TreeNodeFlags_.default_open ):
+
+                self.context.gui.draw_vec3_control( "Position", gameObject.translate, 0.0 )
+                self.context.gui.draw_vec3_control( "Rotation", gameObject.rotation, 0.0 )
+                self.context.gui.draw_vec3_control( "Scale", gameObject.scale, 0.0 )
+
+                imgui.tree_pop()
+
             return
 
-        assets = Path( self.settings.assets ).resolve()
-        _shift_left = 20.0
-        _region = imgui.get_content_region_avail()
-        _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
+        def _material_thumb( self, label, texture_id ) -> None:
+            imgui.text( f"{label}" );
+            imgui.next_column()
+            self.context.gui.draw_thumb( texture_id, imgui.ImVec2(75.0, 75.0) )
+            imgui.next_column()
 
-        i = -1
-        for i, script in enumerate(self.selectedObject.scripts):
-            imgui.push_id(f"draw_script_{str(script['file'])}")
+        def _material( self ) -> None:
+            if imgui.tree_node( "Material" ):
 
-            name = str(script['file'])
+                if not self.context.gui.selectedObject:
+                    imgui.tree_pop()
+                    return
 
-            draw_list = imgui.get_window_draw_list() 
-            draw_list.channels_split(2)
-            draw_list.channels_set_current(1)
+                _models = self.context.gui.models
+                _images = self.context.gui.images
+                _materials = self.context.gui.materials
 
-            p_min = imgui.get_cursor_screen_pos()
-            p_min = imgui.ImVec2( (p_min.x-_shift_left), p_min.y)
-            imgui.set_cursor_screen_pos(p_min)
-                
-            imgui.begin_group()
+                gameObject = self.context.gui.selectedObject
 
-            imgui.text(name) # should become the Class name
-            imgui.same_line( _region.x - 15 )
-            if not self.settings.game_running and imgui.button("x"):
-                self.selectedObject.removeScript( script['file'] )
+                if not isinstance( gameObject, GameObject ):
+                    imgui.tree_pop()
+                    return
 
-            imgui.same_line( _region.x - 35 )
-            if not self.settings.game_running and imgui.button("E"):
-                self.cte.open_file( script['file'] )
+                # collect material(s)
+                materials = []
 
-            #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+                for mesh in _models.model[gameObject.model].meshes:
+                    mesh_index = _models.model[gameObject.model].meshes.index(mesh)
+                    mesh_gl = _models.model_mesh[gameObject.model][mesh_index]
+      
+                    if mesh_gl["material"] >= 0:
+                        materials.append( mesh_gl["material"] )
 
-            imgui.end_group()
-            _group_height = imgui.get_item_rect_size().y
+                # visualize material(s)
+                multi_mat : bool = True if len(materials) > 1 else False
 
-            # background rect
-            _header_height = 20
-            p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _group_height)
+                for material_id in materials:
+                    mat : Materials.Material = _materials.getMaterialByIndex( material_id )
 
-            draw_list.channels_set_current(0)
-            draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.2)))
-            draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
-            draw_list.channels_merge()
-   
-            imgui.pop_id()
+                    is_open : bool = False
 
-        if i == -1:
-            imgui.text("No scripts attached")
+                    # use tree node of this mesh has multiple materials
+                    if multi_mat:
+                        if imgui.tree_node( f"Material ID: { material_id }" ):
+                            is_open = True
+                    else:
+                        imgui.text( f"Material ID: { material_id }" );
+                        imgui.separator()
+                        is_open = True
 
-        imgui.tree_pop()
+                    if is_open:
+                        imgui.columns( count=2, borders=False )
+                        imgui.set_column_width (0, 70.0 )
 
-    def draw_inspector_add_script( self ):
-        path = False
-        
-        _region = imgui.get_content_region_avail()
-        pos = imgui.get_cursor_screen_pos()
-        pos = imgui.ImVec2( pos.x + (_region.x / 2) - 50, pos.y + _region.y - 20)
-        imgui.set_cursor_screen_pos(pos)
+                        self._material_thumb( "Albedo",     mat["albedo"]   if 'albedo'     in mat else _images.defaultImage    )
+                        self._material_thumb( "Normal",     mat["normal"]   if 'normal'     in mat else _images.defaultNormal   )
+                        self._material_thumb( "Phyiscal",   mat["phyiscal"] if 'phyiscal'   in mat else _images.defaultRMO      )
+                        self._material_thumb( "Emissive",   mat["emissive"] if 'emissive'   in mat else _images.blackImage      )
+            
+                        imgui.columns( count=1 )
 
-        if imgui.button("Add Script"):
-            imgui.open_popup("add-script")
+                    if multi_mat and is_open:
+                        imgui.tree_pop()
 
-        imgui.same_line()
+                imgui.tree_pop()
+            return
 
-        if imgui.begin_popup("add-script"):
+        def _scripts( self ):
+            if not imgui.tree_node_ex( "Scripts", imgui.TreeNodeFlags_.default_open ):
+                return
 
-            # todo:
-            # perhaps there should be a separate thread for this
-            # that either updates periodicly, or tracks changes in assets folder
-            self.context.findScripts()
-
-            # project assets
             assets = Path( self.settings.assets ).resolve()
-            for i, script in enumerate(self.context.asset_scripts):
-                imgui.push_id(f"add_script_{str(script)}")
-                clicked = False
+            _shift_left = 20.0
+            _region = imgui.get_content_region_avail()
+            _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
 
-                name = str(script.relative_to(assets))
-                _, clicked = imgui.selectable(
-                    f"{name}", clicked
-                )
+            i = -1
+            for i, script in enumerate(self.context.gui.selectedObject.scripts):
+                imgui.push_id(f"draw_script_{str(script['file'])}")
 
-                if clicked:
-                    path = script
+                name = str(script['file'])
 
+                draw_list = imgui.get_window_draw_list() 
+                draw_list.channels_split(2)
+                draw_list.channels_set_current(1)
+
+                p_min = imgui.get_cursor_screen_pos()
+                p_min = imgui.ImVec2( (p_min.x-_shift_left), p_min.y)
+                imgui.set_cursor_screen_pos(p_min)
+                
+                imgui.begin_group()
+
+                imgui.text(name) # should become the Class name
+                imgui.same_line( _region.x - 15 )
+                if not self.settings.game_running and imgui.button("x"):
+                    self.context.gui.selectedObject.removeScript( script['file'] )
+
+                imgui.same_line( _region.x - 35 )
+                if not self.settings.game_running and imgui.button("E"):
+                    self.context.gui.text_editor.open_file( script['file'] )
+
+                #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+
+                imgui.end_group()
+                _group_height = imgui.get_item_rect_size().y
+
+                # background rect
+                _header_height = 20
+                p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _group_height)
+
+                draw_list.channels_set_current(0)
+                draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.2)))
+                draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
+                draw_list.channels_merge()
+   
                 imgui.pop_id()
 
-            # engine assets not supported yet
-            # ..
+            if i == -1:
+                imgui.text("No scripts attached")
 
-            imgui.end_popup()
+            imgui.tree_pop()
 
-        if path:
-            self.selectedObject.addScript( path )
+        def _add_script( self ):
+            path = False
+        
+            _region = imgui.get_content_region_avail()
+            pos = imgui.get_cursor_screen_pos()
+            pos = imgui.ImVec2( pos.x + (_region.x / 2) - 50, pos.y + _region.y - 20)
+            imgui.set_cursor_screen_pos(pos)
 
-    def draw_inspector( self ) -> None:
-        imgui.begin( "Inspector" )
+            if imgui.button("Add Script"):
+                imgui.open_popup("add-script")
+
+            imgui.same_line()
+
+            if imgui.begin_popup("add-script"):
+
+                # todo:
+                # perhaps there should be a separate thread for this
+                # that either updates periodicly, or tracks changes in assets folder
+                self.context.findScripts()
+
+                # project assets
+                assets = Path( self.settings.assets ).resolve()
+                for i, script in enumerate(self.context.asset_scripts):
+                    imgui.push_id(f"add_script_{str(script)}")
+                    clicked = False
+
+                    name = str(script.relative_to(assets))
+                    _, clicked = imgui.selectable(
+                        f"{name}", clicked
+                    )
+
+                    if clicked:
+                        path = script
+
+                    imgui.pop_id()
+
+                # engine assets not supported yet
+                # ..
+
+                imgui.end_popup()
+
+            if path:
+                self.context.gui.selectedObject.addScript( path )
+
+        def render( self ) -> None:
+            imgui.begin( "Inspector" )
   
-        if not self.selectedObject:
+            if not self.context.gui.selectedObject:
+                imgui.end()
+                return
+
+            gameObject = self.context.gui.selectedObject
+
+            if isinstance( gameObject, GameObject ):
+                #imgui.text( f"{ gameObject.name }" );
+                
+                changed, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
+
+                # components
+                self._transform()
+                imgui.separator()
+
+                self._material()
+                imgui.separator()
+
+                self._scripts()
+
+                if not self.settings.game_running:
+                    self._add_script()
+
             imgui.end()
             return
-
-        gameObject = self.selectedObject
-
-        if isinstance( gameObject, GameObject ):
-            #imgui.text( f"{ gameObject.name }" );
-                
-            changed, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
-
-            # components
-            self.draw_inspector_transform()
-            imgui.separator()
-            self.draw_inspector_material()
-            imgui.separator()
-            self.draw_inspector_scripts()
-
-            if not self.settings.game_running:
-                self.draw_inspector_add_script()
-
-        imgui.end()
-        return
 
     #
     # asset explorer
@@ -822,8 +839,8 @@ class UserInterface( Context ):
         def __init__( self, context ):
             super().__init__( context )
 
-            self._file_browser_dir = self.file_browser_rootpath()
-            self.icon_dim = imgui.ImVec2(75.0, 75.0)  
+            self._file_browser_dir = self.get_rootpath()
+            self._icon_dim = imgui.ImVec2(75.0, 75.0)  
 
         def open_file( self, path ) -> None:
             if path.suffix == ".fbx" or path.suffix == ".obj":
@@ -840,10 +857,10 @@ class UserInterface( Context ):
                 self.scene.clearEditorScene()
                 self.scene.loadScene( path.stem )
 
-        def file_browser_rootpath( self ) -> Path:
+        def get_rootpath( self ) -> Path:
             return Path( self.settings.assets ).resolve()
 
-        def get_file_browser_item_icon( self, path ) -> None:
+        def get_icon( self, path ) -> imgui.ImTextureRef:
             _icons = self.context.gui.icons
 
             icon = _icons['.unknown']
@@ -854,28 +871,26 @@ class UserInterface( Context ):
             if path.is_dir() and ".folder" in _icons:
                 icon = _icons['.folder']
 
-            return icon
+            return imgui.ImTextureRef( icon )
 
-        def set_file_browser_path( self, path ) -> None:
+        def set_path( self, path ) -> None:
             self._file_browser_dir = path
 
-        def file_browser_go_back( self ) -> None:
+        def back( self ) -> None:
             path = self._file_browser_dir.parent
             self.set_file_browser_path( path )
 
-        def draw_file_browser_item( self, path ):
+        def render_item( self, path ):
             imgui.push_style_color(imgui.Col_.button,          imgui.ImVec4(1.0, 1.0, 1.0, 0.0) ) 
             imgui.push_style_color(imgui.Col_.button_hovered,  imgui.ImVec4(1.0, 1.0, 1.0, 0.1) ) 
             imgui.push_style_color(imgui.Col_.button_active,   imgui.ImVec4(1.0, 1.0, 1.0, 0.2) ) 
                
-            icon = imgui.ImTextureRef(self.get_file_browser_item_icon( path ))
-
-            if imgui.image_button( f"file##{path}", icon, self.icon_dim, self.icon_dim):
+            if imgui.image_button( f"file##{path}", self.get_icon( path ), self._icon_dim, self._icon_dim):
                 if path.is_file():
                     self.open_file( path )
 
                 elif path.is_dir():
-                    self.set_file_browser_path( path )
+                    self.set_path( path )
         
             hovered : bool = imgui.is_item_hovered()
 
@@ -901,9 +916,9 @@ class UserInterface( Context ):
 
             imgui.text( str(self._file_browser_dir) )
 
-            if self._file_browser_dir != self.file_browser_rootpath():
+            if self._file_browser_dir != self.get_rootpath():
                 if imgui.button( "Page up ^" ):
-                    self.file_browser_go_back()
+                    self.back()
 
             if any( self._file_browser_dir.glob("*") ):
                 row_width = 0
@@ -911,181 +926,188 @@ class UserInterface( Context ):
                     imgui.push_id( str(path.name) )
 
                     # wrapping
-                    if i > 0 and ( row_width + self.icon_dim.x ) < imgui.get_window_size().x:
+                    if i > 0 and ( row_width + self._icon_dim.x ) < imgui.get_window_size().x:
                         imgui.same_line()
                     elif i > 0:
                         row_width = 0
                         imgui.dummy( imgui.ImVec2(0, 35) )
 
 
-                    row_width += (self.icon_dim.x + 18.0)
+                    row_width += (self._icon_dim.x + 18.0)
                 
-                    self.draw_file_browser_item( path )
+                    self.render_item( path )
 
                     imgui.pop_id()
 
             imgui.dummy( imgui.ImVec2(0, 50) )
-            imgui.end()
-    
+            imgui.end()  
 
     #
     # Console
     #
-    def draw_console_entry( self, i, entry : Console.Entry ):
-        imgui.push_id( f"exception_{i}" )
+    class ConsoleWindow( Context ):
+        def __init__( self, context ):
+            super().__init__( context )
+
+        def render_entry( self, i, entry : Console.Entry ):
+            imgui.push_id( f"exception_{i}" )
    
-        _line_height = 17
-        _region = imgui.get_content_region_avail()
-        _color = self.console.entry_type_color[entry["type_id"]]
+            _line_height = 17
+            _region = imgui.get_content_region_avail()
+            _color = self.console.get_entry_color(entry)
 
-        # header background
-        draw_list = imgui.get_window_draw_list() 
-        p_min = imgui.get_cursor_screen_pos()
-        p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _line_height)
-        color = imgui.color_convert_float4_to_u32(imgui.ImVec4(_color[0], _color[1], _color[2], 0.2))
-        draw_list.add_rect_filled(p_min, p_max, color)
-        
-        # header hover background
-        imgui.push_style_color(imgui.Col_.header_hovered, imgui.ImVec4(_color[0], _color[1], _color[2], 0.4) ) 
-
-        if imgui.tree_node( f"{ entry['message'] }" ):
-            # content background
-            _h_cor_bias = 4 # imgui.STYLE_ITEM_SPACING
-            p_min = imgui.ImVec2(p_min.x, p_max.y)
-            _height = (_line_height * entry["_n_lines"]) - _h_cor_bias
-            p_max = imgui.ImVec2(p_max.x, p_min.y + _height)
-            color = imgui.color_convert_float4_to_u32(imgui.ImVec4(_color[0], _color[1], _color[2], 0.1))
+            # header background
+            draw_list = imgui.get_window_draw_list() 
+            p_min = imgui.get_cursor_screen_pos()
+            p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _line_height)
+            color = imgui.color_convert_float4_to_u32(imgui.ImVec4(_color[0], _color[1], _color[2], 0.2))
             draw_list.add_rect_filled(p_min, p_max, color)
+        
+            # header hover background
+            imgui.push_style_color(imgui.Col_.header_hovered, imgui.ImVec4(_color[0], _color[1], _color[2], 0.4) ) 
 
-            for tb in entry["traceback"]:
-                imgui.text( f"{tb}" )
+            if imgui.tree_node( f"{ entry['message'] }" ):
+                # content background
+                _h_cor_bias = 4 # imgui.STYLE_ITEM_SPACING
+                p_min = imgui.ImVec2(p_min.x, p_max.y)
+                _height = (_line_height * entry["_n_lines"]) - _h_cor_bias
+                p_max = imgui.ImVec2(p_max.x, p_min.y + _height)
+                color = imgui.color_convert_float4_to_u32(imgui.ImVec4(_color[0], _color[1], _color[2], 0.1))
+                draw_list.add_rect_filled(p_min, p_max, color)
 
-            imgui.tree_pop()
+                for tb in entry["traceback"]:
+                    imgui.text( f"{tb}" )
 
-        imgui.pop_style_color(1)
-        imgui.pop_id()
+                imgui.tree_pop()
 
-    def draw_console( self ):
-        imgui.begin( "Console" )
-        entries : List[Console.Entry] = self.console.getEntries()
+            imgui.pop_style_color(1)
+            imgui.pop_id()
 
-        if not hasattr(self, "_last_console_count"):
-            self._last_console_count = 0
+        def render( self ):
+            imgui.begin( "Console" )
+            imgui.text(f"HELLO {fa.ICON_FA_CROWN}")
 
-        imgui.push_style_var(imgui.StyleVar_.item_spacing, (0.0, 6.0))
+            entries : List[Console.Entry] = self.console.getEntries()
 
-        for i, entry in enumerate(entries):
-            self.draw_console_entry( i, entry )
+            if not hasattr(self, "_last_console_count"):
+                self._last_console_count = 0
 
-        imgui.pop_style_var(1)
+            imgui.push_style_var(imgui.StyleVar_.item_spacing, (0.0, 6.0))
 
-        # scroll to bottom
-        if len(entries) > self._last_console_count:
-            imgui.set_scroll_here_y(1.0)
-            self._last_console_count = len(entries)
+            for i, entry in enumerate(entries):
+                self.render_entry( i, entry )
 
-        imgui.dummy( imgui.ImVec2(0, 15) )
-        imgui.end()
+            imgui.pop_style_var(1)
 
+            # scroll to bottom
+            if len(entries) > self._last_console_count:
+                imgui.set_scroll_here_y(1.0)
+                self._last_console_count = len(entries)
+
+            imgui.dummy( imgui.ImVec2(0, 15) )
+            imgui.end()
 
     #
     # Project
     #
-    def save_scene_modal( self, popup_uid : str, note : str, callback : Callable = None ):
-        if imgui.begin_popup_modal( popup_uid, None, imgui.WindowFlags_.always_auto_resize)[0]:
-            imgui.text( note )
-            imgui.separator()
+    class Project( Context ):
+        def __init__( self, context ):
+            super().__init__( context )
 
-            changed, self.save_as_name = imgui.input_text( "Name##SceneName", self.save_as_name )
+        def draw_save_scene_modal( self, popup_uid : str, note : str, callback : Callable = None ):
+            if imgui.begin_popup_modal( popup_uid, None, imgui.WindowFlags_.always_auto_resize)[0]:
+                imgui.text( note )
+                imgui.separator()
 
-            if imgui.button("Save", imgui.ImVec2(120, 0)):
-                callback( self.save_as_name )
-                imgui.close_current_popup()
+                changed, self.save_as_name = imgui.input_text( "Name##SceneName", self.save_as_name )
 
-            imgui.set_item_default_focus()
-            imgui.same_line()
-            if imgui.button("Cancel", imgui.ImVec2(120, 0)):
-                imgui.close_current_popup()
+                if imgui.button("Save", imgui.ImVec2(120, 0)):
+                    callback( self.save_as_name )
+                    imgui.close_current_popup()
 
-            imgui.end_popup()
+                imgui.set_item_default_focus()
+                imgui.same_line()
+                if imgui.button("Cancel", imgui.ImVec2(120, 0)):
+                    imgui.close_current_popup()
 
-    def draw_project_settings_export( self, _region ):
-        """Display export settings, eg: name"""
+                imgui.end_popup()
 
-        # project name
-        changed, project_name = imgui.input_text( "Name##ProjectName", self.project.meta.get("name"))
+        def _draw_export( self, _region ):
+            """Display export settings, eg: name"""
 
-        if changed:
-            filtered_name = re.sub(self.settings.executable_format, "", project_name)
+            # project name
+            changed, project_name = imgui.input_text( "Name##ProjectName", self.project.meta.get("name"))
 
-            if filtered_name != self.project.meta["name"]:
-                self.project.meta["name"] = filtered_name
+            if changed:
+                filtered_name = re.sub(self.settings.executable_format, "", project_name)
 
-        # export using pyinstaller --clean flag
-        _, self.project.meta["export_clean"] = imgui.checkbox( 
-            "Clean on export##export_clean", self.project.meta["export_clean"] )
+                if filtered_name != self.project.meta["name"]:
+                    self.project.meta["name"] = filtered_name
+
+            # export using pyinstaller --clean flag
+            _, self.project.meta["export_clean"] = imgui.checkbox( 
+                "Clean on export##export_clean", self.context.project.meta["export_clean"] )
        
-       # export using pyinstaller console enable
-        _, self.project.meta["export_debug"] = imgui.checkbox( 
-            "Debug export##export_debug", self.project.meta["export_debug"] )
+           # export using pyinstaller console enable
+            _, self.project.meta["export_debug"] = imgui.checkbox( 
+                "Debug export##export_debug", self.context.project.meta["export_debug"] )
 
-    def draw_project_settings_scenes( self, _region ):
-        # keep updating the scenes List?
-        # or just on open?
-        self.scene.getScenes()
+        def _draw_scenes( self, _region ):
+            # keep updating the scenes List?
+            # or just on open?
+            self.scene.getScenes()
 
-        for scene in self.scene.scenes:
-            scene_uid : str = scene["uid"]
-            imgui.push_id( f"scne_{scene_uid}" )
+            for scene in self.scene.scenes:
+                scene_uid : str = scene["uid"]
+                imgui.push_id( f"scne_{scene_uid}" )
 
-            imgui.text(scene["name"])
+                imgui.text(scene["name"])
 
-            if scene["uid"] == self.project.meta["default_scene"]:
-                imgui.same_line( _region.x - 175 )
-                imgui.text("default")
+                if scene["uid"] == self.project.meta["default_scene"]:
+                    imgui.same_line( _region.x - 175 )
+                    imgui.text("default")
 
-            imgui.same_line( _region.x - 115 )
-            if imgui.button( "Load" ):
-                self.scene.clearEditorScene()
-                self.scene.loadScene( scene["uid"] )
+                imgui.same_line( _region.x - 115 )
+                if imgui.button( "Load" ):
+                    self.scene.clearEditorScene()
+                    self.scene.loadScene( scene["uid"] )
 
-            if scene_uid != self.settings.default_scene.stem:
-                imgui.same_line( _region.x - 75 )
+                if scene_uid != self.settings.default_scene.stem:
+                    imgui.same_line( _region.x - 75 )
 
-                if imgui.button( "Set default" ):
-                    self.project.setDefaultScene( scene["uid"] )
+                    if imgui.button( "Set default" ):
+                        self.project.setDefaultScene( scene["uid"] )
 
-            imgui.separator()
-            imgui.pop_id()
+                imgui.separator()
+                imgui.pop_id()
 
-    def draw_project_settings_modal( self ):
-        if imgui.begin_popup_modal("Project Settings", None, imgui.WindowFlags_.no_resize)[0]:
-            imgui.set_window_size( imgui.ImVec2(600, 400) )  # Example: width=4
+        def draw_settings_modal( self ):
+            if imgui.begin_popup_modal("Project Settings", None, imgui.WindowFlags_.no_resize)[0]:
+                imgui.set_window_size( imgui.ImVec2(600, 400) )  # Example: width=4
 
-            imgui.same_line(imgui.get_window_width() - 30) 
-            if imgui.button("X", imgui.ImVec2(20, 20)):
-                imgui.close_current_popup()
+                imgui.same_line(imgui.get_window_width() - 30) 
+                if imgui.button("X", imgui.ImVec2(20, 20)):
+                    imgui.close_current_popup()
 
-            _region = imgui.get_content_region_avail()
-            pos = imgui.get_cursor_screen_pos()
+                _region = imgui.get_content_region_avail()
+                pos = imgui.get_cursor_screen_pos()
 
-            self.draw_project_settings_export( _region )
+                self._draw_export( _region )
+                self._draw_scenes( _region )
 
-            self.draw_project_settings_scenes( _region )
+                pos = imgui.ImVec2( pos.x, pos.y + _region.y - 20)
+                imgui.set_cursor_screen_pos(pos)  
 
-            pos = imgui.ImVec2( pos.x, pos.y + _region.y - 20)
-            imgui.set_cursor_screen_pos(pos)  
+                if imgui.button( "Save Project" ):
+                    self.context.project.save()
 
-            if imgui.button( "Save Project" ):
-                self.project.save()
+                imgui.same_line()
 
-            imgui.same_line()
+                if imgui.button( "Export Project" ):
+                    self.project.save()
+                    self.context.project.export()
 
-            if imgui.button( "Export Project" ):
-                self.project.save()
-                self.project.export()
-
-            imgui.end_popup()
+                imgui.end_popup()
 
     def render( self ):
         # init
@@ -1110,13 +1132,13 @@ class UserInterface( Context ):
             self.asset_browser.render()
             self.draw_hierarchy()
             self.draw_settings()
-            self.draw_inspector()
+            self.inspector.render()
             self.draw_environment()
-            self.draw_console()
 
+            self.console_window.render()
             self.text_editor.render()
 
             # popups
-            self.save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
-            self.save_scene_modal( "New Scene##Modal", "Choose a name for the scene\n\n", self.scene.newScene )
-            self.draw_project_settings_modal()
+            self.project.draw_save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
+            self.project.draw_save_scene_modal( "New Scene##Modal", "Choose a name for the scene\n\n", self.scene.newScene )
+            self.project.draw_settings_modal()
