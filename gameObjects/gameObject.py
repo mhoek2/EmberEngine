@@ -21,6 +21,9 @@ import inspect
 import importlib
 import traceback
 
+import copy
+import pybullet as p
+
 class GameObject( Context ):
     """Base class for gameObjects """
 
@@ -133,8 +136,14 @@ class GameObject( Context ):
 
         ScriptClass = getattr(module, _class_name)
 
-        class ClassPlaceholder(ScriptClass, ScriptBehaivior):
-            pass
+        class ClassPlaceholder(ScriptBehaivior, ScriptClass):
+            def __init__(self, context, gameObject):
+                ScriptBehaivior.__init__(self, context, gameObject)
+                if hasattr(ScriptClass, "__init__"):
+                    try:
+                        ScriptClass.__init__(self)
+                    except TypeError:
+                        pass
 
         script["obj"] = ClassPlaceholder(self.context, self)
 
@@ -160,6 +169,8 @@ class GameObject( Context ):
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
+        self._runPhysics()
+
     def __init__( self, context, 
                  name = "GameObject",
                  visible = True,
@@ -168,6 +179,7 @@ class GameObject( Context ):
                  translate = [ 0.0, 0.0, 0.0 ], 
                  rotation = [ 0.0, 0.0, 0.0 ], 
                  scale = [ 1.0, 1.0, 1.0 ],
+                 mass = -1.0,
                  scripts : List[Path] = []
                  ) -> None:
         """Base class for gameObjects 
@@ -182,12 +194,14 @@ class GameObject( Context ):
         :type model_file: Path | bool
         :param material: The index in the material buffer as override, -1 is default
         :type material: int
-        :param translate: The position of the object
-        :type translate: Vector3
-        :param rotation: The rotation of the object
-        :type rotation: Vector3
+        :param translate: The position of the object, using getter and setter
+        :type translate: List
+        :param rotation: The rotation of the object, using getter and setter
+        :type rotation: List
         :param scale: The scale of the object
         :type scale: Vector3
+        :param mass: The mass of the object, -1.0 is noy physics?
+        :type mass: float
         :param scripts: A list containing Paths to dynamic scripts
         :type scripts: List[scripts]
         """
@@ -204,16 +218,24 @@ class GameObject( Context ):
         self.material       : int = material
         self.visible        : bool = visible
 
-        self._removed        : bool = False
+        self._removed       : bool = False
         
         # https://github.com/adamlwgriffiths/Pyrr
-        self.translate = translate
-        self.rotation = rotation
-        self.scale = scale
+
+        self._translate = self.vectorInterface( translate, self._update_physics_body )
+        self._rotation  = self.vectorInterface( rotation, self._update_physics_body )
+
+        print(type(self._translate), id(self._translate))
+
+        self.scale      = scale
+        self.mass       = mass
 
         # model
         self.model          : int = -1
         self.model_file = Path(model_file) if model_file else False
+
+        # physics
+        self.physics_id = None
 
         self.onStart()
 
@@ -221,12 +243,174 @@ class GameObject( Context ):
         for file in scripts:
             self.addScript( file )
 
+    class vectorInterface(list):
+        def __init__(self, data, callback):
+            super().__init__(data)
+            self._callback = callback
+
+        def _trigger(self):
+            if self._callback:
+                self._callback()
+
+        def __setitem__(self, key, value):
+            print("(gui-script)");
+            super().__setitem__(key, value)
+            self._trigger()
+
+        def __iadd__(self, other):
+            result = super().__iadd__(other)
+            self._trigger()
+            return result
+
+        def __isub__(self, other):
+            result = super().__isub__(other)
+            self._trigger()
+            return result
+
+        def set(self, data):
+            test : bool = False;
+            if isinstance(data, list):
+                test = True
+
+            if not isinstance(data, type(self)):
+                data = type(self)( data, self._callback )
+                print("(physics engine)");
+
+            super().__setitem__(slice(None), data)
+
+            if test:
+                self._trigger()
+                print("(gui-script)");
+
+    @property
+    def translate(self):
+        return self._translate
+    
+    @translate.setter
+    def translate(self, value):
+        """
+        !important
+        only update physics when value changed (gui or script)
+        this is detected by the data type specifier in vectorInterface.set(),
+        physics engine : tuple
+        gui or scripts : list.
+        """
+        #if not isinstance(value, self.vectorInterface):
+        #    value = self.vectorInterface( value, self._update_physics_body )
+
+        self._translate.set( value )
+
+        if not isinstance(value, tuple):
+            self._translate._trigger()
+
+    @property
+    def rotation(self):
+        return self._rotation
+    
+    @rotation.setter
+    def rotation(self, value):
+        """
+        !important
+        only update physics when value changed (gui or script)
+        this is detected by the data type specifier,
+        physics engine : tuple
+        gui or scripts : list.
+        """
+        self._rotation.set( value )
+
+    def _update_physics_body(self):
+        """
+        Physics engine requires are update call 
+        whenever translation or rotation has changed externally (gui or script)
+        """
+        print("update")
+        if self.physics_id is None or self.mass < 0.0:
+            return
+        
+        p.resetBasePositionAndOrientation( 
+            self.physics_id, 
+            self.translate, 
+            p.getQuaternionFromEuler( self.rotation ) 
+        )
+   
+    def _save_state(self):
+        """Save a snapshot of the full GameObject state."""
+
+        self._state_snapshot = {
+            "translate": list(self.translate),
+            "rotation": list(self.rotation),
+            "scale": copy.deepcopy(self.scale),
+            "visible": self.visible,
+            "material": self.material,
+            "scripts": copy.deepcopy(self.scripts),
+        }
+        print("here")
+
+    def _restore_state(self):
+        """Restore the object to the saved initial state."""
+        if not hasattr(self, "_state_snapshot"):
+            return
+
+        state = self._state_snapshot
+        self.translate.set( state["translate"] )
+        self.rotation.set( state["rotation"] )
+        self.scale = copy.deepcopy(state["scale"])
+        self.visible = state["visible"]
+        self.material = state["material"]
+        self.scripts = copy.deepcopy(state["scripts"])
+
+        # reset physics
+        #if self.physics_id is not None:
+        #    p.resetBasePositionAndOrientation(
+        #        self.physics_id,
+        #        self.translate,
+        #        p.getQuaternionFromEuler(self.rotation)
+        #    )
+
     def _createModelMatrix( self ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
         model = Matrix44.identity()
         model = model * Matrix44.from_translation( Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
         model = model * Matrix44.from_eulers( Vector3([self.rotation[0], self.rotation[1], self.rotation[2]] ) )
         return model * Matrix44.from_scale( Vector3( [self.scale[0], self.scale[1], self.scale[2]] ) )
+
+    def _initPhysics( self ) -> None:
+        """Initialize physics for this gameObject, sets position, orientation and mass"""
+        if self.mass < 0.0:
+            return
+
+        collision_shape = p.createCollisionShape(
+            p.GEOM_BOX, 
+            halfExtents = self.scale
+        )
+
+        self.physics_id = p.createMultiBody(
+            baseMass                = self.mass, 
+            baseCollisionShapeIndex = collision_shape, 
+            basePosition            = self.translate,
+            baseOrientation         = p.getQuaternionFromEuler(self.rotation)
+        )
+
+    def _deInitPhysics( self) -> None:
+        if self.physics_id is None or self.mass < 0.0:
+            return
+
+        p.removeBody( self.physics_id )
+        self.physics_id = None
+
+    def _runPhysics( self ):
+        """Run phyisics engine on this gameObject updating position and orientation"""
+        if self.physics_id is None or self.mass < 0.0:
+            return
+
+        pos, rot = p.getBasePositionAndOrientation( self.physics_id )
+        rotation_quat = p.getEulerFromQuaternion( rot )
+
+        #if list(pos) != list(self._translate):
+        self.translate.set( pos )
+
+        #if list(rotation_quat) != list(self.rotation):
+        self.rotation.set( rotation_quat )
 
     def onStart( self ) -> None:
         """Implemented by inherited class"""

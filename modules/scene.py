@@ -32,6 +32,7 @@ class SceneManager:
         translate   : List[float]
         rotation    : List[float]
         scale       : List[float]
+        mass        : float
         scripts     : List[str]
         instance_data : Dict # additional instance data
 
@@ -230,6 +231,7 @@ class SceneManager:
                 "material"      : obj.material,
                 "translate"     : obj.translate,
                 "scale"         : obj.scale,
+                "mass"          : obj.mass,
                 "rotation"      : obj.rotation,
                 "scripts"       : [str(x["file"]) for x in obj.scripts],
                 "instance_data" : {}
@@ -326,6 +328,7 @@ class SceneManager:
                                 translate   = obj["translate"]  if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
                                 scale       = obj["scale"]      if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
                                 rotation    = obj["rotation"]   if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
+                                mass        = obj["mass"]       if "mass"       in obj else -1.0,
                                 scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
                             )
                         )
