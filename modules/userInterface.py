@@ -60,8 +60,7 @@ class UserInterface( Context ):
         self.io             : imgui.IO = imgui.get_io()
 
         self.drawWireframe          : bool = False
-        self.selectedObject         : GameObject = False
-        self.selectedObjectIndex    : int = -1
+        self.selectedObject         : GameObject = None
 
         self.char_game_state : List = ["play", "stop"]
         self.color_game_state : List[imgui.ImVec4] = [
@@ -84,13 +83,8 @@ class UserInterface( Context ):
         # text_input placeholders
         self.save_as_name : str = "Scene Name"
 
-    def set_selected_object( self, uid : int ):
-        self.selectedObjectIndex = uid
-
-        if uid >= 0:
-            self.selectedObject = self.context.gameObjects[ uid ]
-        else:
-            self.selectedObject = False
+    def set_selected_object( self, obj : GameObject = None ):
+            self.selectedObject = obj
 
     #
     # text editor
@@ -391,6 +385,75 @@ class UserInterface( Context ):
 
         imgui.end()
 
+    def draw_gameObject_recursive( self, parent : GameObject = None, objects : List[GameObject] = [], depth : int = 0 ):
+        if not objects:
+            return
+
+        for n, obj in enumerate( objects ):
+            if isinstance( obj, GameObject ): # link class name
+
+                if obj._removed:
+                    continue
+
+                if obj.parent != parent or obj.parent and parent == None:
+                    continue
+                    
+                imgui.push_id( f"gameObject_{n}" )
+
+                if obj == None:
+                    return False
+
+                can_hide = True
+
+                _region = imgui.get_content_region_avail()
+
+                if depth > 0:
+                    pos = imgui.get_cursor_screen_pos()
+                    pos = imgui.ImVec2( (pos.x + (depth * 15)), pos.y)
+                    imgui.set_cursor_screen_pos(pos)
+
+                clicked, hover = imgui.selectable(
+                    label = obj.name,
+                    p_selected = bool( self.selectedObject == obj ),
+                    size = imgui.ImVec2(_region.x - 20.0, 15.0)
+                )
+
+                if clicked:
+                    self.set_selected_object( obj )
+                    
+                # toggle visibility
+                if isinstance( obj, Camera ):
+                    can_hide = False
+
+                if can_hide:
+                    imgui.same_line()
+                    pos = imgui.get_cursor_screen_pos()
+                    pos = imgui.ImVec2(5, pos.y - 3)
+                    imgui.set_cursor_screen_pos(pos)
+
+                    imgui.push_item_width(5) 
+                    _, obj.visible = imgui.checkbox( 
+                        "##visible", obj.visible )
+                    imgui.pop_item_width()
+
+                # remove gameObject
+                if not self.settings.game_running:
+                    #if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
+                    #    self.context.removeGameObject( self.context.gameObjects[ n ] )
+
+                    if self.context.gui.draw_edit_button( f"{fa.ICON_FA_TORNADO}", _region.x + 15 ):
+                        #obj.setParent( self.context.gameObjects[ 0 ] )
+                        obj.setParent( self.context.gameObjects[ len(self.context.gameObjects) - 1 ] )
+
+                if obj.children:
+                    self.draw_gameObject_recursive( 
+                        obj, 
+                        obj.children, 
+                        depth=depth+1
+                    )
+
+                imgui.pop_id()
+        
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
@@ -412,50 +475,13 @@ class UserInterface( Context ):
         if imgui.button( "Camera" ):
             self.context.addDefaultCamera()
 
-
         if imgui.tree_node_ex( "Hierarchy", imgui.TreeNodeFlags_.default_open ):
-
-            for n, obj in enumerate( self.context.gameObjects ):
-                if isinstance( obj, GameObject ): # link class name
-
-                    if obj._removed:
-                        continue
-
-                    can_hide = True
-
-                    imgui.push_id( f"gameObject_{n}" )
-                    _region = imgui.get_content_region_avail()
-
-                    clicked, hover = imgui.selectable(
-                        label = obj.name,
-                        p_selected = bool( self.selectedObjectIndex == n ),
-                        size = imgui.ImVec2(_region.x - 20.0, 15.0)
-                    )
-
-                    if clicked:
-                        self.set_selected_object( n )
-                    
-                    # toggle visibility
-                    if isinstance( obj, Camera ):
-                        can_hide = False
-
-                    if can_hide:
-                        imgui.same_line()
-                        pos = imgui.get_cursor_screen_pos()
-                        pos = imgui.ImVec2(5, pos.y - 3)
-                        imgui.set_cursor_screen_pos(pos)
-
-                        imgui.push_item_width(5) 
-                        _, self.context.gameObjects[ n ].visible = imgui.checkbox( 
-                            "##visible", self.context.gameObjects[ n ].visible )
-                        imgui.pop_item_width()
-
-                    # remove gameObject
-                    if not self.settings.game_running:
-                        if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
-                            self.context.removeGameObject( self.context.gameObjects[ n ] )
-
-                    imgui.pop_id()
+            self.draw_gameObject_recursive( 
+                None, 
+                self.context.gameObjects,
+                depth=0
+            )
+            
             imgui.tree_pop()
 
         imgui.end()

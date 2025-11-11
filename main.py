@@ -212,6 +212,43 @@ class EmberEngine:
             glVertex3f(size, 0, i)
             glEnd()
 
+    def renderGameObjectsRecursive(self, 
+        parent : GameObject = None,
+        objects : List[GameObject] = []
+    ):
+        if not objects:
+            return
+
+        for obj in objects:
+            if obj.parent != parent or obj.parent and parent == None:
+                continue
+
+            # (re)store states
+            if not app.settings.is_exported:
+                if self.settings.game_start:
+                    obj._save_state()
+                    obj._initPhysics()
+
+                if self.settings.game_stop:
+                    obj._restore_state()
+                    obj._deInitPhysics()
+                            
+            obj.onUpdate();  # editor update
+
+            # scene
+            if self.settings.game_start:
+                obj.onStartScripts();
+     
+            if self.settings.game_running:
+                obj.onUpdateScripts();
+
+            # render children if any
+            if obj.children:
+                self.renderGameObjectsRecursive( 
+                    obj, 
+                    obj.children
+                )
+
     def run( self ) -> None:
         """The main loop of the appliction, remains active as long as 'self.renderer.running'
         is True.
@@ -273,26 +310,10 @@ class EmberEngine:
                     self.console.clear()
 
                 # trigger update function in registered gameObjects
-                for gameObject in self.gameObjects:
-                    # (re)store states
-                    if not app.settings.is_exported:
-                        if self.settings.game_start:
-                            gameObject._save_state()
-                            gameObject._initPhysics()
-
-                        if self.settings.game_stop:
-                            gameObject._restore_state()
-                            gameObject._deInitPhysics()
-                            
-
-                    gameObject.onUpdate();  # editor update
-
-                    # scene
-                    if self.settings.game_start:
-                        gameObject.onStartScripts();
-     
-                    if self.settings.game_running:
-                        gameObject.onUpdateScripts();
+                self.renderGameObjectsRecursive( 
+                    None, 
+                    self.gameObjects
+                )
 
                 if self.settings.game_start:
                     self.settings.game_start = False

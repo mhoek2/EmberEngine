@@ -1,3 +1,5 @@
+#from __future__ import annotations # used for "GameObject" forward reference in same scope
+
 import os, sys
 from pathlib import Path
 import pygame
@@ -26,10 +28,152 @@ import pybullet as p
 
 class GameObject( Context ):
     """Base class for gameObjects """
+    def __init__( self, context, 
+                 name = "GameObject",
+                 visible = True,
+                 model_file = False,
+                 material = -1,
+                 translate = [ 0.0, 0.0, 0.0 ], 
+                 rotation = [ 0.0, 0.0, 0.0 ], 
+                 scale = [ 1.0, 1.0, 1.0 ],
+                 mass = -1.0,
+                 scripts : List[Path] = []
+                 ) -> None:
+        """Base class for gameObjects 
+
+        :param context: This is the main context of the application
+        :type context: EmberEngine
+        :param name: The name that is stored with the gameObject
+        :type name: str
+        :param visible: If the gameObject is drawn
+        :type visible: bool
+        :param model_file: The file path to a model file
+        :type model_file: Path | bool
+        :param material: The index in the material buffer as override, -1 is default
+        :type material: int
+        :param translate: The position of the object, using getter and setter
+        :type translate: List
+        :param rotation: The rotation of the object, using getter and setter
+        :type rotation: List
+        :param scale: The scale of the object
+        :type scale: Vector3
+        :param mass: The mass of the object, -1.0 is noy physics?
+        :type mass: float
+        :param scripts: A list containing Paths to dynamic scripts
+        :type scripts: List[scripts]
+        """
+        super().__init__( context )
+
+        self.materials      : Materials = context.materials
+        self.images         : Images = context.images
+        self.cubemaps       : Cubemap = context.cubemaps
+        self.models         : Models = context.models
+
+        self.scripts        : list[GameObject.Script] = []
+
+        self.name           : str = name
+        self.material       : int = material
+        self.visible        : bool = visible
+
+        self._removed       : bool = False
+        
+        # https://github.com/adamlwgriffiths/Pyrr
+
+        self._translate = self.vectorInterface( translate, self._update_physics_body )
+        self._rotation  = self.vectorInterface( rotation, self._update_physics_body )
+
+        self.scale      = scale
+        self.mass       = mass
+
+        # model
+        self.model          : int = -1
+        self.model_file = Path(model_file) if model_file else False
+
+        # physics
+        self.physics_id = None
+
+        self.children : List[GameObject] = []
+        self.parent : GameObject = None
+
+        self.onStart()
+
+        # external scripts
+        for file in scripts:
+            self.addScript( file )
+
+    def setParent( self, parent : "GameObject" ) -> None:
+        """Set relation between child and parent object"""
+        parent.children.append(self)
+        self.parent = parent
+
+        # needs additional logic for model matrix transforms to keep world position
+        pass
 
     class Script(TypedDict):
         file: Path
         obj: None
+
+    class vectorInterface(list):
+        def __init__(self, data, callback):
+            super().__init__(data)
+            self._callback = callback
+
+        def _trigger(self):
+            if self._callback:
+                self._callback()
+
+        def __setitem__(self, key, value):
+            """
+            !important
+            only update physics when value changed (gui or script)
+            this is detected by the data type specifier,
+            physics engine : tuple
+            gui or scripts : list, int, float
+            """
+            update_physics : bool = isinstance(value, (list, int, float));
+
+            if isinstance(key, slice):
+                if not isinstance(value, type(self)):
+                    value = type(self)( value, self._callback )
+                    #print("(physics engine)");
+
+            super().__setitem__(key, value)
+
+            if update_physics:
+                self._trigger()
+                #print("(gui-script)");
+
+        def __iadd__(self, other):
+            result = super().__iadd__(other)
+            self._trigger()
+            return result
+
+        def __isub__(self, other):
+            result = super().__isub__(other)
+            self._trigger()
+            return result
+
+        def __ne__(self, other):
+            return list(self) != list(other)
+
+        def __eq__(self, other):
+            return list(self) == list(other)
+
+    @property
+    def translate(self):
+        return self._translate
+    
+    @translate.setter
+    def translate(self, data):
+        self._translate.__setitem__(slice(None), data)
+
+    @property
+    def rotation(self):
+        return self._rotation
+    
+    @rotation.setter
+    def rotation(self, data):
+        self._rotation.__setitem__(slice(None), data)
 
     def addScript( self, file : Path ):
         """Add script to a gameObject
@@ -170,138 +314,6 @@ class GameObject( Context ):
                 self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
         self._runPhysics()
-
-    def __init__( self, context, 
-                 name = "GameObject",
-                 visible = True,
-                 model_file = False,
-                 material = -1,
-                 translate = [ 0.0, 0.0, 0.0 ], 
-                 rotation = [ 0.0, 0.0, 0.0 ], 
-                 scale = [ 1.0, 1.0, 1.0 ],
-                 mass = -1.0,
-                 scripts : List[Path] = []
-                 ) -> None:
-        """Base class for gameObjects 
-
-        :param context: This is the main context of the application
-        :type context: EmberEngine
-        :param name: The name that is stored with the gameObject
-        :type name: str
-        :param visible: If the gameObject is drawn
-        :type visible: bool
-        :param model_file: The file path to a model file
-        :type model_file: Path | bool
-        :param material: The index in the material buffer as override, -1 is default
-        :type material: int
-        :param translate: The position of the object, using getter and setter
-        :type translate: List
-        :param rotation: The rotation of the object, using getter and setter
-        :type rotation: List
-        :param scale: The scale of the object
-        :type scale: Vector3
-        :param mass: The mass of the object, -1.0 is noy physics?
-        :type mass: float
-        :param scripts: A list containing Paths to dynamic scripts
-        :type scripts: List[scripts]
-        """
-        super().__init__( context )
-
-        self.materials      : Materials = context.materials
-        self.images         : Images = context.images
-        self.cubemaps       : Cubemap = context.cubemaps
-        self.models         : Models = context.models
-
-        self.scripts        : list[GameObject.Script] = []
-
-        self.name           : str = name
-        self.material       : int = material
-        self.visible        : bool = visible
-
-        self._removed       : bool = False
-        
-        # https://github.com/adamlwgriffiths/Pyrr
-
-        self._translate = self.vectorInterface( translate, self._update_physics_body )
-        self._rotation  = self.vectorInterface( rotation, self._update_physics_body )
-
-        self.scale      = scale
-        self.mass       = mass
-
-        # model
-        self.model          : int = -1
-        self.model_file = Path(model_file) if model_file else False
-
-        # physics
-        self.physics_id = None
-
-        self.onStart()
-
-        # external scripts
-        for file in scripts:
-            self.addScript( file )
-
-    class vectorInterface(list):
-        def __init__(self, data, callback):
-            super().__init__(data)
-            self._callback = callback
-
-        def _trigger(self):
-            if self._callback:
-                self._callback()
-
-        def __setitem__(self, key, value):
-            """
-            !important
-            only update physics when value changed (gui or script)
-            this is detected by the data type specifier,
-            physics engine : tuple
-            gui or scripts : list, int, float
-            """
-            update_physics : bool = isinstance(value, (list, int, float));
-
-            if isinstance(key, slice):
-                if not isinstance(value, type(self)):
-                    value = type(self)( value, self._callback )
-                    #print("(physics engine)");
-
-            super().__setitem__(key, value)
-
-            if update_physics:
-                self._trigger()
-                #print("(gui-script)");
-
-        def __iadd__(self, other):
-            result = super().__iadd__(other)
-            self._trigger()
-            return result
-
-        def __isub__(self, other):
-            result = super().__isub__(other)
-            self._trigger()
-            return result
-
-        def __ne__(self, other):
-            return list(self) != list(other)
-
-        def __eq__(self, other):
-            return list(self) == list(other)
-
-    @property
-    def translate(self):
-        return self._translate
-    
-    @translate.setter
-    def translate(self, data):
-        self._translate.__setitem__(slice(None), data)
-
-    @property
-    def rotation(self):
-        return self._rotation
-    
-    @rotation.setter
-    def rotation(self, data):
-        self._rotation.__setitem__(slice(None), data)
 
     def _update_physics_body(self):
         """
