@@ -21,6 +21,8 @@ from modules.project import ProjectManager
 from modules.shader import Shader
 from modules.camera import Camera
 
+import pybullet as p
+
 if TYPE_CHECKING:
     from main import EmberEngine
 
@@ -137,6 +139,9 @@ class Renderer:
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         self.setup_projection_matrix( self.display_size)
+
+        # physics
+        self._initPhysics()
 
     @staticmethod
     def check_opengl_error():
@@ -471,6 +476,24 @@ class Renderer:
         if not self.ImGuiInput and not mouse_moving:
             pygame.mouse.set_pos( self.screen_center )
 
+    def _initPhysics( self ):
+        """Initialize the pybullter physics engine and set gravity"""
+        self.physics_client = p.connect(p.DIRECT)
+
+        #p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        p.setGravity(0, -10, 0)
+
+        # debug print list of available functions
+        #for name in dir(p):
+        #    if callable(getattr(p, name)):
+        #        print(name)
+
+    def _runPhysics( self ):
+        """Run the step simulation when game is running"""
+        if self.settings.game_running:
+            for _ in range( int(self.deltaTime / (1./240.)) ):
+                p.stepSimulation()
+
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
         Bind framebuffer (FBO), view matrix, frame&delta time"""
@@ -484,6 +507,9 @@ class Renderer:
         self.bind_fbo( self.main_fbo )
 
         self.view = self.context.camera.get_view_matrix()
+
+        # physics
+        self._runPhysics()
 
     def end_frame( self ) -> None:
         """End for each frame, clear GL states, resolve MSAA if enabled, draw ImGui.

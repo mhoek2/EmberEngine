@@ -25,6 +25,8 @@ from pathlib import Path
 import textwrap
 import re
 
+import pybullet as p
+
 class CustomEvent( Context ):
     def __init__(self):
         self._queue : List = []
@@ -58,7 +60,7 @@ class UserInterface( Context ):
         self.io             : imgui.IO = imgui.get_io()
 
         self.drawWireframe          : bool = False
-        self.selectedObject         : bool = False
+        self.selectedObject         : GameObject = False
         self.selectedObjectIndex    : int = -1
 
         self.char_game_state : List = ["play", "stop"]
@@ -254,7 +256,7 @@ class UserInterface( Context ):
                     _open_new_scene_modal = True
 
                 if imgui.menu_item( "Save", '', False, True )[0]:
-                    self.project.save()
+                    self.context.project.save()
                     self.scene.saveScene()
 
                 if imgui.menu_item( "Save Scene as", '', False, True )[0]:
@@ -264,7 +266,7 @@ class UserInterface( Context ):
                     _open_project_settings = True
     
                 if imgui.menu_item( "Export", '', False, True )[0]:
-                    self.project.export()
+                    self.context.project.export()
 
                 imgui.end_menu()
 
@@ -324,6 +326,7 @@ class UserInterface( Context ):
 
         if imgui.button( self.char_game_state[game_state] ):
             if self.settings.game_running:
+                self.settings.game_stop = True
                 self.settings.game_running = False
             else:
                 self.settings.game_start = True
@@ -490,8 +493,7 @@ class UserInterface( Context ):
         imgui.end()
         return
 
-    # helper
-    def draw_vec3_control( self, label, vector, resetValue = 0.0 ):
+    def draw_vec3_control( self, label, vector, resetValue = 0.0 ) -> bool:
 
         labels = ["X", "Y", "Z"]
         label_colors = [(0.8, 0.1, 0.15), (0.2, 0.7, 0.2), (0.1, 0.25, 0.8)]
@@ -509,6 +511,8 @@ class UserInterface( Context ):
 
         imgui.push_style_var(imgui.StyleVar_.item_spacing, (0.0, 0.0))
 
+        changed_any : bool = False
+
         for i in range( 0, 3 ):
             imgui.push_style_color(imgui.Col_.button, imgui.ImVec4(label_colors[i][0], label_colors[i][1], label_colors[i][2], 1.0))
             if imgui.button( labels[i] ):
@@ -516,10 +520,15 @@ class UserInterface( Context ):
             imgui.pop_style_color(1)
             imgui.same_line()
             imgui.push_item_width( width );
-            changed, vector[i] = imgui.drag_float(
+
+            changed, _value = imgui.drag_float(
                 f"##{labels[i]}", vector[i], 0.01
             )
             imgui.pop_item_width();
+
+            if changed:
+                vector[i] = _value
+                changed_any = True
 
             if i < 2:
                 imgui.same_line()
@@ -531,7 +540,8 @@ class UserInterface( Context ):
         imgui.columns( count=1 )
 
         imgui.pop_id()
-        return
+
+        return changed_any
 
     # helper
     def draw_thumb( self, image : int, size : imgui.ImVec2 ):
@@ -684,10 +694,16 @@ class UserInterface( Context ):
                 imgui.text( f"Light" );
 
             if imgui.tree_node_ex( "Transform", imgui.TreeNodeFlags_.default_open ):
-
                 self.context.gui.draw_vec3_control( "Position", gameObject.translate, 0.0 )
                 self.context.gui.draw_vec3_control( "Rotation", gameObject.rotation, 0.0 )
                 self.context.gui.draw_vec3_control( "Scale", gameObject.scale, 0.0 )
+
+                imgui.tree_pop()
+
+            if imgui.tree_node_ex( "Physics", imgui.TreeNodeFlags_.default_open ):
+                changed, gameObject.mass = imgui.drag_float(
+                        f"Mass", gameObject.mass, 1
+                )
 
                 imgui.tree_pop()
 
@@ -1042,7 +1058,6 @@ class UserInterface( Context ):
 
         def render( self ):
             imgui.begin( "Console" )
-            imgui.text(f"HELLO {fa.ICON_FA_CROWN}")
 
             entries : List[Console.Entry] = self.console.getEntries()
 

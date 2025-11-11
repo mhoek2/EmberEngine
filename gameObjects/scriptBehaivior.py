@@ -21,4 +21,3 @@ class ScriptBehaivior:
         self.translate  = self.gameObject.translate
         self.rotation   = self.gameObject.rotation
         self.scale      = self.gameObject.scale
-

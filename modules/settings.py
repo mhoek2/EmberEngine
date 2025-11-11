@@ -8,6 +8,7 @@ class Settings:
 
         self.game_running = False
         self.game_start = False
+        self.game_stop = False
 
         self.msaa = 8
         self.msaaEnabled = True if self.msaa > 0 else False

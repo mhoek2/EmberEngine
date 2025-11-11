@@ -135,6 +135,7 @@ class EmberEngine:
             material    = self.defaultMaterial,
             translate   = [ 0, 1, 0 ],
             scale       = [ 1, 1, 1 ],
+            mass        = -1.0,
             rotation    = [ 0.0, 0.0, 0.0 ]
         ) )
 
@@ -273,6 +274,17 @@ class EmberEngine:
 
                 # trigger update function in registered gameObjects
                 for gameObject in self.gameObjects:
+                    # (re)store states
+                    if not app.settings.is_exported:
+                        if self.settings.game_start:
+                            gameObject._save_state()
+                            gameObject._initPhysics()
+
+                        if self.settings.game_stop:
+                            gameObject._restore_state()
+                            gameObject._deInitPhysics()
+                            
+
                     gameObject.onUpdate();  # editor update
 
                     # scene
@@ -284,6 +296,9 @@ class EmberEngine:
 
                 if self.settings.game_start:
                     self.settings.game_start = False
+
+                if self.settings.game_stop:
+                    self.settings.game_stop = False
 
                 self.renderer.end_frame()
 
