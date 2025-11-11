@@ -63,7 +63,7 @@ class Renderer:
         _icon_ranges = [fa.ICON_MIN_FA, fa.ICON_MAX_FA, 0]
         _font_file : str = str(os.path.join(self.settings.engineAssets, "gui/fonts/Font_Awesome_6_Free-Solid-900.otf"))
         io.fonts.add_font_from_file_ttf(
-            _font_file, 16.0, _font_cfg
+            _font_file, 12.0, _font_cfg
         )
 
         self.render_backend = PygameRenderer()
