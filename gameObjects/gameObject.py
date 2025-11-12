@@ -106,6 +106,15 @@ class GameObject( Context ):
         parent.children.append(self)
         self.parent = parent
 
+
+        #model_matrix = self._createModelMatrix()
+        #scale, rotation_quat, translation = model_matrix.decompose()
+        ##
+        ### Convert pyrr.Quaternion to list for PyBullet
+        #world_rot_quat = [rotation_quat.x, rotation_quat.y, rotation_quat.z, rotation_quat.w]
+        #world_pos = [translation.x, translation.y, translation.z]
+
+
         # needs additional logic for model matrix transforms to keep world position
         pass
 
@@ -355,28 +364,56 @@ class GameObject( Context ):
         self.material   = state["material"]
         self.scripts    = copy.deepcopy(state["scripts"])
 
-    def _createModelMatrix( self ) -> Matrix44:
+    def _createModelMatrix( self, includeParent : bool = True ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
-        model = Matrix44.identity()
-        model = model * Matrix44.from_translation( Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
-        model = model * Matrix44.from_eulers( Vector3([self.rotation[0], self.rotation[1], self.rotation[2]] ) )
-        return model * Matrix44.from_scale( Vector3( [self.scale[0], self.scale[1], self.scale[2]] ) )
+        #self.model_matrix = Matrix44.identity()
+        T = Matrix44.from_translation( Vector3( [self.translate[0], self.translate[1], self.translate[2]] ) )
+        R = Matrix44.from_eulers( Vector3([self.rotation[0], self.rotation[1], self.rotation[2]] ) )
+        S = Matrix44.from_scale( Vector3( [self.scale[0], self.scale[1], self.scale[2]] ) )
+        self.model_matrix = T * R * S
+
+        if includeParent and self.parent is not None:
+            self.model_matrix = self.parent.model_matrix * self.model_matrix
+
+        return self.model_matrix
 
     def _initPhysics( self ) -> None:
         """Initialize physics for this gameObject, sets position, orientation and mass"""
         if self.mass < 0.0:
             return
 
+        # Compute world-space transform
+        model_matrix = self._createModelMatrix()
+        scale, rotation_quat, translation = model_matrix.decompose()
+        #
+        ## Convert pyrr.Quaternion to list for PyBullet
+        world_rot_quat = [rotation_quat.x, rotation_quat.y, rotation_quat.z, rotation_quat.w]
+        world_pos = [translation.x, translation.y, translation.z]
+        #
         collision_shape = p.createCollisionShape(
             p.GEOM_BOX, 
             halfExtents = self.scale
         )
+        #
+        #self.physics_id = p.createMultiBody(
+        #    baseMass                = self.mass, 
+        #    baseCollisionShapeIndex = collision_shape, 
+        #    basePosition            = world_pos,
+        #    baseOrientation         = world_rot_quat
+        #)
+
+        #self.physics_id = p.createMultiBody(
+        #    baseMass                = self.mass, 
+        #    baseCollisionShapeIndex = collision_shape, 
+        #    basePosition            = self.translate,
+        #    baseOrientation         = p.getQuaternionFromEuler(self.rotation)
+        #)
 
         self.physics_id = p.createMultiBody(
             baseMass                = self.mass, 
             baseCollisionShapeIndex = collision_shape, 
-            basePosition            = self.translate,
-            baseOrientation         = p.getQuaternionFromEuler(self.rotation)
+            basePosition            = world_pos,
+            baseOrientation         = world_rot_quat
         )
 
     def _deInitPhysics( self) -> None:

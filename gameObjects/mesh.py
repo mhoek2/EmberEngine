@@ -10,4 +10,4 @@ class Mesh( GameObject ):
     def onUpdate( self ) -> None:
         """Executes every frame, issuing draw commands"""
         if self.model != -1 and self.visible:
-            self.models.draw( self.model, self._createModelMatrix() )     
+            self.models.draw( self.model, self._createModelMatrix(includeParent=not self.settings.game_running) )     
