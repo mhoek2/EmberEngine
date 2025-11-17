@@ -44,6 +44,18 @@ class Settings:
         self.export_clean           = True
         self.export_debug           = False
 
+        # coordination
+        self.ENGINE_ROTATION_MAP  = {
+            "XYZ": "ZYX",
+            "XZY": "YZX",
+            "YXZ": "ZXY",
+            "YZX": "XZY",
+            "ZXY": "YXZ",
+            "ZYX": "XYZ"
+        }
+
+        self.ENGINE_ROTATION = "YXZ"
+
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""
         return os.getenv("EE_EXPORTED") == "1"

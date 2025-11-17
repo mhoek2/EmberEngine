@@ -212,6 +212,48 @@ class EmberEngine:
             glVertex3f(size, 0, i)
             glEnd()
 
+    def draw_axis( self, length : float = 1.0, width : float = 3.0, centered : bool = False ):
+        """Draw axis lines. width and length can be adjust, also if axis is centered or half-axis"""
+        glLineWidth(width)
+
+        self.renderer.use_shader(self.renderer.color)
+
+        # bind projection matrix
+        glUniformMatrix4fv(self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection)
+        
+        # viewmatrix
+        glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
+
+        if centered:
+            start = -length
+            end   = +length
+        else:
+            start = 0.0
+            end   = length
+
+        # X axis : red
+        glUniform4f(self.renderer.shader.uniforms['uColor'], 1.0, 0.0, 0.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex3f(start, 0.0,   0.0)
+        glVertex3f(end,   0.0,   0.0)
+        glEnd()
+
+        # Y axis : green
+        glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 1.0, 0.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex3f(0.0, start,   0.0)
+        glVertex3f(0.0, end,     0.0)
+        glEnd()
+
+        # Z axis : blue
+        glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 0.0, 1.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex3f(0.0,   0.0, start)
+        glVertex3f(0.0,   0.0, end)
+        glEnd()
+
+        glLineWidth(1.0)
+
     def renderGameObjectsRecursive(self, 
         parent : GameObject = None,
         objects : List[GameObject] = []
@@ -232,8 +274,6 @@ class EmberEngine:
                 if self.settings.game_stop:
                     obj._restore_state()
                     obj._deInitPhysics()
-                            
-            obj.onUpdate();  # editor update
 
             # scene
             if self.settings.game_start:
@@ -241,6 +281,8 @@ class EmberEngine:
      
             if self.settings.game_running:
                 obj.onUpdateScripts();
+
+            obj.onUpdate();  # engine update
 
             # render children if any
             if obj.children:
@@ -265,10 +307,12 @@ class EmberEngine:
                 self.skybox.draw()
 
                 #
-                # grid
+                # editor viewport
                 #
-                self.draw_grid()
-                
+                if not app.settings.is_exported:
+                    self.draw_grid()
+                    self.draw_axis(100.0, centered=True)
+
                 #
                 # general
                 #
@@ -298,7 +342,7 @@ class EmberEngine:
                 _scene = self.scene.getCurrentScene()
 
                 # sun direction/position and color
-                light_dir = self.gameObjects[self.sun].translate if self.sun != -1 else (0.0, 0.0, 1.0)
+                light_dir = self.gameObjects[self.sun].transform.local_position if self.sun != -1 else (0.0, 0.0, 1.0)
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], _scene["light_color"][0], _scene["light_color"][1], _scene["light_color"][2], 1.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )

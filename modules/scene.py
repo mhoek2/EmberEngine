@@ -222,10 +222,10 @@ class SceneManager:
                 "name"          : obj.name,
                 "model_file"    : str(obj.model_file.relative_to(self.settings.rootdir)),
                 "material"      : obj.material,
-                "translate"     : obj.translate,
-                "scale"         : obj.scale,
+                "translate"     : obj.transform.local_position,
+                "rotation"      : obj.transform.local_rotation,
+                "scale"         : obj.transform.local_scale,
                 "mass"          : obj.mass,
-                "rotation"      : obj.rotation,
                 "scripts"       : [str(x["file"]) for x in obj.scripts],
                 "instance_data" : {},
                 "children"      : []
@@ -367,7 +367,7 @@ class SceneManager:
             if parent:
                 gameObject.setParent( parent )
 
-            if obj["children"]:
+            if "children" in obj:
                 self.loadGameObjectsRecursive( 
                     gameObject, 
                     obj["children"], 

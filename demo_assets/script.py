@@ -4,7 +4,6 @@ class MyScript:
     """Default script template"""
     def onStart( self ) -> None:
         self.camera = self.scene.getCamera()
-
         pass
 
     def onUpdate( self ) -> None:
@@ -17,14 +16,14 @@ class MyScript:
         move = self.renderer.deltaTime * velocity
 
         if keypress[pygame.K_w]:
-            self.translate[2] += move
-            self.camera.translate[2] += move
+            self.transform.local_position[2] += move
+            self.camera.transform.local_position[2] += move
         if keypress[pygame.K_s]:
-            self.translate[2] -= move
-            self.camera.translate[2] -= move
+            self.transform.local_position[2] -= move
+            self.camera.transform.local_position[2] -= move
         if keypress[pygame.K_d]:
-            self.translate[0] -= move
-            self.camera.translate[0] -= move
+            self.transform.local_position[0] -= move
+            self.camera.transform.local_position[0] -= move
         if keypress[pygame.K_a]:
-            self.translate[0] += move
-            self.camera.translate[0] += move
+            self.transform.local_position[0] += move
+            self.camera.transform.local_position[0] += move

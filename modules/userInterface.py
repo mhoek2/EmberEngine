@@ -519,7 +519,7 @@ class UserInterface( Context ):
         imgui.end()
         return
 
-    def draw_vec3_control( self, label, vector, resetValue = 0.0 ) -> bool:
+    def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None ) -> bool:
 
         labels = ["X", "Y", "Z"]
         label_colors = [(0.8, 0.1, 0.15), (0.2, 0.7, 0.2), (0.1, 0.25, 0.8)]
@@ -566,6 +566,9 @@ class UserInterface( Context ):
         imgui.columns( count=1 )
 
         imgui.pop_id()
+
+        if changed_any and onChange is not None:
+            onChange( vector )
 
         return changed_any
 
@@ -719,11 +722,27 @@ class UserInterface( Context ):
             if isinstance( gameObject, Light ):
                 imgui.text( f"Light" );
 
-            if imgui.tree_node_ex( "Transform", imgui.TreeNodeFlags_.default_open ):
-                self.context.gui.draw_vec3_control( "Position", gameObject.translate, 0.0 )
-                self.context.gui.draw_vec3_control( "Rotation", gameObject.rotation, 0.0 )
-                self.context.gui.draw_vec3_control( "Scale", gameObject.scale, 0.0 )
+            if imgui.tree_node_ex( "Transform local", imgui.TreeNodeFlags_.default_open ):
+                self.context.gui.draw_vec3_control( "Position", gameObject.transform.local_position, 0.0 )
+                self.context.gui.draw_vec3_control( "Rotation", gameObject.transform.local_rotation, 0.0 )
+                self.context.gui.draw_vec3_control( "Scale", gameObject.transform.local_scale, 0.0 )
+                imgui.tree_pop()
 
+
+            if imgui.tree_node_ex( "Transform world", imgui.TreeNodeFlags_.default_open ):
+                pos = gameObject.transform.extract_position()
+                rot = gameObject.transform.extract_euler()
+                scl = gameObject.transform.extract_scale()
+
+                self.context.gui.draw_vec3_control( "Position", pos, 0.0,          
+                    onChange = lambda v: gameObject.transform.updatePositionFromWorld(v)
+                )
+                self.context.gui.draw_vec3_control( "Rotation", rot, 0.0,
+                    onChange = lambda v: gameObject.transform.updateRotationFromWorld(v)
+                )
+                self.context.gui.draw_vec3_control( "Scale", scl, 0.0,
+                    onChange = lambda v: gameObject.transform.updateScaleFromWorld(v)
+                )
                 imgui.tree_pop()
 
             if imgui.tree_node_ex( "Physics", imgui.TreeNodeFlags_.default_open ):
