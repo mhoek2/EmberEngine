@@ -119,12 +119,20 @@ class GameObject( Context, Transform ):
 
     def setParent( self, parent : "GameObject" ) -> None:
         """Set relation between child and parent object"""
-        parent.children.append(self)
+
+        # remove from current parent
+        if self.parent is not None:
+            self.parent.children.remove(self)
+
+        # add to new parent
+        if parent is not None:
+            parent.children.append(self)
+
         self.parent = parent
 
         # needs additional logic for model matrix transforms to keep the current world position
         # bascily, need to update local transform in relation to the new parent world position
-        pass
+        self._mark_dirty()
 
     def _mark_dirty(self):
         if not self._dirty:

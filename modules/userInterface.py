@@ -24,8 +24,7 @@ from gameObjects.camera import Camera
 from pathlib import Path
 import textwrap
 import re
-
-import pybullet as p
+import uuid as uid
 
 class CustomEvent( Context ):
     def __init__(self):
@@ -398,7 +397,7 @@ class UserInterface( Context ):
                 if obj.parent != parent or obj.parent and parent == None:
                     continue
                     
-                imgui.push_id( f"gameObject_{n}" )
+                imgui.push_id( f"gameObject_{obj._uuid_gui}" )
 
                 if obj == None:
                     return False
@@ -417,6 +416,32 @@ class UserInterface( Context ):
                     p_selected = bool( self.selectedObject == obj ),
                     size = imgui.ImVec2(_region.x - 20.0, 15.0)
                 )
+
+                # dnd: source
+                if imgui.begin_drag_drop_source(imgui.DragDropFlags_.none):
+                    imgui.set_drag_drop_payload_py_id(
+                        type    = "HIERARCHY_OBJ", 
+                        data_id = obj._uuid_gui
+                    )
+                    imgui.text(f"{obj.name}")
+                    imgui.end_drag_drop_source()
+
+                # dnd: receive
+                if imgui.begin_drag_drop_target():
+                    payload = imgui.accept_drag_drop_payload_py_id("HIERARCHY_OBJ")
+                    if payload is not None:
+                        payload_uuid_gui = payload.data_id
+                        payload_obj = self.context.findGameObject(payload_uuid_gui)
+
+                        print("parent")
+                        print(obj)
+
+                        print("payload")
+                        print(payload_obj)
+
+                        payload_obj.setParent(obj)
+
+                    imgui.end_drag_drop_target()
 
                 if clicked:
                     self.set_selected_object( obj )
@@ -438,12 +463,10 @@ class UserInterface( Context ):
 
                 # remove gameObject
                 if not self.settings.game_running:
-                    #if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
-                    #    self.context.removeGameObject( self.context.gameObjects[ n ] )
+                    if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
+                        self.context.removeGameObject( self.context.gameObjects[ n ] )
 
-                    if self.context.gui.draw_edit_button( f"{fa.ICON_FA_TORNADO}", _region.x + 15 ):
-                        #obj.setParent( self.context.gameObjects[ 0 ] )
-                        obj.setParent( self.context.gameObjects[ len(self.context.gameObjects) - 1 ] )
+                imgui.pop_id()
 
                 if obj.children:
                     self.draw_gameObject_recursive( 
@@ -451,8 +474,6 @@ class UserInterface( Context ):
                         obj.children, 
                         depth=depth+1
                     )
-
-                imgui.pop_id()
         
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
