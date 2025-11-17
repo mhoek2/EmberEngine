@@ -14,5 +14,5 @@ class Sun:
         if keypress[pygame.K_p]:
             self.angle += self.renderer.deltaTime * self.anim_speed 
 
-            self.translate[1] = self.anim_radius * math.cos( self.angle )  # Update x position
-            self.translate[2] = self.anim_radius * math.sin( self.angle )
+            self.transform.local_position[1] = self.anim_radius * math.cos( self.angle )  # Update x position
+            self.transform.local_position[2] = self.anim_radius * math.sin( self.angle )

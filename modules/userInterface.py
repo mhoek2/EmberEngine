@@ -24,8 +24,7 @@ from gameObjects.camera import Camera
 from pathlib import Path
 import textwrap
 import re
-
-import pybullet as p
+import uuid as uid
 
 class CustomEvent( Context ):
     def __init__(self):
@@ -60,8 +59,7 @@ class UserInterface( Context ):
         self.io             : imgui.IO = imgui.get_io()
 
         self.drawWireframe          : bool = False
-        self.selectedObject         : GameObject = False
-        self.selectedObjectIndex    : int = -1
+        self.selectedObject         : GameObject = None
 
         self.char_game_state : List = ["play", "stop"]
         self.color_game_state : List[imgui.ImVec4] = [
@@ -84,13 +82,8 @@ class UserInterface( Context ):
         # text_input placeholders
         self.save_as_name : str = "Scene Name"
 
-    def set_selected_object( self, uid : int ):
-        self.selectedObjectIndex = uid
-
-        if uid >= 0:
-            self.selectedObject = self.context.gameObjects[ uid ]
-        else:
-            self.selectedObject = False
+    def set_selected_object( self, obj : GameObject = None ):
+            self.selectedObject = obj
 
     #
     # text editor
@@ -391,6 +384,97 @@ class UserInterface( Context ):
 
         imgui.end()
 
+    def draw_gameObject_recursive( self, parent : GameObject = None, objects : List[GameObject] = [], depth : int = 0 ):
+        if not objects:
+            return
+
+        for n, obj in enumerate( objects ):
+            if isinstance( obj, GameObject ): # link class name
+
+                if obj._removed:
+                    continue
+
+                if obj.parent != parent or obj.parent and parent == None:
+                    continue
+                    
+                imgui.push_id( f"gameObject_{obj._uuid_gui}" )
+
+                if obj == None:
+                    return False
+
+                can_hide = True
+
+                _region = imgui.get_content_region_avail()
+
+                if depth > 0:
+                    pos = imgui.get_cursor_screen_pos()
+                    pos = imgui.ImVec2( (pos.x + (depth * 15)), pos.y)
+                    imgui.set_cursor_screen_pos(pos)
+
+                clicked, hover = imgui.selectable(
+                    label = obj.name,
+                    p_selected = bool( self.selectedObject == obj ),
+                    size = imgui.ImVec2(_region.x - 20.0, 15.0)
+                )
+
+                # dnd: source
+                if imgui.begin_drag_drop_source(imgui.DragDropFlags_.none):
+                    imgui.set_drag_drop_payload_py_id(
+                        type    = "HIERARCHY_OBJ", 
+                        data_id = obj._uuid_gui
+                    )
+                    imgui.text(f"{obj.name}")
+                    imgui.end_drag_drop_source()
+
+                # dnd: receive
+                if imgui.begin_drag_drop_target():
+                    payload = imgui.accept_drag_drop_payload_py_id("HIERARCHY_OBJ")
+                    if payload is not None:
+                        payload_uuid_gui = payload.data_id
+                        payload_obj = self.context.findGameObject(payload_uuid_gui)
+
+                        print("parent")
+                        print(obj)
+
+                        print("payload")
+                        print(payload_obj)
+
+                        payload_obj.setParent(obj)
+
+                    imgui.end_drag_drop_target()
+
+                if clicked:
+                    self.set_selected_object( obj )
+                    
+                # toggle visibility
+                if isinstance( obj, Camera ):
+                    can_hide = False
+
+                if can_hide:
+                    imgui.same_line()
+                    pos = imgui.get_cursor_screen_pos()
+                    pos = imgui.ImVec2(5, pos.y - 3)
+                    imgui.set_cursor_screen_pos(pos)
+
+                    imgui.push_item_width(5) 
+                    _, obj.visible = imgui.checkbox( 
+                        "##visible", obj.visible )
+                    imgui.pop_item_width()
+
+                # remove gameObject
+                if not self.settings.game_running:
+                    if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
+                        self.context.removeGameObject( self.context.gameObjects[ n ] )
+
+                imgui.pop_id()
+
+                if obj.children:
+                    self.draw_gameObject_recursive( 
+                        obj, 
+                        obj.children, 
+                        depth=depth+1
+                    )
+        
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
 
@@ -412,50 +496,13 @@ class UserInterface( Context ):
         if imgui.button( "Camera" ):
             self.context.addDefaultCamera()
 
-
         if imgui.tree_node_ex( "Hierarchy", imgui.TreeNodeFlags_.default_open ):
-
-            for n, obj in enumerate( self.context.gameObjects ):
-                if isinstance( obj, GameObject ): # link class name
-
-                    if obj._removed:
-                        continue
-
-                    can_hide = True
-
-                    imgui.push_id( f"gameObject_{n}" )
-                    _region = imgui.get_content_region_avail()
-
-                    clicked, hover = imgui.selectable(
-                        label = obj.name,
-                        p_selected = bool( self.selectedObjectIndex == n ),
-                        size = imgui.ImVec2(_region.x - 20.0, 15.0)
-                    )
-
-                    if clicked:
-                        self.set_selected_object( n )
-                    
-                    # toggle visibility
-                    if isinstance( obj, Camera ):
-                        can_hide = False
-
-                    if can_hide:
-                        imgui.same_line()
-                        pos = imgui.get_cursor_screen_pos()
-                        pos = imgui.ImVec2(5, pos.y - 3)
-                        imgui.set_cursor_screen_pos(pos)
-
-                        imgui.push_item_width(5) 
-                        _, self.context.gameObjects[ n ].visible = imgui.checkbox( 
-                            "##visible", self.context.gameObjects[ n ].visible )
-                        imgui.pop_item_width()
-
-                    # remove gameObject
-                    if not self.settings.game_running:
-                        if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
-                            self.context.removeGameObject( self.context.gameObjects[ n ] )
-
-                    imgui.pop_id()
+            self.draw_gameObject_recursive( 
+                None, 
+                self.context.gameObjects,
+                depth=0
+            )
+            
             imgui.tree_pop()
 
         imgui.end()
@@ -493,7 +540,7 @@ class UserInterface( Context ):
         imgui.end()
         return
 
-    def draw_vec3_control( self, label, vector, resetValue = 0.0 ) -> bool:
+    def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None ) -> bool:
 
         labels = ["X", "Y", "Z"]
         label_colors = [(0.8, 0.1, 0.15), (0.2, 0.7, 0.2), (0.1, 0.25, 0.8)]
@@ -540,6 +587,9 @@ class UserInterface( Context ):
         imgui.columns( count=1 )
 
         imgui.pop_id()
+
+        if changed_any and onChange is not None:
+            onChange( vector )
 
         return changed_any
 
@@ -693,11 +743,27 @@ class UserInterface( Context ):
             if isinstance( gameObject, Light ):
                 imgui.text( f"Light" );
 
-            if imgui.tree_node_ex( "Transform", imgui.TreeNodeFlags_.default_open ):
-                self.context.gui.draw_vec3_control( "Position", gameObject.translate, 0.0 )
-                self.context.gui.draw_vec3_control( "Rotation", gameObject.rotation, 0.0 )
-                self.context.gui.draw_vec3_control( "Scale", gameObject.scale, 0.0 )
+            if imgui.tree_node_ex( "Transform local", imgui.TreeNodeFlags_.default_open ):
+                self.context.gui.draw_vec3_control( "Position", gameObject.transform.local_position, 0.0 )
+                self.context.gui.draw_vec3_control( "Rotation", gameObject.transform.local_rotation, 0.0 )
+                self.context.gui.draw_vec3_control( "Scale", gameObject.transform.local_scale, 0.0 )
+                imgui.tree_pop()
 
+
+            if imgui.tree_node_ex( "Transform world", imgui.TreeNodeFlags_.default_open ):
+                pos = gameObject.transform.extract_position()
+                rot = gameObject.transform.extract_euler()
+                scl = gameObject.transform.extract_scale()
+
+                self.context.gui.draw_vec3_control( "Position", pos, 0.0,          
+                    onChange = lambda v: gameObject.transform.updatePositionFromWorld(v)
+                )
+                self.context.gui.draw_vec3_control( "Rotation", rot, 0.0,
+                    onChange = lambda v: gameObject.transform.updateRotationFromWorld(v)
+                )
+                self.context.gui.draw_vec3_control( "Scale", scl, 0.0,
+                    onChange = lambda v: gameObject.transform.updateScaleFromWorld(v)
+                )
                 imgui.tree_pop()
 
             if imgui.tree_node_ex( "Physics", imgui.TreeNodeFlags_.default_open ):
@@ -886,9 +952,9 @@ class UserInterface( Context ):
             gameObject = self.context.gui.selectedObject
 
             if isinstance( gameObject, GameObject ):
-                #imgui.text( f"{ gameObject.name }" );
+                imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { gameObject.uuid.hex }" );
                 
-                changed, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
+                _, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
 
                 # components
                 self._transform()
