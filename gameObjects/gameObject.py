@@ -117,7 +117,7 @@ class GameObject( Context, Transform ):
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
-    def setParent( self, parent : "GameObject" ) -> None:
+    def setParent( self, parent : "GameObject", update:bool=True ) -> None:
         """Set relation between child and parent object"""
 
         # remove from current parent
@@ -132,6 +132,9 @@ class GameObject( Context, Transform ):
 
         # needs additional logic for model matrix transforms to keep the current world position
         # bascily, need to update local transform in relation to the new parent world position
+        if update:
+            self.transform._update_local_from_world()
+
         self._mark_dirty()
 
     def _mark_dirty(self):

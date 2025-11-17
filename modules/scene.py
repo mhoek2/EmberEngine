@@ -368,7 +368,7 @@ class SceneManager:
                     self.setCamera( index, scene_id = scene_id )
 
             if parent:
-                gameObject.setParent( parent )
+                gameObject.setParent( parent, update=False )
 
             if "children" in obj:
                 self.loadGameObjectsRecursive( 
