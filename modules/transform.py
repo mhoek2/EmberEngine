@@ -1,7 +1,6 @@
-from pyrr import Matrix44, Vector3, Quaternion, euler
+from pyrr import Matrix44, Vector3, Quaternion
 import numpy as np
 import math
-import pygame
 
 from modules.settings import Settings
 
@@ -11,7 +10,7 @@ if TYPE_CHECKING:
     from gameObjects.gameObject import GameObject
 
 class Transform():
-    def __init__( self, context, 
+    def __init__( self, context : "EmberEngine", 
                  gameObject     : "GameObject",
                  translate      = [ 0.0, 0.0, 0.0 ], 
                  rotation       = [ 0.0, 0.0, 0.0 ], 
@@ -54,15 +53,15 @@ class Transform():
             if isinstance(key, slice):
                 if not isinstance(value, type(self)):
                     value = type(self)( value, self._callback )
-                    if self._name == "testcube" and self._callback:
-                        print("(phys)")
+                    #if self._name == "testcube" and self._callback:
+                    #    print("(phys)")
 
             super().__setitem__(key, value)
 
             if update_physics:
                 self._trigger()
-                if self._name == "testcube" and self._callback:
-                    print("(gui-script)")
+                #if self._name == "testcube" and self._callback:
+                #    print("(gui-script)")
 
         def __iadd__(self, other):
             result = super().__iadd__(other)

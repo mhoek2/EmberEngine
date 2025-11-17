@@ -8,11 +8,8 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import numpy as np
-from pyrr import Matrix44, Vector3, Quaternion, euler
+from pyrr import Quaternion
 from typing import TYPE_CHECKING, TypedDict, List
-
-from pyrr.objects import quaternion
 
 from modules.context import Context
 
@@ -26,7 +23,7 @@ import inspect
 import importlib
 import traceback
 
-import copy, math
+import copy
 import pybullet as p
 
 class GameObject( Context, Transform ):
