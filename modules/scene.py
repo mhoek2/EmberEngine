@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
+import uuid as uid
 
 from modules.console import Console
 from modules.settings import Settings
@@ -217,6 +218,7 @@ class SceneManager:
                 continue
 
             buffer : SceneManager._GameObject = {
+                "uuid"          : obj.uuid.hex,
                 "instance"      : type(obj).__name__,
                 "visible"       : obj.visible,
                 "name"          : obj.name,
@@ -337,14 +339,15 @@ class SceneManager:
             model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
 
             index = self.context.addGameObject( eval(obj["instance"])( self.context,
-                    name        = obj["name"]       if "name"       in obj else "Unknown",
-                    visible     = obj["visible"]    if "visible"    in obj else True,
+                    uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
+                    name        = obj["name"]               if "name"       in obj else "Unknown",
+                    visible     = obj["visible"]            if "visible"    in obj else True,
                     model_file  = model,
-                    material    = obj["material"]   if "material"   in obj else -1,
-                    translate   = obj["translate"]  if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
-                    scale       = obj["scale"]      if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
-                    rotation    = obj["rotation"]   if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
-                    mass        = obj["mass"]       if "mass"       in obj else -1.0,
+                    material    = obj["material"]           if "material"   in obj else -1,
+                    translate   = obj["translate"]          if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
+                    scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
+                    rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
+                    mass        = obj["mass"]               if "mass"       in obj else -1.0,
                     scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
                 )
             )

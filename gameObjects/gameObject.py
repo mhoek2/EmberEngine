@@ -25,24 +25,28 @@ import traceback
 
 import copy
 import pybullet as p
+import uuid as uid
 
 class GameObject( Context, Transform ):
     """Base class for gameObjects """
     def __init__( self, context, 
-                 name           = "GameObject",
-                 visible        = True,
-                 model_file     = False,
-                 material       = -1,
-                 translate      = [ 0.0, 0.0, 0.0 ], 
-                 rotation       = [ 0.0, 0.0, 0.0 ], 
-                 scale          = [ 1.0, 1.0, 1.0 ],
-                 mass           = -1.0,
-                 scripts        : List[Path] = []
+                 uuid           : uid.UUID = None,
+                 name           : str = "GameObject",
+                 visible        : bool = True,
+                 model_file     : bool = False,
+                 material       : int = -1,
+                 translate      : list = [ 0.0, 0.0, 0.0 ], 
+                 rotation       : list = [ 0.0, 0.0, 0.0 ], 
+                 scale          : list = [ 1.0, 1.0, 1.0 ],
+                 mass           : int = -1.0,
+                 scripts        : list[Path] = []
                  ) -> None:
         """Base class for gameObjects 
 
         :param context: This is the main context of the application
         :type context: EmberEngine
+        :param uuid: The uuid of the object, if None a new uuid is assigned
+        :type uuid: str
         :param name: The name that is stored with the gameObject
         :type name: str
         :param visible: If the gameObject is drawn
@@ -63,6 +67,12 @@ class GameObject( Context, Transform ):
         :type scripts: List[scripts]
         """
         super().__init__( context )
+
+        if uuid is None:
+            uuid = self.__create_uuid()
+        
+        self.uuid           : uid.UUID = uuid
+        self._uuid_gui      : int = int(str(self.uuid.int)[0:8])
 
         self.materials      : Materials = context.materials
         self.images         : Images = context.images
@@ -103,6 +113,9 @@ class GameObject( Context, Transform ):
         # external scripts
         for file in scripts:
             self.addScript( file )
+
+    def __create_uuid( self ) -> uid.UUID:
+        return uid.uuid4()
 
     def setParent( self, parent : "GameObject" ) -> None:
         """Set relation between child and parent object"""

@@ -931,9 +931,9 @@ class UserInterface( Context ):
             gameObject = self.context.gui.selectedObject
 
             if isinstance( gameObject, GameObject ):
-                #imgui.text( f"{ gameObject.name }" );
+                imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { gameObject.uuid.hex }" );
                 
-                changed, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
+                _, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
 
                 # components
                 self._transform()

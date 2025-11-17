@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 
 #import site
 #print(site.getsitepackages())
@@ -14,6 +14,7 @@ from OpenGL.GLU import *
 import numpy as np
 import re
 import sys
+import uuid as uid
 
 from modules.settings import Settings
 
@@ -176,8 +177,37 @@ class EmberEngine:
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
                 self.scene.setCamera( -1 )
 
+            # move children to root of hierarchy
+            # todo: move to nearest parent?
+            for child in obj.children:
+                child.parent = None
+
         except:
             print("gameobject doesnt exist..")
+
+
+    def findGameObject( self, identifier : Optional[Union[uid.UUID, int, str]] = None ) -> GameObject:
+        """Try to find a gameObject by its uuid
+        
+        :param identifier: This is a identifier of a gameObject that is looked for, datatype int : _uuid_gui, uid.UUID : uuid or str : name
+        :type identifier: Optional[Union[uid.UUID, int, str]
+        :return: A GameObject object or None
+        :rtype: GameObject | None
+        """
+        if identifier is None:
+            return None
+
+        for obj in self.gameObjects:
+            if isinstance(identifier, int) and obj._uuid_gui == identifier:
+                return obj
+
+            if isinstance(identifier, str) and obj.name == identifier:
+                return obj
+
+            if isinstance(identifier, uid.UUID) and obj.uuid == identifier:
+                return obj
+
+        return None
     ##
     ## end
     ##
