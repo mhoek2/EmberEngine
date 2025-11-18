@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - beta
-      - text-editor
   pull_request:
     branches:
       - main
@@ -50,17 +49,41 @@ jobs:
           pyinstaller main.spec
 
       - name: Zip the dist folder
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
         run: |
           powershell Compress-Archive -Path dist/* -DestinationPath windows-package.zip
 
       - name: Upload artifact
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
         uses: actions/upload-artifact@v4
         with:
           name: windows-package
           path: windows-package.zip
 
-  create-release:
+  create-beta-release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+    needs: [deploy-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-package
+          path: ./windows-dist
+
+      - name: Create Beta
+        id: create_beta
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GH_TOKEN }}
+          automatic_release_tag: "latest-beta"
+          prerelease: true
+          title: "Beta"
+          files: |
+            ./windows-dist/windows-package.zip
+            
+  create-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [deploy-windows]
     runs-on: ubuntu-latest
     steps:
@@ -75,8 +98,8 @@ jobs:
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GH_TOKEN }}
-          automatic_release_tag: "latest-beta"
-          prerelease: true
-          title: "Beta"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Latest Release"
           files: |
             ./windows-dist/windows-package.zip
