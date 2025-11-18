@@ -236,6 +236,16 @@ class GameObject( Context, Transform ):
             return
 
         module = importlib.util.module_from_spec(spec)
+        
+        # auto import modules
+        for auto_mod_name, auto_mod_as in self.settings.SCRIPT_AUTO_IMPORT_MODULES.items():
+            imported = importlib.import_module(auto_mod_name)
+
+            if auto_mod_as is not None:
+                module.__dict__[auto_mod_as] = imported
+            else:
+                module.__dict__[auto_mod_name] = imported
+
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
 
@@ -270,14 +280,14 @@ class GameObject( Context, Transform ):
     def onStartScripts( self ):
         """Call onStart() function in all dynamic scripts attached to this gameObject"""
         for script in self.scripts:
-            self.init_external_script( script )
-            script["obj"].onStart()
-        #    try:
-        #        self.init_external_script( script )
-        #        script["obj"].onStart()
-        #    except Exception as e:
-        #        exc_type, exc_value, exc_tb = sys.exc_info()
-        #        self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+        #    self.init_external_script( script )
+        #    script["obj"].onStart()
+            try:
+                self.init_external_script( script )
+                script["obj"].onStart()
+            except Exception as e:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
     def onUpdateScripts( self ):
         """Call onUpdate() function in all dynamic scripts attached to this gameObject"""

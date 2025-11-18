@@ -37,6 +37,13 @@ class Settings:
         self.grid_size = 10.0
         self.grid_spacing = 0.5
 
+        # scriptable behaivior
+        self.SCRIPT_AUTO_IMPORT_MODULES = {
+            # module        # as
+            "pygame"        : None,
+            "pybullet"      : "p"
+        }
+
         # exported application
         self.is_exported            = self.is_app_exported()
         self.project_default_name   = "New Project"
