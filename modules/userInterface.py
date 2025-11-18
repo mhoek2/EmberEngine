@@ -1,5 +1,5 @@
 from pickletools import read_stringnl_noescape_pair
-from typing import Callable, List
+from typing import Callable, List, Union, Any
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
@@ -25,6 +25,7 @@ from pathlib import Path
 import textwrap
 import re
 import uuid as uid
+import enum
 
 class CustomEvent( Context ):
     def __init__(self):
@@ -84,6 +85,36 @@ class UserInterface( Context ):
 
     def set_selected_object( self, obj : GameObject = None ):
             self.selectedObject = obj
+
+    class DragAndDropPayload:
+        def __init__(self, 
+                     type_id : str = None, 
+                     data_id : int = None,
+                     data : Any = None ):
+            """Wrapper to store additional drag and drop payload data"""
+            self.type_id    = type_id
+            self.data_id    = data_id
+            self.data       = data
+
+        class Type_(enum.StrEnum):
+            """Explicit source or acceptance types"""
+            hierarchy    = enum.auto()
+
+        def set_payload( self, type_id : str, data_id : int, data : Any ):
+            self.type_id    = type_id
+            self.data_id    = data_id
+            self.data       = data
+
+            imgui.set_drag_drop_payload_py_id( type=self.type_id, data_id=self.data_id)
+
+        def get_payload_type(self) -> str:
+            return self.type_id
+
+        def get_payload_data_id(self) -> int:
+            return self.data_id
+
+        def get_payload_data(self):
+            return self.data
 
     #
     # text editor
@@ -189,6 +220,9 @@ class UserInterface( Context ):
         self.text_editor    : UserInterface.TextEditor = self.TextEditor( self.context )
         self.project        : UserInterface.Project = self.Project( self.context )
         self.inspector      : UserInterface.Inspector = self.Inspector( self.context )
+
+        # drag and drop
+        self.dnd_payload    : UserInterface.DragAndDropPayload = UserInterface.DragAndDropPayload()
 
         self.initialized = True
 
@@ -421,26 +455,20 @@ class UserInterface( Context ):
 
                 # dnd: source
                 if imgui.begin_drag_drop_source(imgui.DragDropFlags_.none):
-                    imgui.set_drag_drop_payload_py_id(
-                        type    = "HIERARCHY_OBJ", 
-                        data_id = obj._uuid_gui
+                    self.dnd_payload.set_payload(
+                        self.dnd_payload.Type_.hierarchy,
+                        obj._uuid_gui,
+                        obj
                     )
+
                     imgui.text(f"{obj.name}")
                     imgui.end_drag_drop_source()
 
                 # dnd: receive
                 if imgui.begin_drag_drop_target():
-                    payload = imgui.accept_drag_drop_payload_py_id("HIERARCHY_OBJ")
+                    payload = imgui.accept_drag_drop_payload_py_id(self.dnd_payload.Type_.hierarchy)
                     if payload is not None:
-                        payload_uuid_gui = payload.data_id
-                        payload_obj = self.context.findGameObject(payload_uuid_gui)
-
-                        print("parent")
-                        print(obj)
-
-                        print("payload")
-                        print(payload_obj)
-
+                        payload_obj = self.dnd_payload.get_payload_data()
                         payload_obj.setParent(obj)
 
                     imgui.end_drag_drop_target()
