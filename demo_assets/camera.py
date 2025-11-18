@@ -1,4 +1,4 @@
-class MyScript:
+class MyCamera:
     """Default script template"""
     def onStart( self ) -> None:
         pass

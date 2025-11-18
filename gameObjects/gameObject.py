@@ -145,8 +145,10 @@ class GameObject( Context, Transform ):
                 c._mark_dirty()
 
     class Script(TypedDict):
-        file: Path
-        obj: None
+        file            : Path
+        class_name      : str
+        class_name_f    : str
+        obj             : None
 
     def addScript( self, file : Path ):
         """Add script to a gameObject
@@ -158,7 +160,13 @@ class GameObject( Context, Transform ):
 
         self.console.log( self.console.Type_.note, [], f"Load script: {relative_path}" )
 
-        self.scripts.append( { "file": relative_path, "obj": "" } )
+        self.scripts.append({ 
+            "file": relative_path, 
+            "obj": "" 
+         })
+
+        # set class name
+        self.__set_class_name( self.scripts[-1] )
 
     def removeScript( self, file : Path ):
         """Remove script from a gameObject
@@ -172,7 +180,7 @@ class GameObject( Context, Transform ):
                 self.scripts.remove(script)
                 break
 
-    def get_class_name_from_script(self, script: Path) -> str:
+    def __get_class_name_from_script(self, script: Path) -> str:
         """Scan the content of the script to find the first class name.
 
         :param script: The path to a .py script file
@@ -195,6 +203,31 @@ class GameObject( Context, Transform ):
                 return class_name
 
         return None
+
+    def __format_class_name( self, name : str ) -> str:
+        """Format the classname
+        
+        :return: Formatted string with space after any uppercased letter
+        :rtype: str | None
+        """
+        formatted : str = ""
+
+        for char in name:
+            if char.isupper():
+                formatted += f" {char}"
+            else:
+                formatted += char
+
+        return formatted
+
+    def __set_class_name( self, script : Script ):
+        """Gets the class name for a given scripts, also formats it for GUI
+        
+        :param script: The Script object containing a file path
+        :type script: GameObject.Script
+        """
+        script["class_name"] = self.__get_class_name_from_script(script["file"])
+        script["class_name_f"] = self.__format_class_name( script["class_name"] )
 
     def init_external_script( self, script : Script ):
         """Initialize script attached to this gameObject,
@@ -253,8 +286,9 @@ class GameObject( Context, Transform ):
         _script_behavior = importlib.import_module("gameObjects.scriptBehaivior")
         ScriptBehaivior = getattr(_script_behavior, "ScriptBehaivior")
 
-
-        _class_name = self.get_class_name_from_script(script["file"])
+        # set class name
+        self.__set_class_name( script )
+        _class_name = script["class_name"]
 
         if not hasattr(module, _class_name):
             self.console.log( self.console.Type_.note, [], 

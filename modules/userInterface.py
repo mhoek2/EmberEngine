@@ -872,61 +872,71 @@ class UserInterface( Context ):
                 imgui.tree_pop()
             return
 
-        def _scripts( self ):
-            if not imgui.tree_node_ex( "Scripts", imgui.TreeNodeFlags_.default_open ):
-                return
-
-            assets = Path( self.settings.assets ).resolve()
+        def _draw_script( self, index, script: GameObject.Script ):
             _shift_left = 20.0
             _region = imgui.get_content_region_avail()
             _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
 
-            i = -1
-            for i, script in enumerate(self.context.gui.selectedObject.scripts):
-                imgui.push_id(f"draw_script_{str(script['file'])}")
+            if not imgui.tree_node_ex( f"{script['class_name_f']} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
+                return
 
-                name = str(script['file'])
+            
 
-                draw_list = imgui.get_window_draw_list() 
-                draw_list.channels_split(2)
-                draw_list.channels_set_current(1)
+            imgui.push_id(f"draw_script_{str(script['file'])}")
 
-                p_min = imgui.get_cursor_screen_pos()
-                p_min = imgui.ImVec2( (p_min.x-_shift_left), p_min.y)
-                imgui.set_cursor_screen_pos(p_min)
+            # actions
+            if not self.settings.game_running: 
+                imgui.same_line()
+
+                if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                    self.context.gui.selectedObject.removeScript( script['file'] )
+
+                if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
+                    self.context.gui.text_editor.open_file( script['file'] )
+
+            draw_list = imgui.get_window_draw_list() 
+            draw_list.channels_split(2)
+            draw_list.channels_set_current(1)
+
+            p_min = imgui.get_cursor_screen_pos()
+            p_min = imgui.ImVec2( (p_min.x-_shift_left), p_min.y)
+            imgui.set_cursor_screen_pos(p_min)
                 
-                imgui.begin_group()
+            imgui.begin_group()
+            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), str(script["file"]) );
+            #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+            imgui.end_group()
 
-                imgui.text(name) # should become the Class name
+            _group_height = imgui.get_item_rect_size().y
 
-                # actions
-                if not self.settings.game_running: 
-                    if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
-                        self.context.gui.selectedObject.removeScript( script['file'] )
+            # background rect
+            _header_height = 20
+            _bg_color = imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.05))
+            p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _group_height)
+            p_min.y -= 3
 
-                    if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
-                        self.context.gui.text_editor.open_file( script['file'] )
+            draw_list.channels_set_current(0)
+            draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), _bg_color)
+            #draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
+            draw_list.channels_merge()
+  
+            imgui.pop_id()
 
-                #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
-
-                imgui.end_group()
-                _group_height = imgui.get_item_rect_size().y
-
-                # background rect
-                _header_height = 20
-                p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _group_height)
-
-                draw_list.channels_set_current(0)
-                draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.2)))
-                draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
-                draw_list.channels_merge()
-   
-                imgui.pop_id()
-
-            if i == -1:
-                imgui.text("No scripts attached")
-
+            imgui.dummy( imgui.ImVec2(20, 0) )
             imgui.tree_pop()
+
+
+
+        def _scripts( self ):
+            assets = Path( self.settings.assets ).resolve()
+
+            if len(self.context.gui.selectedObject.scripts) == 0:
+                imgui.text("No scripts attached")
+                return
+
+            for i, script in enumerate(self.context.gui.selectedObject.scripts):
+                self._draw_script( i, script )
+                imgui.separator()
 
         def _add_script( self ):
             path = False
