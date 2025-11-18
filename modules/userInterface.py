@@ -406,15 +406,17 @@ class UserInterface( Context ):
 
                 _region = imgui.get_content_region_avail()
 
+                depth_offset = (depth * 15)
+
                 if depth > 0:
                     pos = imgui.get_cursor_screen_pos()
-                    pos = imgui.ImVec2( (pos.x + (depth * 15)), pos.y)
+                    pos = imgui.ImVec2( (pos.x + depth_offset), pos.y)
                     imgui.set_cursor_screen_pos(pos)
 
                 clicked, hover = imgui.selectable(
                     label = obj.name,
                     p_selected = bool( self.selectedObject == obj ),
-                    size = imgui.ImVec2(_region.x - 20.0, 15.0)
+                    size = imgui.ImVec2((_region.x - 20.0) - depth_offset, 15.0)
                 )
 
                 # dnd: source
@@ -464,7 +466,7 @@ class UserInterface( Context ):
                 # remove gameObject
                 if not self.settings.game_running:
                     if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
-                        self.context.removeGameObject( self.context.gameObjects[ n ] )
+                        self.context.removeGameObject( obj )
 
                 imgui.pop_id()
 

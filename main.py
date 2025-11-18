@@ -177,10 +177,9 @@ class EmberEngine:
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
                 self.scene.setCamera( -1 )
 
-            # move children to root of hierarchy
-            # todo: move to nearest parent?
-            for child in obj.children:
-                child.parent = None
+            reparent_children = list(obj.children) # prevent mutation during iteration
+            for child in reparent_children:
+                child.setParent( obj.parent )
 
         except:
             print("gameobject doesnt exist..")
