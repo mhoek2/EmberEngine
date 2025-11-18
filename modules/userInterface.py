@@ -773,14 +773,14 @@ class UserInterface( Context ):
             if isinstance( gameObject, Light ):
                 imgui.text( f"Light" );
 
-            if imgui.tree_node_ex( "Transform local", imgui.TreeNodeFlags_.default_open ):
+            if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
                 self.context.gui.draw_vec3_control( "Position", gameObject.transform.local_position, 0.0 )
                 self.context.gui.draw_vec3_control( "Rotation", gameObject.transform.local_rotation, 0.0 )
                 self.context.gui.draw_vec3_control( "Scale", gameObject.transform.local_scale, 0.0 )
                 imgui.tree_pop()
 
 
-            if imgui.tree_node_ex( "Transform world", imgui.TreeNodeFlags_.default_open ):
+            if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
                 pos = gameObject.transform.extract_position()
                 rot = gameObject.transform.extract_euler()
                 scl = gameObject.transform.extract_scale()
@@ -796,7 +796,7 @@ class UserInterface( Context ):
                 )
                 imgui.tree_pop()
 
-            if imgui.tree_node_ex( "Physics", imgui.TreeNodeFlags_.default_open ):
+            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING} Physics", imgui.TreeNodeFlags_.default_open ):
                 changed, gameObject.mass = imgui.drag_float(
                         f"Mass", gameObject.mass, 1
                 )
@@ -812,7 +812,7 @@ class UserInterface( Context ):
             imgui.next_column()
 
         def _material( self ) -> None:
-            if imgui.tree_node( "Material" ):
+            if imgui.tree_node( f"{fa.ICON_FA_BRUSH} Material" ):
 
                 if not self.context.gui.selectedObject:
                     imgui.tree_pop()
@@ -877,7 +877,7 @@ class UserInterface( Context ):
             _region = imgui.get_content_region_avail()
             _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
 
-            if not imgui.tree_node_ex( f"{script['class_name_f']} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
+            if not imgui.tree_node_ex( f"{fa.ICON_FA_CODE} {script['class_name_f']} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
                 return
 
             
