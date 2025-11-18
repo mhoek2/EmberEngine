@@ -9,21 +9,23 @@ The primary goal of this project is to gain more knowledge in Python programming
 
 “Because of Python's limitations, it is not typically used for 3D graphics applications. However, I still value it as a good exercise!”
 
-## Installation
+## Installation (Windows)
+1. Download [Release or Beta](https://github.com/mhoek2/EmberEngine/releases) here.
 
+## Development (Windows)
 1. Download this repository
 2. Open a terminal of your choice
 3. Browse to the root folder of the downloaded project files
 4. install dependencies using: ```pip install -r requirements.txt```
+5. Download binary dependency [Assimp](https://github.com/assimp/assimp/releases)
+	1. Move ```Release\assimp-vc143-mt.dll``` from the ```zip``` to one of the **PATH** folders listed in your system variables
+6. Open project folder in your preferred IDE and set main.py as startup item
 
-5. Install dependency: **Assimp** - *requirement for [Impasse](https://github.com/SaladDais/Impasse)*:
-	1. Get and build [Assimp](https://github.com/assimp/assimp/tree/master)
-	2. Copy ```assimp\bin\Release\assimp-vc143-mt.dll``` to the python install location: eg. ```C:\Python39```
+## Build local docs
+1. Open a terminal of your choice
+2. Install ```python -m pip install sphinx pydata-sphinx-theme```
+3. Execute ```python -m sphinx -b html docs/source docs/build``` from project root
 
-7. Install dependency: **pyImGui**:
-	1. Get and build [pyImGui docking](https://github.com/pyimgui/pyimgui/tree/docking)
- 		1. Windows: run ```pip install .``` in root folder of the project 
-	3. Replace files in ```C:\Python39\Lib\site-packages\imgui``` with files in ```pyimgui\build\lib.win-amd64-3.9\imgui```
 
 ## Latest version:
 https://github.com/user-attachments/assets/7746df9e-e854-4730-9cb1-69f35433d842
