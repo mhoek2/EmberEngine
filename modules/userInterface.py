@@ -78,6 +78,16 @@ class UserInterface( Context ):
             imgui.ImVec4(0.988, 0.729, 0.012, 1.0)    # hover
         ]
 
+        self.color_visibility : List[imgui.ImVec4] = [
+            imgui.ImVec4(1.0, 1.0, 1.0, 0.2),   # default   
+            imgui.ImVec4(1.0, 1.0, 1.0, 1.0)    # hover
+        ]
+
+        self.visibility_icon : List = [
+            fa.ICON_FA_EYE_SLASH,    
+            fa.ICON_FA_EYE,    
+        ]
+
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
 
         # text_input placeholders
@@ -418,41 +428,43 @@ class UserInterface( Context ):
 
         imgui.end()
 
-    def draw_gameObject_recursive( self, parent : GameObject = None, objects : List[GameObject] = [], depth : int = 0 ):
+    def draw_gameObject_recursive( self, 
+        parent          : GameObject = None, 
+        objects         : List[GameObject] = [], 
+        depth           : int = 0,
+        base_tree_flags : imgui.TreeNodeFlags_ = imgui.TreeNodeFlags_.none
+        ):
+        
         if not objects:
             return
 
         for n, obj in enumerate( objects ):
             if isinstance( obj, GameObject ): # link class name
+                if obj is None:
+                    return False 
 
                 if obj._removed:
                     continue
 
                 if obj.parent != parent or obj.parent and parent == None:
                     continue
-                    
+
                 imgui.push_id( f"gameObject_{obj._uuid_gui}" )
 
-                if obj == None:
-                    return False
+                # treenode flags
+                tree_flags = base_tree_flags
+                if not obj.children:
+                    tree_flags |= imgui.TreeNodeFlags_.leaf
 
-                can_hide = True
+                if self.selectedObject == obj:
+                    tree_flags |= imgui.TreeNodeFlags_.selected
 
-                _region = imgui.get_content_region_avail()
+                _is_open = imgui.tree_node_ex( obj.name, tree_flags )
+                _is_hovered = imgui.is_item_hovered()
 
-                depth_offset = (depth * 15)
-
-                if depth > 0:
-                    pos = imgui.get_cursor_screen_pos()
-                    pos = imgui.ImVec2( (pos.x + depth_offset), pos.y)
-                    imgui.set_cursor_screen_pos(pos)
-
-                clicked, hover = imgui.selectable(
-                    label = obj.name,
-                    p_selected = bool( self.selectedObject == obj ),
-                    size = imgui.ImVec2((_region.x - 20.0) - depth_offset, 15.0)
-                )
-
+                if imgui.is_item_clicked(): # and imgui.is_item_toggled_open():
+                    self.set_selected_object( obj )
+    
                 # dnd: source
                 if imgui.begin_drag_drop_source(imgui.DragDropFlags_.none):
                     self.dnd_payload.set_payload(
@@ -473,37 +485,41 @@ class UserInterface( Context ):
 
                     imgui.end_drag_drop_target()
 
-                if clicked:
-                    self.set_selected_object( obj )
-                    
-                # toggle visibility
-                if isinstance( obj, Camera ):
-                    can_hide = False
 
-                if can_hide:
-                    imgui.same_line()
-                    pos = imgui.get_cursor_screen_pos()
-                    pos = imgui.ImVec2(5, pos.y - 3)
-                    imgui.set_cursor_screen_pos(pos)
-
-                    imgui.push_item_width(5) 
-                    _, obj.visible = imgui.checkbox( 
-                        "##visible", obj.visible )
-                    imgui.pop_item_width()
-
-                # remove gameObject
+                # Non-runtime editor GUI
                 if not self.settings.game_running:
+                    _region = imgui.get_content_region_avail()
+
+                    # visibility
+                    #can_hide = True
+                    #if isinstance( obj, Camera ):
+                    #    can_hide = False
+                
+                    #if _is_hovered or not obj.visible:
+                    if self.context.gui.draw_button( 
+                        uid     = f"{self.visibility_icon[int(obj.visible)]}", 
+                        region  = _region.x - 5,
+                        colors  = self.context.gui.color_visibility
+                    ):
+                        obj.visible = not obj.visible
+                        obj._mark_dirty()
+
+                    # remove gameObject
                     if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
                         self.context.removeGameObject( obj )
 
-                imgui.pop_id()
+                if _is_open:
+                    if obj.children:
+                        self.draw_gameObject_recursive( 
+                            obj, 
+                            obj.children, 
+                            depth=depth+1,
+                            base_tree_flags=base_tree_flags
+                        )
 
-                if obj.children:
-                    self.draw_gameObject_recursive( 
-                        obj, 
-                        obj.children, 
-                        depth=depth+1
-                    )
+                    imgui.tree_pop()
+
+                imgui.pop_id()
         
     def draw_hierarchy( self ) -> None:
         imgui.begin( "Hierarchy" )
@@ -526,11 +542,16 @@ class UserInterface( Context ):
         if imgui.button( "Camera" ):
             self.context.addDefaultCamera()
 
-        if imgui.tree_node_ex( "Hierarchy", imgui.TreeNodeFlags_.default_open ):
+        _base_tree_flags =  imgui.TreeNodeFlags_.default_open | \
+                            imgui.TreeNodeFlags_.draw_lines_full | \
+                            imgui.TreeNodeFlags_.open_on_double_click
+
+        if imgui.tree_node_ex( "Hierarchy", _base_tree_flags ):
             self.draw_gameObject_recursive( 
                 None, 
                 self.context.gameObjects,
-                depth=0
+                depth=0,
+                base_tree_flags=_base_tree_flags
             )
             
             imgui.tree_pop()
@@ -689,6 +710,7 @@ class UserInterface( Context ):
             colors  = self.context.gui.color_button_trash
         )
 
+    # helper
     def draw_edit_button( self, uid : str, region : float = -1.0 ) -> bool:
         return self.draw_button( 
             uid     = uid, 
@@ -696,6 +718,7 @@ class UserInterface( Context ):
             colors  = self.context.gui.color_button_edit_ide
         )
 
+    # helper
     def draw_close_button( self, uid : str, region : float = -1.0 ) -> bool:
         return self.draw_button( 
             uid     = uid, 
