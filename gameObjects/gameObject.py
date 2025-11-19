@@ -74,6 +74,9 @@ class GameObject( Context, Transform ):
         self.uuid           : uid.UUID = uuid
         self._uuid_gui      : int = int(str(self.uuid.int)[0:8])
 
+        self.active         : bool = True
+        self.parent_active  : bool = True
+
         self.materials      : Materials = context.materials
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps
@@ -118,7 +121,43 @@ class GameObject( Context, Transform ):
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
+    def setActive(self, state : bool = True ) -> None:
+        """Sets active state for this GameObject, then marks itself and children dirty
+
+        :param state: The new state
+        :type state: bool
+        """
+        self.active = state
+        self._mark_dirty()
+
+    def isParentActive( self, gameObject : "GameObject" = None ) -> bool:
+        """See if any of the parents is not active
+
+        :param gameObject: The current GameObject if None use self
+        :type gameObject: GameObject
+        :return: True if all of its parents are active, False if not
+        :rtype: bool
+        """
+        if gameObject is None:
+            gameObject = self
+
+        if gameObject.parent is None:
+            return True
+
+        if not gameObject.parent.active:
+            return False
+
+        # recursive
+        return self.isParentActive( gameObject.parent )
+
     def isParentVisible( self, gameObject : "GameObject" = None ):
+        """See if any of the parents is not visible (editor-only)
+
+        :param gameObject: The current GameObject if None use self
+        :type gameObject: GameObject
+        :return: True if all of its parents are visible, False if not
+        :rtype: bool
+        """
         if gameObject is None:
             gameObject = self
 
@@ -131,8 +170,14 @@ class GameObject( Context, Transform ):
         # recursive
         return self.isParentVisible( gameObject.parent )
 
-    def setParent( self, parent : "GameObject", update:bool=True ) -> None:
-        """Set relation between child and parent object"""
+    def setParent( self, parent : "GameObject", update : bool = True ) -> None:
+        """Set relation between child and parent object
+        
+        :param parent: The new parent of this object
+        :type parent: GameObject
+        :param update: Whether to update transform local from new parents world world coordinates
+        :type update: bool
+        """
 
         # remove from current parent
         if self.parent is not None:
@@ -479,6 +524,7 @@ class GameObject( Context, Transform ):
 
             # set visibility
             self.parent_visible = self.isParentVisible()
+            self.parent_active = self.isParentActive()
 
             self._dirty = False
 

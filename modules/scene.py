@@ -219,6 +219,7 @@ class SceneManager:
 
             buffer : SceneManager._GameObject = {
                 "uuid"          : obj.uuid.hex,
+                "active"        : obj.active,
                 "instance"      : type(obj).__name__,
                 "visible"       : obj.visible,
                 "name"          : obj.name,
@@ -357,6 +358,9 @@ class SceneManager:
 
             # reference added gameObject
             gameObject = self.context.gameObjects[index]
+
+            if "active" in obj:
+                gameObject.setActive(obj["active"])
 
             # todo:
             # implement scene settings, so a camera or sun can be assigned

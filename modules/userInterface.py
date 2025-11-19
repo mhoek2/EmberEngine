@@ -1042,6 +1042,11 @@ class UserInterface( Context ):
                 
                 _, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
 
+                active_changed, state = imgui.checkbox( "Active", gameObject.active )
+                if active_changed:
+                    gameObject.setActive(state)
+                _, blabla = imgui.checkbox( "Parent Active", gameObject.parent_active )
+
                 # components
                 self._transform()
                 imgui.separator()
