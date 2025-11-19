@@ -87,6 +87,7 @@ class GameObject( Context, Transform ):
 
         self.children       : List[GameObject] = []
         self.parent         : GameObject = None
+        self.parent_visible : bool = True
 
         self.transform      : Transform = Transform(
             context=self.context,
@@ -117,6 +118,19 @@ class GameObject( Context, Transform ):
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
+    def isParentVisible( self, gameObject : "GameObject" = None ):
+        if gameObject is None:
+            gameObject = self
+
+        if gameObject.parent is None:
+            return True
+
+        if not gameObject.parent.visible:
+            return False
+
+        # recursive
+        return self.isParentVisible( gameObject.parent )
+
     def setParent( self, parent : "GameObject", update:bool=True ) -> None:
         """Set relation between child and parent object"""
 
@@ -130,8 +144,7 @@ class GameObject( Context, Transform ):
 
         self.parent = parent
 
-        # needs additional logic for model matrix transforms to keep the current world position
-        # bascily, need to update local transform in relation to the new parent world position
+        # update local transform in relation to new parent
         if update:
             self.transform._update_local_from_world()
 
@@ -459,6 +472,9 @@ class GameObject( Context, Transform ):
 
             if self.settings.game_running:
                 self._updatePhysicsBody()
+
+            # set visibility
+            self.parent_visible = self.isParentVisible()
 
             self._dirty = False
 
