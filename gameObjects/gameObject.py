@@ -112,8 +112,8 @@ class GameObject( Context, Transform ):
         self.onStart()
 
         # external scripts
-        for file in scripts:
-            self.addScript( file )
+        for path in scripts:
+            self.addScript( path )
 
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
@@ -158,7 +158,7 @@ class GameObject( Context, Transform ):
                 c._mark_dirty()
 
     class Script(TypedDict):
-        file            : Path
+        path            : Path
         class_name      : str
         class_name_f    : str
         obj             : None
@@ -166,8 +166,8 @@ class GameObject( Context, Transform ):
     def addScript( self, path : Path ):
         """Add script to a gameObject
 
-        :param file: The path to a .py script file
-        :type file: Path
+        :param path: The path to a .py script file
+        :type path: Path
         """
         if path.suffix != ".py":
             self.console.log( self.console.Type_.note, [], f"Extension: {path.suffix} is invalid!" )
@@ -178,37 +178,37 @@ class GameObject( Context, Transform ):
         self.console.log( self.console.Type_.note, [], f"Load script: {relative_path}" )
 
         self.scripts.append({ 
-            "file": relative_path, 
+            "path": relative_path, 
             "obj": "" 
          })
 
         # set class name
         self.__set_class_name( self.scripts[-1] )
 
-    def removeScript( self, file : Path ):
+    def removeScript( self, path : Path ):
         """Remove script from a gameObject
 
-        :param file: The path to a .py script file
-        :type file: Path
+        :param path: The path to a .py script file
+        :type path: Path
         """
-        #self.scripts = [script for script in self.scripts if script['file'] != file]
+        #self.scripts = [script for script in self.scripts if script["path"] != file]
         for script in self.scripts:
-            if script['file'] == file:
+            if script["path"] == path:
                 self.scripts.remove(script)
                 break
 
-    def __get_class_name_from_script(self, script: Path) -> str:
+    def __get_class_name_from_script( self, path: Path ) -> str:
         """Scan the content of the script to find the first class name.
 
-        :param script: The path to a .py script file
-        :type script: Path
+        :param path: The path to a .py script file
+        :type path: Path
         :return: A class name if its found, return None otherwise
         :rtype: str | None
         """
-        file = (self.settings.rootdir / script).resolve()
+        filepath = (self.settings.rootdir / path).resolve()
 
-        if os.path.isfile(file):
-            code = file.read_text()
+        if os.path.isfile(filepath):
+            code = filepath.read_text()
 
         for line in code.splitlines():
             if line.strip().startswith("class "):
@@ -243,7 +243,7 @@ class GameObject( Context, Transform ):
         :param script: The Script object containing a file path
         :type script: GameObject.Script
         """
-        script["class_name"] = self.__get_class_name_from_script(script["file"])
+        script["class_name"] = self.__get_class_name_from_script(script["path"])
         script["class_name_f"] = self.__format_class_name( script["class_name"] )
 
     def init_external_script( self, script : Script ):
@@ -258,7 +258,7 @@ class GameObject( Context, Transform ):
         script["obj"] = False
 
         # Get full file path
-        file_path = script['file']
+        file_path = script["path"]
 
         # Resolve relative paths (important when running from .exe)
         if not os.path.isabs(file_path):

@@ -103,15 +103,15 @@ class EmberEngine:
 
         self.asset_scripts = self.findDynamicScripts( _assets )
 
-    def findDynamicScripts( self, path : Path ) -> List[Path]:
+    def findDynamicScripts( self, folder : Path ) -> List[Path]:
         """Find .py files recursivly in a assets folder, used as dynamic scripts.
 
-        :param path: This is root folder to scan
-        :type path: Path
+        :param folder: This is root folder to scan
+        :type folder: Path
         :return: List of Path's containing each .py script
         :rtype: List[Path]
         """
-        return [file for file in path.rglob("*.py")]
+        return [path for path in folder.rglob("*.py")]
 
     def loadDefaultEnvironment( self ) -> None:
         """Load the default environment cubemap"""

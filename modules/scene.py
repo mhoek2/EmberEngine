@@ -228,7 +228,7 @@ class SceneManager:
                 "rotation"      : obj.transform.local_rotation,
                 "scale"         : obj.transform.local_scale,
                 "mass"          : obj.mass,
-                "scripts"       : [str(x["file"]) for x in obj.scripts],
+                "scripts"       : [str(x["path"]) for x in obj.scripts],
                 "instance_data" : {},
                 "children"      : []
             }

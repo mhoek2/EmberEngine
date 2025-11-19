@@ -906,17 +906,17 @@ class UserInterface( Context ):
 
             
 
-            imgui.push_id(f"draw_script_{str(script['file'])}")
+            imgui.push_id(f"draw_script_{str(script["path"])}")
 
             # actions
             if not self.settings.game_running: 
                 imgui.same_line()
 
                 if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
-                    self.context.gui.selectedObject.removeScript( script['file'] )
+                    self.context.gui.selectedObject.removeScript( script["path"] )
 
                 if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
-                    self.context.gui.text_editor.open_file( script['file'] )
+                    self.context.gui.text_editor.open_file( script["path"] )
 
             draw_list = imgui.get_window_draw_list() 
             draw_list.channels_split(2)
@@ -927,7 +927,7 @@ class UserInterface( Context ):
             imgui.set_cursor_screen_pos(p_min)
                 
             imgui.begin_group()
-            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), str(script["file"]) );
+            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), str(script["path"]) );
             #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
             imgui.end_group()
 
