@@ -163,13 +163,17 @@ class GameObject( Context, Transform ):
         class_name_f    : str
         obj             : None
 
-    def addScript( self, file : Path ):
+    def addScript( self, path : Path ):
         """Add script to a gameObject
 
         :param file: The path to a .py script file
         :type file: Path
         """
-        relative_path = file.relative_to(self.settings.rootdir)
+        if path.suffix != ".py":
+            self.console.log( self.console.Type_.note, [], f"Extension: {path.suffix} is invalid!" )
+            return
+
+        relative_path = path.relative_to(self.settings.rootdir)
 
         self.console.log( self.console.Type_.note, [], f"Load script: {relative_path}" )
 

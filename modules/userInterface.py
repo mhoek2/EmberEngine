@@ -108,7 +108,8 @@ class UserInterface( Context ):
 
         class Type_(enum.StrEnum):
             """Explicit source or acceptance types"""
-            hierarchy    = enum.auto()
+            hierarchy   = enum.auto()
+            asset       = enum.auto()
 
         def set_payload( self, type_id : str, data_id : int, data : Any ):
             self.type_id    = type_id
@@ -961,16 +962,36 @@ class UserInterface( Context ):
                 self._draw_script( i, script )
                 imgui.separator()
 
-        def _add_script( self ):
-            path = False
-        
-            _region = imgui.get_content_region_avail()
-            pos = imgui.get_cursor_screen_pos()
-            pos = imgui.ImVec2( pos.x + (_region.x / 2) - 50, pos.y + _region.y - 20)
-            imgui.set_cursor_screen_pos(pos)
+        def _add_component( self ):
+            if self.settings.game_running: 
+                return
 
-            if imgui.button("Add Script"):
+            path = False
+
+            _tree_flags =   imgui.TreeNodeFlags_.default_open | \
+                            imgui.TreeNodeFlags_.leaf | \
+                            imgui.TreeNodeFlags_.span_full_width
+
+            if not imgui.tree_node_ex( f"##AddComponentNode", _tree_flags ):
+                return
+
+            _region_x = imgui.get_content_region_avail().x
+            button_text = "Add Component"
+            button_width = imgui.calc_text_size(button_text).x + imgui.get_style().frame_padding.x * 2
+            
+            offset = (_region_x - button_width ) * 0.5
+            imgui.set_cursor_pos_x(imgui.get_cursor_pos_x() + offset)
+
+            if imgui.button( button_text ):
                 imgui.open_popup("add-script")
+
+            # dnd: receive
+            if imgui.begin_drag_drop_target():
+                is_asset = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.asset)
+                if is_asset is not None:
+                    path = self.context.gui.dnd_payload.get_payload_data()
+
+                imgui.end_drag_drop_target()
 
             imgui.same_line()
 
@@ -1005,6 +1026,8 @@ class UserInterface( Context ):
             if path:
                 self.context.gui.selectedObject.addScript( path )
 
+            imgui.tree_pop()
+
         def render( self ) -> None:
             imgui.begin( "Inspector" )
   
@@ -1028,8 +1051,7 @@ class UserInterface( Context ):
 
                 self._scripts()
 
-                if not self.settings.game_running:
-                    self._add_script()
+                self._add_component()
 
             imgui.end()
             return
@@ -1059,6 +1081,9 @@ class UserInterface( Context ):
                 self.scene.clearEditorScene()
                 self.scene.loadScene( path.stem )
 
+            if path.suffix == ".py":
+                self.context.gui.text_editor.open_file( path )
+
         def get_rootpath( self ) -> Path:
             return Path( self.settings.assets ).resolve()
 
@@ -1080,20 +1105,34 @@ class UserInterface( Context ):
 
         def back( self ) -> None:
             path = self._file_browser_dir.parent
-            self.set_file_browser_path( path )
+            self.set_path( path )
 
         def render_item( self, path ):
             imgui.push_style_color(imgui.Col_.button,          imgui.ImVec4(1.0, 1.0, 1.0, 0.0) ) 
             imgui.push_style_color(imgui.Col_.button_hovered,  imgui.ImVec4(1.0, 1.0, 1.0, 0.1) ) 
             imgui.push_style_color(imgui.Col_.button_active,   imgui.ImVec4(1.0, 1.0, 1.0, 0.2) ) 
                
-            if imgui.image_button( f"file##{path}", self.get_icon( path ), self._icon_dim, self._icon_dim):
+            if imgui.image_button( f"file##{path}", self.get_icon( path ), self._icon_dim, imgui.ImVec2(0,0)):
+                pass
+
+            if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(0):
                 if path.is_file():
                     self.open_file( path )
 
                 elif path.is_dir():
                     self.set_path( path )
         
+            # dnd: source
+            if imgui.begin_drag_drop_source(imgui.DragDropFlags_.none):
+                self.context.gui.dnd_payload.set_payload(
+                    self.context.gui.dnd_payload.Type_.asset,
+                    1001,
+                    path
+                )
+
+                imgui.text(f"{path.name}")
+                imgui.end_drag_drop_source()
+
             hovered : bool = imgui.is_item_hovered()
 
             draw_list = imgui.get_window_draw_list()  # Get the draw list for the current window
