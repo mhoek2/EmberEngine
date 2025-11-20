@@ -1,3 +1,6 @@
+from abc import abstractclassmethod
+
+
 class ScriptBehaivior:
     def __init__( self, context, gameObject ):
         """Base class for dynamic loaded scripts, 
@@ -19,3 +22,19 @@ class ScriptBehaivior:
 
         self.gameObject = gameObject
         self.transform  = self.gameObject.transform
+
+    def onStart( self ):
+        """Implemented by script"""
+        pass
+
+    def onUpdate( self ):
+        """Implemented by script"""
+        pass
+
+    def onEnable( self ):
+        """Implemented by script"""
+        pass
+
+    def onDisable( self ):
+        """Implemented by script"""
+        pass

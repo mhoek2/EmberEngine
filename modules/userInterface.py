@@ -502,8 +502,7 @@ class UserInterface( Context ):
                         region  = _region.x - 5,
                         colors  = self.context.gui.color_visibility
                     ):
-                        obj.visible = not obj.visible
-                        obj._mark_dirty()
+                        obj.setVisible(not obj.visible)
 
                     # remove gameObject
                     if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
@@ -1040,12 +1039,14 @@ class UserInterface( Context ):
             if isinstance( gameObject, GameObject ):
                 imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { gameObject.uuid.hex }" );
                 
+                active_changed, active_state = imgui.checkbox( "Active", gameObject.active )
+                if active_changed:
+                    gameObject.active = active_state
+
+                _, _ = imgui.checkbox( "Active Parent", gameObject.hierachyActive() )
+
                 _, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
 
-                active_changed, state = imgui.checkbox( "Active", gameObject.active )
-                if active_changed:
-                    gameObject.setActive(state)
-                _, blabla = imgui.checkbox( "Parent Active", gameObject.parent_active )
 
                 # components
                 self._transform()

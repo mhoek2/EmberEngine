@@ -297,19 +297,13 @@ class EmberEngine:
             # (re)store states
             if not app.settings.is_exported:
                 if self.settings.game_start:
-                    obj._save_state()
-                    obj._initPhysics()
+                    obj.onEnable( _on_start=True )
 
                 if self.settings.game_stop:
-                    obj._restore_state()
-                    obj._deInitPhysics()
+                    obj.onDisable( _on_stop=True )
 
-            # scene
-            if self.settings.game_start:
-                obj.onStartScripts();
-     
-            if self.settings.game_running:
-                obj.onUpdateScripts();
+            #if self.settings.game_running:
+            #    obj.onUpdateScripts();
 
             obj.onUpdate();  # engine update
 

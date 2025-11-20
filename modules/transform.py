@@ -219,6 +219,9 @@ class Transform():
         }
         return Quaternion(order_map[order])
 
+    def safe_asin( self, x):
+        return math.asin(max(-1.0, min(1.0, x)))
+
     def quat_to_euler(self, q: Quaternion, order=None) -> Vector3:
         """
         Convert quaternion to Euler angles using current ENGINE_ROTATION
@@ -247,7 +250,7 @@ class Transform():
             return Vector3([x, y, z])
 
         elif order == "XZY":
-            z = math.asin(-R[1,0])
+            z = self.safe_asin(-R[1,0])
             cz = math.cos(z)
             if abs(cz) < 1e-6:
                 x = 0
@@ -258,7 +261,7 @@ class Transform():
             return Vector3([x, y, z])
 
         elif order == "YXZ":
-            x = math.asin(R[2,1])
+            x = self.safe_asin(R[2,1])
             cx = math.cos(x)
             if abs(cx) < 1e-6:
                 z = 0

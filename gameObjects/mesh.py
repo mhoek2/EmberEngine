@@ -13,7 +13,10 @@ class Mesh( GameObject ):
         """Executes every frame, issuing draw commands"""
         super().onUpdate()
 
-        is_visible : bool = True if self.settings.game_running else (self.visible and self.parent_visible)
+        if not self.hierachyActive():
+            return
 
+        is_visible : bool = True if self.settings.game_running else (self.visible and self.parent_visible)
+        
         if self.model != -1 and is_visible:
-            self.models.draw( self.model, self.transform._getModelMatrix() )     
+            self.models.draw( self.model, self.transform._getModelMatrix() ) 

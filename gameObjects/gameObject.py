@@ -74,31 +74,30 @@ class GameObject( Context, Transform ):
         self.uuid           : uid.UUID = uuid
         self._uuid_gui      : int = int(str(self.uuid.int)[0:8])
 
-        self.active         : bool = True
-        self.parent_active  : bool = True
-
+        self.name           : str = name
         self.materials      : Materials = context.materials
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps
         self.models         : Models = context.models
-
         self.scripts        : list[GameObject.Script] = []
-
-        self.name           : str = name
         self.material       : int = material
-        self.visible        : bool = visible
-
-        self.children       : List[GameObject] = []
+        
         self.parent         : GameObject = None
-        self.parent_visible : bool = True
+        self.children       : List[GameObject] = []
+
+        self._active            : bool = False
+        self._hierarchy_active  : bool = False
+
+        self.visible            : bool = visible
+        self.parent_visible     : bool = True
 
         self.transform      : Transform = Transform(
-            context=self.context,
-            gameObject=self,
-            translate=translate,
-            rotation=rotation,
-            scale=scale,
-            name=name
+            context     = self.context,
+            gameObject  = self,
+            translate   = translate,
+            rotation    = rotation,
+            scale       = scale,
+            name        = name
         )
 
         # model
@@ -121,34 +120,89 @@ class GameObject( Context, Transform ):
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
-    def setActive(self, state : bool = True ) -> None:
+    #
+    # active state
+    #
+    def selfActive( self ) -> bool:
+        """Get the current active sate of only the GameObject"""
+        return self._active
+
+    def hierachyActive( self ) -> bool:
+        """Get the current hierarchical active state of the GameObject
+        :return: True if GameObject AND its ancestors are active
+        :rtype: bool
+        """
+        return self._hierarchy_active
+
+    def __isHierarchyActive( self, gameObject : "GameObject" = None ) -> bool:
+        """Check for ancestor active state recursivly
+
+        :param gameObject: The current GameObject if None use self
+        :type gameObject: GameObject
+        :return: True if all of its ancestors are active, False if not
+        :rtype: bool
+        """
+        gameObject = gameObject or self
+
+        if gameObject.parent is None:
+            return True
+
+        # check parent then recursivly the ancestors
+        return gameObject.parent.active and self.__isHierarchyActive( gameObject.parent )
+
+    def updateActiveState( self ) -> None:
+        """
+        Update hierarchical active state when GameObject is _dirty
+        Calls onEnable() or onDisable() on state change in runtime
+        """
+        _latest_state = True if (self._active and self.__isHierarchyActive()) else False
+
+        # no state change, stop
+        if self._hierarchy_active == _latest_state:
+            return
+
+        self._hierarchy_active = _latest_state
+
+        # runtime logic
+        if not self.settings.game_running:
+            return
+
+        if self._hierarchy_active:
+            self.onEnable()
+
+        else:
+            self.onDisable()
+
+    @property
+    def active( self ):
+        """
+        @property:  The active state of this gameObject (not including parents)
+        @setter:    Changes state and marks itself and children _dirty
+        """
+        return self._active
+
+    @active.setter
+    def active( self, state : bool = True ):
+        if self._active == state:
+           return
+
+        self._active = state
+        self._mark_dirty()
+
+    def setActive( self, state : bool ) -> None:
         """Sets active state for this GameObject, then marks itself and children dirty
 
         :param state: The new state
         :type state: bool
         """
         self.active = state
+
+    #
+    # visibility state
+    #
+    def setVisible( self, state : bool ) -> None:
+        self.visible = state
         self._mark_dirty()
-
-    def isParentActive( self, gameObject : "GameObject" = None ) -> bool:
-        """See if any of the parents is not active
-
-        :param gameObject: The current GameObject if None use self
-        :type gameObject: GameObject
-        :return: True if all of its parents are active, False if not
-        :rtype: bool
-        """
-        if gameObject is None:
-            gameObject = self
-
-        if gameObject.parent is None:
-            return True
-
-        if not gameObject.parent.active:
-            return False
-
-        # recursive
-        return self.isParentActive( gameObject.parent )
 
     def isParentVisible( self, gameObject : "GameObject" = None ):
         """See if any of the parents is not visible (editor-only)
@@ -170,7 +224,7 @@ class GameObject( Context, Transform ):
         # recursive
         return self.isParentVisible( gameObject.parent )
 
-    def setParent( self, parent : "GameObject", update : bool = True ) -> None:
+    def setParent( self, parent : "GameObject", update:bool=True ) -> None:
         """Set relation between child and parent object
         
         :param parent: The new parent of this object
@@ -359,7 +413,7 @@ class GameObject( Context, Transform ):
 
         ScriptClass = getattr(module, _class_name)
 
-        class ClassPlaceholder(ScriptBehaivior, ScriptClass):
+        class ClassPlaceholder(ScriptClass, ScriptBehaivior):
             def __init__(self, context, gameObject):
                 ScriptBehaivior.__init__(self, context, gameObject)
                 if hasattr(ScriptClass, "__init__"):
@@ -375,11 +429,11 @@ class GameObject( Context, Transform ):
 
     def onStartScripts( self ):
         """Call onStart() function in all dynamic scripts attached to this gameObject"""
+        if not self.hierachyActive():
+            return
+
         for script in self.scripts:
-        #    self.init_external_script( script )
-        #    script["obj"].onStart()
             try:
-                self.init_external_script( script )
                 script["obj"].onStart()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
@@ -387,9 +441,44 @@ class GameObject( Context, Transform ):
 
     def onUpdateScripts( self ):
         """Call onUpdate() function in all dynamic scripts attached to this gameObject"""
+        if not self.hierachyActive():
+            return
+
         for script in filter(lambda x: x["obj"] is not False, self.scripts):
             try:
                 script["obj"].onUpdate()
+            except Exception as e:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+
+    def onEnableScripts( self ):
+        """Call onEnable() function in all dynamic scripts attached to this gameObject"""
+        if not self.hierachyActive():
+            return
+
+        for script in filter(lambda x: x["obj"] is not False, self.scripts):
+            try:
+                script["obj"].onEnable()
+            except Exception as e:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+
+    def onDisableScripts( self ):
+        """Call onDisable() function in all dynamic scripts attached to this gameObject"""
+        for script in filter(lambda x: x["obj"] is not False, self.scripts):
+            try:
+                script["obj"].onDisable()
+            except Exception as e:
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+
+
+    def initScripts( self ):
+        for script in filter(lambda x: x["obj"] is not False, self.scripts):
+            try:
+                self.init_external_script( script )
+
+                script["obj"].onEnable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
@@ -401,9 +490,12 @@ class GameObject( Context, Transform ):
             "translate" : list(self.transform.local_position),
             "rotation"  : list(self.transform.local_rotation),
             "scale"     : list(self.transform.local_scale),
+            "active"    : self.active,
             "visible"   : self.visible,
             "material"  : self.material,
-            "scripts"   : copy.deepcopy(self.scripts),
+            "children"  : self.children,
+            "parent"  : self.parent,
+            #"scripts"   : copy.deepcopy(self.scripts),
         }
         print("here")
 
@@ -416,9 +508,12 @@ class GameObject( Context, Transform ):
         self.transform.local_position   = state["translate"]
         self.transform.local_rotation   = state["rotation"]
         self.transform.local_scale      = state["scale"]
+        self.active                     = state["active"]
         self.visible                    = state["visible"]
         self.material                   = state["material"]
-        self.scripts                    = copy.deepcopy(state["scripts"])
+        self.children                   = state["children"]
+        self.parent                     = state["parent"]
+        #self.scripts                    = copy.deepcopy(state["scripts"])
 
     #
     # physics
@@ -428,10 +523,9 @@ class GameObject( Context, Transform ):
         Initialize physics for this gameObject, sets position, orientation and mass
         https://github.com/bulletphysics/bullet3/blob/master/docs/pybullet_quickstartguide.pdf
         """
- 
         self.transform._createWorldModelMatrix()
 
-        if self.mass < 0.0:
+        if self.physics_id or self.mass < 0.0:
             return
 
         _, world_rotation_quat, world_position = self.transform.world_model_matrix.decompose()
@@ -507,6 +601,38 @@ class GameObject( Context, Transform ):
         )
 
     #
+    # enable and disable
+    #
+    def onEnable( self, _on_start=False ) -> None:
+        # only when runtime starts
+        if _on_start:
+            self._save_state()
+            self.initScripts()
+            self.updateActiveState()
+
+        # skip runtime, object is disabled
+        if not self.hierachyActive():
+            return
+
+        self.onEnableScripts();
+
+        # only when runtime starts
+        if _on_start:
+            self.onStartScripts();
+
+        self._initPhysics()
+
+    def onDisable( self, _on_stop=False ) -> None:
+        self.onDisableScripts();
+
+        # only when runtime stops
+        if _on_stop:
+            self._restore_state()
+            #deinit scripts?
+
+        self._deInitPhysics()
+
+    #
     # start and update
     #
     def onStart( self ) -> None:
@@ -516,20 +642,31 @@ class GameObject( Context, Transform ):
     def onUpdate( self ) -> None:
         """Implemented by inherited class"""
         if self._dirty:
-            self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
-            self.transform._createWorldModelMatrix()
-
-            if self.settings.game_running:
-                self._updatePhysicsBody()
-
-            # set visibility
+            # want a dirty flag for this? DirtyFlag_.visible_state
             self.parent_visible = self.isParentVisible()
-            self.parent_active = self.isParentActive()
+            
+            # want a dirty flag for this? DirtyFlag_.active_state
+            self.updateActiveState()
+
+        if self.settings.game_running:
+            self.onUpdateScripts();
+
+        if self._dirty:
+            # want a dirty flag for this? DirtyFlag_.transform
+            if self.hierachyActive():
+                self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
+                self.transform._createWorldModelMatrix()
+
+                if self.settings.game_running:
+                    self._updatePhysicsBody()
 
             self._dirty = False
 
         else:
+            # nothing to do
+            if not self.hierachyActive():
+                return 
+
             # Run physics and update non-kinematic local transforms
             self._runPhysics()
-            pass
 

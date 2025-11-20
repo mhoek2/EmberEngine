@@ -342,7 +342,7 @@ class SceneManager:
             index = self.context.addGameObject( eval(obj["instance"])( self.context,
                     uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
                     name        = obj["name"]               if "name"       in obj else "Unknown",
-                    visible     = obj["visible"]            if "visible"    in obj else True,
+                    #visible     = obj["visible"]            if "visible"    in obj else True,
                     model_file  = model,
                     material    = obj["material"]           if "material"   in obj else -1,
                     translate   = obj["translate"]          if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
@@ -359,9 +359,6 @@ class SceneManager:
             # reference added gameObject
             gameObject = self.context.gameObjects[index]
 
-            if "active" in obj:
-                gameObject.setActive(obj["active"])
-
             # todo:
             # implement scene settings, so a camera or sun can be assigned
             if isinstance( gameObject, Light ):
@@ -370,6 +367,12 @@ class SceneManager:
             if isinstance( gameObject, Camera ):
                 if obj.get("instance_data", {}).get("is_default_camera", False):
                     self.setCamera( index, scene_id = scene_id )
+
+            if "active" in obj:
+                gameObject.active = obj["active"]
+
+            if "visible" in obj:
+                gameObject.setVisible(obj["visible"])
 
             if parent:
                 gameObject.setParent( parent, update=False )
