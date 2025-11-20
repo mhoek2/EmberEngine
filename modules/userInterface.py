@@ -502,7 +502,7 @@ class UserInterface( Context ):
                         region  = _region.x - 5,
                         colors  = self.context.gui.color_visibility
                     ):
-                        obj.setVisible(not obj.visible)
+                        obj.visible = not obj.visible
 
                     # remove gameObject
                     if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):

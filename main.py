@@ -172,7 +172,7 @@ class EmberEngine:
             # so mark it removed, and do not store it on save.
             #self.gameObjects.remove( object )
             obj._removed = True
-            obj.visible = False
+            obj._visible = False
 
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
                 self.scene.setCamera( -1 )

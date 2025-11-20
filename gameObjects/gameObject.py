@@ -88,8 +88,8 @@ class GameObject( Context, Transform ):
         self._active            : bool = False
         self._hierarchy_active  : bool = False
 
-        self.visible            : bool = visible
-        self.parent_visible     : bool = True
+        self._visible           : bool = visible
+        self._hierarchy_visible : bool = False
 
         self.transform      : Transform = Transform(
             context     = self.context,
@@ -119,6 +119,13 @@ class GameObject( Context, Transform ):
 
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
+
+    def _mark_dirty(self):
+        if not self._dirty:
+            self._dirty = True
+
+            for c in self.children:
+                c._mark_dirty()
 
     #
     # active state
@@ -150,7 +157,7 @@ class GameObject( Context, Transform ):
         # check parent then recursivly the ancestors
         return gameObject.parent.active and self.__isHierarchyActive( gameObject.parent )
 
-    def updateActiveState( self ) -> None:
+    def __updateActiveState( self ) -> None:
         """
         Update hierarchical active state when GameObject is _dirty
         Calls onEnable() or onDisable() on state change in runtime
@@ -200,30 +207,71 @@ class GameObject( Context, Transform ):
     #
     # visibility state
     #
-    def setVisible( self, state : bool ) -> None:
-        self.visible = state
-        self._mark_dirty()
+    def selfVisible( self ) -> bool:
+        """Get the current visible sate of only the GameObject"""
+        return self.visible
 
-    def isParentVisible( self, gameObject : "GameObject" = None ):
-        """See if any of the parents is not visible (editor-only)
+    def hierachyVisible( self ) -> bool:
+        """Get the current hierarchical active state of the GameObject
+        :return: True if GameObject AND its ancestors are active
+        :rtype: bool
+        """
+        return self._hierarchy_visible
+
+    def __isHierarchyVisible( self, gameObject : "GameObject" = None ):
+        """Check for ancestor visible state recursivly (editor-only)
 
         :param gameObject: The current GameObject if None use self
         :type gameObject: GameObject
-        :return: True if all of its parents are visible, False if not
+        :return: True if all of its ancestors are visible, False if not
         :rtype: bool
         """
-        if gameObject is None:
-            gameObject = self
+        gameObject = gameObject or self
 
         if gameObject.parent is None:
             return True
 
-        if not gameObject.parent.visible:
-            return False
+        # check parent then recursivly the ancestors
+        return gameObject.parent.visible and self.__isHierarchyVisible( gameObject.parent )
 
-        # recursive
-        return self.isParentVisible( gameObject.parent )
+    def __updateVisibleState( self ) -> None:
+        """
+        Update hierarchical active state when GameObject is _dirty
+        Calls onEnable() or onDisable() on state change in runtime
+        """
+        _latest_state = True if (self.visible and self.__isHierarchyVisible()) else False
 
+        # no state change, stop
+        if self._hierarchy_visible != _latest_state:
+            self._hierarchy_visible = _latest_state
+
+    @property
+    def visible( self ):
+        """
+        @property:  The active state of this gameObject (not including parents)
+        @setter:    Changes state and marks itself and children _dirty
+        """
+        return self._visible
+
+    @visible.setter
+    def visible( self, state : bool = True ):
+        if self._visible == state:
+           return
+
+        self._visible = state
+        self._mark_dirty()
+
+    def setVisible( self, state : bool ) -> None:
+        """Sets visible state for this GameObject, then marks itself and children dirty
+
+        :param state: The new state
+        :type state: bool
+        """
+        self.visible = state
+
+    #
+    # parenting
+    #
     def setParent( self, parent : "GameObject", update:bool=True ) -> None:
         """Set relation between child and parent object
         
@@ -249,13 +297,9 @@ class GameObject( Context, Transform ):
 
         self._mark_dirty()
 
-    def _mark_dirty(self):
-        if not self._dirty:
-            self._dirty = True
-
-            for c in self.children:
-                c._mark_dirty()
-
+    #
+    # scripting
+    #
     class Script(TypedDict):
         path            : Path
         class_name      : str
@@ -472,7 +516,6 @@ class GameObject( Context, Transform ):
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
-
     def initScripts( self ):
         for script in filter(lambda x: x["obj"] is not False, self.scripts):
             try:
@@ -483,6 +526,9 @@ class GameObject( Context, Transform ):
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
 
+    #
+    # editor state
+    #
     def _save_state(self):
         """Save a snapshot of the full GameObject state."""
 
@@ -608,7 +654,7 @@ class GameObject( Context, Transform ):
         if _on_start:
             self._save_state()
             self.initScripts()
-            self.updateActiveState()
+            self.__updateActiveState()
 
         # skip runtime, object is disabled
         if not self.hierachyActive():
@@ -643,10 +689,10 @@ class GameObject( Context, Transform ):
         """Implemented by inherited class"""
         if self._dirty:
             # want a dirty flag for this? DirtyFlag_.visible_state
-            self.parent_visible = self.isParentVisible()
-            
+            self.__updateVisibleState()
+
             # want a dirty flag for this? DirtyFlag_.active_state
-            self.updateActiveState()
+            self.__updateActiveState()
 
         if self.settings.game_running:
             self.onUpdateScripts();

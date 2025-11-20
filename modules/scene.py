@@ -372,7 +372,7 @@ class SceneManager:
                 gameObject.active = obj["active"]
 
             if "visible" in obj:
-                gameObject.setVisible(obj["visible"])
+                gameObject.visible = obj["visible"]
 
             if parent:
                 gameObject.setParent( parent, update=False )

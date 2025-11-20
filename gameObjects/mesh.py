@@ -16,7 +16,7 @@ class Mesh( GameObject ):
         if not self.hierachyActive():
             return
 
-        is_visible : bool = True if self.settings.game_running else (self.visible and self.parent_visible)
+        is_visible : bool = True if self.settings.game_running else self.hierachyVisible()
         
         if self.model != -1 and is_visible:
             self.models.draw( self.model, self.transform._getModelMatrix() ) 
