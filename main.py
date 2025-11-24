@@ -302,6 +302,11 @@ class EmberEngine:
                 if self.settings.game_stop:
                     obj.onDisable( _on_stop=True )
 
+            # start exported application
+            else:
+                if self.settings.game_start:
+                    obj.onEnable( _on_start=True )
+
             obj.onUpdate();  # engine update
 
             # render children if any
