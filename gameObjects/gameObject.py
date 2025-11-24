@@ -1,6 +1,6 @@
 #from __future__ import annotations # used for "GameObject" forward reference in same scope
 
-import os, sys
+import os, sys, enum
 from pathlib import Path
 import pygame
 from pygame.locals import *
@@ -110,7 +110,7 @@ class GameObject( Context, Transform ):
         self.physics_id     : int = None
         self.mass           : float = mass
 
-        self._dirty         : bool = True
+        self._dirty         : GameObject.DirtyFlag_ = GameObject.DirtyFlag_.all
         self._removed       : bool = False
 
         self.onStart()
@@ -122,12 +122,21 @@ class GameObject( Context, Transform ):
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
-    def _mark_dirty(self):
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class DirtyFlag_(enum.IntFlag):
+        none           = 0
+        visible_state  = enum.auto() # (= 1 << 0) = 1
+        active_state   = enum.auto() # (= 1 << 1) = 2
+        transform      = enum.auto() # (= 1 << 2) = 4 
+        all            = visible_state | active_state | transform
+
+    def _mark_dirty(self, flag : DirtyFlag_ = DirtyFlag_.all ):
         if not self._dirty:
-            self._dirty = True
+            self._dirty = flag
 
             for c in self.children:
-                c._mark_dirty()
+                c._mark_dirty( flag )
 
     #
     # active state
@@ -196,7 +205,7 @@ class GameObject( Context, Transform ):
            return
 
         self._active = state
-        self._mark_dirty()
+        self._mark_dirty( GameObject.DirtyFlag_.active_state )
 
     def setActive( self, state : bool ) -> None:
         """Sets active state for this GameObject, then marks itself and children dirty
@@ -261,7 +270,7 @@ class GameObject( Context, Transform ):
            return
 
         self._visible = state
-        self._mark_dirty()
+        self._mark_dirty( GameObject.DirtyFlag_.visible_state  )
 
     def setVisible( self, state : bool ) -> None:
         """Sets visible state for this GameObject, then marks itself and children dirty
@@ -297,7 +306,7 @@ class GameObject( Context, Transform ):
         if update:
             self.transform._update_local_from_world()
 
-        self._mark_dirty()
+        self._mark_dirty( GameObject.DirtyFlag_.all  )
 
     #
     # scripting
@@ -802,18 +811,16 @@ class GameObject( Context, Transform ):
 
     def onUpdate( self ) -> None:
         """Implemented by inherited class"""
-        if self._dirty:
-            # want a dirty flag for this? DirtyFlag_.visible_state
+        if self._dirty & GameObject.DirtyFlag_.visible_state:
             self.__updateVisibleState()
 
-            # want a dirty flag for this? DirtyFlag_.active_state
+        if self._dirty & GameObject.DirtyFlag_.active_state:
             self.__updateActiveState()
 
         if self.settings.game_running:
             self.onUpdateScripts();
 
-        if self._dirty:
-            # want a dirty flag for this? DirtyFlag_.transform
+        if self._dirty & GameObject.DirtyFlag_.transform:
             if self.hierachyActive():
                 self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
                 self.transform._createWorldModelMatrix()
@@ -821,7 +828,8 @@ class GameObject( Context, Transform ):
                 if self.settings.game_running:
                     self._updatePhysicsBody()
 
-            self._dirty = False
+        if self._dirty:
+            self._dirty = GameObject.DirtyFlag_.none
 
         else:
             # nothing to do

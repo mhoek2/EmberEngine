@@ -9,6 +9,8 @@ if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
 
+from functools import partial
+
 class Transform():
     def __init__( self, context : "EmberEngine", 
                  gameObject     : "GameObject",
@@ -24,9 +26,9 @@ class Transform():
         # row-major, post-multiply, intrinsic rotation
         # R = Rx * Ry * Rz
         # tbh, so much has changed, I lost track ..
-        self._local_position        = self.vectorInterface( translate, gameObject._mark_dirty, name )
-        self._local_rotation        = self.vectorInterface( rotation, gameObject._mark_dirty, name )
-        self._local_scale           = self.vectorInterface( scale, gameObject._mark_dirty, name )
+        self._local_position        = self.vectorInterface( translate, partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
+        self._local_rotation        = self.vectorInterface( rotation, partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
+        self._local_scale           = self.vectorInterface( scale, partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
         self._local_rotation_quat   : Quaternion = Quaternion(self.euler_to_quat(self._local_rotation))
         self.world_model_matrix     : Matrix44 = self._createWorldModelMatrix()
 
