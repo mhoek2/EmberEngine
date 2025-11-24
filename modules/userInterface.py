@@ -164,19 +164,19 @@ class UserInterface( Context ):
                 with open(self._current_file, "w", encoding="utf8") as f:
                     f.write(text)
 
-                self.console.log( self.console.Type_.note, [], f"Saved to {self._current_file}")
+                self.console.note( f"Saved to {self._current_file}")
 
                 self.scene.updateScriptonGameObjects( self._current_file )
 
             else:
-                self.console.log( self.console.Type_.error, [], "No file selected yet.")
+                self.console.error( "No file selected yet.")
 
         def open_file( self, path : Path ) -> None:
             """Opens a file and make its content the current text of the text editor"""
             buffer = None
 
             if not path.is_file():
-                self.console.log( self.console.Type_.error, [], f"File: {path} does not exist!" )
+                self.console.error( f"File: {path} does not exist!" )
                 return
 
             with open(path, encoding="utf8") as f:
@@ -755,13 +755,13 @@ class UserInterface( Context ):
 
         _scene = self.scene.getCurrentScene()
 
-        changed, _scene["light_color"] = imgui.color_edit3(
-            "Light color", _scene["light_color"]
-        )
-
-        changed, _scene["ambient_color"] = imgui.color_edit3(
-            "Ambient color", _scene["ambient_color"]
-        )
+        #changed, _scene["light_color"] = imgui.color_edit3(
+        #    "Light color", _scene["light_color"]
+        #)
+        #
+        #changed, _scene["ambient_color"] = imgui.color_edit3(
+        #    "Ambient color", _scene["ambient_color"]
+        #)
 
         imgui.end()
         return
@@ -1255,7 +1255,19 @@ class UserInterface( Context ):
             # header hover background
             imgui.push_style_color(imgui.Col_.header_hovered, imgui.ImVec4(_color[0], _color[1], _color[2], 0.4) ) 
 
-            if imgui.tree_node( f"{ entry['message'] }" ):
+            _n_lines : int = entry["_n_lines"]
+
+            tree_flags = imgui.TreeNodeFlags_.none
+
+            if _n_lines == 0:
+                tree_flags |= imgui.TreeNodeFlags_.leaf # remove flag
+
+            match entry["type_id"]:
+                case self.console.Type_.error   : _icon = f"{fa.ICON_FA_EXPLOSION} "
+                case self.console.Type_.warning : _icon = f"{fa.ICON_FA_TRIANGLE_EXCLAMATION} "
+                case _                          : _icon = ""
+                
+            if imgui.tree_node_ex( f"{_icon}{ entry['message'] }", tree_flags ):
                 # content background
                 _h_cor_bias = 4 # imgui.STYLE_ITEM_SPACING
                 p_min = imgui.ImVec2(p_min.x, p_max.y)

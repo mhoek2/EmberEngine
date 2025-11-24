@@ -145,7 +145,7 @@ class SceneManager:
         except Exception as e:
             #print( e )
             #exc_type, exc_value, exc_tb = sys.exc_info()
-            #self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+            #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
 
     def newScene( self, name : str ):
@@ -158,7 +158,7 @@ class SceneManager:
         
         #_scene = self.getDefaultScene()
         #if not _scene:
-        #    self.console.log( self.console.Type_.error, [], f"Couldn't load default scene'" )
+        #    self.console.error( e, f"Couldn't load default scene'" )
         #
         #_current_name = _scene["name"] # temporary store current scene's name
         
@@ -184,7 +184,7 @@ class SceneManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+            self.console.error( e, traceback.format_tb(exc_tb) )
      
     def saveSceneAs( self, name : str ):
         """Duplicate the current scene under a diffrent filename
@@ -267,7 +267,7 @@ class SceneManager:
         _scene_uid = scene_uid if scene_uid != False else self.getCurrentSceneUID()
 
         if _scene_uid == self.settings.default_scene.stem:
-            self.console.log( self.console.Type_.warning, [], "Cannot overwrite engine's default empty scene" )
+            self.console.warn( "Cannot overwrite engine's default empty scene" )
             return
         
         _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
@@ -291,7 +291,7 @@ class SceneManager:
         with open(_scene_filename, 'w') as buffer:
             json.dump(scene, buffer, indent=4)
 
-        self.console.log( self.console.Type_.note, [], f"Save scene: {_scene_uid}" )
+        self.console.note( f"Save scene: {_scene_uid}" )
 
     def getScene( self, scene_filename : Path ):
         """Load and decode JSON from a scene file
@@ -309,7 +309,7 @@ class SceneManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+            self.console.error( e, traceback.format_tb(exc_tb) )
             
     def getScenes( self ):
         """search assets for .scene files, and calls the getScene to decode them"""
@@ -330,7 +330,7 @@ class SceneManager:
         self.context.gameObjects.clear()
         self.current_scene = -1
 
-        self.console.log( self.console.Type_.note, [], f"Clear current scene in editor" )
+        self.console.note( f"Clear current scene in editor" )
 
     def updateScriptonGameObjects( self, path : Path ):
         #_script : "GameObject.Script" = {
@@ -345,7 +345,7 @@ class SceneManager:
                     continue
 
                 # reload
-                obj.init_external_script( script, )
+                obj.__init_external_script( script, )
                 print(script["path"])
         pass
 
@@ -385,7 +385,7 @@ class SceneManager:
             )
 
             if model:
-                self.console.log( self.console.Type_.note, [], f"Load model: {model.relative_to(self.settings.rootdir)}" )
+                self.console.log( f"Load model: {model.relative_to(self.settings.rootdir)}" )
 
             # reference added gameObject
             gameObject = self.context.gameObjects[index]
@@ -430,7 +430,7 @@ class SceneManager:
             if scene["uid"] != scene_uid:
                 continue
 
-            self.console.log( self.console.Type_.note, [], f"Loading scene: {scene_uid}" )
+            self.console.note( f"Loading scene: {scene_uid}" )
 
             try:
                 self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
@@ -450,15 +450,15 @@ class SceneManager:
             except Exception as e:
                 print( e )
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e ) 
+                self.console.error( e, traceback.format_tb(exc_tb) ) 
             else:
                 self.current_scene =  i
-                self.console.log( self.console.Type_.note, [], f"Scene {scene_uid} loaded successfully" )
+                self.console.note( f"Scene {scene_uid} loaded successfully" )
                 return True
 
         # load default scene
         if self.current_scene < 0:
-            self.console.log( self.console.Type_.note, [], f"Could not find scene: {scene_uid}" )
+            self.console.error( f"Could not find scene: {scene_uid}" )
             return False
 
     def loadDefaultScene( self ):

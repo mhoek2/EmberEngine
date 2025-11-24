@@ -68,7 +68,7 @@ class ProjectManager:
         with open(self.project_cfg, 'w') as buffer:
             json.dump(meta, buffer, indent=4)
 
-        self.console.log( self.console.Type_.note, [], f"Saved project" )
+        self.console.note( f"Saved project" )
 
     def load( self ):
         """Load and decode JSON from the project config file"""
@@ -86,10 +86,7 @@ class ProjectManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
-
-
-
+            self.console.error( e, traceback.format_tb(exc_tb) )
 
     #
     # Exporting project
@@ -131,14 +128,14 @@ class ProjectManager:
             if not line:
                 continue
 
-            console.log(console.Type_.note, [], line)
+            console.log( line )
 
         process.wait()
                 
         if process.returncode == 0:
-            console.log(console.Type_.note, [], f"{label} complete.")
+            console.note( f"{label} complete." )
         else:
-            console.log(console.Type_.error, [], f"{label} failed with code {process.returncode}")
+            console.error( f"{label} failed with code {process.returncode}" )
 
     def ensure_embedded_python( self, console : Console ):
         """Download embedded Python and install PyInstaller if not already present."""
@@ -217,13 +214,13 @@ class ProjectManager:
 
         self.run_process( console, cmd, "PyInstaller")
 
-        console.log(console.Type_.note, [], "Cleanup temporary file")
+        console.note( "Cleanup temporary file" )
         for src in ["temp", "build"]:
             if os.path.exists(src):
                 shutil.rmtree(src)
 
     def export( self ):
-        self.console.log(self.console.Type_.note, [], "Exporting project...")
+        self.console.note( "Exporting project..." )
 
         try:
             thread = threading.Thread(target=self.run_pyinstaller, args=(self.console,), daemon=True)
@@ -231,5 +228,5 @@ class ProjectManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+            self.console.error( e, traceback.format_tb(exc_tb) )
 

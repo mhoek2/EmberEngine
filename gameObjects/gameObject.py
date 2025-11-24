@@ -324,12 +324,12 @@ class GameObject( Context, Transform ):
         path = script["path"]
 
         if path.suffix != ".py":
-            self.console.log( self.console.Type_.note, [], f"Extension: {path.suffix} is invalid!" )
+            self.console.error( f"Extension: {path.suffix} is invalid!" )
             return
 
         relative_path = path.relative_to(self.settings.rootdir)
 
-        self.console.log( self.console.Type_.note, [], f"[{__func_name__}] Load script: {relative_path}" )
+        self.console.log( f"[{__func_name__}] Load script: {relative_path}" )
 
         _script : "GameObject.Script" = {
             "path"      : relative_path, 
@@ -339,12 +339,17 @@ class GameObject( Context, Transform ):
             }
         }
 
-        self.init_external_script(_script)
-        self.scripts.append(_script)
+        try:
+            self.__init_external_script(_script)
+            self.__set_class_name( _script )
 
-        # set class name
-        self.__set_class_name( self.scripts[-1] )
+            self.scripts.append(_script)
 
+        except Exception as e:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.error( e, traceback.format_tb(exc_tb) )
+            self.console.warn(f"Script: [{path.name}] is not attached to GameObject: [{self.name}]")
+    
     def removeScript( self, path : Path ):
         """Remove script from a gameObject
 
@@ -430,9 +435,7 @@ class GameObject( Context, Transform ):
                 # attribute NOT stored in the scene, use default class attribute value
                 #
                 if class_attr_name not in script["exports"]:
-                    self.console.log( self.console.Type_.note, [], 
-                        f"[{__func_name__}] Export new: [{class_attr_name} = {class_attr_value}] in script {script["class_name"]}"
-                    )
+                    self.console.log( f"[{__func_name__}] Export new: [{class_attr_name} = {class_attr_value}] in script {script["class_name"]}" )
                     continue
 
                 #
@@ -442,10 +445,7 @@ class GameObject( Context, Transform ):
 
                 # Sanity check
                 if not isinstance(scene_instance_attr, ScriptBehaivior.Exported):
-                    self.console.log(
-                        self.console.Type_.error, [],
-                            f"Export error: [{class_attr_name}] improperly loaded in script {script['class_name']} from scene"
-                    )
+                    self.console.error( f"Export error: [{class_attr_name}] improperly loaded in script {script['class_name']} from scene" )
                     continue
 
                 scene_instance_attr_value = scene_instance_attr.get()
@@ -457,20 +457,16 @@ class GameObject( Context, Transform ):
                     casted_value = class_attr_type(scene_instance_attr_value)
 
                 except Exception:
-                    self.console.log(
-                        self.console.Type_.note, [],
-                            f"[{__func_name__}] Type change for '{class_attr_name}': "
-                            f"scene instance value '{scene_instance_attr_value}' cannot convert to {class_attr_type.__name__}; "
-                            f"using default '{class_attr_value}'"
+                    self.console.warn(
+                        f"[{__func_name__}] Type change for '{class_attr_name}': "
+                        f"scene instance value '{scene_instance_attr_value}' cannot convert to {class_attr_type.__name__}; "
+                        f"using default '{class_attr_value}'"
                     )
                     casted_value = class_attr_value
 
                 _exports[class_attr_name].set(casted_value)
 
-                self.console.log(
-                    self.console.Type_.note, [],
-                        f"[{__func_name__}] Export found: [{class_attr_name} = {casted_value}] in script {script['class_name']}"
-                )
+                self.console.log( f"[{__func_name__}] Export found: [{class_attr_name} = {casted_value}] in script {script['class_name']}" )
 
         script["exports"] = _exports
 
@@ -496,14 +492,13 @@ class GameObject( Context, Transform ):
             _file_path = os.path.join(base_path, _file_path)
 
         if not os.path.isfile(_file_path):
-            self.console.log( self.console.Type_.note, [], 
-                f"[{__func_name__}] Script file not found: {_file_path}")
+            self.console.error( f"[{__func_name__}] Script file not found: {_file_path}" )
 
             _found = False
 
         return _found, _file_path
 
-    def init_external_script( self, script : Script ):
+    def __init_external_script( self, script : Script ):
         """Initialize script attached to this gameObject,
         Try to load and parse the script, then convert to module in sys.
 
@@ -533,8 +528,7 @@ class GameObject( Context, Transform ):
         # Load the module from the file path
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         if spec is None or spec.loader is None:
-            self.console.log( self.console.Type_.note, [], 
-                f"[{__func_name__}] Failed to load spec for {file_path}")
+            self.console.error( f"[{__func_name__}] Failed to load spec for {file_path}" )
             return
 
         module = importlib.util.module_from_spec(spec)
@@ -563,8 +557,7 @@ class GameObject( Context, Transform ):
         self.__set_class_name( script )
 
         if not hasattr(module, script["class_name"]):
-            self.console.log( self.console.Type_.note, [], 
-                f"[{__func_name__}] No class named '{script["class_name"]}' found in {file_path}")
+            self.console.error( f"[{__func_name__}] No class named '{script["class_name"]}' found in {file_path}" )
             return
 
         _ScriptClass = getattr(module, script["class_name"])
@@ -590,8 +583,7 @@ class GameObject( Context, Transform ):
             setattr(script["obj"], name, exported.default)
             _num_exports += 1
 
-        self.console.log( self.console.Type_.note, [], 
-            f"[{__func_name__}] Loaded ['{script["class_name"]}'] with {_num_exports} exported attributes from {file_path}")
+        self.console.log( f"[{__func_name__}] Loaded ['{script["class_name"]}'] with {_num_exports} exported attributes from {file_path}"  )
 
     def onStartScripts( self ):
         """Call onStart() function in all dynamic scripts attached to this gameObject"""
@@ -603,7 +595,7 @@ class GameObject( Context, Transform ):
                 script["obj"].onStart()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+                self.console.error( e, traceback.format_tb(exc_tb) )
 
     def onUpdateScripts( self ):
         """Call onUpdate() function in all dynamic scripts attached to this gameObject"""
@@ -615,7 +607,7 @@ class GameObject( Context, Transform ):
                 script["obj"].onUpdate()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+                self.console.error( e, traceback.format_tb(exc_tb) )
 
     def onEnableScripts( self ):
         """Call onEnable() function in all dynamic scripts attached to this gameObject"""
@@ -627,7 +619,7 @@ class GameObject( Context, Transform ):
                 script["obj"].onEnable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+                self.console.error( e, traceback.format_tb(exc_tb) )
 
     def onDisableScripts( self ):
         """Call onDisable() function in all dynamic scripts attached to this gameObject"""
@@ -636,17 +628,17 @@ class GameObject( Context, Transform ):
                 script["obj"].onDisable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+                self.console.error( e, traceback.format_tb(exc_tb) )
 
     def initScripts( self ):
         for script in filter(lambda x: x["obj"] is not None, self.scripts):
             try:
-                self.init_external_script( script )
+                self.__init_external_script( script )
 
                 script["obj"].onEnable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.log( self.console.Type_.error, traceback.format_tb(exc_tb), e )
+                self.console.error( e, traceback.format_tb(exc_tb) )
 
     #
     # editor state
