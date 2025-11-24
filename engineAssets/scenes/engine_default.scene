@@ -22,7 +22,9 @@
                 0.0
             ],
             "scripts": [
-                "assets\\camera.py"
+              {
+                "file": "assets\\camera.py"
+              }
             ]
         },
         {
@@ -46,7 +48,9 @@
                 0.0
             ],
             "scripts": [
-                "assets\\script.py"
+              {
+                "file": "assets\\script.py"
+              }
             ]
         },
         {

@@ -39,7 +39,7 @@ class SceneManager:
         rotation    : List[float]
         scale       : List[float]
         mass        : float
-        scripts     : List[str]
+        scripts     : List["GameObject.Script"]
         instance_data : Dict # additional instance data
         #children    : Dict
         children    : List["_GameObject"] = []
@@ -229,7 +229,15 @@ class SceneManager:
                 "rotation"      : obj.transform.local_rotation,
                 "scale"         : obj.transform.local_scale,
                 "mass"          : obj.mass,
-                "scripts"       : [str(x["path"]) for x in obj.scripts],
+                #"scripts"       : [str(x["path"]) for x in obj.scripts],
+                "scripts": [
+                    {
+                        "file": str(x["path"]),
+                        #"class_name": x["class_name"],
+                        "exports": { k: v.default for k, v in x["exports"].items() }
+                    }
+                    for x in obj.scripts
+                ],
                 "instance_data" : {},
                 "children"      : []
             }
@@ -324,6 +332,22 @@ class SceneManager:
 
         self.console.log( self.console.Type_.note, [], f"Clear current scene in editor" )
 
+    def updateScriptonGameObjects( self, path : Path ):
+        #_script : "GameObject.Script" = {
+        #    "path"      : path, 
+        #    "exports"   : {}
+        #}
+        #
+        #_class_name = __get_class_name_from_script()
+        for obj in self.context.gameObjects:
+            for script in obj.scripts:
+                if path != script["path"]:
+                    continue
+
+                # reload
+                obj.init_external_script( script, )
+                print(script["path"])
+        pass
 
     def loadGameObjectsRecursive( self,
         parent          : "GameObject" = None,
@@ -349,7 +373,14 @@ class SceneManager:
                     scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
                     rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
                     mass        = obj["mass"]               if "mass"       in obj else -1.0,
-                    scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
+                    #scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
+                    scripts     = [
+                        {
+                            "path": (self.settings.rootdir / x["file"]).resolve(),
+                            "exports": x.get("exports", {})
+                        }
+                        for x in obj["scripts"]
+                    ]
                 )
             )
 
@@ -403,7 +434,7 @@ class SceneManager:
 
             try:
                 self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
-                
+                    
                 scene["name"]    = scene.get("name", "default scene")
 
                 scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
@@ -415,7 +446,7 @@ class SceneManager:
                         scene["gameObjects"], 
                         scene_id=i
                     )
-  
+
             except Exception as e:
                 print( e )
                 exc_type, exc_value, exc_tb = sys.exc_info()

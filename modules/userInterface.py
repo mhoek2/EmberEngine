@@ -162,9 +162,12 @@ class UserInterface( Context ):
 
             if self._current_file:
                 with open(self._current_file, "w", encoding="utf8") as f:
-                 f.write(text)
+                    f.write(text)
+
                 self.console.log( self.console.Type_.note, [], f"Saved to {self._current_file}")
-        
+
+                self.scene.updateScriptonGameObjects( self._current_file )
+
             else:
                 self.console.log( self.console.Type_.error, [], "No file selected yet.")
 
@@ -895,6 +898,39 @@ class UserInterface( Context ):
                 imgui.tree_pop()
             return
 
+        def _draw_script_exported_attributes( self, script: GameObject.Script ):
+            for instance_attr_name, instance_attr in script["exports"].items():
+                if script["obj"] is None:
+                    continue
+
+                _value = getattr(script["obj"], instance_attr_name)
+                _t = instance_attr.type
+                _changed = False
+
+                # FLOAT
+                if _t is float:
+                    _changed, new = imgui.drag_float(f"{instance_attr_name}:", _value, 0.01)
+
+                # INT
+                elif _t is int:
+                    _changed, new = imgui.drag_int(f"{instance_attr_name}:", _value, 1)
+
+                # STRING
+                elif _t is str:
+                    _changed, new = imgui.input_text(f"{instance_attr_name}:", _value, 256)
+
+                # BOOL
+                elif _t is bool:
+                    _changed, new = imgui.checkbox(f"{instance_attr_name}:", _value)
+
+                # Unsupported type
+                else:
+                    imgui.text(f"{instance_attr_name}: <unsupported {_t}>")
+
+                if _changed:
+                    instance_attr.set(new)
+                    setattr(script["obj"], instance_attr_name, new)
+
         def _draw_script( self, index, script: GameObject.Script ):
             _shift_left = 20.0
             _region = imgui.get_content_region_avail()
@@ -902,8 +938,6 @@ class UserInterface( Context ):
 
             if not imgui.tree_node_ex( f"{fa.ICON_FA_CODE} {script['class_name_f']} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
                 return
-
-            
 
             imgui.push_id(f"draw_script_{str(script["path"])}")
 
@@ -946,9 +980,12 @@ class UserInterface( Context ):
             imgui.pop_id()
 
             imgui.dummy( imgui.ImVec2(20, 0) )
+
+            # exported attributes
+            self._draw_script_exported_attributes(script)
+
+            imgui.dummy( imgui.ImVec2(20, 0) )
             imgui.tree_pop()
-
-
 
         def _scripts( self ):
             assets = Path( self.settings.assets ).resolve()
@@ -1023,7 +1060,12 @@ class UserInterface( Context ):
                 imgui.end_popup()
 
             if path:
-                self.context.gui.selectedObject.addScript( path )
+                _script : GameObject.Script = {
+                    "path"      : path,
+                    "obj"       : None,
+                    "exports"   : {}
+                }
+                self.context.gui.selectedObject.addScript( _script )
 
             imgui.tree_pop()
 

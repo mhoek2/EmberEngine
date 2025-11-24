@@ -1,6 +1,3 @@
-from abc import abstractclassmethod
-
-
 class ScriptBehaivior:
     def __init__( self, context, gameObject ):
         """Base class for dynamic loaded scripts, 
@@ -38,3 +35,20 @@ class ScriptBehaivior:
     def onDisable( self ):
         """Implemented by script"""
         pass
+
+    #
+    # export class attributes
+    #
+    class Exported:
+        def __init__( self, default=None ):
+            self.set(default)
+
+        def get( self ):
+            return self.default
+
+        def set( self, value ):
+            self.default = value
+            self.type = type(value)
+
+    def export( default=None ):
+        return ScriptBehaivior.Exported( default )

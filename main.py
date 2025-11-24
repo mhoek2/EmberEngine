@@ -302,9 +302,6 @@ class EmberEngine:
                 if self.settings.game_stop:
                     obj.onDisable( _on_stop=True )
 
-            #if self.settings.game_running:
-            #    obj.onUpdateScripts();
-
             obj.onUpdate();  # engine update
 
             # render children if any
