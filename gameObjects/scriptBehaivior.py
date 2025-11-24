@@ -8,10 +8,11 @@ class ScriptBehaivior:
         :param gameObject: A reference to the gameObject the script is attached to
         :type gameObject: GameObject
         """
-        self.context = context
-        self.settings = context.settings
-        self.renderer = context.renderer
-        self.scene = context.scene
+        self.context    = context
+        self.settings   = context.settings
+        self.renderer   = context.renderer
+        self.scene      = context.scene
+        self.console    = context.console
 
         self.events     = context.events
         self.key        = context.key
