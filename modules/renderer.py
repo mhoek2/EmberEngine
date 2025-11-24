@@ -468,6 +468,9 @@ class Renderer:
                     if event.key == pygame.K_y:
                         self.context.cevent.add("redo")
 
+                if event.key == pygame.K_TAB:
+                    self.context.cevent.add("tab")
+
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]

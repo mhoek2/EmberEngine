@@ -186,6 +186,15 @@ class UserInterface( Context ):
             self.ed.set_text( buffer )
             self._current_file = path
 
+        def fix_tabs( self ) -> None:
+            """"Hacky but fine for now
+ 
+            This will replace all tabs '\t' with 4 spaces, not just the freshly added tab
+            """
+            if self._current_file.suffix == ".py":
+                _text = self.ed.get_text()
+                self.ed.set_text( _text.replace("\t", "    ") )
+
         def render( self ) -> None: 
             """handles ImGuiColorTextEdit rendering and logic"""
             imgui.begin( "IDE" )
@@ -199,6 +208,7 @@ class UserInterface( Context ):
                 self.context.cevent.handle( "paste",  self.ed.paste )
                 self.context.cevent.handle( "undo",   self.ed.undo )
                 self.context.cevent.handle( "redo",   self.ed.redo )
+                self.context.cevent.handle( "tab",    self.fix_tabs )
 
             imgui.end()
 
