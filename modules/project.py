@@ -91,7 +91,7 @@ class ProjectManager:
     #
     # Exporting project
     #
-    EMBED_PYTHON_VERSION = "3.11.7"
+    EMBED_PYTHON_VERSION = "3.12.7"
     EMBED_PYTHON_ZIP_URL = f"https://www.python.org/ftp/python/{EMBED_PYTHON_VERSION}/python-{EMBED_PYTHON_VERSION}-embed-amd64.zip"
 
     EMBED_DIR       = "python"
