@@ -914,6 +914,11 @@ class UserInterface( Context ):
             return
 
         def _draw_script_exported_attributes( self, script: GameObject.Script ):
+            if not script.get("active"):
+                return 
+
+            imgui.dummy( imgui.ImVec2(20, 0) )
+
             for instance_attr_name, instance_attr in script["exports"].items():
                 if script["obj"] is None:
                     continue
@@ -966,6 +971,12 @@ class UserInterface( Context ):
                 if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
                     self.context.gui.text_editor.open_file( script["path"] )
 
+                active_changed, active_state = imgui.checkbox( "Active", script.get("active") )
+                if active_changed:
+                    script["active"] = active_state
+                    self.scene.updateScriptonGameObjects( script["path"] )
+
+
             draw_list = imgui.get_window_draw_list() 
             draw_list.channels_split(2)
             draw_list.channels_set_current(1)
@@ -993,8 +1004,6 @@ class UserInterface( Context ):
             draw_list.channels_merge()
   
             imgui.pop_id()
-
-            imgui.dummy( imgui.ImVec2(20, 0) )
 
             # exported attributes
             self._draw_script_exported_attributes(script)

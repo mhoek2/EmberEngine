@@ -219,10 +219,10 @@ class SceneManager:
 
             buffer : SceneManager._GameObject = {
                 "uuid"          : obj.uuid.hex,
+                "name"          : obj.name,
                 "active"        : obj.active,
                 "instance"      : type(obj).__name__,
                 "visible"       : obj.visible,
-                "name"          : obj.name,
                 "model_file"    : str(obj.model_file.relative_to(self.settings.rootdir)),
                 "material"      : obj.material,
                 "translate"     : obj.transform.local_position,
@@ -233,6 +233,7 @@ class SceneManager:
                 "scripts": [
                     {
                         "file": str(x["path"]),
+                        "active": x["active"],
                         #"class_name": x["class_name"],
                         "exports": { k: v.default for k, v in x["exports"].items() }
                     }
@@ -345,7 +346,7 @@ class SceneManager:
 
                 # reload
                 try:
-                    obj.init_external_script( script, )
+                    obj.init_external_script( script )
 
                 except Exception as e:
                     exc_type, exc_value, exc_tb = sys.exc_info()
@@ -379,6 +380,7 @@ class SceneManager:
                     scripts     = [
                         {
                             "path": (self.settings.rootdir / x["file"]).resolve(),
+                            "active": bool(x.get("active", True)),
                             "exports": x.get("exports", {})
                         }
                         for x in obj["scripts"]
