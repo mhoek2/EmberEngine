@@ -175,7 +175,10 @@ class UserInterface( Context ):
             """Opens a file and make its content the current text of the text editor"""
             buffer = None
 
-            relative_path = path.relative_to(self.settings.rootdir)
+            if path.is_absolute():
+                relative_path = path.relative_to(self.settings.rootdir)
+            else:
+                relative_path = path
 
             if not relative_path.is_file():
                 self.console.error( f"File: {relative_path} does not exist!" )
