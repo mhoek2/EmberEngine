@@ -175,16 +175,18 @@ class UserInterface( Context ):
             """Opens a file and make its content the current text of the text editor"""
             buffer = None
 
-            if not path.is_file():
-                self.console.error( f"File: {path} does not exist!" )
+            relative_path = path.relative_to(self.settings.rootdir)
+
+            if not relative_path.is_file():
+                self.console.error( f"File: {relative_path} does not exist!" )
                 return
 
-            with open(path, encoding="utf8") as f:
+            with open(relative_path, encoding="utf8") as f:
                 buffer = f.read()
 
             self.reset();
             self.ed.set_text( buffer )
-            self._current_file = path
+            self._current_file = relative_path
 
         def fix_tabs( self ) -> None:
             """"Hacky but fine for now

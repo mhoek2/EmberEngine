@@ -332,22 +332,24 @@ class SceneManager:
 
         self.console.note( f"Clear current scene in editor" )
 
-    def updateScriptonGameObjects( self, path : Path ):
-        #_script : "GameObject.Script" = {
-        #    "path"      : path, 
-        #    "exports"   : {}
-        #}
-        #
-        #_class_name = __get_class_name_from_script()
+    def updateScriptonGameObjects( self, path : Path ) -> None:
+        """Re-initialize specific script on GameObjects
+
+        :param path: The path to a .py script file
+        :type path: Path
+        """
         for obj in self.context.gameObjects:
             for script in obj.scripts:
                 if path != script["path"]:
                     continue
 
                 # reload
-                obj.__init_external_script( script, )
-                print(script["path"])
-        pass
+                try:
+                    obj.init_external_script( script, )
+
+                except Exception as e:
+                    exc_type, exc_value, exc_tb = sys.exc_info()
+                    self.console.error( e, traceback.format_tb(exc_tb) )
 
     def loadGameObjectsRecursive( self,
         parent          : "GameObject" = None,

@@ -349,7 +349,7 @@ class GameObject( Context, Transform ):
         }
 
         try:
-            self.__init_external_script(_script)
+            self.init_external_script(_script)
             self.__set_class_name( _script )
 
             self.scripts.append(_script)
@@ -357,7 +357,7 @@ class GameObject( Context, Transform ):
         except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.console.error( e, traceback.format_tb(exc_tb) )
-            self.console.warn(f"Script: [{path.name}] is not attached to GameObject: [{self.name}]")
+            self.console.warn(f"Script: [{path.name}] is not attached to GameObject: [{self.name}] - Fix and reload scene")
     
     def removeScript( self, path : Path ):
         """Remove script from a gameObject
@@ -507,7 +507,7 @@ class GameObject( Context, Transform ):
 
         return _found, _file_path
 
-    def __init_external_script( self, script : Script ):
+    def init_external_script( self, script : Script ):
         """Initialize script attached to this gameObject,
         Try to load and parse the script, then convert to module in sys.
 
@@ -642,9 +642,9 @@ class GameObject( Context, Transform ):
     def initScripts( self ):
         for script in filter(lambda x: x["obj"] is not None, self.scripts):
             try:
-                self.__init_external_script( script )
-
+                self.init_external_script( script )
                 script["obj"].onEnable()
+
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
