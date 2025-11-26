@@ -659,6 +659,9 @@ class GameObject( Context, Transform ):
 
     def onDisableScripts( self ):
         """Call onDisable() function in all dynamic scripts attached to this gameObject"""
+        if not self.hierachyActive():
+            return
+
         for script in filter(lambda x: x["obj"] is not None, self.scripts):
             try:
                 script["obj"].onDisable()
@@ -667,9 +670,11 @@ class GameObject( Context, Transform ):
                 self.console.error( e, traceback.format_tb(exc_tb) )
 
     def initScripts( self ):
-        for _script in filter(lambda x: x["obj"] is not None, self.scripts):
-            if self.init_external_script( _script ):
-                _script["obj"].onEnable()
+        if not self.hierachyActive():
+            return
+
+        for script in filter(lambda x: x["obj"] is not None, self.scripts):
+            self.init_external_script( script )
 
     #
     # editor state
@@ -688,7 +693,6 @@ class GameObject( Context, Transform ):
             "parent"  : self.parent,
             #"scripts"   : copy.deepcopy(self.scripts),
         }
-        print("here")
 
     def _restore_state(self):
         """Restore the object to the saved initial state."""

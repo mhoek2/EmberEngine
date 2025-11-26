@@ -1091,12 +1091,12 @@ class UserInterface( Context ):
                 imgui.end_popup()
 
             if path:
-                _script : GameObject.Script = {
+                script : GameObject.Script = {
                     "path"      : path,
                     "obj"       : None,
                     "exports"   : {}
                 }
-                self.context.gui.selectedObject.addScript( _script )
+                self.context.gui.selectedObject.addScript( script )
 
             imgui.tree_pop()
 
