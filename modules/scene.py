@@ -232,10 +232,11 @@ class SceneManager:
                 #"scripts"       : [str(x["path"]) for x in obj.scripts],
                 "scripts": [
                     {
-                        "file": str(x["path"]),
-                        "active": x["active"],
-                        #"class_name": x["class_name"],
-                        "exports": { k: v.default for k, v in x["exports"].items() }
+                        "uuid"          : x["uuid"].hex,
+                        "file"          : str(x["path"]),
+                        "active"        : x["active"],
+                        #"class_name"   : x["class_name"],
+                        "exports"       : { k: v.default for k, v in x["exports"].items() }
                     }
                     for x in obj.scripts
                 ],
@@ -374,9 +375,10 @@ class SceneManager:
                     #scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
                     scripts     = [
                         {
-                            "path": (self.settings.rootdir / x["file"]).resolve(),
-                            "active": bool(x.get("active", True)),
-                            "exports": x.get("exports", {})
+                            "uuid"      : uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
+                            "path"      : (self.settings.rootdir / x["file"]).resolve(),
+                            "active"    : bool(x.get("active", True)),
+                            "exports"   : x.get("exports", {})
                         }
                         for x in obj["scripts"]
                     ]

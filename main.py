@@ -15,6 +15,7 @@ import numpy as np
 import re
 import sys
 import uuid as uid
+import traceback
 
 from modules.settings import Settings
 
@@ -173,6 +174,8 @@ class EmberEngine:
             #self.gameObjects.remove( object )
             obj._removed = True
             obj._visible = False
+            obj._active = False
+            obj._mark_dirty()
 
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
                 self.scene.setCamera( -1 )
@@ -181,8 +184,10 @@ class EmberEngine:
             for child in reparent_children:
                 child.setParent( obj.parent )
 
-        except:
-            print("gameobject doesnt exist..")
+        except Exception as e:
+            print( e )
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.error( e, traceback.format_tb(exc_tb) )
 
 
     def findGameObject( self, identifier : Optional[Union[uid.UUID, int, str]] = None ) -> GameObject:
@@ -383,6 +388,14 @@ class EmberEngine:
                     None, 
                     self.gameObjects
                 )
+
+                # cleanup _removed objects
+                #for obj in filter(lambda x: x._removed == True, self.gameObjects):
+                #    if obj.children:
+                #        print("Cannot remove: obj has children")
+                #        continue
+                #
+                #    self.gameObjects.remove( obj )
 
                 if self.settings.game_start:
                     self.settings.game_start = False

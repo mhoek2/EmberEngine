@@ -90,9 +90,6 @@ class UserInterface( Context ):
 
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
 
-        # text_input placeholders
-        self.save_as_name : str = "Scene Name"
-
     def set_selected_object( self, obj : GameObject = None ):
             self.selectedObject = obj
 
@@ -468,7 +465,7 @@ class UserInterface( Context ):
                 if obj.parent != parent or obj.parent and parent == None:
                     continue
 
-                imgui.push_id( f"gameObject_{obj._uuid_gui}" )
+                imgui.push_id( f"{obj._uuid_gui}" )
 
                 # treenode flags
                 tree_flags = base_tree_flags
@@ -951,15 +948,16 @@ class UserInterface( Context ):
                     instance_attr.set(new)
                     setattr(script["obj"], instance_attr_name, new)
 
-        def _draw_script( self, index, script: GameObject.Script ) -> None:
+        def _draw_script( self, script: GameObject.Script ) -> None:
             _shift_left = 20.0
             _region = imgui.get_content_region_avail()
             _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
 
-            if not imgui.tree_node_ex( f"{fa.ICON_FA_CODE} {script['class_name_f']} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
-                return
+            imgui.push_id( f"{script["uuid"]}" )
 
-            imgui.push_id(f"draw_script_{str(script["path"])}")
+            if not imgui.tree_node_ex( f"{fa.ICON_FA_CODE} {script['class_name_f']} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
+                imgui.pop_id()
+                return
 
             # actions
             if not self.settings.game_running: 
@@ -970,18 +968,22 @@ class UserInterface( Context ):
 
                 if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
                     self.context.gui.text_editor.open_file( script["path"] )
+            
+            # draw uuid
+            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { script["uuid"].hex }" );
 
-                active_changed, active_state = imgui.checkbox( "Active", script.get("active") )
-                if active_changed:
-                    script["active"] = active_state
-                    self.scene.updateScriptonGameObjects( script["path"] )
+            active_changed, active_state = imgui.checkbox( "Active", script.get("active") )
+            if active_changed:
+                script["active"] = active_state
+                self.scene.updateScriptonGameObjects( script["path"] )
+
 
             # script contains errors, return
             if script.get("_error", None):
                 imgui.text_colored( imgui.ImVec4(1.0, 0.0, 0.0, 0.9), script.get("_error") );
-                imgui.pop_id()
                 imgui.dummy( imgui.ImVec2(20, 0) )
                 imgui.tree_pop()
+                imgui.pop_id()
                 return
 
             draw_list = imgui.get_window_draw_list() 
@@ -1010,13 +1012,13 @@ class UserInterface( Context ):
             #draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
             draw_list.channels_merge()
   
-            imgui.pop_id()
-
             # exported attributes
             self._draw_script_exported_attributes(script)
 
             imgui.dummy( imgui.ImVec2(20, 0) )
             imgui.tree_pop()
+
+            imgui.pop_id()
 
         def _scripts( self ):
             assets = Path( self.settings.assets ).resolve()
@@ -1025,8 +1027,8 @@ class UserInterface( Context ):
                 imgui.text("No scripts attached")
                 return
 
-            for i, script in enumerate(self.context.gui.selectedObject.scripts):
-                self._draw_script( i, script )
+            for script in self.context.gui.selectedObject.scripts:
+                self._draw_script( script )
                 imgui.separator()
 
         def _add_component( self ):
@@ -1092,6 +1094,7 @@ class UserInterface( Context ):
 
             if path:
                 script : GameObject.Script = {
+                    "active"    : True,
                     "path"      : path,
                     "obj"       : None,
                     "exports"   : {}
@@ -1110,6 +1113,7 @@ class UserInterface( Context ):
             gameObject = self.context.gui.selectedObject
 
             if isinstance( gameObject, GameObject ):
+                # draw uuid
                 imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { gameObject.uuid.hex }" );
                 
                 active_changed, active_state = imgui.checkbox( "Active", gameObject.active )
@@ -1344,6 +1348,8 @@ class UserInterface( Context ):
     class Project( Context ):
         def __init__( self, context ):
             super().__init__( context )
+
+            self.save_as_name : str = "Scene Name"
 
         def draw_save_scene_modal( self, popup_uid : str, note : str, callback : Callable = None ):
             if imgui.begin_popup_modal( popup_uid, None, imgui.WindowFlags_.always_auto_resize)[0]:

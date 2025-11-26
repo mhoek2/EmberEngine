@@ -316,6 +316,7 @@ class GameObject( Context, Transform ):
         # - should make this a propper class ..
         # - dont use "obj", call it instance?  
         #
+        uuid            : uid.UUID
         path            : Path
         active          : bool
         class_name      : str
@@ -339,10 +340,12 @@ class GameObject( Context, Transform ):
             return
 
         relative_path = path.relative_to(self.settings.rootdir)
+        uuid = script.get("uuid", None) or self.__create_uuid()
 
         self.console.log( f"[{__func_name__}] Load script: {relative_path}" )
 
         _script : "GameObject.Script" = {
+            "uuid"      : uuid,
             "path"      : relative_path, 
             "active"    : script.get("active"),
             "exports"   : {
