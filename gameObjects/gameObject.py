@@ -34,7 +34,6 @@ class GameObject( Context, Transform ):
     def __init__( self, context, 
                  uuid           : uid.UUID = None,
                  name           : str = "GameObject",
-                 visible        : bool = True,
                  model_file     : bool = False,
                  material       : int = -1,
                  translate      : list = [ 0.0, 0.0, 0.0 ], 
@@ -51,8 +50,6 @@ class GameObject( Context, Transform ):
         :type uuid: str
         :param name: The name that is stored with the gameObject
         :type name: str
-        :param visible: If the gameObject is drawn
-        :type visible: bool
         :param model_file: The file path to a model file
         :type model_file: Path | bool
         :param material: The index in the material buffer as override, -1 is default
@@ -87,11 +84,11 @@ class GameObject( Context, Transform ):
         self.parent         : GameObject = None
         self.children       : List[GameObject] = []
 
-        self._active            : bool = False
-        self._hierarchy_active  : bool = False
+        self._active            : bool = True
+        self._hierarchy_active  : bool = True
 
-        self._visible           : bool = visible
-        self._hierarchy_visible : bool = False
+        self._visible           : bool = True
+        self._hierarchy_visible : bool = True
 
         self.transform      : Transform = Transform(
             context     = self.context,
@@ -850,12 +847,12 @@ class GameObject( Context, Transform ):
             self.onUpdateScripts();
 
         if self._dirty & GameObject.DirtyFlag_.transform:
-            if self.hierachyActive():
-                self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
-                self.transform._createWorldModelMatrix()
+            #if self.hierachyActive(): # not required
+            self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
+            self.transform._createWorldModelMatrix()
 
-                if self.settings.game_running:
-                    self._updatePhysicsBody()
+            if self.settings.game_running:
+                self._updatePhysicsBody()
 
         if self._dirty:
             self._dirty = GameObject.DirtyFlag_.none

@@ -365,7 +365,6 @@ class SceneManager:
             index = self.context.addGameObject( eval(obj["instance"])( self.context,
                     uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
                     name        = obj["name"]               if "name"       in obj else "Unknown",
-                    #visible     = obj["visible"]            if "visible"    in obj else True,
                     model_file  = model,
                     material    = obj["material"]           if "material"   in obj else -1,
                     translate   = obj["translate"]          if "translate"  in obj else [ 0.0, 0.0, 0.0 ],

@@ -161,9 +161,10 @@ class EmberEngine:
                         rotation    = [ 0.0, 0.0, 80.0 ]
                     ) )
 
-    def addGameObject( self, object : GameObject ) -> int:
+    def addGameObject( self, obj : GameObject ) -> int:
         index = len( self.gameObjects )
-        self.gameObjects.append( object )
+
+        self.gameObjects.append( obj )
 
         return index
 
