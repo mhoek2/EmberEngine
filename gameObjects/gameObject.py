@@ -322,6 +322,7 @@ class GameObject( Context, Transform ):
         class_name_f    : str
         exports         : dict
         obj             : None
+        _error          : str       # temporary
 
     def addScript( self, script : "GameObject.Script" ):
         """Add script to a gameObject
@@ -351,16 +352,21 @@ class GameObject( Context, Transform ):
         }
 
         try:
-            self.__set_class_name( _script )
             self.init_external_script( _script )
-
-            self.scripts.append(_script)
 
         except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.console.error( e, traceback.format_tb(exc_tb) )
-            self.console.warn(f"Script: [{path.name}] is not attached to GameObject: [{self.name}] - Fix and reload scene")
-    
+            self.console.warn(f"Script: [{path.name}] contains errors GameObject: [{self.name}]")
+        
+            # mark as disabled
+            _script["active"] = False
+            _script["_error"] = str(e)
+
+        finally:
+            # append the script to the GameObject, even if it contains errors
+            self.scripts.append(_script)
+
     def removeScript( self, path : Path ):
         """Remove script from a gameObject
 
@@ -413,13 +419,15 @@ class GameObject( Context, Transform ):
 
         return formatted
 
-    def __set_class_name( self, script : Script ):
+    def __set_class_name( self, script : Script ) -> None:
         """Gets the class name for a given scripts, also formats it for GUI
         
         :param script: The Script object containing a file path
         :type script: GameObject.Script
         """
-        script["class_name"] = self.__get_class_name_from_script(script.get("path"))
+        class_name = self.__get_class_name_from_script( script.get("path") )
+
+        script["class_name"] = class_name or "Invalid"
         script["class_name_f"] = self.__format_class_name( script.get("class_name") )
 
     def __load_script_exported_attributes( self, script : Script, _ScriptClass ):
@@ -525,6 +533,9 @@ class GameObject( Context, Transform ):
             self.console.note( f"[{__func_name__}] '{script.get("class_name")}' is not active, skip" )
             return
 
+        # find and set class name
+        self.__set_class_name( script )
+
         # destroy, somewhat ..
         # avoid storing direct references to objects inside script["obj"] instance 
         script["obj"] = None
@@ -569,9 +580,6 @@ class GameObject( Context, Transform ):
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
 
-        # find and set class name
-        self.__set_class_name( script )
-
         if not hasattr(module, script.get("class_name")):
             self.console.error( f"[{__func_name__}] No class named '{script.get("class_name")}' found in {file_path}" )
             return
@@ -598,6 +606,9 @@ class GameObject( Context, Transform ):
         for name, exported in script.get("exports").items():
             setattr(script.get("obj"), name, exported.default)
             _num_exports += 1
+
+        # clear existing errors
+        script.pop("_error", None)
 
         self.console.log( f"[{__func_name__}] Loaded ['{script.get("class_name")}'] with {_num_exports} exported attributes from {file_path}"  )
 
@@ -647,16 +658,19 @@ class GameObject( Context, Transform ):
                 self.console.error( e, traceback.format_tb(exc_tb) )
 
     def initScripts( self ):
-        for script in filter(lambda x: x["obj"] is not None, self.scripts):
+        for _script in filter(lambda x: x["obj"] is not None, self.scripts):
             try:
-                self.__set_class_name( script )
-                self.init_external_script( script )
+                self.init_external_script( _script )
 
-                script["obj"].onEnable()
+                _script["obj"].onEnable()
 
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
+
+                # mark as disabled
+                _script["active"] = False
+                _script["_error"] = str(e)
 
     #
     # editor state

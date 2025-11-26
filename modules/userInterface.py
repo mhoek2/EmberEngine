@@ -951,7 +951,7 @@ class UserInterface( Context ):
                     instance_attr.set(new)
                     setattr(script["obj"], instance_attr_name, new)
 
-        def _draw_script( self, index, script: GameObject.Script ):
+        def _draw_script( self, index, script: GameObject.Script ) -> None:
             _shift_left = 20.0
             _region = imgui.get_content_region_avail()
             _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
@@ -976,6 +976,13 @@ class UserInterface( Context ):
                     script["active"] = active_state
                     self.scene.updateScriptonGameObjects( script["path"] )
 
+            # script contains errors, return
+            if script.get("_error", None):
+                imgui.text_colored( imgui.ImVec4(1.0, 0.0, 0.0, 0.9), script.get("_error") );
+                imgui.pop_id()
+                imgui.dummy( imgui.ImVec2(20, 0) )
+                imgui.tree_pop()
+                return
 
             draw_list = imgui.get_window_draw_list() 
             draw_list.channels_split(2)

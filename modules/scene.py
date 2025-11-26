@@ -340,17 +340,21 @@ class SceneManager:
         :type path: Path
         """
         for obj in self.context.gameObjects:
-            for script in obj.scripts:
-                if path != script["path"]:
+            for _script in obj.scripts:
+                if path != _script["path"]:
                     continue
 
                 # reload
                 try:
-                    obj.init_external_script( script )
+                    obj.init_external_script( _script )
 
                 except Exception as e:
                     exc_type, exc_value, exc_tb = sys.exc_info()
                     self.console.error( e, traceback.format_tb(exc_tb) )
+
+                    # mark as disabled
+                    _script["active"] = False
+                    _script["_error"] = str(e)
 
     def loadGameObjectsRecursive( self,
         parent          : "GameObject" = None,
