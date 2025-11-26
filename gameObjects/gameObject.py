@@ -350,22 +350,11 @@ class GameObject( Context, Transform ):
                 for var_name, value in script.get("exports").items()
             }
         }
-
-        try:
-            self.init_external_script( _script )
-
-        except Exception as e:
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.error( e, traceback.format_tb(exc_tb) )
-            self.console.warn(f"Script: [{path.name}] contains errors GameObject: [{self.name}]")
         
-            # mark as disabled
-            _script["active"] = False
-            _script["_error"] = str(e)
+        self.init_external_script( _script )
 
-        finally:
-            # append the script to the GameObject, even if it contains errors
-            self.scripts.append(_script)
+        # append the script to the GameObject, even if it contains errors
+        self.scripts.append( _script )
 
     def removeScript( self, path : Path ):
         """Remove script from a gameObject
@@ -391,6 +380,8 @@ class GameObject( Context, Transform ):
 
         if os.path.isfile(filepath):
             code = filepath.read_text()
+        else:
+            return None
 
         for line in code.splitlines():
             if line.strip().startswith("class "):
@@ -517,7 +508,7 @@ class GameObject( Context, Transform ):
 
         return _found, _file_path
 
-    def init_external_script( self, script : Script ):
+    def init_external_script( self, script : Script ) -> bool:
         """Initialize script attached to this gameObject,
         Try to load and parse the script, then convert to module in sys.
 
@@ -528,89 +519,107 @@ class GameObject( Context, Transform ):
         """
         __func_name__ = inspect.currentframe().f_code.co_name
 
-        if not script.get("active"):
+        try:
+            if not script.get("active"):
+                script["obj"] = None
+                self.console.note( f"[{__func_name__}] '{script.get("class_name")}' is not active, skip" )
+                return False
+
+            # find and set class name
+            self.__set_class_name( script )
+
+            # destroy, somewhat ..
+            # avoid storing direct references to objects inside script["obj"] instance 
             script["obj"] = None
-            self.console.note( f"[{__func_name__}] '{script.get("class_name")}' is not active, skip" )
-            return
 
-        # find and set class name
-        self.__set_class_name( script )
+            # Resolve the absolute script file path
+            _found, file_path = self.__resolve_script_path( script )
+            if not _found:
+                raise FileNotFoundError( f"Script '{file_path}' not found!")
 
-        # destroy, somewhat ..
-        # avoid storing direct references to objects inside script["obj"] instance 
-        script["obj"] = None
+            # Derive a simple module name from the file name
+            module_name = os.path.splitext(os.path.basename(file_path))[0]
 
-        # Rresolve the absolute script file path
-        _found, file_path = self.__resolve_script_path( script )
-        if not _found:
-            return
+            # Remove from sys.modules if already loaded (hot reload)
+            if module_name in sys.modules:
+                del sys.modules[module_name]
 
-        # Derive a simple module name from the file name
-        module_name = os.path.splitext(os.path.basename(file_path))[0]
+            # Load the module from the file path
+            spec = importlib.util.spec_from_file_location(module_name, file_path)
+            if spec is None or spec.loader is None:
+                self.console.error( f"[{__func_name__}] Failed to load spec for {file_path}" )
+                raise ImportError(f"Cannot import module from {file_path}")
 
-        # Remove from sys.modules if already loaded (hot reload)
-        if module_name in sys.modules:
-            del sys.modules[module_name]
-
-        # Load the module from the file path
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
-        if spec is None or spec.loader is None:
-            self.console.error( f"[{__func_name__}] Failed to load spec for {file_path}" )
-            return
-
-        module = importlib.util.module_from_spec(spec)
+            module = importlib.util.module_from_spec(spec)
         
-        # Load ScriptBehaivior
-        _script_behavior = importlib.import_module("gameObjects.scriptBehaivior")
-        ScriptBehaivior = getattr(_script_behavior, "ScriptBehaivior")
+            # Load ScriptBehaivior
+            _script_behavior = importlib.import_module("gameObjects.scriptBehaivior")
+            ScriptBehaivior = getattr(_script_behavior, "ScriptBehaivior")
 
-        # define attribute export method from ScriptBehaivior
-        # making it callable from a dynamic script
-        module.__dict__["export"] = ScriptBehaivior.export
+            # define attribute export method from ScriptBehaivior
+            # making it callable from a dynamic script
+            module.__dict__["export"] = ScriptBehaivior.export
 
-        # auto import modules
-        for auto_mod_name, auto_mod_as in self.settings.SCRIPT_AUTO_IMPORT_MODULES.items():
-            imported = importlib.import_module(auto_mod_name)
+            # auto import modules
+            for auto_mod_name, auto_mod_as in self.settings.SCRIPT_AUTO_IMPORT_MODULES.items():
+                imported = importlib.import_module(auto_mod_name)
 
-            if auto_mod_as is not None:
-                module.__dict__[auto_mod_as] = imported
-            else:
-                module.__dict__[auto_mod_name] = imported
+                if auto_mod_as is not None:
+                    module.__dict__[auto_mod_as] = imported
+                else:
+                    module.__dict__[auto_mod_name] = imported
 
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
 
-        if not hasattr(module, script.get("class_name")):
-            self.console.error( f"[{__func_name__}] No class named '{script.get("class_name")}' found in {file_path}" )
-            return
+            if not hasattr(module, script.get("class_name")):
+                self.console.error( f"[{__func_name__}] No class named '{script.get("class_name")}' found in {file_path}" )
+                raise AttributeError(
+                    f"[{__func_name__}] No class named '{class_name}' found in {file_path}"
+                )
 
-        _ScriptClass = getattr(module, script.get("class_name"))
+            _ScriptClass = getattr(module, script.get("class_name"))
 
-        # load and populate exported script attributes
-        # either with default value, or stored value from scene
-        self.__load_script_exported_attributes( script, _ScriptClass )
+            # load and populate exported script attributes
+            # either with default value, or stored value from scene
+            self.__load_script_exported_attributes( script, _ScriptClass )
 
-        class ClassPlaceholder(_ScriptClass, ScriptBehaivior):
-            def __init__(self, context, gameObject):
-                ScriptBehaivior.__init__(self, context, gameObject)
-                if hasattr(_ScriptClass, "__init__"):
-                    try:
-                        _ScriptClass.__init__(self)
-                    except TypeError:
-                        pass
+            class ClassPlaceholder(_ScriptClass, ScriptBehaivior):
+                def __init__(self, context, gameObject):
+                    ScriptBehaivior.__init__(self, context, gameObject)
+                    if hasattr(_ScriptClass, "__init__"):
+                        try:
+                            _ScriptClass.__init__(self)
+                        except TypeError:
+                            pass
 
-        script["obj"] = ClassPlaceholder(self.context, self)
+            script["obj"] = ClassPlaceholder(self.context, self)
         
-        # set the exported attributes on the script instance
-        _num_exports = 0
-        for name, exported in script.get("exports").items():
-            setattr(script.get("obj"), name, exported.default)
-            _num_exports += 1
+            # set the exported attributes on the script instance
+            _num_exports = 0
+            for name, exported in script.get("exports").items():
+                setattr(script.get("obj"), name, exported.default)
+                _num_exports += 1
 
-        # clear existing errors
-        script.pop("_error", None)
+            # clear existing errors
+            script.pop("_error", None)
 
-        self.console.log( f"[{__func_name__}] Loaded ['{script.get("class_name")}'] with {_num_exports} exported attributes from {file_path}"  )
+            self.console.log( f"[{__func_name__}] Loaded ['{script.get("class_name")}'] with {_num_exports} exported attributes from {file_path}"  )
+        
+        # an error was raised  
+        except Exception as e:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.error( e, traceback.format_tb(exc_tb) )
+            self.console.warn(f"Script: [{script.get("path").name}] contains errors GameObject: [{self.name}]")
+        
+            # mark as disabled
+            script["obj"] = None
+            script["active"] = False
+            script["_error"] = str(e)
+
+            return False
+
+        return True
 
     def onStartScripts( self ):
         """Call onStart() function in all dynamic scripts attached to this gameObject"""
@@ -659,18 +668,8 @@ class GameObject( Context, Transform ):
 
     def initScripts( self ):
         for _script in filter(lambda x: x["obj"] is not None, self.scripts):
-            try:
-                self.init_external_script( _script )
-
+            if self.init_external_script( _script ):
                 _script["obj"].onEnable()
-
-            except Exception as e:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.error( e, traceback.format_tb(exc_tb) )
-
-                # mark as disabled
-                _script["active"] = False
-                _script["_error"] = str(e)
 
     #
     # editor state

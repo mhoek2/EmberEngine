@@ -344,17 +344,8 @@ class SceneManager:
                 if path != _script["path"]:
                     continue
 
-                # reload
-                try:
-                    obj.init_external_script( _script )
-
-                except Exception as e:
-                    exc_type, exc_value, exc_tb = sys.exc_info()
-                    self.console.error( e, traceback.format_tb(exc_tb) )
-
-                    # mark as disabled
-                    _script["active"] = False
-                    _script["_error"] = str(e)
+                # (re)init
+                obj.init_external_script( _script )
 
     def loadGameObjectsRecursive( self,
         parent          : "GameObject" = None,
