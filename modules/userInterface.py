@@ -4,10 +4,13 @@ from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 from imgui_bundle import imgui
+from imgui_bundle import imguizmo
 from imgui_bundle import icons_fontawesome_6 as fa
 from imgui_bundle import imgui_color_text_edit as ImGuiColorTextEdit
 
 import pygame
+from pyrr import Matrix44, Vector3, Quaternion
+import numpy as np
 
 from modules.context import Context
 from modules.material import Materials
@@ -58,6 +61,7 @@ class UserInterface( Context ):
         
         self.initialized    : bool = False
         self.io             : imgui.IO = imgui.get_io()
+        self.gizmo          : imguizmo.im_guizmo = imguizmo.im_guizmo
 
         self.drawWireframe          : bool = False
         self.selectedObject         : GameObject = None
@@ -123,6 +127,83 @@ class UserInterface( Context ):
 
         def get_payload_data(self):
             return self.data
+
+    #
+    # Guizmo
+    #
+    class ImGuizmo( Context ):
+        def __init__( self, context ):
+            super().__init__( context )
+
+            self.gizmo = self.context.gui.gizmo
+
+        def to_matrix16(self, mat):
+            """
+            Convert a numpy.ndarray or Pyrr Matrix44 to ImGuizmo Matrix16.
+            Ensures column-major order for ImGuizmo.
+            """
+            if isinstance(mat, np.ndarray):
+                floats = mat.astype(float).reshape(16).tolist()  # <-- remove .T
+                return self.gizmo.Matrix16(floats)
+
+            if isinstance(mat, Matrix44):
+                floats = mat.flatten().tolist()  # <-- remove .T
+                return self.gizmo.Matrix16(floats)
+
+            raise TypeError(f"Unsupported matrix type: {type(mat)}")
+
+        def begin_frame( self ):
+            #self.gizmo.set_im_gui_context(imgui.get_current_context())
+            self.gizmo.begin_frame()
+
+        def render( self, _rect_min : imgui.ImVec2, _image_size : imgui.ImVec2 ) -> None:
+            self.begin_frame()
+
+            self.gizmo.push_id(0)
+
+            self.gizmo.set_drawlist(imgui.get_window_draw_list())
+            self.gizmo.set_rect(
+                _rect_min.x, _rect_min.y, 
+                _image_size.x, _image_size.y)
+            self.gizmo.set_orthographic(False)
+
+            view_m16        = self.to_matrix16(self.renderer.view)
+            proj_m16        = self.to_matrix16(self.renderer.projection)
+
+            # selected item
+            if self.context.gui.selectedObject:
+                gameObject = self.context.gui.selectedObject
+                model_m16 = self.to_matrix16(gameObject.transform._getModelMatrix())
+
+                glEnable(GL_DEPTH_TEST)
+                glDepthFunc(GL_LEQUAL)
+                self.gizmo.manipulate(
+                    view_m16,
+                    proj_m16,
+                    self.gizmo.OPERATION.translate,
+                    self.gizmo.MODE.local,
+                    model_m16,
+                    None,
+                    None,
+                    None,
+                    None
+                )
+
+                # write result back on update
+                if self.gizmo.is_using():
+                    gameObject.transform.world_model_matrix = Matrix44(model_m16.values.astype(float))
+                    gameObject.transform._update_local_from_world()
+                    gameObject._mark_dirty( GameObject.DirtyFlag_.transform )
+                    
+            self.gizmo.view_manipulate(
+                view_m16,
+                3.0,
+                imgui.ImVec2((_rect_min.x + _image_size.x) - 142, _rect_min.y + 20),
+                imgui.ImVec2(128, 128),
+                0x10101010,
+            )
+
+            self.gizmo.pop_id()
 
     #
     # text editor
@@ -246,6 +327,7 @@ class UserInterface( Context ):
         self.text_editor    : UserInterface.TextEditor = self.TextEditor( self.context )
         self.project        : UserInterface.Project = self.Project( self.context )
         self.inspector      : UserInterface.Inspector = self.Inspector( self.context )
+        self.guizmo         : UserInterface.ImGuizmo = self.ImGuizmo( self.context )
 
         # drag and drop
         self.dnd_payload    : UserInterface.DragAndDropPayload = UserInterface.DragAndDropPayload()
@@ -441,6 +523,10 @@ class UserInterface( Context ):
         image_uv0   = imgui.ImVec2( 0, 1 )
         image_uv1   = imgui.ImVec2( 1, 0 )
         imgui.image( image, image_size, image_uv0, image_uv1 )
+
+        # ImGuizmo
+        _rect_min = imgui.get_item_rect_min()
+        self.guizmo.render( _rect_min, image_size )
 
         imgui.end()
 
