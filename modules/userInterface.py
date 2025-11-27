@@ -1003,10 +1003,10 @@ class UserInterface( Context ):
             imgui.dummy( imgui.ImVec2(20, 0) )
 
             for instance_attr_name, instance_attr in script["exports"].items():
-                if script["obj"] is None:
+                if script["instance"] is None:
                     continue
 
-                _value = getattr(script["obj"], instance_attr_name)
+                _value = getattr(script["instance"], instance_attr_name)
                 _t = instance_attr.type
                 _changed = False
 
@@ -1032,7 +1032,7 @@ class UserInterface( Context ):
 
                 if _changed:
                     instance_attr.set(new)
-                    setattr(script["obj"], instance_attr_name, new)
+                    setattr(script["instance"], instance_attr_name, new)
 
         def _draw_script( self, script: GameObject.Script ) -> None:
             _shift_left = 20.0
@@ -1182,7 +1182,7 @@ class UserInterface( Context ):
                 script : GameObject.Script = {
                     "active"    : True,
                     "path"      : path,
-                    "obj"       : None,
+                    "instance"       : None,
                     "exports"   : {}
                 }
                 self.context.gui.selectedObject.addScript( script )

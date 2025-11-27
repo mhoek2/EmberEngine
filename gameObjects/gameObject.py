@@ -311,7 +311,6 @@ class GameObject( Context, Transform ):
     class Script(TypedDict):
         # TODO: 
         # - should make this a propper class ..
-        # - dont use "obj", call it instance?  
         #
         uuid            : uid.UUID
         path            : Path
@@ -319,7 +318,7 @@ class GameObject( Context, Transform ):
         class_name      : str
         class_name_f    : str
         exports         : dict
-        obj             : None
+        instance        : None      # reference the the dynamic script instance
         _error          : str       # temporary
 
     def addScript( self, script : "GameObject.Script" ):
@@ -521,7 +520,7 @@ class GameObject( Context, Transform ):
 
         try:
             if not script.get("active"):
-                script["obj"] = None
+                script["instance"] = None
                 self.console.note( f"[{__func_name__}] '{script.get("class_name")}' is not active, skip" )
                 return False
 
@@ -529,8 +528,8 @@ class GameObject( Context, Transform ):
             self.__set_class_name( script )
 
             # destroy, somewhat ..
-            # avoid storing direct references to objects inside script["obj"] instance 
-            script["obj"] = None
+            # avoid storing direct references to objects inside script["instance"] 
+            script["instance"] = None
 
             # Resolve the absolute script file path
             _found, file_path = self.__resolve_script_path( script )
@@ -593,12 +592,12 @@ class GameObject( Context, Transform ):
                         except TypeError:
                             pass
 
-            script["obj"] = ClassPlaceholder(self.context, self)
+            script["instance"] = ClassPlaceholder(self.context, self)
         
             # set the exported attributes on the script instance
             _num_exports = 0
             for name, exported in script.get("exports").items():
-                setattr(script.get("obj"), name, exported.default)
+                setattr(script.get("instance"), name, exported.default)
                 _num_exports += 1
 
             # clear existing errors
@@ -613,7 +612,7 @@ class GameObject( Context, Transform ):
             self.console.warn(f"Script: [{script.get("path").name}] contains errors GameObject: [{self.name}]")
         
             # mark as disabled
-            script["obj"] = None
+            script["instance"] = None
             script["active"] = False
             script["_error"] = str(e)
 
@@ -626,9 +625,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["obj"] is not None, self.scripts):
+        for script in filter(lambda x: x["instance"] is not None, self.scripts):
             try:
-                script["obj"].onStart()
+                script["instance"].onStart()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -638,9 +637,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["obj"] is not None, self.scripts):
+        for script in filter(lambda x: x["instance"] is not None, self.scripts):
             try:
-                script["obj"].onUpdate()
+                script["instance"].onUpdate()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -650,9 +649,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["obj"] is not None, self.scripts):
+        for script in filter(lambda x: x["instance"] is not None, self.scripts):
             try:
-                script["obj"].onEnable()
+                script["instance"].onEnable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -662,9 +661,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["obj"] is not None, self.scripts):
+        for script in filter(lambda x: x["instance"] is not None, self.scripts):
             try:
-                script["obj"].onDisable()
+                script["instance"].onDisable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -673,7 +672,7 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["obj"] is not None, self.scripts):
+        for script in filter(lambda x: x["instance"] is not None, self.scripts):
             self.init_external_script( script )
 
     #
@@ -858,6 +857,10 @@ class GameObject( Context, Transform ):
             self._dirty = GameObject.DirtyFlag_.none
 
         else:
+            print( type(self.transform.local_position) )
+            print( type(self.transform.local_rotation) )
+            print( type(self.transform.local_scale) )
+
             # nothing to do
             if not self.hierachyActive():
                 return 
