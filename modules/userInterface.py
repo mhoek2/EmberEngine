@@ -30,6 +30,8 @@ import re
 import uuid as uid
 import enum
 
+from modules.transform import Transform
+
 class CustomEvent( Context ):
     def __init__(self):
         self._queue : List = []
@@ -1006,6 +1008,10 @@ class UserInterface( Context ):
                 if script["instance"] is None:
                     continue
 
+                # exported attribute contains error, type mismatch?
+                if not instance_attr.active:
+                    continue
+
                 _value = getattr(script["instance"], instance_attr_name)
                 _t = instance_attr.type
                 _changed = False
@@ -1025,6 +1031,9 @@ class UserInterface( Context ):
                 # BOOL
                 elif _t is bool:
                     _changed, new = imgui.checkbox(f"{instance_attr_name}:", _value)
+
+                elif _t is Transform:
+                    imgui.text("Transform export!")
 
                 # Unsupported type
                 else:

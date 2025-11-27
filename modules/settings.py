@@ -40,8 +40,9 @@ class Settings:
         # scriptable behaivior
         self.SCRIPT_AUTO_IMPORT_MODULES = {
             # module        # as
-            "pygame"        : None,
-            "pybullet"      : "p"
+            "pygame"                : None,
+            "pybullet"              : "p",
+            "modules.Transform"     : None
         }
 
         # exported application

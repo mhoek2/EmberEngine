@@ -441,6 +441,13 @@ class GameObject( Context, Transform ):
                 class_attr_type = type(class_attr_value)
 
                 #
+                # failed to export, type mismatch?
+                #
+                if not class_attr.active:
+                    self.console.error( f"[{__func_name__}] Export failed: [{class_attr_name} = {class_attr_value}] in script {script["class_name"]}" )
+                    continue
+
+                #
                 # attribute NOT stored in the scene, use default class attribute value
                 #
                 if class_attr_name not in script.get("exports"):
@@ -857,10 +864,6 @@ class GameObject( Context, Transform ):
             self._dirty = GameObject.DirtyFlag_.none
 
         else:
-            print( type(self.transform.local_position) )
-            print( type(self.transform.local_rotation) )
-            print( type(self.transform.local_scale) )
-
             # nothing to do
             if not self.hierachyActive():
                 return 
