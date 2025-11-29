@@ -323,218 +323,36 @@
 <h1>gameObjects<a class="headerlink" href="#gameobjects" title="Link to this heading">#</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<dl class="py class" id="module-gameObjects.camera">
-<dt class="sig sig-object py" id="gameObjects.camera.Camera">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.camera.</span></span><span class="sig-name descname"><span class="pre">Camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.camera.Camera" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameObject</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.camera.Camera.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.camera.Camera.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Class that handles camera objects, Derived from GameObject Class</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p></li>
-<li><p><strong>*args</strong> – <p>Additional positional arguments to be passed to the parent class or other parts of the system</p>
-</p></li>
-<li><p><strong>**kwargs</strong> – <p>Additional keyword arguments to be passed to the parent class or other parts of the system</p>
-</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.camera.Camera.onStart">
-<span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.camera.Camera.onStart" title="Link to this definition">#</a></dt>
-<dd><p>Executes whenever the object is added to scene</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.camera.Camera.onUpdate">
-<span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.camera.Camera.onUpdate" title="Link to this definition">#</a></dt>
-<dd><p>Executes every frame, issuing draw commands</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class" id="module-gameObjects.gameObject">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.gameObject.</span></span><span class="sig-name descname"><span class="pre">GameObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.gameObject.GameObject" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
-<p>Base class for gameObjects</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.Script">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Script</span></span><a class="headerlink" href="#gameObjects.gameObject.GameObject.Script" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.Script.file">
-<span class="sig-name descname"><span class="pre">file</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#gameObjects.gameObject.GameObject.Script.file" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.Script.obj">
-<span class="sig-name descname"><span class="pre">obj</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gameObjects.gameObject.GameObject.Script.obj" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GameObject'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visible</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1.0,</span> <span class="pre">1.0,</span> <span class="pre">1.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scripts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.gameObject.GameObject.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Base class for gameObjects</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – The name that is stored with the gameObject</p></li>
-<li><p><strong>visible</strong> (<em>bool</em>) – If the gameObject is drawn</p></li>
-<li><p><strong>model_file</strong> (<em>Path</em><em> | </em><em>bool</em>) – The file path to a model file</p></li>
-<li><p><strong>material</strong> (<em>int</em>) – The index in the material buffer as override, -1 is default</p></li>
-<li><p><strong>translate</strong> (<em>Vector3</em>) – The position of the object</p></li>
-<li><p><strong>rotation</strong> (<em>Vector3</em>) – The rotation of the object</p></li>
-<li><p><strong>scale</strong> (<em>Vector3</em>) – The scale of the object</p></li>
-<li><p><strong>scripts</strong> (<em>List</em><em>[</em><em>scripts</em><em>]</em>) – A list containing Paths to dynamic scripts</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.addScript">
-<span class="sig-name descname"><span class="pre">addScript</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.gameObject.GameObject.addScript" title="Link to this definition">#</a></dt>
-<dd><p>Add script to a gameObject</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>file</strong> (<em>Path</em>) – The path to a .py script file</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.get_class_name_from_script">
-<span class="sig-name descname"><span class="pre">get_class_name_from_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#gameObjects.gameObject.GameObject.get_class_name_from_script" title="Link to this definition">#</a></dt>
-<dd><p>Scan the content of the script to find the first class name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>script</strong> (<em>Path</em>) – The path to a .py script file</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A class name if its found, return None otherwise</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str | None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.init_external_script">
-<span class="sig-name descname"><span class="pre">init_external_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">script</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#gameObjects.gameObject.GameObject.Script" title="gameObjects.gameObject.GameObject.Script"><span class="pre">Script</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.gameObject.GameObject.init_external_script" title="Link to this definition">#</a></dt>
-<dd><p>Initialize script attached to this gameObject,
-Try to load and parse the script, then convert to module in sys.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>script</strong> (<a class="reference internal" href="#gameObjects.gameObject.GameObject.Script" title="gameObjects.gameObject.GameObject.Script"><em>GameObject.Script</em></a>) – The Script object containing a file path</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.onStart">
-<span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.gameObject.GameObject.onStart" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.onStartScripts">
-<span class="sig-name descname"><span class="pre">onStartScripts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.gameObject.GameObject.onStartScripts" title="Link to this definition">#</a></dt>
-<dd><p>Call onStart() function in all dynamic scripts attached to this gameObject</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.onUpdate">
-<span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.gameObject.GameObject.onUpdate" title="Link to this definition">#</a></dt>
-<dd><p>Implemented by inherited class</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.onUpdateScripts">
-<span class="sig-name descname"><span class="pre">onUpdateScripts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.gameObject.GameObject.onUpdateScripts" title="Link to this definition">#</a></dt>
-<dd><p>Call onUpdate() function in all dynamic scripts attached to this gameObject</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.gameObject.GameObject.removeScript">
-<span class="sig-name descname"><span class="pre">removeScript</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.gameObject.GameObject.removeScript" title="Link to this definition">#</a></dt>
-<dd><p>Remove script from a gameObject</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>file</strong> (<em>Path</em>) – The path to a .py script file</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class" id="module-gameObjects.light">
-<dt class="sig sig-object py" id="gameObjects.light.Light">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.light.</span></span><span class="sig-name descname"><span class="pre">Light</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.light.Light" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameObject</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.light.Light.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.light.Light.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Base class for Light gameObjects, holds the various light types</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p></li>
-<li><p><strong>*args</strong> – <p>Additional positional arguments to be passed to the parent class or other parts of the system</p>
-</p></li>
-<li><p><strong>**kwargs</strong> – <p>Additional keyword arguments to be passed to the parent class or other parts of the system</p>
-</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.light.Light.onStart">
-<span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.light.Light.onStart" title="Link to this definition">#</a></dt>
-<dd><p>Executes whenever the object is added to scene</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.light.Light.onUpdate">
-<span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.light.Light.onUpdate" title="Link to this definition">#</a></dt>
-<dd><p>Executes every frame, issuing draw commands</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class" id="module-gameObjects.mesh">
-<dt class="sig sig-object py" id="gameObjects.mesh.Mesh">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.mesh.</span></span><span class="sig-name descname"><span class="pre">Mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.mesh.Mesh" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">GameObject</span></code></a></p>
-<p>Base class for regular gameObjects, with mesh or empty, Derived from GameObject Class</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.mesh.Mesh.onStart">
-<span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.mesh.Mesh.onStart" title="Link to this definition">#</a></dt>
-<dd><p>Executes whenever the object is added to scene</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gameObjects.mesh.Mesh.onUpdate">
-<span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.mesh.Mesh.onUpdate" title="Link to this definition">#</a></dt>
-<dd><p>Executes every frame, issuing draw commands</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class" id="module-gameObjects.scriptBehaivior">
 <dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.scriptBehaivior.</span></span><span class="sig-name descname"><span class="pre">ScriptBehaivior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.Exported">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Exported</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.Exported.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.Exported.default_for_annotation_type">
+<span class="sig-name descname"><span class="pre">default_for_annotation_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.default_for_annotation_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.Exported.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.get" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.Exported.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.set" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.__init__" title="Link to this definition">#</a></dt>
@@ -544,10 +362,39 @@ setting up references to context, events and the gameObject itself</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p></li>
-<li><p><strong>gameObject</strong> (<a class="reference internal" href="#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><em>GameObject</em></a>) – A reference to the gameObject the script is attached to</p></li>
+<li><p><strong>gameObject</strong> (<em>GameObject</em>) – A reference to the gameObject the script is attached to</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.export">
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.export" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.onDisable">
+<span class="sig-name descname"><span class="pre">onDisable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onDisable" title="Link to this definition">#</a></dt>
+<dd><p>Implemented by script</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.onEnable">
+<span class="sig-name descname"><span class="pre">onEnable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onEnable" title="Link to this definition">#</a></dt>
+<dd><p>Implemented by script</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.onStart">
+<span class="sig-name descname"><span class="pre">onStart</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onStart" title="Link to this definition">#</a></dt>
+<dd><p>Implemented by script</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gameObjects.scriptBehaivior.ScriptBehaivior.onUpdate">
+<span class="sig-name descname"><span class="pre">onUpdate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onUpdate" title="Link to this definition">#</a></dt>
+<dd><p>Implemented by script</p>
 </dd></dl>
 
 </dd></dl>
@@ -616,42 +463,20 @@ setting up references to context, events and the gameObject itself</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.camera.Camera"><code class="docutils literal notranslate"><span class="pre">Camera</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.camera.Camera.__init__"><code class="docutils literal notranslate"><span class="pre">Camera.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.camera.Camera.onStart"><code class="docutils literal notranslate"><span class="pre">Camera.onStart()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.camera.Camera.onUpdate"><code class="docutils literal notranslate"><span class="pre">Camera.onUpdate()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject"><code class="docutils literal notranslate"><span class="pre">GameObject</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.Script"><code class="docutils literal notranslate"><span class="pre">GameObject.Script</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.Script.file"><code class="docutils literal notranslate"><span class="pre">GameObject.Script.file</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.Script.obj"><code class="docutils literal notranslate"><span class="pre">GameObject.Script.obj</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.__init__"><code class="docutils literal notranslate"><span class="pre">GameObject.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.addScript"><code class="docutils literal notranslate"><span class="pre">GameObject.addScript()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.get_class_name_from_script"><code class="docutils literal notranslate"><span class="pre">GameObject.get_class_name_from_script()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.init_external_script"><code class="docutils literal notranslate"><span class="pre">GameObject.init_external_script()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.onStart"><code class="docutils literal notranslate"><span class="pre">GameObject.onStart()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.onStartScripts"><code class="docutils literal notranslate"><span class="pre">GameObject.onStartScripts()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.onUpdate"><code class="docutils literal notranslate"><span class="pre">GameObject.onUpdate()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.onUpdateScripts"><code class="docutils literal notranslate"><span class="pre">GameObject.onUpdateScripts()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.gameObject.GameObject.removeScript"><code class="docutils literal notranslate"><span class="pre">GameObject.removeScript()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.light.Light"><code class="docutils literal notranslate"><span class="pre">Light</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.light.Light.__init__"><code class="docutils literal notranslate"><span class="pre">Light.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.light.Light.onStart"><code class="docutils literal notranslate"><span class="pre">Light.onStart()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.light.Light.onUpdate"><code class="docutils literal notranslate"><span class="pre">Light.onUpdate()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.mesh.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.mesh.Mesh.onStart"><code class="docutils literal notranslate"><span class="pre">Mesh.onStart()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.mesh.Mesh.onUpdate"><code class="docutils literal notranslate"><span class="pre">Mesh.onUpdate()</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.Exported</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.__init__"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.Exported.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.default_for_annotation_type"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.Exported.default_for_annotation_type()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.get"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.Exported.get()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.set"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.Exported.set()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.__init__"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.export"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.export()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onDisable"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.onDisable()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onEnable"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.onEnable()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onStart"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.onStart()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.scriptBehaivior.ScriptBehaivior.onUpdate"><code class="docutils literal notranslate"><span class="pre">ScriptBehaivior.onUpdate()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.skybox.Skybox"><code class="docutils literal notranslate"><span class="pre">Skybox</span></code></a><ul class="nav section-nav flex-column">

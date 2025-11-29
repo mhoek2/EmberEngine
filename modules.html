@@ -378,7 +378,7 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.camera.Camera.place_object_in_front_of_another">
-<span class="sig-name descname"><span class="pre">place_object_in_front_of_another</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Vector3</span></span></span><a class="headerlink" href="#modules.camera.Camera.place_object_in_front_of_another" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">place_object_in_front_of_another</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation_quat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Vector3</span></span></span><a class="headerlink" href="#modules.camera.Camera.place_object_in_front_of_another" title="Link to this definition">#</a></dt>
 <dd><p>-This should become a scriptable function perhaps</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -447,6 +447,32 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="modules.console.Console.Type_">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Type_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.Type_" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.console.Console.Type_.error">
+<span class="sig-name descname"><span class="pre">error</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#modules.console.Console.Type_.error" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.console.Console.Type_.none">
+<span class="sig-name descname"><span class="pre">none</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#modules.console.Console.Type_.none" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.console.Console.Type_.note">
+<span class="sig-name descname"><span class="pre">note</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#modules.console.Console.Type_.note" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.console.Console.Type_.warning">
+<span class="sig-name descname"><span class="pre">warning</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#modules.console.Console.Type_.warning" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.__init__" title="Link to this definition">#</a></dt>
@@ -459,24 +485,17 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="modules.console.Console.addEntry">
-<span class="sig-name descname"><span class="pre">addEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traceback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Exception</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.addEntry" title="Link to this definition">#</a></dt>
-<dd><p>Add entry to the console entries buffer</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>type_id</strong> (<em>int</em>) – The type of a entry, ENTRY_TYPE_ERROR ENTRY_TYPE_WARNING, or ENTRY_TYPE_NOTE</p></li>
-<li><p><strong>traceback</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A list that contains detailed information of a raised Exception</p></li>
-<li><p><strong>e</strong> (<em>Exception</em>) – The final raised Exception</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="modules.console.Console.clear">
 <span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.console.Console.clear" title="Link to this definition">#</a></dt>
 <dd><p>Clear the console entries buffer</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.console.Console.error">
+<span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.error" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dd><p>Wrapper method to add error entry</p>
 </dd></dl>
 
 <dl class="py method">
@@ -491,6 +510,43 @@ Do this by placing an object in front of the cameras direction, and use lookAt.<
 <dd class="field-even"><p>List[<a class="reference internal" href="#modules.console.Console.Entry" title="modules.console.Console.Entry">Entry</a>]</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.console.Console.get_entry_color">
+<span class="sig-name descname"><span class="pre">get_entry_color</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.console.Console.Entry" title="modules.console.Console.Entry"><span class="pre">Entry</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.get_entry_color" title="Link to this definition">#</a></dt>
+<dd><p>Get the color of a given entry</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.console.Console.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.log" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.console.Console.Type_" title="modules.console.Console.Type_"><span class="pre">Type_</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.console.Console.Type_" title="modules.console.Console.Type_"><span class="pre">Type_</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span></dt>
+<dd><p>Add entry to the console entries buffer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_type</strong> (<a href="#id1"><span class="problematic" id="id2">Console.Type_</span></a>) – The type of a entry, <a href="#id3"><span class="problematic" id="id4">Type_</span></a>.error <a href="#id5"><span class="problematic" id="id6">Type_</span></a>.warning, or <a href="#id7"><span class="problematic" id="id8">Type_</span></a>.note</p></li>
+<li><p><strong>stack</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – A list that contains detailed information of a raised Exception</p></li>
+<li><p><strong>message</strong> (<em>str</em>) – The message of the entry</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.console.Console.note">
+<span class="sig-name descname"><span class="pre">note</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.note" title="Link to this definition">#</a></dt>
+<dd><p>Wrapper method to add note entry</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.console.Console.warn">
+<span class="sig-name descname"><span class="pre">warn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.console.Console.warn" title="Link to this definition">#</a></dt>
+<dd><p>Wrapper method to add warning entry</p>
 </dd></dl>
 
 </dd></dl>
@@ -727,188 +783,6 @@ Find from cache is not implemented yet.</p>
 </dd>
 </dl>
 </dd></dl>
-
-</dd></dl>
-
-<dl class="py class" id="module-modules.imgui">
-<dt class="sig sig-object py" id="modules.imgui.ImGui">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.imgui.</span></span><span class="sig-name descname"><span class="pre">ImGui</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.docking_space">
-<span class="sig-name descname"><span class="pre">docking_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.docking_space" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_camera_selector">
-<span class="sig-name descname"><span class="pre">draw_camera_selector</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_camera_selector" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_console">
-<span class="sig-name descname"><span class="pre">draw_console</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_console" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_console_entry">
-<span class="sig-name descname"><span class="pre">draw_console_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.console.Console.Entry" title="modules.console.Console.Entry"><span class="pre">Entry</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_console_entry" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_environment">
-<span class="sig-name descname"><span class="pre">draw_environment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_environment" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_exported_viewport">
-<span class="sig-name descname"><span class="pre">draw_exported_viewport</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_exported_viewport" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_file_browser">
-<span class="sig-name descname"><span class="pre">draw_file_browser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_file_browser" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_file_browser_item">
-<span class="sig-name descname"><span class="pre">draw_file_browser_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_file_browser_item" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_gamestate">
-<span class="sig-name descname"><span class="pre">draw_gamestate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_gamestate" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_hierarchy">
-<span class="sig-name descname"><span class="pre">draw_hierarchy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_hierarchy" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_inspector">
-<span class="sig-name descname"><span class="pre">draw_inspector</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_inspector" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_inspector_add_script">
-<span class="sig-name descname"><span class="pre">draw_inspector_add_script</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_inspector_add_script" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_inspector_material">
-<span class="sig-name descname"><span class="pre">draw_inspector_material</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_inspector_material" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_inspector_material_thumb">
-<span class="sig-name descname"><span class="pre">draw_inspector_material_thumb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_inspector_material_thumb" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_inspector_scripts">
-<span class="sig-name descname"><span class="pre">draw_inspector_scripts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_inspector_scripts" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_inspector_transform">
-<span class="sig-name descname"><span class="pre">draw_inspector_transform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_inspector_transform" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_menu_bar">
-<span class="sig-name descname"><span class="pre">draw_menu_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_menu_bar" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_popup_gameObject">
-<span class="sig-name descname"><span class="pre">draw_popup_gameObject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_popup_gameObject" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_project_settings_modal">
-<span class="sig-name descname"><span class="pre">draw_project_settings_modal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_project_settings_modal" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_settings">
-<span class="sig-name descname"><span class="pre">draw_settings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_settings" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_thumb">
-<span class="sig-name descname"><span class="pre">draw_thumb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_thumb" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_vec3_control">
-<span class="sig-name descname"><span class="pre">draw_vec3_control</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resetValue</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.draw_vec3_control" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.draw_viewport">
-<span class="sig-name descname"><span class="pre">draw_viewport</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.draw_viewport" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.file_browser_go_back">
-<span class="sig-name descname"><span class="pre">file_browser_go_back</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.file_browser_go_back" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.file_browser_init">
-<span class="sig-name descname"><span class="pre">file_browser_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.file_browser_init" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.file_browser_rootpath">
-<span class="sig-name descname"><span class="pre">file_browser_rootpath</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.file_browser_rootpath" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.get_file_browser_item_icon">
-<span class="sig-name descname"><span class="pre">get_file_browser_item_icon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.get_file_browser_item_icon" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.initialize_context">
-<span class="sig-name descname"><span class="pre">initialize_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.initialize_context" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.load_gui_icons">
-<span class="sig-name descname"><span class="pre">load_gui_icons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.load_gui_icons" title="Link to this definition">#</a></dt>
-<dd><p>Load icons from game assets gui folder</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.open_file">
-<span class="sig-name descname"><span class="pre">open_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.open_file" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.render">
-<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.render" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.save_scene_modal">
-<span class="sig-name descname"><span class="pre">save_scene_modal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">popup_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">note</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.save_scene_modal" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.set_file_browser_path">
-<span class="sig-name descname"><span class="pre">set_file_browser_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.imgui.ImGui.set_file_browser_path" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.imgui.ImGui.set_selected_object">
-<span class="sig-name descname"><span class="pre">set_selected_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imgui.ImGui.set_selected_object" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -1234,190 +1108,6 @@ size or material id</p>
 
 </dd></dl>
 
-<dl class="py class" id="module-modules.renderer">
-<dt class="sig sig-object py" id="modules.renderer.Renderer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.renderer.</span></span><span class="sig-name descname"><span class="pre">Renderer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>The rendering backend</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Renderer backend, creating window instance, openGL, FBO’s, shaders and rendertargets</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.begin_frame">
-<span class="sig-name descname"><span class="pre">begin_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.begin_frame" title="Link to this definition">#</a></dt>
-<dd><p>Start for each frame, but triggered after the event_handler.
-Bind framebuffer (FBO), view matrix, frame&amp;delta time</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.bind_fbo">
-<span class="sig-name descname"><span class="pre">bind_fbo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fbo</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.bind_fbo" title="Link to this definition">#</a></dt>
-<dd><p>Bind a framebuffer (FBO) to the command buffer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>fbo</strong> (<em>uint32/uintc</em>) – The framebuffer uid</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.check_opengl_error">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_opengl_error</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.check_opengl_error" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.create_fbo_with_depth">
-<span class="sig-name descname"><span class="pre">create_fbo_with_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pygame.math.Vector2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.create_fbo_with_depth" title="Link to this definition">#</a></dt>
-<dd><p>Create the a framebuffer (FBO) with a bound image attachment.
-Adjust image attachment properties based on MSAA state.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>size</strong> (<em>Vector2</em>) – The dimensions of the texture</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The uid of the texture in GPU memory</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>uint32/uintc</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.create_instance">
-<span class="sig-name descname"><span class="pre">create_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.create_instance" title="Link to this definition">#</a></dt>
-<dd><p>Create the window and instance with openGL</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.create_resolve_fbo">
-<span class="sig-name descname"><span class="pre">create_resolve_fbo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolved_texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.create_resolve_fbo" title="Link to this definition">#</a></dt>
-<dd><p>Create the resolve framebuffer (FBO) and bind the resolve image attachment</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>resolved_texture</strong> (<em>uint32/uintc</em>) – The image attachment MSAA should resolve to (not sample from)</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The uid of the framebuffer (FBO)</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>uint32/uintc</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.create_resolve_texture">
-<span class="sig-name descname"><span class="pre">create_resolve_texture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pygame.math.Vector2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.create_resolve_texture" title="Link to this definition">#</a></dt>
-<dd><p>Create a image attachment used as the resolved MSAA</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>size</strong> (<em>Vector2</em>) – The dimensions of the image</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The uid of the texture in GPU memory</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>uint32/uintc</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.create_screen_vao">
-<span class="sig-name descname"><span class="pre">create_screen_vao</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.create_screen_vao" title="Link to this definition">#</a></dt>
-<dd><p>Create vertex buffer for 2d operations like gamma, msaa resolve</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.create_shaders">
-<span class="sig-name descname"><span class="pre">create_shaders</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.create_shaders" title="Link to this definition">#</a></dt>
-<dd><p>Create the GLSL shaders used for the editor and general pipeline</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.end_frame">
-<span class="sig-name descname"><span class="pre">end_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.end_frame" title="Link to this definition">#</a></dt>
-<dd><p>End for each frame, clear GL states, resolve MSAA if enabled, draw ImGui.
-ImGui in will draw the 3D viewport.
-otherwise render_fbo() will directly render to the swapchain</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.event_handler">
-<span class="sig-name descname"><span class="pre">event_handler</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.event_handler" title="Link to this definition">#</a></dt>
-<dd><p>The main event handler for the application itself, handling input event states
-eg. Keep mouse hidden and in center of window when F1 is pressed to go into 3D space.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.render_fbo">
-<span class="sig-name descname"><span class="pre">render_fbo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fbo</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.render_fbo" title="Link to this definition">#</a></dt>
-<dd><p>Render a framebuffer to the swapchain using the 2d VAO</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>fbo</strong> (<em>uint32/uintc</em>) – The framebuffer uid</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.resolve_multisample_texture">
-<span class="sig-name descname"><span class="pre">resolve_multisample_texture</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.renderer.Renderer.resolve_multisample_texture" title="Link to this definition">#</a></dt>
-<dd><p>The ‘renderpass’ that samples from main framebuffer and resolves to MSAA</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.setup_projection_matrix">
-<span class="sig-name descname"><span class="pre">setup_projection_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pygame.math.Vector2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.setup_projection_matrix" title="Link to this definition">#</a></dt>
-<dd><p>Setup the viewport and projection matrix using Matrix44</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>size</strong> (<em>Vector2</em>) – The dimensions of the current viewport</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.shutdown">
-<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.shutdown" title="Link to this definition">#</a></dt>
-<dd><p>Quit the application</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.toggle_input_state">
-<span class="sig-name descname"><span class="pre">toggle_input_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.toggle_input_state" title="Link to this definition">#</a></dt>
-<dd><p>Toggle input between application and viewport
-Toggling visibility and position of the mouse</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.unbind_fbo">
-<span class="sig-name descname"><span class="pre">unbind_fbo</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.unbind_fbo" title="Link to this definition">#</a></dt>
-<dd><p>Stop rending to current fbo, and unbind framebuffer (FBO)</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.renderer.Renderer.use_shader">
-<span class="sig-name descname"><span class="pre">use_shader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.shader.Shader" title="modules.shader.Shader"><span class="pre">Shader</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.renderer.Renderer.use_shader" title="Link to this definition">#</a></dt>
-<dd><p>Bind a shader program to the command buffer</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>shader</strong> (<a class="reference internal" href="#modules.shader.Shader" title="modules.shader.Shader"><em>Shader</em></a>) – the shader object containing the program</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class" id="module-modules.scene">
 <dt class="sig sig-object py" id="modules.scene.SceneManager">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.scene.</span></span><span class="sig-name descname"><span class="pre">SceneManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager" title="Link to this definition">#</a></dt>
@@ -1486,7 +1176,7 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <dd class="field-odd"><p>The current scene default/start camera, False if this fails</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="gameObjects.html#gameObjects.camera.Camera" title="gameObjects.camera.Camera">Camera</a> or bool</p>
+<dd class="field-even"><p><a class="reference internal" href="#modules.camera.Camera" title="modules.camera.Camera">Camera</a> or bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1591,6 +1281,11 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.loadGameObjectsRecursive">
+<span class="sig-name descname"><span class="pre">loadGameObjectsRecursive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GameObject</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">_GameObject</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.loadGameObjectsRecursive" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.loadScene">
 <span class="sig-name descname"><span class="pre">loadScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.loadScene" title="Link to this definition">#</a></dt>
 <dd><p>Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene.</p>
@@ -1616,6 +1311,12 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the scene, which is also sanitized and use as filename for the .scene file.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.saveGameObjectRecursive">
+<span class="sig-name descname"><span class="pre">saveGameObjectRecursive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GameObject</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">GameObject</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_gameObjects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">SceneManager._GameObject</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.saveGameObjectRecursive" title="Link to this definition">#</a></dt>
+<dd><p>Recursivly iterate over gameObject and its children</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1650,6 +1351,17 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <li><p><strong>uid</strong> (<em>int</em>) – The uid of a Camera gameObject</p></li>
 <li><p><strong>scene_id</strong> (<em>int</em><em>, </em><em>optional</em>) – The index in scens List of the scene the camera is set on, current scene when empty</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.updateScriptonGameObjects">
+<span class="sig-name descname"><span class="pre">updateScriptonGameObjects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.updateScriptonGameObjects" title="Link to this definition">#</a></dt>
+<dd><p>Re-initialize specific script on GameObjects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – The path to a .py script file</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1818,10 +1530,21 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.Entry.type_id"><code class="docutils literal notranslate"><span class="pre">Console.Entry.type_id</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.Type_"><code class="docutils literal notranslate"><span class="pre">Console.Type_</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.Type_.error"><code class="docutils literal notranslate"><span class="pre">Console.Type_.error</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.Type_.none"><code class="docutils literal notranslate"><span class="pre">Console.Type_.none</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.Type_.note"><code class="docutils literal notranslate"><span class="pre">Console.Type_.note</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.Type_.warning"><code class="docutils literal notranslate"><span class="pre">Console.Type_.warning</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.__init__"><code class="docutils literal notranslate"><span class="pre">Console.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.addEntry"><code class="docutils literal notranslate"><span class="pre">Console.addEntry()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.clear"><code class="docutils literal notranslate"><span class="pre">Console.clear()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.error"><code class="docutils literal notranslate"><span class="pre">Console.error()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.getEntries"><code class="docutils literal notranslate"><span class="pre">Console.getEntries()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.get_entry_color"><code class="docutils literal notranslate"><span class="pre">Console.get_entry_color()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.log"><code class="docutils literal notranslate"><span class="pre">Console.log()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.note"><code class="docutils literal notranslate"><span class="pre">Console.note()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.console.Console.warn"><code class="docutils literal notranslate"><span class="pre">Console.warn()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.cubemap.Cubemap"><code class="docutils literal notranslate"><span class="pre">Cubemap</span></code></a><ul class="nav section-nav flex-column">
@@ -1858,44 +1581,6 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.bind"><code class="docutils literal notranslate"><span class="pre">Images.bind()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.loadOrFindFullPath"><code class="docutils literal notranslate"><span class="pre">Images.loadOrFindFullPath()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.loadOrFindPhysicalMap"><code class="docutils literal notranslate"><span class="pre">Images.loadOrFindPhysicalMap()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui"><code class="docutils literal notranslate"><span class="pre">ImGui</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.__init__"><code class="docutils literal notranslate"><span class="pre">ImGui.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.docking_space"><code class="docutils literal notranslate"><span class="pre">ImGui.docking_space()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_camera_selector"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_camera_selector()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_console"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_console()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_console_entry"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_console_entry()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_environment"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_environment()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_exported_viewport"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_exported_viewport()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_file_browser"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_file_browser()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_file_browser_item"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_file_browser_item()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_gamestate"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_gamestate()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_hierarchy"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_hierarchy()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_inspector"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_inspector()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_inspector_add_script"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_inspector_add_script()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_inspector_material"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_inspector_material()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_inspector_material_thumb"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_inspector_material_thumb()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_inspector_scripts"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_inspector_scripts()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_inspector_transform"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_inspector_transform()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_menu_bar"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_menu_bar()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_popup_gameObject"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_popup_gameObject()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_project_settings_modal"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_project_settings_modal()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_settings"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_settings()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_thumb"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_thumb()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_vec3_control"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_vec3_control()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.draw_viewport"><code class="docutils literal notranslate"><span class="pre">ImGui.draw_viewport()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.file_browser_go_back"><code class="docutils literal notranslate"><span class="pre">ImGui.file_browser_go_back()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.file_browser_init"><code class="docutils literal notranslate"><span class="pre">ImGui.file_browser_init()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.file_browser_rootpath"><code class="docutils literal notranslate"><span class="pre">ImGui.file_browser_rootpath()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.get_file_browser_item_icon"><code class="docutils literal notranslate"><span class="pre">ImGui.get_file_browser_item_icon()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.initialize_context"><code class="docutils literal notranslate"><span class="pre">ImGui.initialize_context()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.load_gui_icons"><code class="docutils literal notranslate"><span class="pre">ImGui.load_gui_icons()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.open_file"><code class="docutils literal notranslate"><span class="pre">ImGui.open_file()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.render"><code class="docutils literal notranslate"><span class="pre">ImGui.render()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.save_scene_modal"><code class="docutils literal notranslate"><span class="pre">ImGui.save_scene_modal()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.set_file_browser_path"><code class="docutils literal notranslate"><span class="pre">ImGui.set_file_browser_path()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imgui.ImGui.set_selected_object"><code class="docutils literal notranslate"><span class="pre">ImGui.set_selected_object()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.jsonHandling.JsonHandler"><code class="docutils literal notranslate"><span class="pre">JsonHandler</span></code></a><ul class="nav section-nav flex-column">
@@ -1943,28 +1628,6 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.render"><code class="docutils literal notranslate"><span class="pre">Models.render()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer"><code class="docutils literal notranslate"><span class="pre">Renderer</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.__init__"><code class="docutils literal notranslate"><span class="pre">Renderer.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.begin_frame"><code class="docutils literal notranslate"><span class="pre">Renderer.begin_frame()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.bind_fbo"><code class="docutils literal notranslate"><span class="pre">Renderer.bind_fbo()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.check_opengl_error"><code class="docutils literal notranslate"><span class="pre">Renderer.check_opengl_error()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.create_fbo_with_depth"><code class="docutils literal notranslate"><span class="pre">Renderer.create_fbo_with_depth()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.create_instance"><code class="docutils literal notranslate"><span class="pre">Renderer.create_instance()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.create_resolve_fbo"><code class="docutils literal notranslate"><span class="pre">Renderer.create_resolve_fbo()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.create_resolve_texture"><code class="docutils literal notranslate"><span class="pre">Renderer.create_resolve_texture()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.create_screen_vao"><code class="docutils literal notranslate"><span class="pre">Renderer.create_screen_vao()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.create_shaders"><code class="docutils literal notranslate"><span class="pre">Renderer.create_shaders()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.end_frame"><code class="docutils literal notranslate"><span class="pre">Renderer.end_frame()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.event_handler"><code class="docutils literal notranslate"><span class="pre">Renderer.event_handler()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.render_fbo"><code class="docutils literal notranslate"><span class="pre">Renderer.render_fbo()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.resolve_multisample_texture"><code class="docutils literal notranslate"><span class="pre">Renderer.resolve_multisample_texture()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.setup_projection_matrix"><code class="docutils literal notranslate"><span class="pre">Renderer.setup_projection_matrix()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.shutdown"><code class="docutils literal notranslate"><span class="pre">Renderer.shutdown()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.toggle_input_state"><code class="docutils literal notranslate"><span class="pre">Renderer.toggle_input_state()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.unbind_fbo"><code class="docutils literal notranslate"><span class="pre">Renderer.unbind_fbo()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.renderer.Renderer.use_shader"><code class="docutils literal notranslate"><span class="pre">Renderer.use_shader()</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager"><code class="docutils literal notranslate"><span class="pre">SceneManager</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.ambient_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.ambient_color</span></code></a></li>
@@ -1986,11 +1649,14 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getSceneByUID"><code class="docutils literal notranslate"><span class="pre">SceneManager.getSceneByUID()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getScenes"><code class="docutils literal notranslate"><span class="pre">SceneManager.getScenes()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadDefaultScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadDefaultScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadGameObjectsRecursive"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadGameObjectsRecursive()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadScene()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.newScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.newScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveGameObjectRecursive"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveGameObjectRecursive()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveScene()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveSceneAs"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveSceneAs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.setCamera"><code class="docutils literal notranslate"><span class="pre">SceneManager.setCamera()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.updateScriptonGameObjects"><code class="docutils literal notranslate"><span class="pre">SceneManager.updateScriptonGameObjects()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.settings.Settings"><code class="docutils literal notranslate"><span class="pre">Settings</span></code></a><ul class="nav section-nav flex-column">
