@@ -1,30 +1,44 @@
-import pygame
-
 class MyScript:
+    value       : int = export(1)
+      
     """Default script template"""
     def onStart( self ) -> None:
         self.camera = self.scene.getCamera()
-
+        #print('onStart()')
         pass
 
-    def onUpdate( self ) -> None:
-        keypress = self.key.get_pressed()
-        velocity = 0.5
+    def onEnable( self ):
+        #print('onEnable()')
+        pass
+
+    def onDisable( self ):
+        #print('onDisable()')
+        pass
         
+    def onUpdate( self ) -> None:
+        # print exported value for debugging purposes
+        #print(self.value)
+ 
+        keypress = self.key.get_pressed()
+        velocity = self.value
+
+        if keypress[pygame.K_u]:
+            self.gameObject.setActive(False)
+    
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
             velocity *= 10
 
         move = self.renderer.deltaTime * velocity
 
         if keypress[pygame.K_w]:
-            self.translate[2] += move
-            self.camera.translate[2] += move
+            self.transform.local_position[2] += move
+            self.camera.transform.local_position[2] += move
         if keypress[pygame.K_s]:
-            self.translate[2] -= move
-            self.camera.translate[2] -= move
+            self.transform.local_position[2] -= move
+            self.camera.transform.local_position[2] -= move
         if keypress[pygame.K_d]:
-            self.translate[0] -= move
-            self.camera.translate[0] -= move
+            self.transform.local_position[0] -= move
+            self.camera.transform.local_position[0] -= move
         if keypress[pygame.K_a]:
-            self.translate[0] += move
-            self.camera.translate[0] += move
+            self.transform.local_position[0] += move
+            self.camera.transform.local_position[0] += move

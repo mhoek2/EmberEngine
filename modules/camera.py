@@ -30,7 +30,7 @@ class Camera:
         self.jaw = -90
         self.pitch = 0
 
-    def place_object_in_front_of_another( self, position, rotation, distance ) -> Vector3:
+    def place_object_in_front_of_another( self, position, rotation_quat, distance ) -> Vector3:
         """-This should become a scriptable function perhaps
 
         :param position: The position of the parent object
@@ -42,7 +42,7 @@ class Camera:
         :return: The position of an object placed in front of another object along the Z-axis at a defined distance
         :rtype: Vector3
         """
-        rotation_matrix = Matrix44.from_eulers(rotation)
+        rotation_matrix = Matrix44.from_quaternion(rotation_quat)
         forward_vector = rotation_matrix * Vector3([0, 0, 1]) # forward is along the Z-axis
         return position + forward_vector * distance
 
@@ -58,12 +58,12 @@ class Camera:
         if not camera:
             return Matrix44.identity()
 
-        camera_rotation = Matrix44.from_eulers(camera.rotation)
+        camera_rotation = Matrix44.from_quaternion(camera.transform._local_rotation_quat)
         up = camera_rotation * Vector3([0.0, 1.0, 0.0])
 
-        target = self.place_object_in_front_of_another( camera.translate, camera.rotation, 10.0 )
+        target = self.place_object_in_front_of_another( camera.transform._local_position, camera.transform._local_rotation_quat, 10.0 )
 
-        return matrix44.create_look_at(camera.translate, target, up)
+        return matrix44.create_look_at(camera.transform._local_position, target, up)
 
     def get_view_matrix( self ):
         """Get the current view matrix, based on if game is running,

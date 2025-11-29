@@ -1,14 +1,20 @@
+#from __future__ import annotations
+
 from pyexpat import model
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
+import uuid as uid
 
 from modules.console import Console
 from modules.settings import Settings
 
+
 if TYPE_CHECKING:
     from main import EmberEngine
+    from gameObjects.gameObject import GameObject
+    from gameObjects.camera import Camera
 
 import traceback
 
@@ -32,8 +38,11 @@ class SceneManager:
         translate   : List[float]
         rotation    : List[float]
         scale       : List[float]
-        scripts     : List[str]
+        mass        : float
+        scripts     : List["GameObject.Script"]
         instance_data : Dict # additional instance data
+        #children    : Dict
+        children    : List["_GameObject"] = []
 
     def __init__( self, context ) -> None:
         """scene manager
@@ -136,7 +145,7 @@ class SceneManager:
         except Exception as e:
             #print( e )
             #exc_type, exc_value, exc_tb = sys.exc_info()
-            #self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+            #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
 
     def newScene( self, name : str ):
@@ -149,7 +158,7 @@ class SceneManager:
         
         #_scene = self.getDefaultScene()
         #if not _scene:
-        #    self.console.addEntry( self.console.ENTRY_TYPE_ERROR, [], f"Couldn't load default scene'" )
+        #    self.console.error( e, f"Couldn't load default scene'" )
         #
         #_current_name = _scene["name"] # temporary store current scene's name
         
@@ -175,7 +184,7 @@ class SceneManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+            self.console.error( e, traceback.format_tb(exc_tb) )
      
     def saveSceneAs( self, name : str ):
         """Duplicate the current scene under a diffrent filename
@@ -193,20 +202,74 @@ class SceneManager:
 
         _scene["name"] = _current_name # restore current scenes's name
 
+    def saveGameObjectRecursive( self, 
+        parent          : "GameObject" = None,
+        objects         : List["GameObject"] = [],
+        _gameObjects    : List["SceneManager._GameObject"] = [] 
+    ):
+        """Recursivly iterate over gameObject and its children"""
+        from gameObjects.camera import Camera
+
+        for obj in objects:
+            if obj._removed:
+                continue
+
+            if obj.parent != parent or obj.parent and parent == None:
+                continue
+
+            buffer : SceneManager._GameObject = {
+                "uuid"          : obj.uuid.hex,
+                "name"          : obj.name,
+                "active"        : obj.active,
+                "instance"      : type(obj).__name__,
+                "visible"       : obj.visible,
+                "model_file"    : str(obj.model_file.relative_to(self.settings.rootdir)),
+                "material"      : obj.material,
+                "translate"     : obj.transform.local_position,
+                "rotation"      : obj.transform.local_rotation,
+                "scale"         : obj.transform.local_scale,
+                "mass"          : obj.mass,
+                #"scripts"       : [str(x["path"]) for x in obj.scripts],
+                "scripts": [
+                    {
+                        "uuid"          : x["uuid"].hex,
+                        "file"          : str(x["path"]),
+                        "active"        : x["active"],
+                        #"class_name"   : x["class_name"],
+                        "exports"       : { k: v.default for k, v in x["exports"].items() }
+                    }
+                    for x in obj.scripts
+                ],
+                "instance_data" : {},
+                "children"      : []
+            }
+
+            if isinstance( obj, Camera ):
+                buffer["instance_data"]["is_default_camera"] = obj.is_default_camera
+
+            if obj.children:
+                self.saveGameObjectRecursive( 
+                    obj, 
+                    obj.children, 
+                    buffer["children"]
+                )
+
+            _gameObjects.append( buffer )
+        pass
+
     def saveScene( self, scene_uid : str = False ):
         """Save a scene, only serialize things actually needed
         
         :param scene_uid: The name the scene is saved under, meaning the filename of .scene file. Use current scene name if this is empty
         :type scene_uid: str, optional
         """
-        from gameObjects.camera import Camera
 
         # todo:
         # store path from root dir, not system path
         _scene_uid = scene_uid if scene_uid != False else self.getCurrentSceneUID()
 
         if _scene_uid == self.settings.default_scene.stem:
-            self.console.addEntry( self.console.ENTRY_TYPE_WARNING, [], "Cannot overwrite engine's default empty scene" )
+            self.console.warn( "Cannot overwrite engine's default empty scene" )
             return
         
         _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
@@ -218,34 +281,19 @@ class SceneManager:
         scene["ambient_color"]  = _scene["ambient_color"]
 
         _gameObjects : List[SceneManager._GameObject] = []
-        for obj in self.context.gameObjects:
-            if obj._removed:
-                continue
 
-            buffer : SceneManager._GameObject = {
-                "instance"      : type(obj).__name__,
-                "visible"       : obj.visible,
-                "name"          : obj.name,
-                "model_file"    : str(obj.model_file.relative_to(self.settings.rootdir)),
-                "material"      : obj.material,
-                "translate"     : obj.translate,
-                "scale"         : obj.scale,
-                "rotation"      : obj.rotation,
-                "scripts"       : [str(x["file"]) for x in obj.scripts],
-                "instance_data" : {}
-            }
-
-            if isinstance( obj, Camera ):
-                buffer["instance_data"]["is_default_camera"] = obj.is_default_camera
-
-            _gameObjects.append( buffer )
+        self.saveGameObjectRecursive( 
+            None,
+            self.context.gameObjects, 
+            _gameObjects
+        )
 
         scene["gameObjects"] = _gameObjects
 
         with open(_scene_filename, 'w') as buffer:
             json.dump(scene, buffer, indent=4)
 
-        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Save scene: {_scene_uid}" )
+        self.console.note( f"Save scene: {_scene_uid}" )
 
     def getScene( self, scene_filename : Path ):
         """Load and decode JSON from a scene file
@@ -263,7 +311,7 @@ class SceneManager:
         except Exception as e:
             print( e )
             exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e )
+            self.console.error( e, traceback.format_tb(exc_tb) )
             
     def getScenes( self ):
         """search assets for .scene files, and calls the getScene to decode them"""
@@ -280,11 +328,94 @@ class SceneManager:
         """
         self.context.sun = -1
         self.setCamera( -1 )
-        self.context.imgui.set_selected_object( -1 )
+        self.context.gui.set_selected_object()
         self.context.gameObjects.clear()
         self.current_scene = -1
 
-        self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Clear current scene in editor" )
+        self.console.note( f"Clear current scene in editor" )
+
+    def updateScriptonGameObjects( self, path : Path ) -> None:
+        """Re-initialize specific script on GameObjects
+
+        :param path: The path to a .py script file
+        :type path: Path
+        """
+        for obj in self.context.gameObjects:
+            for script in obj.scripts:
+                if path != script["path"]:
+                    continue
+
+                # (re)init
+                obj.init_external_script( script )
+
+    def loadGameObjectsRecursive( self,
+        parent          : "GameObject" = None,
+        objects         : List["_GameObject"] = [],
+        scene_id        : int = -1
+    ):
+        from gameObjects.mesh import Mesh
+        from gameObjects.camera import Camera
+        from gameObjects.light import Light
+
+        for obj in objects:
+            # todo:
+            # replace ternary with; .get(key, default)
+            model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
+
+            index = self.context.addGameObject( eval(obj["instance"])( self.context,
+                    uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
+                    name        = obj["name"]               if "name"       in obj else "Unknown",
+                    model_file  = model,
+                    material    = obj["material"]           if "material"   in obj else -1,
+                    translate   = obj["translate"]          if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
+                    scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
+                    rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
+                    mass        = obj["mass"]               if "mass"       in obj else -1.0,
+                    #scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
+                    scripts     = [
+                        {
+                            "uuid"      : uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
+                            "path"      : (self.settings.rootdir / x["file"]).resolve(),
+                            "active"    : bool(x.get("active", True)),
+                            "exports"   : x.get("exports", {})
+                        }
+                        for x in obj["scripts"]
+                    ]
+                )
+            )
+
+            if model:
+                self.console.log( f"Load model: {model.relative_to(self.settings.rootdir)}" )
+
+            # reference added gameObject
+            gameObject = self.context.gameObjects[index]
+
+            # todo:
+            # implement scene settings, so a camera or sun can be assigned
+            if isinstance( gameObject, Light ):
+                self.context.sun = index
+
+            if isinstance( gameObject, Camera ):
+                if obj.get("instance_data", {}).get("is_default_camera", False):
+                    self.setCamera( index, scene_id = scene_id )
+
+            if "active" in obj:
+                gameObject.active = obj["active"]
+
+            if "visible" in obj:
+                gameObject.visible = obj["visible"]
+
+            if parent:
+                gameObject.setParent( parent, update=False )
+
+            if "children" in obj:
+                self.loadGameObjectsRecursive( 
+                    gameObject, 
+                    obj["children"], 
+                    scene_id=scene_id
+                )
+        pass
+
 
     def loadScene( self, scene_uid : str ) -> bool:
         """Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene.
@@ -294,66 +425,40 @@ class SceneManager:
         :return: True of the scene loaded succesfully, False if was not found or errors occured
         :rtype: bool
         """
-        from gameObjects.mesh import Mesh
-        from gameObjects.camera import Camera
-        from gameObjects.light import Light
 
         for i, scene in enumerate(self.scenes):
             if scene["uid"] != scene_uid:
                 continue
 
-            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Loading scene: {scene_uid}" )
+            self.console.note( f"Loading scene: {scene_uid}" )
 
             try:
                 self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
-                
+                    
                 scene["name"]    = scene.get("name", "default scene")
 
                 scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
                 scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
 
                 if "gameObjects" in scene: 
-                    for obj in scene["gameObjects"]:
-                        # todo:
-                        # replace ternary with; .get(key, default)
-                        model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
-
-                        index = self.context.addGameObject( eval(obj["instance"])( self.context,
-                                name        = obj["name"]       if "name"       in obj else "Unknown",
-                                visible     = obj["visible"]    if "visible"    in obj else True,
-                                model_file  = model,
-                                material    = obj["material"]   if "material"   in obj else -1,
-                                translate   = obj["translate"]  if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
-                                scale       = obj["scale"]      if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
-                                rotation    = obj["rotation"]   if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
-                                scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
-                            )
-                        )
-
-                        if model:
-                            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Load model: {model.relative_to(self.settings.rootdir)}" )
-
-                        # todo:
-                        # implement scene settings, so a camera or sun can be assigned
-                        if isinstance( self.context.gameObjects[index], Light ):
-                            self.context.sun = index
-
-                        if isinstance( self.context.gameObjects[index], Camera ):
-                            if obj.get("instance_data", {}).get("is_default_camera", False):
-                                self.setCamera( index, scene_id = i )
+                    self.loadGameObjectsRecursive( 
+                        None, 
+                        scene["gameObjects"], 
+                        scene_id=i
+                    )
 
             except Exception as e:
                 print( e )
                 exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.addEntry( self.console.ENTRY_TYPE_ERROR, traceback.format_tb(exc_tb), e ) 
+                self.console.error( e, traceback.format_tb(exc_tb) ) 
             else:
                 self.current_scene =  i
-                self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Scene {scene_uid} loaded successfully" )
+                self.console.note( f"Scene {scene_uid} loaded successfully" )
                 return True
 
         # load default scene
         if self.current_scene < 0:
-            self.console.addEntry( self.console.ENTRY_TYPE_NOTE, [], f"Could not find scene: {scene_uid}" )
+            self.console.error( f"Could not find scene: {scene_uid}" )
             return False
 
     def loadDefaultScene( self ):

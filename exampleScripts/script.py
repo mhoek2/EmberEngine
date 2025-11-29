@@ -1,6 +1,8 @@
 import pygame
 
 class MyScript:
+    value : int = export(10)
+
     """Default script template"""
     def onStart( self ) -> None:
         self.camera = self.scene.getCamera()

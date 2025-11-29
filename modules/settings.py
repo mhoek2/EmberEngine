@@ -4,9 +4,11 @@ from pathlib import Path
 class Settings:
     def __init__( self ) -> None:
         """Global applictaion settings"""
+        self.application_name = "Ember Engine 3D"
 
         self.game_running = False
         self.game_start = False
+        self.game_stop = False
 
         self.msaa = 8
         self.msaaEnabled = True if self.msaa > 0 else False
@@ -35,8 +37,32 @@ class Settings:
         self.grid_size = 10.0
         self.grid_spacing = 0.5
 
+        # scriptable behaivior
+        self.SCRIPT_AUTO_IMPORT_MODULES = {
+            # module        # as
+            "pygame"                : None,
+            "pybullet"              : "p",
+            "modules.Transform"     : None
+        }
+
         # exported application
-        self.is_exported = self.is_app_exported()
+        self.is_exported            = self.is_app_exported()
+        self.project_default_name   = "New Project"
+        self.executable_format      = r"[^a-zA-Z0-9 _-]"
+        self.export_clean           = True
+        self.export_debug           = False
+
+        # coordination
+        self.ENGINE_ROTATION_MAP  = {
+            "XYZ": "ZYX",
+            "XZY": "YZX",
+            "YXZ": "ZXY",
+            "YZX": "XZY",
+            "ZXY": "YXZ",
+            "ZYX": "XYZ"
+        }
+
+        self.ENGINE_ROTATION = "YXZ"
 
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""

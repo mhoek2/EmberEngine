@@ -1,23 +1,27 @@
 from typing import TYPE_CHECKING
 
+import os
 import math
 from OpenGL.arrays import returnPointer
 from pygame.math import Vector2
-from pyrr import matrix44, Vector3
+from pyrr import matrix44
 import pygame
 from pygame.locals import *
+
+from imgui_bundle.python_backends.pygame_backend import imgui, PygameRenderer
+from imgui_bundle import icons_fontawesome_6 as fa
 
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 import numpy as np
 
-import imgui
-
 from modules.settings import Settings
+from modules.project import ProjectManager
 from modules.shader import Shader
 from modules.camera import Camera
-from modules.pyimgui_renderer import PygameRenderer
+
+import pybullet as p
 
 if TYPE_CHECKING:
     from main import EmberEngine
@@ -33,22 +37,36 @@ class Renderer:
         self.context    : 'EmberEngine' = context
         self.camera     : Camera = context.camera
         self.settings   : Settings = context.settings
+        self.project    : ProjectManager = context.project
 
         # window
-        self.display_size : Vector2 = Vector2( 1500, 1000 )
-        self.viewport_size : Vector2 = Vector2( 600, 800 )
+        self.display_size : imgui.ImVec2 = imgui.ImVec2( 1500, 1000 )
+        self.viewport_size : imgui.ImVec2 = imgui.ImVec2( 600, 800 )
         self.create_instance()
 
         # imgui
         imgui.create_context()
-        imgui.get_io().display_size = self.display_size
+        io = imgui.get_io()
+        io.display_size = imgui.ImVec2(self.display_size.x, self.display_size.y)
 
         # exported apps do not use imgui docking
         if not self.settings.is_exported:
-            imgui.get_io().config_flags |= imgui.CONFIG_DOCKING_ENABLE
-            imgui.get_io().config_flags |= imgui.CONFIG_VIEWPORTS_ENABLE
+            io.config_flags |= imgui.ConfigFlags_.docking_enable
+            io.config_flags |= imgui.ConfigFlags_.viewports_enable
 
-        self.imgui_renderer = PygameRenderer()
+        # fonts
+        io.fonts.add_font_default()
+
+        _font_cfg = imgui.ImFontConfig()
+        _font_cfg.merge_mode = True
+        _font_cfg.pixel_snap_h = True
+        _icon_ranges = [fa.ICON_MIN_FA, fa.ICON_MAX_FA, 0]
+        _font_file : str = str(os.path.join(self.settings.engineAssets, "gui/fonts/Font_Awesome_6_Free-Solid-900.otf"))
+        io.fonts.add_font_from_file_ttf(
+            _font_file, 12.0, _font_cfg
+        )
+
+        self.render_backend = PygameRenderer()
 
         self.paused = False
         self.running = True
@@ -122,36 +140,51 @@ class Renderer:
 
         self.setup_projection_matrix( self.display_size)
 
+        # physics
+        self._initPhysics()
+
     @staticmethod
     def check_opengl_error():
         err = glGetError()
         if err != GL_NO_ERROR:
             print(  f"OpenGL Error: {err}" )
 
+    def get_window_title(self) -> str:
+        return self.project.meta.get("name") if self.settings.is_exported else self.settings.application_name
+    
     def create_instance( self ) -> None:
         """Create the window and instance with openGL"""
         pygame.init()
+        pygame.display.set_caption( self.get_window_title() )
 
         gl_version = (3, 3)
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, gl_version[0])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
         #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
 
+        if self.settings.msaaEnabled:
+            pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
+            pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLESAMPLES, 4)
+
         display = pygame.display.Info()
-        self.display_size = Vector2(display.current_w, display.current_h)
+        self.display_size = imgui.ImVec2(display.current_w, display.current_h)
 
         # this is a bit of a hack to get windowed fullscreen?
-        self.display_size -= Vector2( 0.0, 60.0 );
+        self.display_size -= imgui.ImVec2( 0.0, 80.0 );
 
         self.screen = pygame.display.set_mode( self.display_size, RESIZABLE | DOUBLEBUF | OPENGL )
-        pygame.display.set_caption( "EmberEngine 3D" )
+        
+        # frozen-exported set fullscreen here ..
+        #if self.settings.is_exported:
+            #self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            #pygame.display.toggle_fullscreen()
 
         if self.settings.msaaEnabled:
             glEnable( GL_MULTISAMPLE )
      
     def shutdown( self ) -> None:
         """Quit the application"""
-        self.imgui_renderer.shutdown()
+        self.render_backend.shutdown()
         pygame.quit()
 
     def create_screen_vao( self ):
@@ -396,6 +429,8 @@ class Renderer:
         mouse_moving = False
 
         for event in self.context.events.get():
+            self.render_backend.process_event(event)
+
             if event.type == pygame.QUIT:
                 self.running = False
 
@@ -416,15 +451,51 @@ class Renderer:
                         self.paused = not self.paused
                         pygame.mouse.set_pos( self.screen_center ) 
 
+                # handle custom events
+                if (event.mod & pygame.KMOD_CTRL):
+                    if event.key == pygame.K_s:
+                        self.context.cevent.add("save")
+
+                    if event.key == pygame.K_c:
+                        self.context.cevent.add("copy")
+
+                    if event.key == pygame.K_v:
+                        self.context.cevent.add("paste")
+
+                    if event.key == pygame.K_z:
+                        self.context.cevent.add("undo")
+
+                    if event.key == pygame.K_y:
+                        self.context.cevent.add("redo")
+
+                if event.key == pygame.K_TAB:
+                    self.context.cevent.add("tab")
+
             if not self.paused: 
                 if event.type == pygame.MOUSEMOTION:
                     self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
                     mouse_moving = True
 
-            self.imgui_renderer.process_event(event)
-
         if not self.ImGuiInput and not mouse_moving:
             pygame.mouse.set_pos( self.screen_center )
+
+    def _initPhysics( self ):
+        """Initialize the pybullter physics engine and set gravity"""
+        self.physics_client = p.connect(p.DIRECT)
+
+        #p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        p.setGravity(0, -10, 0)
+
+        # debug print list of available functions
+        #for name in dir(p):
+        #    if callable(getattr(p, name)):
+        #        print(name)
+
+    def _runPhysics( self ):
+        """Run the step simulation when game is running"""
+        if self.settings.game_running:
+            for _ in range( int(self.deltaTime / (1./240.)) ):
+                p.stepSimulation()
 
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
@@ -440,6 +511,9 @@ class Renderer:
 
         self.view = self.context.camera.get_view_matrix()
 
+        # physics
+        self._runPhysics()
+
     def end_frame( self ) -> None:
         """End for each frame, clear GL states, resolve MSAA if enabled, draw ImGui.
         ImGui in will draw the 3D viewport.
@@ -454,7 +528,7 @@ class Renderer:
         if self.settings.msaaEnabled:
             self.resolve_multisample_texture()
 
-        self.context.imgui.render()
+        self.context.gui.render()
 
         self.framenum += 1
 
@@ -466,7 +540,7 @@ class Renderer:
    
         # render imgui buffer
         imgui.render()
-        self.imgui_renderer.render( imgui.get_draw_data() )
+        self.render_backend.render( imgui.get_draw_data() )
 
         self.check_opengl_error()
 

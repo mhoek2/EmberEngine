@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 
 #import site
 #print(site.getsitepackages())
@@ -14,15 +14,18 @@ from OpenGL.GLU import *
 import numpy as np
 import re
 import sys
+import uuid as uid
+import traceback
+
+from modules.settings import Settings
 
 from modules.project import ProjectManager
 from modules.scene import SceneManager
 from modules.console import Console
-from modules.imgui import ImGui
+from modules.userInterface import UserInterface, CustomEvent
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
 from modules.camera import Camera as CameraHandler
-from modules.settings import Settings
 from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
@@ -47,21 +50,22 @@ class EmberEngine:
         self.events     = pygame.event
         self.key        = pygame.key
         self.mouse      = pygame.mouse
+        self.cevent     : CustomEvent = CustomEvent()
 
-        self.console    : Console = Console(self)
-        self.project    : ProjectManager = ProjectManager(self)
-        self.scene      : SceneManager = SceneManager( self )
-        self.camera     : CameraHandler = CameraHandler( self )
-        self.renderer   : Renderer = Renderer( self )
-        self.imgui      : ImGui = ImGui( self )
+        self.console    : Console           = Console(self)
+        self.project    : ProjectManager    = ProjectManager(self)
+        self.scene      : SceneManager      = SceneManager( self )
+        self.camera     : CameraHandler     = CameraHandler( self )
+        self.renderer   : Renderer          = Renderer( self )
+        self.gui        : UserInterface     = UserInterface( self )
  
         self.gameObjects : List[GameObject] = []
 
-        self.images     : Images = Images( self )
-        self.materials  : Materials = Materials( self )
-        self.models     : Models = Models( self )
-        self.cubemaps   : Cubemap = Cubemap( self )
-        self.skybox     : Skybox = Skybox( self )
+        self.images     : Images            = Images( self )
+        self.materials  : Materials         = Materials( self )
+        self.models     : Models            = Models( self )
+        self.cubemaps   : Cubemap           = Cubemap( self )
+        self.skybox     : Skybox            = Skybox( self )
 
         self.sun = -1
         self.roughnessOverride = -1.0
@@ -100,15 +104,15 @@ class EmberEngine:
 
         self.asset_scripts = self.findDynamicScripts( _assets )
 
-    def findDynamicScripts( self, path : Path ) -> List[Path]:
+    def findDynamicScripts( self, folder : Path ) -> List[Path]:
         """Find .py files recursivly in a assets folder, used as dynamic scripts.
 
-        :param path: This is root folder to scan
-        :type path: Path
+        :param folder: This is root folder to scan
+        :type folder: Path
         :return: List of Path's containing each .py script
         :rtype: List[Path]
         """
-        return [file for file in path.rglob("*.py")]
+        return [path for path in folder.rglob("*.py")]
 
     def loadDefaultEnvironment( self ) -> None:
         """Load the default environment cubemap"""
@@ -133,6 +137,7 @@ class EmberEngine:
             material    = self.defaultMaterial,
             translate   = [ 0, 1, 0 ],
             scale       = [ 1, 1, 1 ],
+            mass        = -1.0,
             rotation    = [ 0.0, 0.0, 0.0 ]
         ) )
 
@@ -156,9 +161,10 @@ class EmberEngine:
                         rotation    = [ 0.0, 0.0, 80.0 ]
                     ) )
 
-    def addGameObject( self, object : GameObject ) -> int:
+    def addGameObject( self, obj : GameObject ) -> int:
         index = len( self.gameObjects )
-        self.gameObjects.append( object )
+
+        self.gameObjects.append( obj )
 
         return index
 
@@ -168,13 +174,45 @@ class EmberEngine:
             # so mark it removed, and do not store it on save.
             #self.gameObjects.remove( object )
             obj._removed = True
-            obj.visible = False
+            obj._visible = False
+            obj._active = False
+            obj._mark_dirty()
 
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
                 self.scene.setCamera( -1 )
 
-        except:
-            print("gameobject doesnt exist..")
+            reparent_children = list(obj.children) # prevent mutation during iteration
+            for child in reparent_children:
+                child.setParent( obj.parent )
+
+        except Exception as e:
+            print( e )
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.error( e, traceback.format_tb(exc_tb) )
+
+
+    def findGameObject( self, identifier : Optional[Union[uid.UUID, int, str]] = None ) -> GameObject:
+        """Try to find a gameObject by its uuid
+        
+        :param identifier: This is a identifier of a gameObject that is looked for, datatype int : _uuid_gui, uid.UUID : uuid or str : name
+        :type identifier: Optional[Union[uid.UUID, int, str]
+        :return: A GameObject object or None
+        :rtype: GameObject | None
+        """
+        if identifier is None:
+            return None
+
+        for obj in self.gameObjects:
+            if isinstance(identifier, int) and obj._uuid_gui == identifier:
+                return obj
+
+            if isinstance(identifier, str) and obj.name == identifier:
+                return obj
+
+            if isinstance(identifier, uid.UUID) and obj.uuid == identifier:
+                return obj
+
+        return None
     ##
     ## end
     ##
@@ -209,6 +247,81 @@ class EmberEngine:
             glVertex3f(size, 0, i)
             glEnd()
 
+    def draw_axis( self, length : float = 1.0, width : float = 3.0, centered : bool = False ):
+        """Draw axis lines. width and length can be adjust, also if axis is centered or half-axis"""
+        glLineWidth(width)
+
+        self.renderer.use_shader(self.renderer.color)
+
+        # bind projection matrix
+        glUniformMatrix4fv(self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection)
+        
+        # viewmatrix
+        glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
+
+        if centered:
+            start = -length
+            end   = +length
+        else:
+            start = 0.0
+            end   = length
+
+        # X axis : red
+        glUniform4f(self.renderer.shader.uniforms['uColor'], 1.0, 0.0, 0.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex3f(start, 0.0,   0.0)
+        glVertex3f(end,   0.0,   0.0)
+        glEnd()
+
+        # Y axis : green
+        glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 1.0, 0.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex3f(0.0, start,   0.0)
+        glVertex3f(0.0, end,     0.0)
+        glEnd()
+
+        # Z axis : blue
+        glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 0.0, 1.0, 1.0)
+        glBegin(GL_LINES)
+        glVertex3f(0.0,   0.0, start)
+        glVertex3f(0.0,   0.0, end)
+        glEnd()
+
+        glLineWidth(1.0)
+
+    def renderGameObjectsRecursive(self, 
+        parent : GameObject = None,
+        objects : List[GameObject] = []
+    ):
+        if not objects:
+            return
+
+        for obj in objects:
+            if obj.parent != parent or obj.parent and parent == None:
+                continue
+
+            # (re)store states
+            if not app.settings.is_exported:
+                if self.settings.game_start:
+                    obj.onEnable( _on_start=True )
+
+                if self.settings.game_stop:
+                    obj.onDisable( _on_stop=True )
+
+            # start exported application
+            else:
+                if self.settings.game_start:
+                    obj.onEnable( _on_start=True )
+
+            obj.onUpdate();  # engine update
+
+            # render children if any
+            if obj.children:
+                self.renderGameObjectsRecursive( 
+                    obj, 
+                    obj.children
+                )
+
     def run( self ) -> None:
         """The main loop of the appliction, remains active as long as 'self.renderer.running'
         is True.
@@ -225,10 +338,12 @@ class EmberEngine:
                 self.skybox.draw()
 
                 #
-                # grid
+                # editor viewport
                 #
-                self.draw_grid()
-                
+                if not app.settings.is_exported:
+                    self.draw_grid()
+                    self.draw_axis(100.0, centered=True)
+
                 #
                 # general
                 #
@@ -258,7 +373,7 @@ class EmberEngine:
                 _scene = self.scene.getCurrentScene()
 
                 # sun direction/position and color
-                light_dir = self.gameObjects[self.sun].translate if self.sun != -1 else (0.0, 0.0, 1.0)
+                light_dir = self.gameObjects[self.sun].transform.local_position if self.sun != -1 else (0.0, 0.0, 1.0)
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], _scene["light_color"][0], _scene["light_color"][1], _scene["light_color"][2], 1.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )
@@ -270,18 +385,24 @@ class EmberEngine:
                     self.console.clear()
 
                 # trigger update function in registered gameObjects
-                for gameObject in self.gameObjects:
-                    gameObject.onUpdate();  # editor update
+                self.renderGameObjectsRecursive( 
+                    None, 
+                    self.gameObjects
+                )
 
-                    # scene
-                    if self.settings.game_start:
-                        gameObject.onStartScripts();
-     
-                    if self.settings.game_running:
-                        gameObject.onUpdateScripts();
+                # cleanup _removed objects
+                #for obj in filter(lambda x: x._removed == True, self.gameObjects):
+                #    if obj.children:
+                #        print("Cannot remove: obj has children")
+                #        continue
+                #
+                #    self.gameObjects.remove( obj )
 
                 if self.settings.game_start:
                     self.settings.game_start = False
+
+                if self.settings.game_stop:
+                    self.settings.game_stop = False
 
                 self.renderer.end_frame()
 

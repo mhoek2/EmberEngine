@@ -1,4 +1,5 @@
 from gameObjects.gameObject import GameObject
+import enum
 
 class Light( GameObject ):
 
@@ -14,19 +15,27 @@ class Light( GameObject ):
         """
         super().__init__(context, *args, **kwargs)
 
-        self.LIGHT_TYPE_DIRECTIONAL = 0
-        self.LIGHT_TYPE_SPOT = 1
-        self.LIGHT_TYPE_AREA = 2
-
+        # not implemented
         #self.light_type = kwargs.get('light_type', 1.0)
-        self.light_type = self.LIGHT_TYPE_DIRECTIONAL
+        self.light_type = self.Type_.direct
+
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class Type_(enum.IntEnum):
+        direct  = enum.auto()    # (= 0)
+        spot    = enum.auto()    # (= 1)
+        area    = enum.auto()    # (= 2)
 
     def onStart( self ) -> None:
         """Executes whenever the object is added to scene"""
+        super().onStart()
+
         if self.model_file:
             self.model = self.models.loadOrFind( self.model_file, self.material )
 
     def onUpdate( self ) -> None:
         """Executes every frame, issuing draw commands"""
+        super().onUpdate()
+
         if self.model != -1 and self.visible:
-            self.models.draw( self.model, self._createModelMatrix() )     
+            self.models.draw( self.model, self.transform._getModelMatrix() )     

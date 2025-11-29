@@ -4,6 +4,6 @@ class MyScript:
         pass
 
     def onUpdate( self ) -> None:
-        #print( f"camera position: {self.translate}")
-        #print( f"camera rotation: {self.rotation}")
+        #print( f"camera position: {self.transform.position}")
+        #print( f"camera rotation: {self.transform.rotation}")
         pass

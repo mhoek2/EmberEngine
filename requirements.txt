@@ -6,3 +6,5 @@ PyOpenGL
 PyOpenGL-accelerate
 impasse
 pyinstaller
+imgui_bundle
+pybullet

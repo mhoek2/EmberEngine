@@ -1,9 +1,24 @@
 {
     "name": "Empty Scene",
+    "light_color": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+    ],
+    "ambient_color": [
+        0.3,
+        0.3,
+        0.3,
+        1.0
+    ],
     "gameObjects": [
         {
-			"instance": "Camera",
+            "uuid": "3d41fcdc008c47e09f4dd9416b57fc06",
             "name": "Camera",
+            "active": true,
+            "instance": "Camera",
+            "visible": true,
             "model_file": "engineAssets\\models\\camera\\model.fbx",
             "material": 0,
             "translate": [
@@ -11,65 +26,129 @@
                 5,
                 -10
             ],
-            "scale": [
-                1,
-                1,
-                1
-            ],
             "rotation": [
                 -0.4,
                 0.0,
                 0.0
             ],
-            "scripts": [
-                "assets\\camera.py"
-            ]
-        },
-        {
-			"instance": "Mesh",
-            "name": "Default cube",
-            "model_file": "engineAssets\\models\\cube\\model.obj",
-            "material": 0,
-            "translate": [
-                0,
-                1,
-                0
-            ],
             "scale": [
                 1,
                 1,
                 1
+            ],
+            "mass": -1.0,
+            "scripts": [
+                {
+                    "uuid": "4a9dd5106f81420cb726ed7a27a97950",
+                    "file": "assets\\camera.py",
+                    "active": true,
+                    "exports": {}
+                }
+            ],
+            "instance_data": {
+                "is_default_camera": true
+            },
+            "children": []
+        },
+        {
+            "uuid": "921ae4aa71c749a8a0e3d9639107ed66",
+            "name": "Cube",
+            "active": true,
+            "instance": "Mesh",
+            "visible": true,
+            "model_file": "engineAssets\\models\\cube\\model.obj",
+            "material": 0,
+            "translate": [
+                0,
+                5.0,
+                0
             ],
             "rotation": [
                 0.0,
                 0.0,
                 0.0
             ],
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "mass": 1.0,
             "scripts": [
-                "assets\\script.py"
-            ]
+                {
+                    "uuid": "94ef997ccc104f888c24ced07cad9127",
+                    "file": "assets\\script.py",
+                    "active": true,
+                    "exports": {
+                        "value": 1
+                    }
+                }
+            ],
+            "instance_data": {},
+            "children": []
         },
         {
-			"instance": "Light",
+            "uuid": "efaed5b215b14859b0da43d273b41436",
             "name": "sun",
+            "active": true,
+            "instance": "Light",
+            "visible": true,
             "model_file": "engineAssets\\models\\sphere\\model.obj",
             "material": -1,
             "translate": [
                 1,
-                -1,
+                10.0,
                 1
-            ],
-            "scale": [
-                0.5,
-                0.5,
-                0.5
             ],
             "rotation": [
                 0.0,
                 0.0,
                 80.0
             ],
-            "scripts": []
+            "scale": [
+                0.5,
+                0.5,
+                0.5
+            ],
+            "mass": -1.0,
+            "scripts": [
+                {
+                    "uuid": "8f6b2f182c2c427898bf3be8042cb8b7",
+                    "file": "assets\\sun.py",
+                    "active": true,
+                    "exports": {}
+                }
+            ],
+            "instance_data": {},
+            "children": []
+        },
+        {
+            "uuid": "d97fd29f48934a45a6eaec00c1d7d981",
+            "name": "Floor",
+            "active": true,
+            "instance": "Mesh",
+            "visible": true,
+            "model_file": "engineAssets\\models\\cube\\model.obj",
+            "material": 0,
+            "translate": [
+                0,
+                0.0,
+                0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "scale": [
+                5.0,
+                0.05000000074505806,
+                5.0
+            ],
+            "mass": 0.0,
+            "scripts": [],
+            "instance_data": {},
+            "children": []
         }
     ]
 }
