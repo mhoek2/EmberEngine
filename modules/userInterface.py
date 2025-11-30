@@ -68,6 +68,8 @@ class UserInterface( Context ):
         self.drawWireframe          : bool = False
         self.selectedObject         : GameObject = None
 
+        self.status_bar_height      : float = 25.0
+
         self.char_game_state : List = ["play", "stop"]
         self.color_game_state : List[imgui.ImVec4] = [
             imgui.ImVec4(0.2, 0.7, 0.2, 1.0), 
@@ -342,6 +344,9 @@ class UserInterface( Context ):
         x, y = viewport.pos
         w, h = viewport.size
 
+        # reserve space for status bar
+        h -= self.status_bar_height
+
         imgui.set_next_window_pos(imgui.ImVec2(x, y))
         imgui.set_next_window_size(imgui.ImVec2(w, h))
         # imgui.set_next_window_viewport(viewport.id)  # still optional
@@ -369,8 +374,11 @@ class UserInterface( Context ):
 
         # DockSpace
         dockspace_id = imgui.get_id(name)
-        imgui.dock_space(dockspace_id, imgui.ImVec2(0, 0) )
-        #imgui.dock_space(dockspace_id, imgui.ImVec2(0, 0), passthru_central_node=True)
+        imgui.dock_space(
+            dockspace_id, 
+            imgui.ImVec2(0, 0), 
+            imgui.DockNodeFlags_.passthru_central_node
+        )
 
         imgui.end()
 
@@ -420,14 +428,14 @@ class UserInterface( Context ):
             if _open_project_settings:
                 imgui.open_popup("Project Settings")
 
-    def draw_status_bar(self, height=25.0) -> None:
+    def draw_status_bar( self ) -> None:
         viewport = imgui.get_main_viewport()
         x, y = viewport.pos
         w, h = viewport.size
 
-        pos_y = y + h - height
+        pos_y = y + h - self.status_bar_height
         imgui.set_next_window_pos(imgui.ImVec2(x, pos_y))
-        imgui.set_next_window_size(imgui.ImVec2(w, height))
+        imgui.set_next_window_size(imgui.ImVec2(w, self.status_bar_height))
 
         flags = (
             imgui.WindowFlags_.no_title_bar
