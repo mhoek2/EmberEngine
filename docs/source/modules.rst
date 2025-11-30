@@ -35,7 +35,7 @@ Modules
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: modules.imgui
+.. automodule:: modules.userinterface
    :members:
    :undoc-members:
    :show-inheritance:

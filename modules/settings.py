@@ -42,7 +42,7 @@ class Settings:
             # module        # as
             "pygame"                : None,
             "pybullet"              : "p",
-            "modules.Transform"     : None
+            #"modules.transform"     : None
         }
 
         # exported application

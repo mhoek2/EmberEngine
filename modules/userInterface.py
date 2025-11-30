@@ -374,6 +374,7 @@ class UserInterface( Context ):
 
         # DockSpace
         dockspace_id = imgui.get_id(name)
+
         imgui.dock_space(
             dockspace_id, 
             imgui.ImVec2(0, 0), 
@@ -784,7 +785,7 @@ class UserInterface( Context ):
                 )
 
                 if clicked:
-                    selected = i
+                    selected = obj.uuid
                     break;
 
             imgui.end_popup()
@@ -848,11 +849,11 @@ class UserInterface( Context ):
             imgui.open_popup("##select_camera")
 
         imgui.same_line()
-        changed_camera_gameobject, _changed_id = self.draw_popup_gameObject(
+        changed_camera_gameobject, _uuid = self.draw_popup_gameObject(
             "##select_camera", filter=lambda obj: isinstance(obj, Camera ))
 
         if changed_camera_gameobject:
-            self.scene.setCamera( _changed_id )
+            self.scene.setCamera( _uuid )
 
     def draw_environment( self ) -> None:
         imgui.begin( "Environment" )
@@ -1020,7 +1021,8 @@ class UserInterface( Context ):
                 if not instance_attr.active:
                     continue
 
-                _value = getattr(script["instance"], instance_attr_name)
+                #_instance_value = getattr(script["instance"], instance_attr_name)
+                _value = instance_attr.default
                 _t = instance_attr.type
                 _changed = False
 
@@ -1041,7 +1043,27 @@ class UserInterface( Context ):
                     _changed, new = imgui.checkbox(f"{instance_attr_name}:", _value)
 
                 elif _t is Transform:
-                    imgui.text("Transform export!")
+                    obj = self.context.findGameObject(_value)
+                    _name = obj.name if obj is not None else "Select"
+
+                    imgui.text(instance_attr_name)
+                    imgui.same_line(100.0)
+
+                    if imgui.button( _name ):
+                        imgui.open_popup(f"##{instance_attr_name}_select")
+
+                    imgui.same_line()
+                    
+                    changed_transform, _uuid = self.context.gui.draw_popup_gameObject(
+                        f"##{instance_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
+                    
+                    if changed_transform:
+                        # set the uuid as the stored value
+                        instance_attr.set( _uuid )
+
+                        # set the script instance value as a refernce to the GameObject
+                        new_obj = self.context.findGameObject(_uuid)
+                        setattr(script["instance"], instance_attr_name, new_obj.transform)
 
                 # Unsupported type
                 else:

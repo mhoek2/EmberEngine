@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from functools import partial
 
-class Transform():
+class Transform:
     def __init__( self, context : "EmberEngine", 
                  gameObject     : "GameObject",
                  translate      = [ 0.0, 0.0, 0.0 ], 

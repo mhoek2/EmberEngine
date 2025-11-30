@@ -24,7 +24,7 @@ class SceneManager:
         uid             : str
         name            : str
         gameObjects     : List["_GameObject"]
-        camera          : int
+        camera          : "Camera"
         light_color     : List[float]
         ambient_color   : List[float]
 
@@ -110,7 +110,7 @@ class SceneManager:
         except:
             return False
 
-    def setCamera( self, uid : int, scene_id = -1):
+    def setCamera( self, uuid : uid.UUID, scene_id = -1):
         """Set the current camera based on gameObject uid
 
         :param uid: The uid of a Camera gameObject
@@ -122,12 +122,11 @@ class SceneManager:
 
         scene = scene_id if scene_id >= 0 else self.current_scene
 
-        self.scenes[scene]["camera"] = uid
-
         # mark camera as default/start scene camera
         for i, obj in enumerate(self.context.gameObjects):
-            if isinstance(obj, Camera) and i == uid:
+            if isinstance(obj, Camera) and obj.uuid == uuid:
                 obj.is_default_camera = True
+                self.scenes[scene]["camera"] = obj
 
     def getCamera( self ):
         """Get the current default/start camera
@@ -136,12 +135,15 @@ class SceneManager:
         :rtype: Camera or bool
         """
         try:
-            _scene_camera_id = self.scenes[self.current_scene]["camera"]
+            from gameObjects.camera import Camera
 
-            if _scene_camera_id == -1:
+            _scene_camera = self.scenes[self.current_scene]["camera"]
+
+            if not isinstance( _scene_camera, Camera ):
                 raise IndexError("invalid camera")
 
-            return self.context.gameObjects[_scene_camera_id]
+            return _scene_camera
+
         except Exception as e:
             #print( e )
             #exc_type, exc_value, exc_tb = sys.exc_info()
@@ -202,6 +204,18 @@ class SceneManager:
 
         _scene["name"] = _current_name # restore current scenes's name
 
+    def serialize_export_value( self, value ):
+        if isinstance(value, uid.UUID):
+            return {"__uuid__": value.hex}
+
+        return value
+
+    def deserialize_export_value( self, value ):
+        if isinstance( value, dict ) and "__uuid__" in value:
+            return uid.UUID(hex=value["__uuid__"])
+
+        return value
+
     def saveGameObjectRecursive( self, 
         parent          : "GameObject" = None,
         objects         : List["GameObject"] = [],
@@ -209,6 +223,8 @@ class SceneManager:
     ):
         """Recursivly iterate over gameObject and its children"""
         from gameObjects.camera import Camera
+
+        _scene_camera = self.getCamera()
 
         for obj in objects:
             if obj._removed:
@@ -236,7 +252,10 @@ class SceneManager:
                         "file"          : str(x["path"]),
                         "active"        : x["active"],
                         #"class_name"   : x["class_name"],
-                        "exports"       : { k: v.default for k, v in x["exports"].items() }
+                        "exports"       : { 
+                                            k: self.serialize_export_value( v.default )
+                                                for k, v in x["exports"].items() 
+                                          }
                     }
                     for x in obj.scripts
                 ],
@@ -244,8 +263,8 @@ class SceneManager:
                 "children"      : []
             }
 
-            if isinstance( obj, Camera ):
-                buffer["instance_data"]["is_default_camera"] = obj.is_default_camera
+            if _scene_camera and isinstance( obj, Camera ):
+                buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -377,7 +396,11 @@ class SceneManager:
                             "uuid"      : uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
                             "path"      : (self.settings.rootdir / x["file"]).resolve(),
                             "active"    : bool(x.get("active", True)),
-                            "exports"   : x.get("exports", {})
+                            #"exports"   : x.get("exports", {})
+                            "exports"   : { 
+                                            k: self.deserialize_export_value( v )
+                                                for k, v in x.get("exports", {}).items() 
+                                          }
                         }
                         for x in obj["scripts"]
                     ]
@@ -397,7 +420,7 @@ class SceneManager:
 
             if isinstance( gameObject, Camera ):
                 if obj.get("instance_data", {}).get("is_default_camera", False):
-                    self.setCamera( index, scene_id = scene_id )
+                    self.setCamera( gameObject.uuid, scene_id = scene_id )
 
             if "active" in obj:
                 gameObject.active = obj["active"]
