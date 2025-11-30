@@ -335,21 +335,20 @@ class GameObject( Context, Transform ):
             self.console.error( f"Extension: {path.suffix} is invalid!" )
             return
 
-        relative_path = path.relative_to(self.settings.rootdir)
-        uuid = script.get("uuid", None) or self.__create_uuid()
-
-        self.console.log( f"[{__func_name__}] Load script: {relative_path}" )
 
         _script : "GameObject.Script" = {
-            "uuid"      : uuid,
-            "path"      : relative_path, 
+            "uuid"      : script.get("uuid", None) or self.__create_uuid(),
+            "path"      : path.relative_to(self.settings.rootdir), 
             "active"    : script.get("active"),
-            "exports"   : {
-                var_name : ScriptBehaivior.export( value )
-                for var_name, value in script.get("exports").items()
-            }
+            "exports"   : script.get("exports", {})
+            # deprecated, happens during scene load now (deserializion)
+            #"exports"   : {
+            #    var_name : ScriptBehaivior.export( value )
+            #        for var_name, value in script.get("exports").items()
+            #}
         }
         
+        self.console.log( f"[{__func_name__}] Load script: {_script.get("path")}" )
         self.init_external_script( _script )
 
         # append the script to the GameObject, even if it contains errors
@@ -438,7 +437,8 @@ class GameObject( Context, Transform ):
                 _exports[class_attr_name] = class_attr
 
                 class_attr_value = class_attr.get()
-                class_attr_type = type(class_attr_value)
+                class_attr_type = class_attr.type           # extract type from exported.default or annotated type
+                #class_attr_type = type(class_attr_value)   # extract type from exported.default -deprectated
 
                 #
                 # failed to export, type mismatch?

@@ -83,7 +83,7 @@ class ScriptBehaivior:
 
         def __init__( self, default=None ):
             self.default    = default           # the value stored as meta, used to init instance value 
-            self.type       = type(default)     # validated in __set_name__
+            self.type       = type(default)     # type from default argument, override with annotated type in __set_name__
             self.active     = True              # non-matching primitive types are set in-active
 
         def is_primitive_type( self, t ) -> bool:

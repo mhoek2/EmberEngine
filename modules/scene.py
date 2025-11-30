@@ -1,15 +1,15 @@
 #from __future__ import annotations
 
-from pyexpat import model
 import sys
 from pathlib import Path
+#import importlib
 from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
 import uuid as uid
 
 from modules.console import Console
 from modules.settings import Settings
-
+from gameObjects.scriptBehaivior import ScriptBehaivior
 
 if TYPE_CHECKING:
     from main import EmberEngine
@@ -134,9 +134,9 @@ class SceneManager:
         :return: The current scene default/start camera, False if this fails
         :rtype: Camera or bool
         """
-        try:
-            from gameObjects.camera import Camera
+        from gameObjects.camera import Camera
 
+        try:
             _scene_camera = self.scenes[self.current_scene]["camera"]
 
             if not isinstance( _scene_camera, Camera ):
@@ -204,17 +204,45 @@ class SceneManager:
 
         _scene["name"] = _current_name # restore current scenes's name
 
-    def serialize_export_value( self, value ):
-        if isinstance(value, uid.UUID):
-            return {"__uuid__": value.hex}
+    def serialize_export( self, exported : ScriptBehaivior.Exported ):
+        if isinstance(exported.default, uid.UUID):
+            return {
+                "uuid"  : exported.default.hex,
+                #"type"  : exported.type.__name__    # deprecated use case
+            }
 
-        return value
+        return exported.default
 
-    def deserialize_export_value( self, value ):
-        if isinstance( value, dict ) and "__uuid__" in value:
-            return uid.UUID(hex=value["__uuid__"])
+    #def resolve_type( self, type_path: str ):
+    #    module_name, class_name = type_path.rsplit(".", 1)
+    #    module = importlib.import_module(module_name)
+    #
+    #    return getattr(module, class_name)
 
-        return value
+    def deserialize_export( self, name, data ):
+        #ENGINE_TYPES = {
+        #    "Transform": "modules.transform.Transform",
+        #    "GameObject": "gameObjects.gameObject.GameObject",
+        #}
+
+        # engine type
+        if isinstance(data, dict) and "uuid" in data:
+            raw_value = uid.UUID(hex=data["uuid"])
+
+            # extract the type from scene, but this is not desired.
+            # use type from script class attribute, as it is leading ..
+            #type_name = data["type"]
+            #if type_name in ENGINE_TYPES:
+            #    t = self.resolve_type( ENGINE_TYPES[type_name] )
+            #lse:
+            #   t = eval( type_name, globals(), locals() )  
+
+            exported = ScriptBehaivior.Exported( raw_value )
+            #exported.type = t
+            return exported
+
+        # primitive type
+        return ScriptBehaivior.Exported( data )
 
     def saveGameObjectRecursive( self, 
         parent          : "GameObject" = None,
@@ -253,7 +281,7 @@ class SceneManager:
                         "active"        : x["active"],
                         #"class_name"   : x["class_name"],
                         "exports"       : { 
-                                            k: self.serialize_export_value( v.default )
+                                            k: self.serialize_export( v )
                                                 for k, v in x["exports"].items() 
                                           }
                     }
@@ -398,7 +426,7 @@ class SceneManager:
                             "active"    : bool(x.get("active", True)),
                             #"exports"   : x.get("exports", {})
                             "exports"   : { 
-                                            k: self.deserialize_export_value( v )
+                                            k: self.deserialize_export( k, v )
                                                 for k, v in x.get("exports", {}).items() 
                                           }
                         }

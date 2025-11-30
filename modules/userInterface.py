@@ -1046,13 +1046,13 @@ class UserInterface( Context ):
                     obj = self.context.findGameObject(_value)
                     _name = obj.name if obj is not None else "Select"
 
-                    imgui.text(instance_attr_name)
-                    imgui.same_line(100.0)
+                    imgui.text( f"{_t.__name__}: {instance_attr_name}")
+                    imgui.same_line(200.0)
 
-                    if imgui.button( _name ):
+                    if imgui.button( f"{_name}##{instance_attr_name}" ):
                         imgui.open_popup(f"##{instance_attr_name}_select")
 
-                    imgui.same_line()
+                    #imgui.same_line()
                     
                     changed_transform, _uuid = self.context.gui.draw_popup_gameObject(
                         f"##{instance_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
