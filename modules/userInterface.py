@@ -1,5 +1,5 @@
 from pickletools import read_stringnl_noescape_pair
-from typing import Callable, List, Union, Any
+from typing import TypedDict, Callable, List, Union, Any
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
@@ -139,7 +139,49 @@ class UserInterface( Context ):
         def __init__( self, context ):
             super().__init__( context )
 
-            self.gizmo = self.context.gui.gizmo
+            self.gizmo      = self.context.gui.gizmo
+
+            self.operation  = 0
+            self.mode       = 0
+
+            class OperationMode(TypedDict):
+                name    : str
+                icon    : str
+                flag    : int
+
+            self.mode_types : list[OperationMode] = [
+                {
+                    "name"  : "Local",
+                    "icon"  : fa.ICON_FA_LOCATION_CROSSHAIRS,
+                    "flag"  : self.gizmo.MODE.local,
+                },
+                {
+                    "name"  : "World",
+                    "icon"  : fa.ICON_FA_EARTH_AMERICAS,
+                    "flag"  : self.gizmo.MODE.world,
+                }
+            ]
+
+            self.operation_types : list[OperationMode] = [
+                {
+                    "name"  : "Translate",
+                    "icon"  : fa.ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,
+                    "flag"  : self.gizmo.OPERATION.translate,
+                },
+                {
+                    "name"  : "Rotate",
+                    "icon"  : fa.ICON_FA_GROUP_ARROWS_ROTATE,
+                    "flag"  : self.gizmo.OPERATION.rotate,
+                },
+                {
+                    "name"  : "Scale",
+                    "icon"  : fa.ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER,
+                    "flag"  : self.gizmo.OPERATION.scale,
+                }
+            ]
+
+        def render_operations_overlay( self ):
+            pass
 
         def to_matrix16(self, mat):
             """
@@ -165,10 +207,11 @@ class UserInterface( Context ):
 
             self.gizmo.push_id(0)
 
-            self.gizmo.set_drawlist(imgui.get_window_draw_list())
+            self.gizmo.set_drawlist( imgui.get_window_draw_list() )
             self.gizmo.set_rect(
                 _rect_min.x, _rect_min.y, 
-                _image_size.x, _image_size.y)
+                _image_size.x, _image_size.y
+            )
             self.gizmo.set_orthographic(False)
 
             view_m16        = self.to_matrix16(self.renderer.view)
@@ -184,8 +227,8 @@ class UserInterface( Context ):
                 self.gizmo.manipulate(
                     view_m16,
                     proj_m16,
-                    self.gizmo.OPERATION.translate,
-                    self.gizmo.MODE.local,
+                    self.operation_types[self.operation]["flag"],
+                    self.mode_types[self.mode]["flag"],
                     model_m16,
                     None,
                     None,
@@ -539,6 +582,25 @@ class UserInterface( Context ):
         _rect_min = imgui.get_item_rect_min()
         self.guizmo.render( _rect_min, image_size )
 
+        # select imguizmo operation
+        _rect_min.y += 10.0
+        _rect_min.x += 10.0
+        _, self.guizmo.operation, group_width = self.radio_group( "guizmo_operation",
+            [ op["icon"] for op in self.guizmo.operation_types ],
+
+            current_index   = self.guizmo.operation,
+            start_pos       = _rect_min
+        )
+
+        # select imguizmo mode
+        _rect_min.x += (group_width + 10.0)
+        _, self.guizmo.mode, group_width = self.radio_group( "guizmo_mode",
+            [ op["icon"] for op in self.guizmo.mode_types ],
+
+            current_index   = self.guizmo.mode,
+            start_pos       = _rect_min
+        )
+
         imgui.end()
 
     def draw_gameObject_recursive( self, 
@@ -703,6 +765,7 @@ class UserInterface( Context ):
         imgui.end()
         return
 
+    # helper
     def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None ) -> bool:
 
         labels = ["X", "Y", "Z"]
@@ -755,6 +818,91 @@ class UserInterface( Context ):
             onChange( vector )
 
         return changed_any
+
+    # helper
+    def radio_group( self, 
+                     label           : str, 
+                     items           : list[str], 
+                     current_index   : int, 
+                     start_pos       : imgui.ImVec2 = None 
+            ):
+
+            imgui.begin_group()
+
+            old_cursor  = imgui.get_cursor_screen_pos()     # restore cursor pos afterwards
+            avail       = imgui.get_content_region_avail()
+            draw_list   = imgui.get_window_draw_list()
+
+            if start_pos is not None:
+                imgui.set_cursor_screen_pos( start_pos )
+            else:
+                start_pos = imgui.get_cursor_screen_pos()
+
+            # sizing
+            padding_x       = 8
+            padding_y       = 6
+            item_spacing    = 2
+            rounding        = 5.0
+
+            # compute item width based on text
+            item_widths = []
+            total_width = 0
+            for content in items:
+                text_width = imgui.calc_text_size( content ).x
+                width = padding_x * 2 + text_width
+                item_widths.append( width )
+                total_width += width + item_spacing
+            total_width -= item_spacing  # last one has no trailing space
+
+            text_height = imgui.get_text_line_height()
+            item_height = text_height + padding_y * 2
+
+            group_min = start_pos
+            group_max = imgui.ImVec2( start_pos.x + total_width, start_pos.y + item_height )
+
+            # group background
+            draw_list.add_rect_filled(
+                group_min, group_max,
+                imgui.color_convert_float4_to_u32( imgui.ImVec4( 0.2, 0.2, 0.2, 1.0 ) ),
+                rounding
+            )
+
+            # invisible button
+            imgui.invisible_button( label, (total_width, item_height) )
+            clicked = imgui.is_item_clicked()
+
+            x = start_pos.x
+            new_index = current_index
+            for idx, content in enumerate( items ):
+                width = item_widths[idx]
+                item_min = imgui.ImVec2( x, start_pos.y )
+                item_max = imgui.ImVec2( x + width, start_pos.y + item_height )
+
+                if clicked:
+                    mx, my = imgui.get_mouse_pos()
+                    if mx >= item_min.x and mx <= item_max.x and my >= item_min.y and my <= item_max.y:
+                        new_index = idx
+
+                # active item
+                if idx == new_index:
+                    draw_list.add_rect_filled(
+                        item_min, item_max,
+                        imgui.color_convert_float4_to_u32( imgui.ImVec4( 0.06, 0.53, 0.98, 1.0 ) ), 
+                        rounding
+                    )
+
+                color = imgui.ImVec4( 1.0, 1.0, 1.0, 1.0 )
+                text_pos = imgui.ImVec2( x + padding_x, start_pos.y + padding_y )
+                draw_list.add_text( text_pos, imgui.color_convert_float4_to_u32( color ), content )
+
+                x += width + item_spacing
+
+            imgui.end_group()
+            
+            # restore cursor position
+            imgui.set_cursor_screen_pos(old_cursor)
+
+            return bool(new_index != current_index), new_index, total_width
 
     # helper
     def draw_thumb( self, image : int, size : imgui.ImVec2 ):
@@ -1042,6 +1190,7 @@ class UserInterface( Context ):
                 elif _t is bool:
                     _changed, new = imgui.checkbox(f"{instance_attr_name}:", _value)
 
+                # TRANSFORM
                 elif _t is Transform:
                     obj = self.context.findGameObject(_value)
                     _name = obj.name if obj is not None else "Select"
