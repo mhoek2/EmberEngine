@@ -17,6 +17,7 @@ from modules.models import Models
 from modules.console import Console
 from modules.scene import SceneManager
 from modules.transform import Transform
+from modules.script import ScriptOBJ
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
@@ -1193,16 +1194,17 @@ class UserInterface( Context ):
                 imgui.tree_pop()
             return
 
-        def _draw_script_exported_attributes( self, script: GameObject.Script ):
-            if not script.get("active"):
+        def _draw_script_exported_attributes( self, script: ScriptOBJ ):
+            if not script.active:
                 return 
 
             imgui.dummy( imgui.ImVec2(20, 0) )
 
-            for class_attr_name, class_attr in script["exports"].items():
+            for class_attr_name, class_attr in script.exports.items():
                 # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
 
-                if script["instance"] is None:
+                # shuldnt this be at the beginning?
+                if script.instance is None:
                     continue
 
                 # exported attribute contains error, type mismatch?
@@ -1252,7 +1254,7 @@ class UserInterface( Context ):
 
                         # resolve the script instance attribute to reference the GameObject
                         new_obj = self.context.findGameObject(_uuid)
-                        setattr(script["instance"], class_attr_name, new_obj.transform)
+                        setattr(script.instance, class_attr_name, new_obj.transform)
 
                 # Unsupported type
                 else:
@@ -1260,16 +1262,16 @@ class UserInterface( Context ):
 
                 if _changed:
                     class_attr.set(new)
-                    setattr(script["instance"], class_attr_name, new)
+                    setattr(script.instance, class_attr_name, new)
 
-        def _draw_script( self, script: GameObject.Script ) -> None:
+        def _draw_script( self, script: ScriptOBJ ) -> None:
             _shift_left = 20.0
             _region = imgui.get_content_region_avail()
             _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
 
-            imgui.push_id( f"{script["uuid"]}" )
+            imgui.push_id( f"{script.uuid}" )
 
-            if not imgui.tree_node_ex( f"{fa.ICON_FA_CODE} {script['class_name_f']} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
+            if not imgui.tree_node_ex( f"{fa.ICON_FA_CODE} {script.class_name_f} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
                 imgui.pop_id()
                 return
 
@@ -1278,23 +1280,23 @@ class UserInterface( Context ):
                 imgui.same_line()
 
                 if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
-                    self.context.gui.selectedObject.removeScript( script["path"] )
+                    self.context.gui.selectedObject.removeScript( script.path )
 
                 if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
-                    self.context.gui.text_editor.open_file( script["path"] )
+                    self.context.gui.text_editor.open_file( script.path )
             
             # draw uuid
-            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { script["uuid"].hex }" );
+            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { script.uuid.hex }" );
 
-            active_changed, active_state = imgui.checkbox( "Active", script.get("active") )
+            active_changed, active_state = imgui.checkbox( "Active", script.active )
             if active_changed:
-                script["active"] = active_state
-                self.scene.updateScriptonGameObjects( script["path"] )
+                script.active = active_state
+                self.scene.updateScriptonGameObjects( script.path )
 
 
             # script contains errors, return
-            if script.get("_error", None):
-                imgui.text_colored( imgui.ImVec4(1.0, 0.0, 0.0, 0.9), script.get("_error") );
+            if script._error:
+                imgui.text_colored( imgui.ImVec4(1.0, 0.0, 0.0, 0.9), script._error );
                 imgui.dummy( imgui.ImVec2(20, 0) )
                 imgui.tree_pop()
                 imgui.pop_id()
@@ -1309,7 +1311,7 @@ class UserInterface( Context ):
             imgui.set_cursor_screen_pos(p_min)
                 
             imgui.begin_group()
-            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), str(script["path"]) );
+            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), str(script.path) );
             #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
             imgui.end_group()
 
@@ -1407,13 +1409,13 @@ class UserInterface( Context ):
                 imgui.end_popup()
 
             if path:
-                script : GameObject.Script = {
-                    "active"    : True,
-                    "path"      : path,
-                    "instance"       : None,
-                    "exports"   : {}
-                }
-                self.context.gui.selectedObject.addScript( script )
+                self.context.gui.selectedObject.addScript( 
+                    ScriptOBJ( 
+                        context = self.context,
+                        path    = path,
+                        active  = True
+                    )   
+                )
 
             imgui.tree_pop()
 

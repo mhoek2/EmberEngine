@@ -9,6 +9,8 @@ import uuid as uid
 
 from modules.console import Console
 from modules.settings import Settings
+from modules.transform import Transform
+from modules.script import ScriptOBJ
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
 if TYPE_CHECKING:
@@ -39,7 +41,8 @@ class SceneManager:
         rotation    : List[float]
         scale       : List[float]
         mass        : float
-        scripts     : List["GameObject.Script"]
+        scripts     : List[ScriptOBJ]
+        transform   : Transform 
         instance_data : Dict # additional instance data
         #children    : Dict
         children    : List["_GameObject"] = []
@@ -276,9 +279,9 @@ class SceneManager:
                 #"scripts"       : [str(x["path"]) for x in obj.scripts],
                 "scripts": [
                     {
-                        "uuid"          : x["uuid"].hex,
-                        "file"          : str(x["path"]),
-                        "active"        : x["active"],
+                        "uuid"          : x.uuid.hex,
+                        "file"          : str(x.path),
+                        "active"        : x.active,
                         #"class_name"   : x["class_name"],
                         "exports"       : { 
                                             k: self.serialize_export( v )
@@ -389,7 +392,7 @@ class SceneManager:
         """
         for obj in self.context.gameObjects:
             for script in obj.scripts:
-                if path != script["path"]:
+                if path != script.path:
                     continue
 
                 # (re)init
@@ -420,16 +423,16 @@ class SceneManager:
                     mass        = obj["mass"]               if "mass"       in obj else -1.0,
                     #scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
                     scripts     = [
-                        {
-                            "uuid"      : uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
-                            "path"      : (self.settings.rootdir / x["file"]).resolve(),
-                            "active"    : bool(x.get("active", True)),
-                            #"exports"   : x.get("exports", {})
-                            "exports"   : { 
+                        ScriptOBJ(
+                            context     = self.context,
+                            uuid        = uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
+                            path        = Path(self.settings.rootdir / x["file"]).resolve(),
+                            active      = bool(x.get("active", True)),
+                            exports     = { 
                                             k: self.deserialize_export( k, v )
                                                 for k, v in x.get("exports", {}).items() 
                                           }
-                        }
+                        )
                         for x in obj["scripts"]
                     ]
                 )

@@ -18,6 +18,7 @@ from modules.material import Materials
 from modules.images import Images
 from modules.models import Models
 from modules.transform import Transform
+from modules.script import ScriptOBJ
 
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
@@ -40,7 +41,7 @@ class GameObject( Context, Transform ):
                  rotation       : list = [ 0.0, 0.0, 0.0 ], 
                  scale          : list = [ 1.0, 1.0, 1.0 ],
                  mass           : int = -1.0,
-                 scripts        : list["GameObject.Script"] = []
+                 scripts        : list[ScriptOBJ] = []
                  ) -> None:
         """Base class for gameObjects 
 
@@ -78,7 +79,7 @@ class GameObject( Context, Transform ):
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps
         self.models         : Models = context.models
-        self.scripts        : list[GameObject.Script] = []
+        self.scripts        : list[ScriptOBJ] = []
         self.material       : int = material
         
         self.parent         : GameObject = None
@@ -321,7 +322,7 @@ class GameObject( Context, Transform ):
         instance        : None      # reference the the dynamic script instance
         _error          : str       # temporary
 
-    def addScript( self, script : "GameObject.Script" ):
+    def addScript( self, script : ScriptOBJ ):
         """Add script to a gameObject
 
         :param path: The path to a .py script file
@@ -329,30 +330,15 @@ class GameObject( Context, Transform ):
         """
         __func_name__ = inspect.currentframe().f_code.co_name
 
-        path = script.get("path")
-
-        if path.suffix != ".py":
-            self.console.error( f"Extension: {path.suffix} is invalid!" )
+        if script.path.suffix != ".py":
+            self.console.error( f"Extension: {script.path.suffix} is invalid!" )
             return
 
-
-        _script : "GameObject.Script" = {
-            "uuid"      : script.get("uuid", None) or self.__create_uuid(),
-            "path"      : path.relative_to(self.settings.rootdir), 
-            "active"    : script.get("active"),
-            "exports"   : script.get("exports", {})
-            # deprecated, happens during scene load now (deserializion)
-            #"exports"   : {
-            #    var_name : ScriptBehaivior.export( value )
-            #        for var_name, value in script.get("exports").items()
-            #}
-        }
-        
-        self.console.log( f"[{__func_name__}] Load script: {_script.get("path")}" )
-        self.init_external_script( _script )
+        self.console.log( f"[{__func_name__}] Load script: {script.path}" )
+        self.init_external_script( script )
 
         # append the script to the GameObject, even if it contains errors
-        self.scripts.append( _script )
+        self.scripts.append( script )
 
     def removeScript( self, path : Path ):
         """Remove script from a gameObject
@@ -362,7 +348,7 @@ class GameObject( Context, Transform ):
         """
         #self.scripts = [script for script in self.scripts if script["path"] != file]
         for script in self.scripts:
-            if script.get("path") == path:
+            if script.path == path:
                 self.scripts.remove(script)
                 break
 
@@ -408,16 +394,16 @@ class GameObject( Context, Transform ):
 
         return formatted
 
-    def __set_class_name( self, script : Script ) -> None:
+    def __set_class_name( self, script : ScriptOBJ ) -> None:
         """Gets the class name for a given scripts, also formats it for GUI
         
         :param script: The Script object containing a file path
         :type script: GameObject.Script
         """
-        class_name = self.__get_class_name_from_script( script.get("path") )
+        class_name = self.__get_class_name_from_script( script.path )
 
-        script["class_name"] = class_name or "Invalid"
-        script["class_name_f"] = self.__format_class_name( script.get("class_name") )
+        script.class_name = class_name or "Invalid"
+        script.class_name_f = self.__format_class_name( script.class_name )
 
     def __load_script_exported_attributes( self, script : Script, _ScriptClass ):
         """Loads and initializes exported attributes from a script class.
@@ -446,18 +432,18 @@ class GameObject( Context, Transform ):
                     continue
 
                 # attribute NOT stored in the scene, use default class attribute value
-                if class_attr_name not in script.get("exports"):
+                if class_attr_name not in script.exports:
                     self.console.log( f"[{__func_name__}] Export new: {class_attr_name} = {class_attr_type.__name__}({class_attr_value})" )
                     continue
 
                 #
                 # find export in saved scene and override attribute value
                 #
-                scene_instance_attr = script.get("exports")[class_attr_name]
+                scene_instance_attr = script.exports[class_attr_name]
 
                 # Sanity check
                 if not isinstance(scene_instance_attr, ScriptBehaivior.Exported):
-                    self.console.error( f"Export error: [{class_attr_name}] improperly loaded in script {script['class_name']} from scene" )
+                    self.console.error( f"Export error: [{class_attr_name}] improperly loaded in script {script.class_name} from scene" )
                     continue
 
                 scene_instance_attr_value = scene_instance_attr.get()
@@ -489,16 +475,16 @@ class GameObject( Context, Transform ):
 
                 self.console.log( f"[{__func_name__}] Export found: {class_attr_name} = {class_attr_type.__name__}({casted_value})" )
 
-        script["exports"] = _exports
+        script.exports = _exports
 
-    def __apply_script_exported_attributes( self, script : Script ):
+    def __apply_script_exported_attributes( self, script : ScriptOBJ ):
         """Apply exported class attributes to the script instance, resolving
         UUID references to GameObjects and/or copying primitive defaults.
         """
         __func_name__ = inspect.currentframe().f_code.co_name
         num_exports = 0
 
-        for name, exported in script.get("exports").items():
+        for name, exported in script.exports.items():
             # UUID type, resolve the instance attribute to reference the GameObject
             if isinstance( exported.default, uid.UUID ):
                 obj_reference = self.context.findGameObject( exported.default )
@@ -506,21 +492,20 @@ class GameObject( Context, Transform ):
                 # possible chicken and egg issue -- is the GameObject already alive, cus of hierarchy?
                 # type checking goes here (Transform, GameObject etc)
                 if obj_reference:
-                    setattr( script.get("instance"), name, obj_reference.transform )
+                    setattr( script.instance, name, obj_reference.transform )
                 else:
-                    setattr( script.get("instance"), name, exported.default  )
+                    setattr( script.instance, name, exported.default  )
 
             # primitive types just become a COPY
             # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
             else:
-                setattr( script.get("instance"), name, exported.default )
+                setattr( script.instance, name, exported.default )
 
             num_exports += 1
 
-        self.console.log( f"[{__func_name__}] Resolved and set ['{script.get("class_name")}'] with {num_exports} exported attributes"  )
+        self.console.log( f"[{__func_name__}] Resolved and set ['{script.class_name}'] with {num_exports} exported attributes"  )
 
-
-    def __resolve_script_path( self, script : Script ):
+    def __resolve_script_path( self, script : ScriptOBJ ):
         """Resolve the absolute file path of a script as a Path object.
 
         If the script path is relative, it is resolved against the project root
@@ -532,7 +517,7 @@ class GameObject( Context, Transform ):
         """
         __func_name__ = inspect.currentframe().f_code.co_name
 
-        _file_path = script["path"]
+        _file_path = script.path
         _found = True
 
         # resolve relative paths (important when running from .exe)
@@ -548,7 +533,7 @@ class GameObject( Context, Transform ):
 
         return _found, _file_path
 
-    def init_external_script( self, script : Script ) -> bool:
+    def init_external_script( self, script : ScriptOBJ ) -> bool:
         """Initialize script attached to this gameObject,
         Try to load and parse the script, then convert to module in sys.
 
@@ -560,9 +545,9 @@ class GameObject( Context, Transform ):
         __func_name__ = inspect.currentframe().f_code.co_name
 
         try:
-            if not script.get("active"):
-                script["instance"] = None
-                self.console.note( f"[{__func_name__}] '{script.get("class_name")}' is not active, skip" )
+            if not script.active:
+                script.instance = None
+                self.console.note( f"[{__func_name__}] '{script.class_name}' is not active, skip" )
                 return False
 
             # find and set class name
@@ -570,7 +555,7 @@ class GameObject( Context, Transform ):
 
             # destroy, somewhat ..
             # avoid storing direct references to objects inside script["instance"] 
-            script["instance"] = None
+            script.instance = None
 
             # Resolve the absolute script file path
             _found, file_path = self.__resolve_script_path( script )
@@ -619,13 +604,13 @@ class GameObject( Context, Transform ):
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
 
-            if not hasattr(module, script.get("class_name")):
-                self.console.error( f"[{__func_name__}] No class named '{script.get("class_name")}' found in {file_path}" )
+            if not hasattr(module, script.class_name):
+                self.console.error( f"[{__func_name__}] No class named '{script.class_name}' found in {file_path}" )
                 raise AttributeError(
-                    f"[{__func_name__}] No class named '{script.get("class_name")}' found in {file_path}"
+                    f"[{__func_name__}] No class named '{script.class_name}' found in {file_path}"
                 )
 
-            _ScriptClass = getattr(module, script.get("class_name"))
+            _ScriptClass = getattr(module, script.class_name)
 
             # load and initialize exported script attributes
             # either with class default, or stored value from scene
@@ -640,25 +625,25 @@ class GameObject( Context, Transform ):
                         except TypeError:
                             pass
 
-            script["instance"] = ClassPlaceholder(self.context, self)
+            script.instance = ClassPlaceholder(self.context, self)
         
             # apply exported class attributes as script instance attributes
             self.__apply_script_exported_attributes( script )
 
             # clear existing errors
-            script.pop("_error", None)
+            script._error = None
 
         
         # an error was raised  
         except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             self.console.error( e, traceback.format_tb(exc_tb) )
-            self.console.warn(f"Script: [{script.get("path").name}] contains errors GameObject: [{self.name}]")
+            self.console.warn(f"Script: [{script.path.name}] contains errors GameObject: [{self.name}]")
         
             # mark as disabled
-            script["instance"] = None
-            script["active"] = False
-            script["_error"] = str(e)
+            script.instance = None
+            script.active   = False
+            script._error   = str(e)
 
             return False
 
@@ -669,9 +654,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["instance"] is not None, self.scripts):
+        for script in filter(lambda x: x.instance is not None, self.scripts):
             try:
-                script["instance"].onStart()
+                script.instance.onStart()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -681,9 +666,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["instance"] is not None, self.scripts):
+        for script in filter(lambda x: x.instance is not None, self.scripts):
             try:
-                script["instance"].onUpdate()
+                script.instance.onUpdate()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -693,9 +678,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["instance"] is not None, self.scripts):
+        for script in filter(lambda x: x.instance is not None, self.scripts):
             try:
-                script["instance"].onEnable()
+                script.instance.onEnable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -705,9 +690,9 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["instance"] is not None, self.scripts):
+        for script in filter(lambda x: x.instance is not None, self.scripts):
             try:
-                script["instance"].onDisable()
+                script.instance.onDisable()
             except Exception as e:
                 exc_type, exc_value, exc_tb = sys.exc_info()
                 self.console.error( e, traceback.format_tb(exc_tb) )
@@ -716,7 +701,7 @@ class GameObject( Context, Transform ):
         if not self.hierachyActive():
             return
 
-        for script in filter(lambda x: x["instance"] is not None, self.scripts):
+        for script in filter(lambda x: x.instance is not None, self.scripts):
             self.init_external_script( script )
 
     #

@@ -138,7 +138,7 @@ class ScriptBehaivior:
                     self.default = self.default_for_annotation_type( annotated_type )
 
                     # only mark disabled when it is a primitive type
-                    if self.is_primitive_type( annotated_type ) and not self.default:
+                    if self.is_primitive_type( annotated_type ) and self.default is None:
                         self.active = False
 
                     return
