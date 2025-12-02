@@ -1,5 +1,4 @@
-from pickletools import read_stringnl_noescape_pair
-from typing import TypedDict, Callable, List, Union, Any
+from typing import TypedDict, Callable, List, Any
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
@@ -8,8 +7,7 @@ from imgui_bundle import imguizmo
 from imgui_bundle import icons_fontawesome_6 as fa
 from imgui_bundle import imgui_color_text_edit as ImGuiColorTextEdit
 
-import pygame
-from pyrr import Matrix44, Vector3, Quaternion
+from pyrr import Matrix44
 import numpy as np
 
 from modules.context import Context
@@ -18,6 +16,7 @@ from modules.images import Images
 from modules.models import Models
 from modules.console import Console
 from modules.scene import SceneManager
+from modules.transform import Transform
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
@@ -27,8 +26,8 @@ from gameObjects.camera import Camera
 from pathlib import Path
 import textwrap
 import re
-import uuid as uid
 import enum
+import math
 
 from modules.transform import Transform
 
@@ -217,7 +216,9 @@ class UserInterface( Context ):
             # selected item
             if self.context.gui.selectedObject:
                 gameObject = self.context.gui.selectedObject
-                model_m16 = self.to_matrix16(gameObject.transform._getModelMatrix())
+                _t          : Transform     = gameObject.transform
+
+                model_m16 = self.to_matrix16(_t._getModelMatrix())
 
                 glEnable(GL_DEPTH_TEST)
                 glDepthFunc(GL_LEQUAL)
@@ -235,8 +236,8 @@ class UserInterface( Context ):
 
                 # write result back on update
                 if self.gizmo.is_using():
-                    gameObject.transform.world_model_matrix = Matrix44(model_m16.values.astype(float))
-                    gameObject.transform._update_local_from_world()
+                    _t.world_model_matrix = Matrix44(model_m16.values.astype(float))
+                    _t._update_local_from_world()
                     gameObject._mark_dirty( GameObject.DirtyFlag_.transform )
                     
             self.gizmo.view_manipulate(
@@ -1038,14 +1039,22 @@ class UserInterface( Context ):
 
 
     class Inspector( Context ):
+        class RotationMode_(enum.IntEnum):
+            """Modes to visualize rotation angles"""
+            radians = enum.auto()
+            degrees = enum.auto()
+
         def __init__( self, context ):
             super().__init__( context )
+
+            self.rotation_mode = self.RotationMode_.radians
 
         def _transform( self ) -> None:
             if not self.context.gui.selectedObject:
                 return
 
-            gameObject = self.context.gui.selectedObject
+            gameObject  : GameObject    = self.context.gui.selectedObject
+            _t          : Transform     = gameObject.transform
 
             if isinstance( gameObject, Mesh ):
                 imgui.text( f"Mesh" );
@@ -1053,37 +1062,57 @@ class UserInterface( Context ):
             if isinstance( gameObject, Light ):
                 imgui.text( f"Light" );
 
+            # todo:
+            # switch from local to world space editing using viewport gizmo mode?
+
+            # local space
             if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
-                self.context.gui.draw_vec3_control( "Position", gameObject.transform.local_position, 0.0 )
-                self.context.gui.draw_vec3_control( "Rotation", gameObject.transform.local_rotation, 0.0 )
-                self.context.gui.draw_vec3_control( "Scale", gameObject.transform.local_scale, 0.0 )
+                # position
+                self.context.gui.draw_vec3_control( "Position", _t.local_position, 0.0 )
+
+                # rotation
+                match self.rotation_mode:
+                    case self.RotationMode_.degrees:
+                        self.context.gui.draw_vec3_control(
+                            "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
+                            onChange=lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
+                        )
+                    case self.RotationMode_.radians:
+                        self.context.gui.draw_vec3_control("Rotation", _t.local_rotation, 0.0)
+
+                # scale
+                self.context.gui.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
+
                 imgui.tree_pop()
 
-
+            # world space --should b hidden or disabled?
             if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
-                pos = gameObject.transform.extract_position()
-                rot = gameObject.transform.extract_euler()
-                scl = gameObject.transform.extract_scale()
+                pos = _t.extract_position()
+                rot = _t.extract_euler()
+                scl = _t.extract_scale()
 
+                # position
                 self.context.gui.draw_vec3_control( "Position", pos, 0.0,          
-                    onChange = lambda v: gameObject.transform.updatePositionFromWorld(v)
+                    onChange = lambda v: _t.updatePositionFromWorld( v )
                 )
-                self.context.gui.draw_vec3_control( "Rotation", rot, 0.0,
-                    onChange = lambda v: gameObject.transform.updateRotationFromWorld(v)
-                )
+
+                # rotation
+                match self.rotation_mode:
+                    case self.RotationMode_.degrees:
+                        self.context.gui.draw_vec3_control( "Rotation", Transform.vec_to_degrees(rot), 0.0,
+                            onChange = lambda v: _t.updateRotationFromWorld( Transform.vec_to_radians( v ) )
+                        )
+                    case self.RotationMode_.radians:
+                        self.context.gui.draw_vec3_control( "Rotation", rot, 0.0,
+                            onChange = lambda v: _t.updateRotationFromWorld( v )
+                        )
+
+                # scale
                 self.context.gui.draw_vec3_control( "Scale", scl, 0.0,
-                    onChange = lambda v: gameObject.transform.updateScaleFromWorld(v)
-                )
-                imgui.tree_pop()
-
-            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING} Physics", imgui.TreeNodeFlags_.default_open ):
-                changed, gameObject.mass = imgui.drag_float(
-                        f"Mass", gameObject.mass, 1
+                    onChange = lambda v: _t.updateScaleFromWorld( v )
                 )
 
                 imgui.tree_pop()
-
-            return
 
         def _material_thumb( self, label, texture_id ) -> None:
             imgui.text( f"{label}" );
@@ -1397,10 +1426,17 @@ class UserInterface( Context ):
 
                 _, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
 
-
                 # components
                 self._transform()
                 imgui.separator()
+
+                # physics  
+                if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING} Physics", imgui.TreeNodeFlags_.default_open ):
+                    changed, gameObject.mass = imgui.drag_float(
+                            f"Mass", gameObject.mass, 1
+                    )
+
+                    imgui.tree_pop()
 
                 self._material()
                 imgui.separator()

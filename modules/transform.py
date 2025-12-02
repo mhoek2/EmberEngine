@@ -32,6 +32,14 @@ class Transform:
         self._local_rotation_quat   : Quaternion = Quaternion(self.euler_to_quat(self._local_rotation))
         self.world_model_matrix     : Matrix44 = self._createWorldModelMatrix()
 
+    @staticmethod
+    def vec_to_degrees( v ):
+        return [math.degrees(x) for x in v]
+
+    @staticmethod
+    def vec_to_radians( v ):
+        return [math.radians(x) for x in v]
+
     class vectorInterface(list):
         def __init__(self, data, callback, name : str = "test"):
             super().__init__(data)
@@ -98,6 +106,10 @@ class Transform:
     @local_rotation.setter
     def local_rotation(self, data):
         self._local_rotation.__setitem__(slice(None), data)
+
+    def set_local_rotation( self, data ):
+        """Lambda wrapper"""
+        self.local_rotation = data
 
     #scale
     @property
