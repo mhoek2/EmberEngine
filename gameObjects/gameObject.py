@@ -422,8 +422,8 @@ class GameObject( Context, Transform ):
     def __load_script_exported_attributes( self, script : Script, _ScriptClass ):
         """Loads and initializes exported attributes from a script class.
 
-        If the attribute already exists in the scene (script["exports"), it overrides the default.
-        Otherwise, uses the class default value.
+        If the attribute already exists in the scene (script["exports"), it overrides the default, 
+        if the types match or is castable
 
         :param script: The Script TypedDict containing file path, class name, and existing exports
         :param _ScriptClass: The loaded class from the script module
@@ -440,22 +440,18 @@ class GameObject( Context, Transform ):
                 class_attr_type = class_attr.type           # extract type from exported.default or annotated type
                 #class_attr_type = type(class_attr_value)   # extract type from exported.default -deprectated
 
-                #
                 # failed to export, type mismatch?
-                #
                 if not class_attr.active:
-                    self.console.error( f"[{__func_name__}] Export failed: [{class_attr_name} = {class_attr_value}] in script {script["class_name"]}" )
+                    self.console.error( f"[{__func_name__}] Export failed: {class_attr_name} = {class_attr_type.__name__}({class_attr_value})" )
                     continue
 
-                #
                 # attribute NOT stored in the scene, use default class attribute value
-                #
                 if class_attr_name not in script.get("exports"):
-                    self.console.log( f"[{__func_name__}] Export new: [{class_attr_name} = {class_attr_value}] in script {script["class_name"]}" )
+                    self.console.log( f"[{__func_name__}] Export new: {class_attr_name} = {class_attr_type.__name__}({class_attr_value})" )
                     continue
 
                 #
-                # override attribute value from scene instance
+                # find export in saved scene and override attribute value
                 #
                 scene_instance_attr = script.get("exports")[class_attr_name]
 
@@ -466,18 +462,15 @@ class GameObject( Context, Transform ):
 
                 scene_instance_attr_value = scene_instance_attr.get()
 
-                #
                 # Try casting scene instance attribute value to new current type
-                # Preserve if value is UUID, this is resolved
-                #
+                # Preserve if is of type UUID, the instance attribute is later resolved using this
                 try:
-                    # UUIDs: preserve, used to point the instance attribute
-                    #        to a GameObject.
+                    # UUID type:
                     if isinstance( scene_instance_attr_value, uid.UUID ):
-                        self.console.log( f"[{__func_name__}] Export uuid: [{class_attr_name} = {scene_instance_attr_value.hex}] in script {script["class_name"]}" )
+                        #self.console.log( f"[{__func_name__}] Export uuid: [{class_attr_name} = {scene_instance_attr_value.hex}] in script {script["class_name"]}" )
                         casted_value : uid.UUID = scene_instance_attr_value
 
-                    # other types: attempt explicit cast
+                    # primitive types: attempt explicit cast
                     else:
                         casted_value = class_attr_type(scene_instance_attr_value)
 
@@ -494,35 +487,37 @@ class GameObject( Context, Transform ):
                 finally:
                     _exports[class_attr_name].set(casted_value)
 
-                self.console.log( f"[{__func_name__}] Export found: [{class_attr_name} = {casted_value}] in script {script['class_name']}" )
+                self.console.log( f"[{__func_name__}] Export found: {class_attr_name} = {class_attr_type.__name__}({casted_value})" )
 
         script["exports"] = _exports
 
-    def __resolve_and_set_script_exported_attributes( self, script : Script ):
-        """set and resolve the exported attributes on the script instance"""
+    def __apply_script_exported_attributes( self, script : Script ):
+        """Apply exported class attributes to the script instance, resolving
+        UUID references to GameObjects and/or copying primitive defaults.
+        """
         __func_name__ = inspect.currentframe().f_code.co_name
-        _num_exports = 0
+        num_exports = 0
 
         for name, exported in script.get("exports").items():
-            # when type of UUID instance attribute is resolved as reference to the GameObject
-            # and retains the UUID as export meta value
+            # UUID type, resolve the instance attribute to reference the GameObject
             if isinstance( exported.default, uid.UUID ):
                 obj_reference = self.context.findGameObject( exported.default )
 
                 # possible chicken and egg issue -- is the GameObject already alive, cus of hierarchy?
+                # type checking goes here (Transform, GameObject etc)
                 if obj_reference:
                     setattr( script.get("instance"), name, obj_reference.transform )
                 else:
                     setattr( script.get("instance"), name, exported.default  )
 
-            # primitive or default types resolve as a COPY of meta value and type
-            # default is already parsed during scene loading and the default or stored value 
+            # primitive types just become a COPY
+            # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
             else:
                 setattr( script.get("instance"), name, exported.default )
 
-            _num_exports += 1
+            num_exports += 1
 
-        self.console.log( f"[{__func_name__}] Resolved and set ['{script.get("class_name")}'] with {_num_exports} exported attributes"  )
+        self.console.log( f"[{__func_name__}] Resolved and set ['{script.get("class_name")}'] with {num_exports} exported attributes"  )
 
 
     def __resolve_script_path( self, script : Script ):
@@ -540,9 +535,9 @@ class GameObject( Context, Transform ):
         _file_path = script["path"]
         _found = True
 
-        # Resolve relative paths (important when running from .exe)
+        # resolve relative paths (important when running from .exe)
         if not os.path.isabs(_file_path):
-            # Assuming your engine has a context.project_root or similar path
+            # assuming your engine has a context.project_root or similar path
             base_path = getattr(self.context, "project_root", os.getcwd())
             _file_path = os.path.join(base_path, _file_path)
 
@@ -627,13 +622,13 @@ class GameObject( Context, Transform ):
             if not hasattr(module, script.get("class_name")):
                 self.console.error( f"[{__func_name__}] No class named '{script.get("class_name")}' found in {file_path}" )
                 raise AttributeError(
-                    f"[{__func_name__}] No class named '{class_name}' found in {file_path}"
+                    f"[{__func_name__}] No class named '{script.get("class_name")}' found in {file_path}"
                 )
 
             _ScriptClass = getattr(module, script.get("class_name"))
 
-            # load and populate exported script attributes
-            # either with default value, or stored value from scene
+            # load and initialize exported script attributes
+            # either with class default, or stored value from scene
             self.__load_script_exported_attributes( script, _ScriptClass )
 
             class ClassPlaceholder(_ScriptClass, ScriptBehaivior):
@@ -647,9 +642,8 @@ class GameObject( Context, Transform ):
 
             script["instance"] = ClassPlaceholder(self.context, self)
         
-
-            # set and resolve the exported attributes on the script instance
-            self.__resolve_and_set_script_exported_attributes( script )
+            # apply exported class attributes as script instance attributes
+            self.__apply_script_exported_attributes( script )
 
             # clear existing errors
             script.pop("_error", None)

@@ -180,20 +180,17 @@ class UserInterface( Context ):
                 }
             ]
 
-        def render_operations_overlay( self ):
-            pass
-
         def to_matrix16(self, mat):
             """
             Convert a numpy.ndarray or Pyrr Matrix44 to ImGuizmo Matrix16.
             Ensures column-major order for ImGuizmo.
             """
             if isinstance(mat, np.ndarray):
-                floats = mat.astype(float).reshape(16).tolist()  # <-- remove .T
+                floats = mat.astype(float).reshape(16).tolist()
                 return self.gizmo.Matrix16(floats)
 
             if isinstance(mat, Matrix44):
-                floats = mat.flatten().tolist()  # <-- remove .T
+                floats = mat.flatten().tolist()
                 return self.gizmo.Matrix16(floats)
 
             raise TypeError(f"Unsupported matrix type: {type(mat)}")
@@ -1161,66 +1158,68 @@ class UserInterface( Context ):
 
             imgui.dummy( imgui.ImVec2(20, 0) )
 
-            for instance_attr_name, instance_attr in script["exports"].items():
+            for class_attr_name, class_attr in script["exports"].items():
+                # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
+
                 if script["instance"] is None:
                     continue
 
                 # exported attribute contains error, type mismatch?
-                if not instance_attr.active:
+                if not class_attr.active:
                     continue
 
                 #_instance_value = getattr(script["instance"], instance_attr_name)
-                _value = instance_attr.default
-                _t = instance_attr.type
+                _value = class_attr.get()
+                _t = class_attr.type
                 _changed = False
 
                 # FLOAT
                 if _t is float:
-                    _changed, new = imgui.drag_float(f"{instance_attr_name}:", _value, 0.01)
+                    _changed, new = imgui.drag_float(f"{class_attr_name}:", _value, 0.01)
 
                 # INT
                 elif _t is int:
-                    _changed, new = imgui.drag_int(f"{instance_attr_name}:", _value, 1)
+                    _changed, new = imgui.drag_int(f"{class_attr_name}:", _value, 1)
 
                 # STRING
                 elif _t is str:
-                    _changed, new = imgui.input_text(f"{instance_attr_name}:", _value, 256)
+                    _changed, new = imgui.input_text(f"{class_attr_name}:", _value, 256)
 
                 # BOOL
                 elif _t is bool:
-                    _changed, new = imgui.checkbox(f"{instance_attr_name}:", _value)
+                    _changed, new = imgui.checkbox(f"{class_attr_name}:", _value)
 
                 # TRANSFORM
                 elif _t is Transform:
                     obj = self.context.findGameObject(_value)
                     _name = obj.name if obj is not None else "Select"
 
-                    imgui.text( f"{_t.__name__}: {instance_attr_name}")
+                    imgui.text( f"{_t.__name__}: {class_attr_name}")
                     imgui.same_line(200.0)
 
-                    if imgui.button( f"{_name}##{instance_attr_name}" ):
-                        imgui.open_popup(f"##{instance_attr_name}_select")
+                    if imgui.button( f"{_name}##{class_attr_name}" ):
+                        imgui.open_popup(f"##{class_attr_name}_select")
 
                     #imgui.same_line()
                     
                     changed_transform, _uuid = self.context.gui.draw_popup_gameObject(
-                        f"##{instance_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
+                        f"##{class_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
                     
                     if changed_transform:
-                        # set the uuid as the stored value
-                        instance_attr.set( _uuid )
+                        # set the UUID as the experted meta value
+                        class_attr.set( _uuid )
 
-                        # set the script instance value as a refernce to the GameObject
+                        # resolve the script instance attribute to reference the GameObject
                         new_obj = self.context.findGameObject(_uuid)
-                        setattr(script["instance"], instance_attr_name, new_obj.transform)
+                        setattr(script["instance"], class_attr_name, new_obj.transform)
 
                 # Unsupported type
                 else:
-                    imgui.text(f"{instance_attr_name}: <unsupported {_t}>")
+                    imgui.text(f"{class_attr_name}: <unsupported {_t}>")
 
                 if _changed:
-                    instance_attr.set(new)
-                    setattr(script["instance"], instance_attr_name, new)
+                    class_attr.set(new)
+                    setattr(script["instance"], class_attr_name, new)
 
         def _draw_script( self, script: GameObject.Script ) -> None:
             _shift_left = 20.0
