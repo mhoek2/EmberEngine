@@ -7,7 +7,7 @@ from imgui_bundle import imguizmo
 from imgui_bundle import icons_fontawesome_6 as fa
 from imgui_bundle import imgui_color_text_edit as ImGuiColorTextEdit
 
-from pyrr import Matrix44
+from pyrr import Matrix44, Vector3
 import numpy as np
 
 from modules.context import Context
@@ -140,8 +140,8 @@ class UserInterface( Context ):
 
             self.gizmo      = self.context.gui.gizmo
 
-            self.operation  = 0
-            self.mode       = 0
+            self.operation      : int   = 0
+            self.mode           : int   = 0
 
             class OperationMode(TypedDict):
                 name    : str
@@ -247,6 +247,18 @@ class UserInterface( Context ):
                 imgui.ImVec2(128, 128),
                 0x10101010,
             )
+
+            if self.gizmo.is_using_view_manipulate():
+                view_m16 = Matrix44(view_m16.values.astype(float))
+                world_matrix = np.array(view_m16.inverse).reshape((4, 4)).T
+
+                self.renderer.camera.camera_pos     = Vector3(world_matrix[:3, 3])
+                self.renderer.camera.camera_right   = Vector3(world_matrix[:3, 0])
+                self.renderer.camera.camera_up      = Vector3(world_matrix[:3, 1])
+                self.renderer.camera.camera_front   = -Vector3(world_matrix[:3, 2])
+
+                self.renderer.camera.update_yaw_pitch_from_front()
+                #self.renderer.view = self.renderer.camera.get_view_matrix()
 
             self.gizmo.pop_id()
 

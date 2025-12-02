@@ -1,5 +1,5 @@
 from pyrr import Vector3, vector, vector3, matrix44, Matrix44
-from math import sin, cos, radians
+from math import atan2, asin, sin, cos, radians, degrees
 import pygame
 
 from modules.settings import Settings
@@ -78,7 +78,14 @@ class Camera:
         # return editor camera
         return matrix44.create_look_at(self.camera_pos, self.camera_pos + self.camera_front, self.camera_up)
 
-    def process_mouse_movement( self, constrain_pitch : bool = True ):
+    def update_yaw_pitch_from_front( self ):
+        """Update jaw (yaw) and pitch based on current camera_front"""
+        front = Vector3(vector.normalise(self.camera_front))
+
+        self.pitch = degrees(asin(front.y))
+        self.jaw = degrees(atan2(front.z, front.x))
+
+    def process_mouse_movement( self, constrain_pitch : float = 89.5 ):
         """Handle mouse events for the editor camera, with constraints and sensitivity bias.
 
         :param constrain_pitch: Enable to contraint the pitch to 45degrees both directions
@@ -98,10 +105,10 @@ class Camera:
         self.pitch += -yoffset
 
         if constrain_pitch:
-            if self.pitch > 45:
-                self.pitch = 45
-            if self.pitch < -45:
-                self.pitch = -45
+            if self.pitch > constrain_pitch:
+                self.pitch = constrain_pitch
+            if self.pitch < -constrain_pitch:
+                self.pitch = -constrain_pitch
 
         self.update_camera_vectors()
 
