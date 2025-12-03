@@ -1060,7 +1060,7 @@ class UserInterface( Context ):
         def __init__( self, context ):
             super().__init__( context )
 
-            self.rotation_mode = self.RotationMode_.radians
+            self.rotation_mode = self.RotationMode_.degrees
 
         def _transform( self ) -> None:
             if not self.context.gui.selectedObject:
@@ -1280,7 +1280,7 @@ class UserInterface( Context ):
                 imgui.same_line()
 
                 if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
-                    self.context.gui.selectedObject.removeScript( script.path )
+                    self.context.gui.selectedObject.removeScript( script )
 
                 if self.context.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
                     self.context.gui.text_editor.open_file( script.path )

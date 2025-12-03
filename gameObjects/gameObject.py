@@ -309,24 +309,23 @@ class GameObject( Context, Transform ):
     #
     # scripting
     #
-    class Script(TypedDict):
-        # TODO: 
-        # - should make this a propper class ..
-        #
-        uuid            : uid.UUID
-        path            : Path
-        active          : bool
-        class_name      : str
-        class_name_f    : str
-        exports         : dict
-        instance        : None      # reference the the dynamic script instance
-        _error          : str       # temporary
+    def onStartScripts(self):
+        self.dispatch_script_base_method("onStart")
+
+    def onUpdateScripts(self):
+        self.dispatch_script_base_method("onUpdate")
+
+    def onEnableScripts(self):
+        self.dispatch_script_base_method("onEnable")
+
+    def onDisableScripts(self):
+        self.dispatch_script_base_method("onDisable")
 
     def addScript( self, script : ScriptOBJ ):
-        """Add script to a gameObject
+        """Attach a script to a gameObject
 
-        :param path: The path to a .py script file
-        :type path: Path
+        :param script: Reference to the script
+        :type script: ScriptOBJ
         """
         __func_name__ = inspect.currentframe().f_code.co_name
 
@@ -334,375 +333,56 @@ class GameObject( Context, Transform ):
             self.console.error( f"Extension: {script.path.suffix} is invalid!" )
             return
 
-        self.console.log( f"[{__func_name__}] Load script: {script.path}" )
-        self.init_external_script( script )
+        script.init_instance( self )
 
         # append the script to the GameObject, even if it contains errors
         self.scripts.append( script )
 
-    def removeScript( self, path : Path ):
+    def removeScript( self, script : ScriptOBJ ):
         """Remove script from a gameObject
 
-        :param path: The path to a .py script file
-        :type path: Path
+        :param script: Reference to the script
+        :type script: ScriptOBJ
         """
         #self.scripts = [script for script in self.scripts if script["path"] != file]
-        for script in self.scripts:
-            if script.path == path:
-                self.scripts.remove(script)
-                break
+        for x in self.scripts:
+            if x.path == script.path:
+                self.scripts.remove( script )
+                return
 
-    def __get_class_name_from_script( self, path: Path ) -> str:
-        """Scan the content of the script to find the first class name.
-
-        :param path: The path to a .py script file
-        :type path: Path
-        :return: A class name if its found, return None otherwise
-        :rtype: str | None
-        """
-        filepath = (self.settings.rootdir / path).resolve()
-
-        if os.path.isfile(filepath):
-            code = filepath.read_text()
-        else:
-            return None
-
-        for line in code.splitlines():
-            if line.strip().startswith("class "):
-                class_name = line.strip().split()[1].split('(')[0]
-
-                if class_name.endswith(":"):
-                    return class_name[:-1]
-
-                return class_name
-
-        return None
-
-    def __format_class_name( self, name : str ) -> str:
-        """Format the classname
+    def dispatch_script_base_method( self, method_name : str ):
+        """Dispatch and invoke a base method for each attached script
         
-        :return: Formatted string with space after any uppercased letter
-        :rtype: str | None
+        Base methods are cached on the script instance.
+            - onStart
+            - onUpdate
+            - onEnable
+            - onDisable
+
+        :param method_name: The name of method to invoke
+        :type method_name: str
         """
-        formatted : str = ""
+        if not self.hierachyActive():
+            return
 
-        for char in name:
-            if char.isupper():
-                formatted += f" {char}"
-            else:
-                formatted += char
+        for script in filter( lambda x: x.instance is not None, self.scripts ):
+            _base_method = script.base_methods.get( method_name )
 
-        return formatted
-
-    def __set_class_name( self, script : ScriptOBJ ) -> None:
-        """Gets the class name for a given scripts, also formats it for GUI
-        
-        :param script: The Script object containing a file path
-        :type script: GameObject.Script
-        """
-        class_name = self.__get_class_name_from_script( script.path )
-
-        script.class_name = class_name or "Invalid"
-        script.class_name_f = self.__format_class_name( script.class_name )
-
-    def __load_script_exported_attributes( self, script : Script, _ScriptClass ):
-        """Loads and initializes exported attributes from a script class.
-
-        If the attribute already exists in the scene (script["exports"), it overrides the default, 
-        if the types match or is castable
-
-        :param script: The Script TypedDict containing file path, class name, and existing exports
-        :param _ScriptClass: The loaded class from the script module
-        """
-        __func_name__ = inspect.currentframe().f_code.co_name
-
-        _exports = {}
-
-        for class_attr_name, class_attr in _ScriptClass.__dict__.items():
-            if isinstance(class_attr, ScriptBehaivior.Exported):
-                _exports[class_attr_name] = class_attr
-
-                class_attr_value = class_attr.get()
-                class_attr_type = class_attr.type           # extract type from exported.default or annotated type
-                #class_attr_type = type(class_attr_value)   # extract type from exported.default -deprectated
-
-                # failed to export, type mismatch?
-                if not class_attr.active:
-                    self.console.error( f"[{__func_name__}] Export failed: {class_attr_name} = {class_attr_type.__name__}({class_attr_value})" )
-                    continue
-
-                # attribute NOT stored in the scene, use default class attribute value
-                if class_attr_name not in script.exports:
-                    self.console.log( f"[{__func_name__}] Export new: {class_attr_name} = {class_attr_type.__name__}({class_attr_value})" )
-                    continue
-
-                #
-                # find export in saved scene and override attribute value
-                #
-                scene_instance_attr = script.exports[class_attr_name]
-
-                # Sanity check
-                if not isinstance(scene_instance_attr, ScriptBehaivior.Exported):
-                    self.console.error( f"Export error: [{class_attr_name}] improperly loaded in script {script.class_name} from scene" )
-                    continue
-
-                scene_instance_attr_value = scene_instance_attr.get()
-
-                # Try casting scene instance attribute value to new current type
-                # Preserve if is of type UUID, the instance attribute is later resolved using this
+            if _base_method:
                 try:
-                    # UUID type:
-                    if isinstance( scene_instance_attr_value, uid.UUID ):
-                        #self.console.log( f"[{__func_name__}] Export uuid: [{class_attr_name} = {scene_instance_attr_value.hex}] in script {script["class_name"]}" )
-                        casted_value : uid.UUID = scene_instance_attr_value
+                    _base_method()
 
-                    # primitive types: attempt explicit cast
-                    else:
-                        casted_value = class_attr_type(scene_instance_attr_value)
+                except Exception as e:
+                    _, _, exc_tb = sys.exc_info()
+                    self.console.error( e, traceback.format_tb( exc_tb ) )
 
-                except Exception:
-                    self.console.warn(
-                        f"[{__func_name__}] Type change for '{class_attr_name}': "
-                        f"scene instance value '{scene_instance_attr_value}' cannot convert to {class_attr_type.__name__}; "
-                        f"using default '{class_attr_value}'"
-                    )
-
-                    # set class default value
-                    casted_value = class_attr_value
-
-                finally:
-                    _exports[class_attr_name].set(casted_value)
-
-                self.console.log( f"[{__func_name__}] Export found: {class_attr_name} = {class_attr_type.__name__}({casted_value})" )
-
-        script.exports = _exports
-
-    def __apply_script_exported_attributes( self, script : ScriptOBJ ):
-        """Apply exported class attributes to the script instance, resolving
-        UUID references to GameObjects and/or copying primitive defaults.
-        """
-        __func_name__ = inspect.currentframe().f_code.co_name
-        num_exports = 0
-
-        for name, exported in script.exports.items():
-            # UUID type, resolve the instance attribute to reference the GameObject
-            if isinstance( exported.default, uid.UUID ):
-                obj_reference = self.context.findGameObject( exported.default )
-
-                # possible chicken and egg issue -- is the GameObject already alive, cus of hierarchy?
-                # type checking goes here (Transform, GameObject etc)
-                if obj_reference:
-                    setattr( script.instance, name, obj_reference.transform )
-                else:
-                    setattr( script.instance, name, exported.default  )
-
-            # primitive types just become a COPY
-            # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
-            else:
-                setattr( script.instance, name, exported.default )
-
-            num_exports += 1
-
-        self.console.log( f"[{__func_name__}] Resolved and set ['{script.class_name}'] with {num_exports} exported attributes"  )
-
-    def __resolve_script_path( self, script : ScriptOBJ ):
-        """Resolve the absolute file path of a script as a Path object.
-
-        If the script path is relative, it is resolved against the project root
-        (or current working directory if project root is not defined). Checks if
-        the file exists.
-
-        :param script: The Script TypedDict containing the 'path' key (Path or str)
-        :return: Tuple (found: bool, file_path: Path)
-        """
-        __func_name__ = inspect.currentframe().f_code.co_name
-
-        _file_path = script.path
-        _found = True
-
-        # resolve relative paths (important when running from .exe)
-        if not os.path.isabs(_file_path):
-            # assuming your engine has a context.project_root or similar path
-            base_path = getattr(self.context, "project_root", os.getcwd())
-            _file_path = os.path.join(base_path, _file_path)
-
-        if not os.path.isfile(_file_path):
-            self.console.error( f"[{__func_name__}] Script file not found: {_file_path}" )
-
-            _found = False
-
-        return _found, _file_path
-
-    def init_external_script( self, script : ScriptOBJ ) -> bool:
-        """Initialize script attached to this gameObject,
-        Try to load and parse the script, then convert to module in sys.
-
-        Loads exported attribute, values from scene instance will override default class values
-
-        :param script: The Script object containing a file path
-        :type script: GameObject.Script
-        """
-        __func_name__ = inspect.currentframe().f_code.co_name
-
-        try:
-            if not script.active:
-                script.instance = None
-                self.console.note( f"[{__func_name__}] '{script.class_name}' is not active, skip" )
-                return False
-
-            # find and set class name
-            self.__set_class_name( script )
-
-            # destroy, somewhat ..
-            # avoid storing direct references to objects inside script["instance"] 
-            script.instance = None
-
-            # Resolve the absolute script file path
-            _found, file_path = self.__resolve_script_path( script )
-            if not _found:
-                raise FileNotFoundError( f"Script '{file_path}' not found!")
-
-            # Derive a simple module name from the file name
-            module_name = os.path.splitext(os.path.basename(file_path))[0]
-
-            # Remove from sys.modules if already loaded (hot reload)
-            if module_name in sys.modules:
-                del sys.modules[module_name]
-
-            # Load the module from the file path
-            spec = importlib.util.spec_from_file_location(module_name, file_path)
-            if spec is None or spec.loader is None:
-                self.console.error( f"[{__func_name__}] Failed to load spec for {file_path}" )
-                raise ImportError(f"Cannot import module from {file_path}")
-
-            module = importlib.util.module_from_spec(spec)
-        
-            # Load ScriptBehaivior
-            _script_behavior = importlib.import_module("gameObjects.scriptBehaivior")
-            ScriptBehaivior = getattr(_script_behavior, "ScriptBehaivior")
-
-            _transform = importlib.import_module("modules.transform")
-            _Transform = getattr(_transform, "Transform")
-            module.__dict__["Transform"] = _Transform
-
-
-            #module.__dict__["__future_annotations__"] = True
-
-            # define attribute export method from ScriptBehaivior
-            # making it callable from a dynamic script
-            module.__dict__["export"] = ScriptBehaivior.export
-
-            # auto import modules
-            for auto_mod_name, auto_mod_as in self.settings.SCRIPT_AUTO_IMPORT_MODULES.items():
-                imported = importlib.import_module(auto_mod_name)
-
-                if auto_mod_as is not None:
-                    module.__dict__[auto_mod_as] = imported
-                else:
-                    module.__dict__[auto_mod_name] = imported
-
-            sys.modules[module_name] = module
-            spec.loader.exec_module(module)
-
-            if not hasattr(module, script.class_name):
-                self.console.error( f"[{__func_name__}] No class named '{script.class_name}' found in {file_path}" )
-                raise AttributeError(
-                    f"[{__func_name__}] No class named '{script.class_name}' found in {file_path}"
-                )
-
-            _ScriptClass = getattr(module, script.class_name)
-
-            # load and initialize exported script attributes
-            # either with class default, or stored value from scene
-            self.__load_script_exported_attributes( script, _ScriptClass )
-
-            class ClassPlaceholder(_ScriptClass, ScriptBehaivior):
-                def __init__(self, context, gameObject):
-                    ScriptBehaivior.__init__(self, context, gameObject)
-                    if hasattr(_ScriptClass, "__init__"):
-                        try:
-                            _ScriptClass.__init__(self)
-                        except TypeError:
-                            pass
-
-            script.instance = ClassPlaceholder(self.context, self)
-        
-            # apply exported class attributes as script instance attributes
-            self.__apply_script_exported_attributes( script )
-
-            # clear existing errors
-            script._error = None
-
-        
-        # an error was raised  
-        except Exception as e:
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.error( e, traceback.format_tb(exc_tb) )
-            self.console.warn(f"Script: [{script.path.name}] contains errors GameObject: [{self.name}]")
-        
-            # mark as disabled
-            script.instance = None
-            script.active   = False
-            script._error   = str(e)
-
-            return False
-
-        return True
-
-    def onStartScripts( self ):
-        """Call onStart() function in all dynamic scripts attached to this gameObject"""
+    def _init_scripts( self ):
+        """Call initilization function for each attached script"""
         if not self.hierachyActive():
             return
 
         for script in filter(lambda x: x.instance is not None, self.scripts):
-            try:
-                script.instance.onStart()
-            except Exception as e:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.error( e, traceback.format_tb(exc_tb) )
-
-    def onUpdateScripts( self ):
-        """Call onUpdate() function in all dynamic scripts attached to this gameObject"""
-        if not self.hierachyActive():
-            return
-
-        for script in filter(lambda x: x.instance is not None, self.scripts):
-            try:
-                script.instance.onUpdate()
-            except Exception as e:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.error( e, traceback.format_tb(exc_tb) )
-
-    def onEnableScripts( self ):
-        """Call onEnable() function in all dynamic scripts attached to this gameObject"""
-        if not self.hierachyActive():
-            return
-
-        for script in filter(lambda x: x.instance is not None, self.scripts):
-            try:
-                script.instance.onEnable()
-            except Exception as e:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.error( e, traceback.format_tb(exc_tb) )
-
-    def onDisableScripts( self ):
-        """Call onDisable() function in all dynamic scripts attached to this gameObject"""
-        if not self.hierachyActive():
-            return
-
-        for script in filter(lambda x: x.instance is not None, self.scripts):
-            try:
-                script.instance.onDisable()
-            except Exception as e:
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                self.console.error( e, traceback.format_tb(exc_tb) )
-
-    def initScripts( self ):
-        if not self.hierachyActive():
-            return
-
-        for script in filter(lambda x: x.instance is not None, self.scripts):
-            self.init_external_script( script )
+            script.init_instance( self )
 
     #
     # editor state
@@ -830,7 +510,7 @@ class GameObject( Context, Transform ):
         # only when runtime starts
         if _on_start:
             self._save_state()
-            self.initScripts()
+            self._init_scripts()
             self.__updateActiveState()
 
         # skip runtime, object is disabled

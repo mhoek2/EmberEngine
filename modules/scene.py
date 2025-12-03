@@ -276,16 +276,14 @@ class SceneManager:
                 "rotation"      : obj.transform.local_rotation,
                 "scale"         : obj.transform.local_scale,
                 "mass"          : obj.mass,
-                #"scripts"       : [str(x["path"]) for x in obj.scripts],
                 "scripts": [
                     {
                         "uuid"          : x.uuid.hex,
                         "file"          : str(x.path),
                         "active"        : x.active,
-                        #"class_name"   : x["class_name"],
                         "exports"       : { 
                                             k: self.serialize_export( v )
-                                                for k, v in x["exports"].items() 
+                                                for k, v in x.exports.items() 
                                           }
                     }
                     for x in obj.scripts
@@ -396,7 +394,7 @@ class SceneManager:
                     continue
 
                 # (re)init
-                obj.init_external_script( script )
+                script.init_instance( obj )
 
     def loadGameObjectsRecursive( self,
         parent          : "GameObject" = None,
@@ -421,7 +419,6 @@ class SceneManager:
                     scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
                     rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
                     mass        = obj["mass"]               if "mass"       in obj else -1.0,
-                    #scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
                     scripts     = [
                         ScriptOBJ(
                             context     = self.context,
