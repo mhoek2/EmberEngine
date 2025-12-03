@@ -9,7 +9,14 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import EmberEngine
 
+import enum
+
 class Camera:
+    class VelocityModifier_(enum.IntEnum):
+        normal      = enum.auto()
+        speed_up    = enum.auto()
+        slow_down   = enum.auto()
+
     def __init__( self, context ):
         """This class is responsible for creating the viewmatrix,
         Based on what camera is active, either from scene or editor
@@ -29,6 +36,11 @@ class Camera:
         self.mouse_sensitivity = 0.25
         self.jaw = -90
         self.pitch = 0
+
+        self.velocity_mode          = Camera.VelocityModifier_.normal
+        self.velocity               : float = 0.05;
+        self.velocity_factor_slow   : float = 15;
+        self.velocity_factor_fast   : float = 30;
 
     def place_object_in_front_of_another( self, position, rotation_quat, distance ) -> Vector3:
         """-This should become a scriptable function perhaps
@@ -126,10 +138,14 @@ class Camera:
     def process_keyboard( self ):
         """Handle key events for the editor camera"""
         keypress = self.context.key.get_pressed()
-        velocity : float = 0.05;
 
-        if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
-            velocity *= 30
+        velocity : float = self.velocity
+        match self.velocity_mode:
+            case Camera.VelocityModifier_.speed_up:
+                velocity *= self.velocity_factor_fast
+
+            case Camera.VelocityModifier_.slow_down:
+                velocity /= self.velocity_factor_slow
 
         if keypress[pygame.K_w]:
             self.camera_pos += self.camera_front * velocity

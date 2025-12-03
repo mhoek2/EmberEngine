@@ -423,6 +423,35 @@ class Renderer:
             self.ImGuiInput = True
             pygame.mouse.set_visible( True )
 
+    def editor_viewport_event_handler( self, event ):
+        if self.settings.game_running:
+            return
+
+        if not self.ImGuiInput:
+            if event.type == pygame.KEYUP:
+                if (event.key & pygame.KMOD_SHIFT) or (event.key & pygame.KMOD_LCTRL):
+                    self.camera.velocity_mode = Camera.VelocityModifier_.normal
+
+            elif event.type == pygame.KEYDOWN:
+                if (event.mod & pygame.KMOD_SHIFT):
+                    self.camera.velocity_mode = Camera.VelocityModifier_.speed_up
+
+                elif (event.mod & pygame.KMOD_LCTRL):
+                    self.camera.velocity_mode = Camera.VelocityModifier_.slow_down
+
+        # toggle between viewport and gui input
+        if event.type == pygame.MOUSEBUTTONUP:
+            if not self.ImGuiInput and event.button == 3:
+                self.toggle_input_state()
+
+        elif event.type == pygame.MOUSEBUTTONDOWN :
+            if self.ImGuiInput and event.button == 3:
+                self.toggle_input_state()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F1:
+                self.toggle_input_state()
+
     def event_handler( self ) -> None:
         """The main event handler for the application itself, handling input event states
         eg. Keep mouse hidden and in center of window when F1 is pressed to go into 3D space."""
@@ -434,15 +463,15 @@ class Renderer:
             if event.type == pygame.QUIT:
                 self.running = False
 
+            # handle events for editor viewport
+            self.editor_viewport_event_handler( event )
+
             #if event.type == pygame.VIDEORESIZE:
                 #screen_size = (event.w, event.h)
                 #screen = pygame.display.set_mode(screen_size, pygame.DOUBLEBUF | pygame.OPENGL | pygame.RESIZABLE)
                 #imgui.get_io().display_size = screen_size  # Update ImGui display size
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F1:
-                    self.toggle_input_state()
-
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
 
