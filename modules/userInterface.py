@@ -29,6 +29,7 @@ import textwrap
 import re
 import enum
 import math
+import uuid as uid
 
 from modules.transform import Transform
 
@@ -648,7 +649,8 @@ class UserInterface( Context ):
                 _is_open = imgui.tree_node_ex( obj.name, tree_flags )
                 _is_hovered = imgui.is_item_hovered()
 
-                if imgui.is_item_clicked(): # and imgui.is_item_toggled_open():
+                #if imgui.is_item_clicked(): # and imgui.is_item_toggled_open():
+                if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(0):
                     self.set_selected_object( obj )
     
                 # dnd: source
@@ -666,7 +668,7 @@ class UserInterface( Context ):
                 if imgui.begin_drag_drop_target():
                     payload = imgui.accept_drag_drop_payload_py_id(self.dnd_payload.Type_.hierarchy)
                     if payload is not None:
-                        payload_obj = self.dnd_payload.get_payload_data()
+                        payload_obj : GameObject = self.dnd_payload.get_payload_data()
                         payload_obj.setParent(obj)
 
                     imgui.end_drag_drop_target()
@@ -1001,17 +1003,30 @@ class UserInterface( Context ):
         imgui.text("camera")
         imgui.same_line(100.0)
 
+        changed : bool = False
+        _uuid   : uid.UUID = None
+
         _camera : GameObject = self.scene.getCamera()
         _camera_name : str = _camera.name if _camera else "None" 
 
         if imgui.button( _camera_name ):
             imgui.open_popup("##select_camera")
 
-        imgui.same_line()
-        changed_camera_gameobject, _uuid = self.draw_popup_gameObject(
-            "##select_camera", filter=lambda obj: isinstance(obj, Camera ))
+        # dnd: receive
+        if imgui.begin_drag_drop_target():
+            payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
+            if payload is not None:
+                payload_obj : GameObject = self.dnd_payload.get_payload_data()
+                _uuid = payload_obj.uuid
+                changed = True
 
-        if changed_camera_gameobject:
+            imgui.end_drag_drop_target()
+
+        else: 
+            changed, _uuid = self.draw_popup_gameObject(
+                "##select_camera", filter=lambda obj: isinstance(obj, Camera ))
+
+        if changed:
             self.scene.setCamera( _uuid )
 
     def draw_environment( self ) -> None:
@@ -1224,8 +1239,11 @@ class UserInterface( Context ):
 
                 # TRANSFORM
                 elif _t is Transform:
-                    obj = self.context.findGameObject(_value)
-                    _name = obj.name if obj is not None else "Select"
+                    changed_transform   : bool = False
+                    _uuid               : uid.UUID = None
+
+                    obj     : GameObject = self.context.findGameObject(_value)
+                    _name   : str = obj.name if obj is not None else "Select"
 
                     imgui.text( f"{_t.__name__}: {class_attr_name}")
                     imgui.same_line(200.0)
@@ -1233,10 +1251,19 @@ class UserInterface( Context ):
                     if imgui.button( f"{_name}##{class_attr_name}" ):
                         imgui.open_popup(f"##{class_attr_name}_select")
 
-                    #imgui.same_line()
-                    
-                    changed_transform, _uuid = self.context.gui.draw_popup_gameObject(
-                        f"##{class_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
+                    # dnd: receive
+                    if imgui.begin_drag_drop_target():
+                        payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
+                        if payload is not None:
+                            payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
+                            _uuid = payload_obj.uuid
+                            changed_transform = True
+
+                        imgui.end_drag_drop_target()
+
+                    else:
+                        changed_transform, _uuid = self.context.gui.draw_popup_gameObject(
+                            f"##{class_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
                     
                     if changed_transform:
                         # set the UUID as the experted meta value
