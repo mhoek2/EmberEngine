@@ -40,17 +40,24 @@ class Transform:
     def vec_to_radians( v ):
         return [math.radians(x) for x in v]
 
-    class vectorInterface(list):
-        def __init__(self, data, callback, name : str = "test"):
-            super().__init__(data)
+    class vectorInterface( list ):
+        def __init__( self, data, callback, name : str = "test", setter=None ):
+            super().__init__( data )
             self._callback = callback
             self._name = name
 
-        def _trigger(self):
+            # world only (test)
+            self._setter = setter
+
+        def _trigger( self ):
             if self._callback:
                 self._callback()
 
-        def __setitem__(self, key, value):
+            # world only (test)
+            if self._setter:
+                self._setter( list(self) )
+
+        def __setitem__( self, key, value ):
             """
             !important
             only update physics when value changed (gui or script)
@@ -58,10 +65,10 @@ class Transform:
             physics engine : tuple
             gui or scripts : list, int, float
             """
-            update_physics : bool = isinstance(value, (list, int, float));
+            update_physics : bool = isinstance( value, (list, int, float) );
 
-            if isinstance(key, slice):
-                if not isinstance(value, type(self)):
+            if isinstance( key, slice ):
+                if not isinstance( value, type(self) ):
                     value = type(self)( value, self._callback )
                     #if self._name == "testcube" and self._callback:
                     #    print("(phys)")
@@ -73,23 +80,26 @@ class Transform:
                 #if self._name == "testcube" and self._callback:
                 #    print("(gui-script)")
 
-        def __iadd__(self, other):
+        def __iadd__( self, other ):
             result = super().__iadd__(other)
             self._trigger()
             return result
 
-        def __isub__(self, other):
+        def __isub__( self, other ):
             result = super().__isub__(other)
             self._trigger()
             return result
 
-        def __ne__(self, other):
+        def __ne__( self, other ):
             return list(self) != list(other)
 
-        def __eq__(self, other):
+        def __eq__( self, other ):
             return list(self) == list(other)
 
-    # position
+    #
+    # LOCAL (master)
+    #
+    # local position
     @property
     def local_position(self):
         return self._local_position
@@ -98,7 +108,11 @@ class Transform:
     def local_position(self, data):
         self._local_position.__setitem__(slice(None), data)
 
-    # rotation (euler)
+    def set_local_position( self, data ):
+        """Lambda wrapper"""
+        self.local_position = data
+
+    # local rotation (euler)
     @property
     def local_rotation(self):
         return self._local_rotation
@@ -111,7 +125,7 @@ class Transform:
         """Lambda wrapper"""
         self.local_rotation = data
 
-    #scale
+    # local scale
     @property
     def local_scale(self):
         return self._local_scale
@@ -119,6 +133,100 @@ class Transform:
     @local_scale.setter
     def local_scale(self, data):
         self._local_scale.__setitem__(slice(None), data)
+
+    def set_local_scale( self, data ):
+        """Lambda wrapper"""
+        self.local_scale = data
+
+    #
+    # WORLD (slave)
+    # 
+    # world position
+    @property
+    def position( self ):
+        return self.extract_position()
+
+        # this is heuristic, just a concept actually.
+        # world transforms probably requires a instance attribute
+        # similar to local_***, but only for static memory access
+
+        # setter is not listening to key/value changes
+        # works:        self.position = (0.0, 0.0, 0.0)
+        # does not:     self.position[1] = 10.0
+
+        #return Transform.vectorInterface( 
+        #    self.extract_position(), None, 
+        #    "test",
+        #    setter=self.set_position
+        #)
+
+    @position.setter
+    def position( self, data ):
+        T = Matrix44.from_translation( data )
+
+        if self.gameObject.parent is not None:
+            # local = inverse(parent_world) * world
+            parent_inv = self._getParentModelMatrix().inverse
+            local_matrix = parent_inv * T
+
+            self.local_position = list(self.extract_position(local_matrix))
+        else:
+            # no parent > world = local
+            self.local_position = list(Vector3(data))
+
+    def set_position( self, data ) -> None:
+        """Lambda wrapper"""
+        self.position = data
+
+    # world rotation
+    @property
+    def rotation( self ):
+        return self.extract_euler()
+
+    @rotation.setter
+    def rotation( self, data ):
+        world_quat = self.euler_to_quat( data )
+
+        quat : Quaternion = Quaternion([0,0,0,0])
+
+        if self.gameObject.parent is not None:
+            parent_world_quat = self.extract_quat(self._getParentModelMatrix())
+            quat = parent_world_quat.inverse * world_quat
+        else:
+            # no parent > world = local
+            quat = world_quat
+
+        self.local_rotation = list(self.quat_to_euler(quat))
+    
+    def set_rotation( self, data ) -> None:
+        """Lambda wrapper"""
+        self.rotation = data
+
+    # world scale
+    @property
+    def scale( self ):
+        return self.extract_scale()
+
+    @scale.setter
+    def scale( self, data ):
+        data = Vector3(data)
+
+        if self.gameObject.parent is not None:
+            parent_scale = self.extract_scale(self._getParentModelMatrix())
+
+            # local scale = world / parent
+            self.local_scale = list([
+                data.x / parent_scale.x if parent_scale.x != 0 else 0,
+                data.y / parent_scale.y if parent_scale.y != 0 else 0,
+                data.z / parent_scale.z if parent_scale.z != 0 else 0,
+            ])
+        else:
+            # no parent > local = world
+            self.local_scale = list(data)
+
+    def set_scale( self, data ) -> None:
+        """Lambda wrapper"""
+        self.scale = data
 
     def _update_local_from_world(self):
         """Recompute local transform from world transform and parent safely."""
@@ -139,49 +247,6 @@ class Transform:
         # Use quaternions for rotation to avoid flipping
         self._local_rotation_quat = Quaternion(rot_quat)
         self.local_rotation = tuple(self.quat_to_euler(self._local_rotation_quat))
-
-    def updatePositionFromWorld( self, world_position ) -> None:
-        T = Matrix44.from_translation(world_position)
-
-        if self.gameObject.parent is not None:
-            # local = inverse(parent_world) * world
-            parent_inv = self._getParentModelMatrix().inverse
-            local_matrix = parent_inv * T
-
-            self.local_position = list(self.extract_position(local_matrix))
-        else:
-            # no parent > world = local
-            self.local_position = list(Vector3(world_position))
-
-    def updateRotationFromWorld(self, world_rotation_euler) -> None:
-        world_quat = self.euler_to_quat( world_rotation_euler )
-
-        quat : Quaternion = Quaternion([0,0,0,0])
-
-        if self.gameObject.parent is not None:
-            parent_world_quat = self.extract_quat(self._getParentModelMatrix())
-            quat = parent_world_quat.inverse * world_quat
-        else:
-            # no parent > world = local
-            quat = world_quat
-
-        self.local_rotation = list(self.quat_to_euler(quat))
-
-    def updateScaleFromWorld( self, world_scale ) -> None:
-        world_scale = Vector3(world_scale)
-
-        if self.gameObject.parent is not None:
-            parent_scale = self.extract_scale(self._getParentModelMatrix())
-
-            # local scale = world / parent
-            self.local_scale = list([
-                world_scale.x / parent_scale.x if parent_scale.x != 0 else 0,
-                world_scale.y / parent_scale.y if parent_scale.y != 0 else 0,
-                world_scale.z / parent_scale.z if parent_scale.z != 0 else 0,
-            ])
-        else:
-            # no parent > local = world
-            self.local_scale = list(world_scale)
 
     def compose_matrix( self, position, quat, scale) -> Matrix44:
         T = Matrix44.from_translation(position)

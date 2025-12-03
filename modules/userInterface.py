@@ -1100,29 +1100,25 @@ class UserInterface( Context ):
 
             # world space --should b hidden or disabled?
             if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
-                pos = _t.extract_position()
-                rot = _t.extract_euler()
-                scl = _t.extract_scale()
-
                 # position
-                self.context.gui.draw_vec3_control( "Position", pos, 0.0,          
-                    onChange = lambda v: _t.updatePositionFromWorld( v )
+                self.context.gui.draw_vec3_control( "Position", _t.position, 0.0,          
+                    onChange = lambda v: _t.set_position( v )
                 )
 
                 # rotation
                 match self.rotation_mode:
                     case self.RotationMode_.degrees:
-                        self.context.gui.draw_vec3_control( "Rotation", Transform.vec_to_degrees(rot), 0.0,
-                            onChange = lambda v: _t.updateRotationFromWorld( Transform.vec_to_radians( v ) )
+                        self.context.gui.draw_vec3_control( "Rotation", Transform.vec_to_degrees( _t.rotation ), 0.0,
+                            onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
                         )
                     case self.RotationMode_.radians:
-                        self.context.gui.draw_vec3_control( "Rotation", rot, 0.0,
-                            onChange = lambda v: _t.updateRotationFromWorld( v )
+                        self.context.gui.draw_vec3_control( "Rotation", _t.rotation, 0.0,
+                            onChange = lambda v: _t.set_rotation( v )
                         )
 
                 # scale
-                self.context.gui.draw_vec3_control( "Scale", scl, 0.0,
-                    onChange = lambda v: _t.updateScaleFromWorld( v )
+                self.context.gui.draw_vec3_control( "Scale", _t.scale, 0.0,
+                    onChange = lambda v: _t.set_scale( v )
                 )
 
                 imgui.tree_pop()
