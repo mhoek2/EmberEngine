@@ -1101,9 +1101,7 @@ class UserInterface( Context ):
             # world space --should b hidden or disabled?
             if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
                 # position
-                self.context.gui.draw_vec3_control( "Position", _t.position, 0.0,          
-                    onChange = lambda v: _t.set_position( v )
-                )
+                self.context.gui.draw_vec3_control( "Position", _t.position, 0.0 )
 
                 # rotation
                 match self.rotation_mode:
@@ -1112,14 +1110,10 @@ class UserInterface( Context ):
                             onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
                         )
                     case self.RotationMode_.radians:
-                        self.context.gui.draw_vec3_control( "Rotation", _t.rotation, 0.0,
-                            onChange = lambda v: _t.set_rotation( v )
-                        )
+                        self.context.gui.draw_vec3_control( "Rotation", _t.rotation, 0.0 )
 
                 # scale
-                self.context.gui.draw_vec3_control( "Scale", _t.scale, 0.0,
-                    onChange = lambda v: _t.set_scale( v )
-                )
+                self.context.gui.draw_vec3_control( "Scale", _t.scale, 0.0 )
 
                 imgui.tree_pop()
 

@@ -26,11 +26,23 @@ class Transform:
         # row-major, post-multiply, intrinsic rotation
         # R = Rx * Ry * Rz
         # tbh, so much has changed, I lost track ..
-        self._local_position        = self.vectorInterface( translate, partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
-        self._local_rotation        = self.vectorInterface( rotation, partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
-        self._local_scale           = self.vectorInterface( scale, partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
+        self._local_position        = self.vectorInterface( translate,  partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
+        self._local_rotation        = self.vectorInterface( rotation,   partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
+        self._local_scale           = self.vectorInterface( scale,      partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
         self._local_rotation_quat   : Quaternion = Quaternion(self.euler_to_quat(self._local_rotation))
         self.world_model_matrix     : Matrix44 = self._createWorldModelMatrix()
+
+        # Proxy/passthrough: unlike local transforms, world transforms are not stored;
+        # they are always computed from the current model matrix.
+        #
+        # Each vectorInterface instance acts as a *live proxy*:
+        #   - data is updated on every access.
+        #   - Element-wise writes (e.g. position[1] = 10) trigger the setter.
+        #   - Whole-value writes (e.g. position = [0,0,0]) also trigger the setter.
+        #   - This allows transparent editing from scripts and the editor GUI.
+        self._world_position_proxy  = self.vectorInterface( self.extract_position(),    None, name, setter=self.set_position )
+        self._world_rotation_proxy  = self.vectorInterface( self.extract_euler(),       None, name, setter=self.set_rotation )
+        self._world_scale_proxy     = self.vectorInterface( self.extract_scale(),       None, name, setter=self.set_scale )
 
     @staticmethod
     def vec_to_degrees( v ):
@@ -46,14 +58,14 @@ class Transform:
             self._callback = callback
             self._name = name
 
-            # world only (test)
+            # world only (proxy)
             self._setter = setter
 
         def _trigger( self ):
             if self._callback:
                 self._callback()
 
-            # world only (test)
+            # world only (proxy)
             if self._setter:
                 self._setter( list(self) )
 
@@ -108,9 +120,9 @@ class Transform:
     def local_position(self, data):
         self._local_position.__setitem__(slice(None), data)
 
-    def set_local_position( self, data ):
+    def set_local_position( self, data : list ):
         """Lambda wrapper"""
-        self.local_position = data
+        self.local_position = list( data )
 
     # local rotation (euler)
     @property
@@ -121,9 +133,9 @@ class Transform:
     def local_rotation(self, data):
         self._local_rotation.__setitem__(slice(None), data)
 
-    def set_local_rotation( self, data ):
+    def set_local_rotation( self, data : list ):
         """Lambda wrapper"""
-        self.local_rotation = data
+        self.local_rotation = list( data )
 
     # local scale
     @property
@@ -134,9 +146,9 @@ class Transform:
     def local_scale(self, data):
         self._local_scale.__setitem__(slice(None), data)
 
-    def set_local_scale( self, data ):
+    def set_local_scale( self, data : list ):
         """Lambda wrapper"""
-        self.local_scale = data
+        self.local_scale = list( data )
 
     #
     # WORLD (slave)
@@ -144,21 +156,19 @@ class Transform:
     # world position
     @property
     def position( self ):
-        return self.extract_position()
+        """
+        Get current position in world space
 
-        # this is heuristic, just a concept actually.
-        # world transforms probably requires a instance attribute
-        # similar to local_***, but only for static memory access
+            world transforms are not stored, it is always computed from the latest model matrix
+            A persistent proxy Transform.VectorInterface instance:
 
-        # setter is not listening to key/value changes
-        # works:        self.position = (0.0, 0.0, 0.0)
-        # does not:     self.position[1] = 10.0
+            - dats is updated on every access
+            - writes are forwarded to set_position() - as list
+            - allows writes from scripts and editor gui
 
-        #return Transform.vectorInterface( 
-        #    self.extract_position(), None, 
-        #    "test",
-        #    setter=self.set_position
-        #)
+        """
+        self._world_position_proxy.__setitem__(slice(None), tuple(self.extract_position()))
+        return self._world_position_proxy
 
     @position.setter
     def position( self, data ):
@@ -174,14 +184,26 @@ class Transform:
             # no parent > world = local
             self.local_position = list(Vector3(data))
 
-    def set_position( self, data ) -> None:
-        """Lambda wrapper"""
-        self.position = data
+    def set_position( self, data : list ) -> None:
+        """Lambda/Proxy wrapper"""
+        self.position = list( data )
 
     # world rotation
     @property
     def rotation( self ):
-        return self.extract_euler()
+        """
+        Get current rotation in world space
+
+            world transforms are not stored, it is always computed from the latest model matrix
+            A persistent proxy Transform.VectorInterface instance:
+
+            - dats is updated on every access
+            - writes are forwarded to set_rotation() - as list
+            - allows writes from scripts and editor gui
+
+        """
+        self._world_rotation_proxy.__setitem__(slice(None), tuple(self.extract_euler()))
+        return self._world_rotation_proxy
 
     @rotation.setter
     def rotation( self, data ):
@@ -198,14 +220,26 @@ class Transform:
 
         self.local_rotation = list(self.quat_to_euler(quat))
     
-    def set_rotation( self, data ) -> None:
-        """Lambda wrapper"""
-        self.rotation = data
+    def set_rotation( self, data : list ) -> None:
+        """Lambda/Proxy wrapper"""
+        self.rotation = list( data )
 
     # world scale
     @property
     def scale( self ):
-        return self.extract_scale()
+        """
+        Get current scale in world space
+
+            world transforms are not stored, it is always computed from the latest model matrix
+            A persistent proxy Transform.VectorInterface instance:
+
+            - dats is updated on every access
+            - writes are forwarded to set_scale() - as list
+            - allows writes from scripts and editor gui
+
+        """      
+        self._world_scale_proxy.__setitem__(slice(None), tuple(self.extract_scale()))
+        return self._world_scale_proxy
 
     @scale.setter
     def scale( self, data ):
@@ -224,9 +258,9 @@ class Transform:
             # no parent > local = world
             self.local_scale = list(data)
 
-    def set_scale( self, data ) -> None:
-        """Lambda wrapper"""
-        self.scale = data
+    def set_scale( self, data : list ) -> None:
+        """Lambda/Proxy wrapper"""
+        self.scale = list( data )
 
     def _update_local_from_world(self):
         """Recompute local transform from world transform and parent safely."""
