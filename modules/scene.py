@@ -10,7 +10,7 @@ import uuid as uid
 from modules.console import Console
 from modules.settings import Settings
 from modules.transform import Transform
-from modules.script import ScriptOBJ
+from modules.script import Script
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class SceneManager:
         rotation    : List[float]
         scale       : List[float]
         mass        : float
-        scripts     : List[ScriptOBJ]
+        scripts     : List[Script]
         transform   : Transform 
         instance_data : Dict # additional instance data
         #children    : Dict
@@ -420,7 +420,7 @@ class SceneManager:
                     rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
                     mass        = obj["mass"]               if "mass"       in obj else -1.0,
                     scripts     = [
-                        ScriptOBJ(
+                        Script(
                             context     = self.context,
                             uuid        = uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
                             path        = Path(self.settings.rootdir / x["file"]).resolve(),

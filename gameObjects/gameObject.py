@@ -18,7 +18,7 @@ from modules.material import Materials
 from modules.images import Images
 from modules.models import Models
 from modules.transform import Transform
-from modules.script import ScriptOBJ
+from modules.script import Script
 
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
@@ -41,7 +41,7 @@ class GameObject( Context, Transform ):
                  rotation       : list = [ 0.0, 0.0, 0.0 ], 
                  scale          : list = [ 1.0, 1.0, 1.0 ],
                  mass           : int = -1.0,
-                 scripts        : list[ScriptOBJ] = []
+                 scripts        : list[Script] = []
                  ) -> None:
         """Base class for gameObjects 
 
@@ -79,7 +79,7 @@ class GameObject( Context, Transform ):
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps
         self.models         : Models = context.models
-        self.scripts        : list[ScriptOBJ] = []
+        self.scripts        : list[Script] = []
         self.material       : int = material
         
         self.parent         : GameObject = None
@@ -321,11 +321,11 @@ class GameObject( Context, Transform ):
     def onDisableScripts(self):
         self.dispatch_script_base_method("onDisable")
 
-    def addScript( self, script : ScriptOBJ ):
+    def addScript( self, script : Script ):
         """Attach a script to a gameObject
 
         :param script: Reference to the script
-        :type script: ScriptOBJ
+        :type script: Script
         """
         __func_name__ = inspect.currentframe().f_code.co_name
 
@@ -338,11 +338,11 @@ class GameObject( Context, Transform ):
         # append the script to the GameObject, even if it contains errors
         self.scripts.append( script )
 
-    def removeScript( self, script : ScriptOBJ ):
+    def removeScript( self, script : Script ):
         """Remove script from a gameObject
 
         :param script: Reference to the script
-        :type script: ScriptOBJ
+        :type script: Script
         """
         #self.scripts = [script for script in self.scripts if script["path"] != file]
         for x in self.scripts:

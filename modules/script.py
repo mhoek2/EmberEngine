@@ -14,7 +14,7 @@ import importlib
 import traceback
 import uuid as uid
 
-class ScriptOBJ:
+class Script:
     def __init__( self, context : "EmberEngine", 
                     uuid            : uid.UUID      = None,
                     path            : Path          = None,

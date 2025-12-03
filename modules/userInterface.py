@@ -17,7 +17,7 @@ from modules.models import Models
 from modules.console import Console
 from modules.scene import SceneManager
 from modules.transform import Transform
-from modules.script import ScriptOBJ
+from modules.script import Script
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
@@ -1194,7 +1194,7 @@ class UserInterface( Context ):
                 imgui.tree_pop()
             return
 
-        def _draw_script_exported_attributes( self, script: ScriptOBJ ):
+        def _draw_script_exported_attributes( self, script: Script ):
             if not script.active:
                 return 
 
@@ -1264,7 +1264,7 @@ class UserInterface( Context ):
                     class_attr.set(new)
                     setattr(script.instance, class_attr_name, new)
 
-        def _draw_script( self, script: ScriptOBJ ) -> None:
+        def _draw_script( self, script: Script ) -> None:
             _shift_left = 20.0
             _region = imgui.get_content_region_avail()
             _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
@@ -1410,7 +1410,7 @@ class UserInterface( Context ):
 
             if path:
                 self.context.gui.selectedObject.addScript( 
-                    ScriptOBJ( 
+                    Script( 
                         context = self.context,
                         path    = path,
                         active  = True
