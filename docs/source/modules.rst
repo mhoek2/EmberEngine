@@ -35,7 +35,7 @@ Modules
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: modules.userinterface
+.. automodule:: modules.userInterface
    :members:
    :undoc-members:
    :show-inheritance:
@@ -76,6 +76,16 @@ Modules
    :show-inheritance:
 
 .. automodule:: modules.shader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: modules.script
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: modules.transform
    :members:
    :undoc-members:
    :show-inheritance:

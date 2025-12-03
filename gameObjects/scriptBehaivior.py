@@ -43,7 +43,7 @@ class ScriptBehaivior:
     class Exported:
         """Exported Attribute System - IMPORTANT DESIGN NOTES
         
-        When a script declares:
+        When a script declares::
         
             value : int = export(1)
         
@@ -55,7 +55,7 @@ class ScriptBehaivior:
           - the expected type (int)
           - whether the export is active/valid
         
-        At runtime, the script instance receives a **separate** attribute:
+        At runtime, the script instance receives a **separate** attribute::
         
             self.value
         
