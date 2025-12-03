@@ -103,6 +103,11 @@ class UserInterface( Context ):
             self.selectedObject = obj
 
     class DragAndDropPayload:
+        class Type_(enum.StrEnum):
+            """Explicit source or acceptance types"""
+            hierarchy   = enum.auto()
+            asset       = enum.auto()
+
         def __init__(self, 
                      type_id : str = None, 
                      data_id : int = None,
@@ -111,11 +116,6 @@ class UserInterface( Context ):
             self.type_id    = type_id
             self.data_id    = data_id
             self.data       = data
-
-        class Type_(enum.StrEnum):
-            """Explicit source or acceptance types"""
-            hierarchy   = enum.auto()
-            asset       = enum.auto()
 
         def set_payload( self, type_id : str, data_id : int, data : Any ):
             self.type_id    = type_id

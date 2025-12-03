@@ -15,6 +15,14 @@ class Console:
         traceback   : None
         _n_lines    : int   # imgui info
 
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class Type_(enum.IntEnum):
+        none    = enum.auto()    # (= 0)
+        error   = enum.auto()    # (= 1)
+        warning = enum.auto()    # (= 2)
+        note    = enum.auto()    # (= 3)
+
     def __init__( self, context ) -> None:
         """Console manager
         
@@ -32,14 +40,6 @@ class Console:
             (1.00, 0.78, 0.20),      # Type_.warning
             (0.38, 0.82, 0.32),      # Type_.note
         ]
-
-    # IntFlag is bitwise  (1 << index)
-    # IntEnum is seqential
-    class Type_(enum.IntEnum):
-        none    = enum.auto()    # (= 0)
-        error   = enum.auto()    # (= 1)
-        warning = enum.auto()    # (= 2)
-        note    = enum.auto()    # (= 3)
 
     def get_entry_color( self, entry : Entry ) -> None:
         """Get the color of a given entry"""

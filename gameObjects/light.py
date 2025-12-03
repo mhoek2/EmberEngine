@@ -2,6 +2,12 @@ from gameObjects.gameObject import GameObject
 import enum
 
 class Light( GameObject ):
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class Type_(enum.IntEnum):
+        direct  = enum.auto()    # (= 0)
+        spot    = enum.auto()    # (= 1)
+        area    = enum.auto()    # (= 2)
 
     def __init__(self, context, *args, **kwargs):
         """Base class for Light gameObjects, holds the various light types
@@ -18,13 +24,6 @@ class Light( GameObject ):
         # not implemented
         #self.light_type = kwargs.get('light_type', 1.0)
         self.light_type = self.Type_.direct
-
-    # IntFlag is bitwise  (1 << index)
-    # IntEnum is seqential
-    class Type_(enum.IntEnum):
-        direct  = enum.auto()    # (= 0)
-        spot    = enum.auto()    # (= 1)
-        area    = enum.auto()    # (= 2)
 
     def onStart( self ) -> None:
         """Executes whenever the object is added to scene"""

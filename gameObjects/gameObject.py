@@ -32,6 +32,15 @@ import uuid as uid
 
 class GameObject( Context, Transform ):
     """Base class for gameObjects """
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class DirtyFlag_(enum.IntFlag):
+        none           = 0
+        visible_state  = enum.auto() # (= 1 << 0) = 1
+        active_state   = enum.auto() # (= 1 << 1) = 2
+        transform      = enum.auto() # (= 1 << 2) = 4 
+        all            = visible_state | active_state | transform
+
     def __init__( self, context, 
                  uuid           : uid.UUID = None,
                  name           : str = "GameObject",
@@ -119,15 +128,6 @@ class GameObject( Context, Transform ):
 
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
-
-    # IntFlag is bitwise  (1 << index)
-    # IntEnum is seqential
-    class DirtyFlag_(enum.IntFlag):
-        none           = 0
-        visible_state  = enum.auto() # (= 1 << 0) = 1
-        active_state   = enum.auto() # (= 1 << 1) = 2
-        transform      = enum.auto() # (= 1 << 2) = 4 
-        all            = visible_state | active_state | transform
 
     def _mark_dirty(self, flag : DirtyFlag_ = DirtyFlag_.all ):
         if not self._dirty:
