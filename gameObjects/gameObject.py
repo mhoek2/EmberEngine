@@ -136,6 +136,15 @@ class GameObject( Context, Transform ):
             for c in self.children:
                 c._mark_dirty( flag )
 
+    def get_component( self, component : str = "" ):
+        _ref = None
+
+        match component:
+            case "Transform"    : _ref = self.transform
+            case "GameObject"   : _ref = self
+
+        return _ref
+
     #
     # active state
     #

@@ -2,6 +2,8 @@ import os, sys, enum
 from pathlib import Path
 
 from modules.settings import Settings
+from modules.engineTypes import EngineTypes
+
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
 from typing import TYPE_CHECKING
@@ -215,18 +217,22 @@ class Script:
         num_exports = 0
 
         for name, exported in self.exports.items():
-            # UUID type, resolve the instance attribute to reference the GameObject
+            # engine type (uuid)
             if isinstance( exported.default, uid.UUID ):
-                obj_reference = self.context.findGameObject( exported.default )
+                _t_engine_type : EngineTypes.EngineTypeInfo = EngineTypes.get_engine_type( exported.type )
 
-                # possible chicken and egg issue -- is the GameObject already alive, cus of hierarchy?
-                # type checking goes here (Transform, GameObject etc)
-                if obj_reference:
-                    setattr( self.instance, name, obj_reference.transform )
-                else:
+                obj : "GameObject" = self.context.findGameObject( exported.default )
+
+                if obj is None or _t_engine_type is None:
+                    print( "failed to export.." )
                     setattr( self.instance, name, exported.default  )
+                    continue
 
-            # primitive types just become a COPY
+                # get the component and set reference on instance attribute
+                _ref = obj.get_component( _t_engine_type._name )
+                setattr( self.instance, name, _ref )
+
+            # primitive types are a COPY
             # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
             else:
                 setattr( self.instance, name, exported.default )
@@ -294,16 +300,13 @@ class Script:
             _script_behavior = importlib.import_module("gameObjects.scriptBehaivior")
             ScriptBehaivior = getattr(_script_behavior, "ScriptBehaivior")
 
-            _transform = importlib.import_module("modules.transform")
-            _Transform = getattr(_transform, "Transform")
-            module.__dict__["Transform"] = _Transform
-
-
-            #module.__dict__["__future_annotations__"] = True
-
-            # define attribute export method from ScriptBehaivior
+            # define class attribute export method from ScriptBehaivior
             # making it callable from a dynamic script
             module.__dict__["export"] = ScriptBehaivior.export
+
+            # import exportable engine types
+            for _engine_type_class in EngineTypes.registry().keys():
+                module.__dict__[_engine_type_class.__name__] = _engine_type_class
 
             # auto import modules
             for auto_mod_name, auto_mod_as in self.settings.SCRIPT_AUTO_IMPORT_MODULES.items():

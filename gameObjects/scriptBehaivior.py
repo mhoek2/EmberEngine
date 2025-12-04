@@ -1,3 +1,5 @@
+from modules.engineTypes import EngineTypes
+
 class ScriptBehaivior:
     def __init__( self, context, gameObject ):
         """Base class for dynamic loaded scripts, 
@@ -86,14 +88,6 @@ class ScriptBehaivior:
             self.type       = type(default)     # type from default argument, override with annotated type in __set_name__
             self.active     = True              # non-matching primitive types are set in-active
 
-        def is_primitive_type( self, t ) -> bool:
-            """Wheter a type is of primitive type.
-
-            :param t: Type to check
-            :return: True if t is int, float, bool, or str
-            """
-            return t in (int, float, bool, str)
-
         def default_for_annotation_type( self, t ):
             """
             Return a default value for a given type.
@@ -138,7 +132,7 @@ class ScriptBehaivior:
                     self.default = self.default_for_annotation_type( annotated_type )
 
                     # only mark disabled when it is a primitive type
-                    if self.is_primitive_type( annotated_type ) and self.default is None:
+                    if EngineTypes.is_primitive_type( annotated_type ) and self.default is None:
                         self.active = False
 
                     return
@@ -175,7 +169,7 @@ class ScriptBehaivior:
             else, engine types allow mismatched types.
             eg, 'value.default' contains the UUID, and instance 'self.value' is resolved to that GameObject at runtime
             """
-            if self.is_primitive_type(self.type) and not isinstance(value, self.type):
+            if EngineTypes.is_primitive_type(self.type) and not isinstance(value, self.type):
                 print(f"Type of {type(value)} does not match expected type of {self.type}")
                 return
 

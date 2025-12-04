@@ -32,6 +32,7 @@ import math
 import uuid as uid
 
 from modules.transform import Transform
+from modules.engineTypes import EngineTypes
 
 class CustomEvent( Context ):
     def __init__(self):
@@ -1220,6 +1221,8 @@ class UserInterface( Context ):
                 _value = class_attr.get()
                 _t = class_attr.type
                 _changed = False
+                _t_engine_type : EngineTypes.EngineTypeInfo = EngineTypes.get_engine_type( _t )
+                #_t_engine_type = EngineTypes.is_engine_type( _t )
 
                 # FLOAT
                 if _t is float:
@@ -1237,9 +1240,8 @@ class UserInterface( Context ):
                 elif _t is bool:
                     _changed, new = imgui.checkbox(f"{class_attr_name}:", _value)
 
-                # TRANSFORM
-                elif _t is Transform:
-                    changed_transform   : bool = False
+                # ENGINE TYPE
+                elif _t_engine_type is not None:
                     _uuid               : uid.UUID = None
 
                     obj     : GameObject = self.context.findGameObject(_value)
@@ -1256,30 +1258,39 @@ class UserInterface( Context ):
                         payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
                         if payload is not None:
                             payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
-                            _uuid = payload_obj.uuid
-                            changed_transform = True
+                            new = payload_obj.uuid
+                            _changed = True
 
                         imgui.end_drag_drop_target()
 
                     else:
-                        changed_transform, _uuid = self.context.gui.draw_popup_gameObject(
+                        _changed, new = self.context.gui.draw_popup_gameObject(
                             f"##{class_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
-                    
-                    if changed_transform:
-                        # set the UUID as the experted meta value
-                        class_attr.set( _uuid )
-
-                        # resolve the script instance attribute to reference the GameObject
-                        new_obj = self.context.findGameObject(_uuid)
-                        setattr(script.instance, class_attr_name, new_obj.transform)
 
                 # Unsupported type
                 else:
-                    imgui.text(f"{class_attr_name}: <unsupported {_t}>")
+                    imgui.text(f"{class_attr_name}: <unsupported {_t.__name__}>")
 
                 if _changed:
-                    class_attr.set(new)
-                    setattr(script.instance, class_attr_name, new)
+                    # engine type (uuid)
+                    if _t_engine_type is not None:
+                        new_obj : GameObject = self.context.findGameObject( new )
+
+                        if new_obj is None:
+                            self.console.error( "gameObject is invalid.")
+                            return
+
+                        # set the UUID as the experted meta value
+                        class_attr.set( new )
+                        
+                        # get the component and set reference on instance attribute
+                        _ref = new_obj.get_component( _t_engine_type._name )
+                        setattr( script.instance, class_attr_name, _ref )
+
+                    # primitive types are a COPY
+                    else:
+                        class_attr.set( new )
+                        setattr( script.instance, class_attr_name, new )
 
         def _draw_script( self, script: Script ) -> None:
             _shift_left = 20.0
