@@ -130,13 +130,29 @@ class GameObject( Context, Transform ):
         return uid.uuid4()
 
     def _mark_dirty(self, flag : DirtyFlag_ = DirtyFlag_.all ):
+        """Mark this object and its children as dirty for the given state(s).
+
+        When a GameObject is dirty, engine knows parts need updating.
+        Which parts are determined by which flag(s) are set
+
+        :param flag: The dirty flag(s) to set. Can be a single DirtyFlag_ or a combination.
+                     Defaults to DirtyFlag_.all.
+        :type flag: DirtyFlag_
+        """
         if not self._dirty:
             self._dirty = flag
 
             for c in self.children:
                 c._mark_dirty( flag )
 
-    def get_component( self, component : str = "" ):
+    def get_component( self, component: str = "" ):
+        """Retrieve a reference to a component of this GameObject.
+
+        :param component: Name of the engine type (component) to retrieve.
+        :type component: str
+        :return: The requested component reference, or None if the name is not recognized.
+        :rtype: Any or None
+        """
         _ref = None
 
         match component:

@@ -1221,8 +1221,7 @@ class UserInterface( Context ):
                 _value = class_attr.get()
                 _t = class_attr.type
                 _changed = False
-                _t_engine_type : EngineTypes.EngineTypeInfo = EngineTypes.get_engine_type( _t )
-                #_t_engine_type = EngineTypes.is_engine_type( _t )
+                _t_engine_type : EngineTypes.EngineTypeMeta = EngineTypes.get_engine_type( _t )
 
                 # FLOAT
                 if _t is float:
