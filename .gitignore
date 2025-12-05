@@ -80,6 +80,8 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/source/engine/modules
+docs/source/engine/gameObjects
 
 # PyBuilder
 .pybuilder/
