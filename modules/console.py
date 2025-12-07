@@ -10,7 +10,7 @@ import inspect
 
 class Console:
     class Entry(TypedDict):
-        type_id     : str
+        type_id     : int
         message     : str
         traceback   : None
         _n_lines    : int   # imgui info
@@ -18,7 +18,7 @@ class Console:
     # IntFlag is bitwise  (1 << index)
     # IntEnum is seqential
     class Type_(enum.IntEnum):
-        none    = enum.auto()    # (= 0)
+        none    = 0              # (= 0)
         error   = enum.auto()    # (= 1)
         warning = enum.auto()    # (= 2)
         note    = enum.auto()    # (= 3)
@@ -43,7 +43,7 @@ class Console:
 
     def get_entry_color( self, entry : Entry ) -> None:
         """Get the color of a given entry"""
-        return self._entry_type_color[ (entry["type_id"] - 1) ]
+        return self._entry_type_color[entry["type_id"]]
     
     @overload
     def log( self, message : str ) -> None: ...

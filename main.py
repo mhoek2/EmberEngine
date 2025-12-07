@@ -417,7 +417,6 @@ if __name__ == '__main__':
 
     # start runtime for exported apps
     if app.settings.is_exported:
-        app.settings.game_start = True
-        app.settings.game_running = True 
+        app.settings.game_state = app.settings.GameState_.running 
 
     app.run()

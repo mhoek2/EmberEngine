@@ -73,6 +73,25 @@ class UserInterface( Context ):
         self.status_bar_height      : float = 25.0
 
         self.char_game_state : List = ["play", "stop"]
+
+
+        self.game_state_mode : list[self.settings.GameState_] = [
+            {
+                "name"  : "Start",
+                "icon"  : fa.ICON_FA_CIRCLE_PLAY,
+                "flag"  : self.context.settings.GameState_.running,
+            },
+            {
+                "name"  : "Stop",
+                "icon"  : fa.ICON_FA_CIRCLE_STOP,
+                "flag"  : self.context.settings.GameState_.none,
+            }
+        ]
+        self._game_state_lookup = {
+            op["flag"]  : i
+                for i, op in enumerate(self.game_state_mode)
+        }
+
         self.color_game_state : List[imgui.ImVec4] = [
             imgui.ImVec4(0.2, 0.7, 0.2, 1.0), 
             imgui.ImVec4(0.8, 0.1, 0.15, 1.0)
@@ -534,6 +553,7 @@ class UserInterface( Context ):
                 self.settings.game_start = True
                 self.settings.game_running = True
 
+        imgui.same_line()
         imgui.pop_style_color(1)
 
     def draw_exported_viewport( self ) -> None:
@@ -572,8 +592,8 @@ class UserInterface( Context ):
         )
         imgui.pop_item_width();
 
-        imgui.same_line()
-        self.draw_gamestate()
+        #imgui.same_line()
+        #self.draw_gamestate()
 
         # window resizing
         window_size : imgui.ImVec2 = imgui.get_window_size()
@@ -595,9 +615,21 @@ class UserInterface( Context ):
         _rect_min = imgui.get_item_rect_min()
         self.guizmo.render( _rect_min, image_size )
 
-        # select imguizmo operation
+        # game state
         _rect_min.y += 10.0
         _rect_min.x += 10.0
+        _game_state_changed, _new_game_state, group_width = self.radio_group( "game_state_mode",
+            [ op["icon"] for op in self.game_state_mode ],
+
+            current_index   = self._game_state_lookup.get( self.context.settings.game_state, 0 ),
+            start_pos       = _rect_min
+        )
+
+        if _game_state_changed:
+            self.context.settings.game_state = self.game_state_mode[_new_game_state]["flag"]
+
+        # select imguizmo operation
+        _rect_min.x += (group_width + 10.0)
         _, self.guizmo.operation, group_width = self.radio_group( "guizmo_operation",
             [ op["icon"] for op in self.guizmo.operation_types ],
 

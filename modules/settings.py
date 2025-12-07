@@ -1,12 +1,18 @@
 import os
 from pathlib import Path
+import enum
 
 class Settings:
+    class GameState_(enum.IntEnum):
+        """Runtime states"""
+        none        = 0             # (= 0)
+        running     = enum.auto()   # (= 1)
+
     def __init__( self ) -> None:
         """Global applictaion settings"""
         self.application_name = "Ember Engine 3D"
 
-        self.game_running = False
+        self._game_state = self.GameState_.none
         self.game_start = False
         self.game_stop = False
 
@@ -72,6 +78,28 @@ class Settings:
         }
 
         self.ENGINE_ROTATION = "YXZ"
+
+    @property
+    def game_state( self ):
+        return self._game_state
+
+    @game_state.setter
+    def game_state( self, state ):
+        if self._game_state == state:
+            return
+
+        self._game_state = state
+
+        match self._game_state:
+            case self.GameState_.none: 
+                self.game_stop = True
+
+            case self.GameState_.running:
+                self.game_start = True
+
+    @property
+    def game_running( self ) -> bool:
+         return self._game_state is self.GameState_.running
 
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""
