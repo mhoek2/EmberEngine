@@ -78,12 +78,6 @@ class UserInterface( Context ):
 
         self.status_bar_height      : float = 25.0
 
-        #self.char_game_state : List = ["play", "stop"]
-        #self.color_game_state : List[imgui.ImVec4] = [
-        #    imgui.ImVec4(0.2, 0.7, 0.2, 1.0), 
-        #    imgui.ImVec4(0.8, 0.1, 0.15, 1.0)
-        #]
-
         self.game_state_modes : list[UserInterface.RadioStruct] = [
             {
                 "name"  : "Start",
@@ -543,24 +537,6 @@ class UserInterface( Context ):
                 imgui.end_menu_bar()
             imgui.end()
 
-    #def draw_gamestate( self ):
-    #    width = imgui.get_window_size().x / 2
-    #    imgui.same_line( width - 50 )
-    #
-    #    game_state = int(self.settings.game_running)
-    #    imgui.push_style_color(imgui.Col_.button, self.color_game_state[game_state])
-    #
-    #    if imgui.button( self.char_game_state[game_state] ):
-    #        if self.settings.game_running:
-    #            self.settings.game_stop = True
-    #            self.settings.game_running = False
-    #        else:
-    #            self.settings.game_start = True
-    #            self.settings.game_running = True
-    #
-    #    imgui.same_line()
-    #    imgui.pop_style_color(1)
-
     def draw_exported_viewport( self ) -> None:
         window_size = imgui.get_io().display_size 
 
@@ -596,9 +572,6 @@ class UserInterface( Context ):
             "##renderMode", self.renderer.renderMode, self.renderer.renderModes
         )
         imgui.pop_item_width();
-
-        #imgui.same_line()
-        #self.draw_gamestate()
 
         # window resizing
         window_size : imgui.ImVec2 = imgui.get_window_size()
