@@ -60,6 +60,12 @@ class CustomEvent( Context ):
             self.clear(name)
 
 class UserInterface( Context ):
+
+    class RadioStruct(TypedDict):
+        name    : str
+        icon    : str
+        flag    : int
+
     def __init__( self, context ):
         super().__init__( context )
         
@@ -72,14 +78,23 @@ class UserInterface( Context ):
 
         self.status_bar_height      : float = 25.0
 
-        self.char_game_state : List = ["play", "stop"]
+        #self.char_game_state : List = ["play", "stop"]
+        #self.color_game_state : List[imgui.ImVec4] = [
+        #    imgui.ImVec4(0.2, 0.7, 0.2, 1.0), 
+        #    imgui.ImVec4(0.8, 0.1, 0.15, 1.0)
+        #]
 
-
-        self.game_state_mode : list[self.settings.GameState_] = [
+        self.game_state_modes : list[UserInterface.RadioStruct] = [
             {
                 "name"  : "Start",
                 "icon"  : fa.ICON_FA_CIRCLE_PLAY,
                 "flag"  : self.context.settings.GameState_.running,
+            },
+            {
+                "name"  : "Pause",
+                "icon"  : fa.ICON_FA_CIRCLE_PAUSE,
+                "flag"  : self.context.settings.GameState_.paused,
+                "hide"  : lambda: not self.context.settings.game_runtime
             },
             {
                 "name"  : "Stop",
@@ -89,13 +104,8 @@ class UserInterface( Context ):
         ]
         self._game_state_lookup = {
             op["flag"]  : i
-                for i, op in enumerate(self.game_state_mode)
+                for i, op in enumerate(self.game_state_modes)
         }
-
-        self.color_game_state : List[imgui.ImVec4] = [
-            imgui.ImVec4(0.2, 0.7, 0.2, 1.0), 
-            imgui.ImVec4(0.8, 0.1, 0.15, 1.0)
-        ]
 
         self.color_button_trash : List[imgui.ImVec4] = [
             imgui.ImVec4(1.0, 0.0, 0.0, 0.6),   # default   
@@ -165,12 +175,7 @@ class UserInterface( Context ):
             self.operation      : int   = 0
             self.mode           : int   = 0
 
-            class OperationMode(TypedDict):
-                name    : str
-                icon    : str
-                flag    : int
-
-            self.mode_types : list[OperationMode] = [
+            self.mode_types : list[UserInterface.RadioStruct] = [
                 {
                     "name"  : "Local",
                     "icon"  : fa.ICON_FA_LOCATION_CROSSHAIRS,
@@ -183,7 +188,7 @@ class UserInterface( Context ):
                 }
             ]
 
-            self.operation_types : list[OperationMode] = [
+            self.operation_types : list[UserInterface.RadioStruct] = [
                 {
                     "name"  : "Translate",
                     "icon"  : fa.ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,
@@ -538,23 +543,23 @@ class UserInterface( Context ):
                 imgui.end_menu_bar()
             imgui.end()
 
-    def draw_gamestate( self ):
-        width = imgui.get_window_size().x / 2
-        imgui.same_line( width - 50 )
-
-        game_state = int(self.settings.game_running)
-        imgui.push_style_color(imgui.Col_.button, self.color_game_state[game_state])
-
-        if imgui.button( self.char_game_state[game_state] ):
-            if self.settings.game_running:
-                self.settings.game_stop = True
-                self.settings.game_running = False
-            else:
-                self.settings.game_start = True
-                self.settings.game_running = True
-
-        imgui.same_line()
-        imgui.pop_style_color(1)
+    #def draw_gamestate( self ):
+    #    width = imgui.get_window_size().x / 2
+    #    imgui.same_line( width - 50 )
+    #
+    #    game_state = int(self.settings.game_running)
+    #    imgui.push_style_color(imgui.Col_.button, self.color_game_state[game_state])
+    #
+    #    if imgui.button( self.char_game_state[game_state] ):
+    #        if self.settings.game_running:
+    #            self.settings.game_stop = True
+    #            self.settings.game_running = False
+    #        else:
+    #            self.settings.game_start = True
+    #            self.settings.game_running = True
+    #
+    #    imgui.same_line()
+    #    imgui.pop_style_color(1)
 
     def draw_exported_viewport( self ) -> None:
         window_size = imgui.get_io().display_size 
@@ -619,20 +624,18 @@ class UserInterface( Context ):
         _rect_min.y += 10.0
         _rect_min.x += 10.0
         _game_state_changed, _new_game_state, group_width = self.radio_group( "game_state_mode",
-            [ op["icon"] for op in self.game_state_mode ],
-
+            items           = self.game_state_modes,
             current_index   = self._game_state_lookup.get( self.context.settings.game_state, 0 ),
             start_pos       = _rect_min
         )
 
         if _game_state_changed:
-            self.context.settings.game_state = self.game_state_mode[_new_game_state]["flag"]
+            self.context.settings.game_state = self.game_state_modes[_new_game_state]["flag"]
 
         # select imguizmo operation
         _rect_min.x += (group_width + 10.0)
         _, self.guizmo.operation, group_width = self.radio_group( "guizmo_operation",
-            [ op["icon"] for op in self.guizmo.operation_types ],
-
+            items           = self.guizmo.operation_types,
             current_index   = self.guizmo.operation,
             start_pos       = _rect_min
         )
@@ -640,8 +643,7 @@ class UserInterface( Context ):
         # select imguizmo mode
         _rect_min.x += (group_width + 10.0)
         _, self.guizmo.mode, group_width = self.radio_group( "guizmo_mode",
-            [ op["icon"] for op in self.guizmo.mode_types ],
-
+            items           = self.guizmo.mode_types,
             current_index   = self.guizmo.mode,
             start_pos       = _rect_min
         )
@@ -708,7 +710,7 @@ class UserInterface( Context ):
 
 
                 # Non-runtime editor GUI
-                if not self.settings.game_running:
+                if not self.settings.game_runtime:
                     _region = imgui.get_content_region_avail()
 
                     # visibility
@@ -868,7 +870,7 @@ class UserInterface( Context ):
     # helper
     def radio_group( self, 
                      label           : str, 
-                     items           : list[str], 
+                     items           : list[RadioStruct],
                      current_index   : int, 
                      start_pos       : imgui.ImVec2 = None 
             ):
@@ -893,10 +895,15 @@ class UserInterface( Context ):
             # compute item width based on text
             item_widths = []
             total_width = 0
-            for content in items:
-                text_width = imgui.calc_text_size( content ).x
+            for item in items:
+                text_width = imgui.calc_text_size( item["icon"] ).x
                 width = padding_x * 2 + text_width
                 item_widths.append( width )
+
+                hide_func = item.get("hide", lambda: False)
+                if hide_func():
+                    continue
+
                 total_width += width + item_spacing
             total_width -= item_spacing  # last one has no trailing space
 
@@ -919,7 +926,11 @@ class UserInterface( Context ):
 
             x = start_pos.x
             new_index = current_index
-            for idx, content in enumerate( items ):
+            for idx, item in enumerate( items ):
+                hide_func = item.get("hide", lambda: False)
+                if hide_func():
+                    continue
+
                 width = item_widths[idx]
                 item_min = imgui.ImVec2( x, start_pos.y )
                 item_max = imgui.ImVec2( x + width, start_pos.y + item_height )
@@ -939,7 +950,7 @@ class UserInterface( Context ):
 
                 color = imgui.ImVec4( 1.0, 1.0, 1.0, 1.0 )
                 text_pos = imgui.ImVec2( x + padding_x, start_pos.y + padding_y )
-                draw_list.add_text( text_pos, imgui.color_convert_float4_to_u32( color ), content )
+                draw_list.add_text( text_pos, imgui.color_convert_float4_to_u32( color ), item["icon"] )
 
                 x += width + item_spacing
 
@@ -1335,7 +1346,7 @@ class UserInterface( Context ):
                 return
 
             # actions
-            if not self.settings.game_running: 
+            if not self.settings.game_runtime: 
                 imgui.same_line()
 
                 if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
@@ -1407,7 +1418,7 @@ class UserInterface( Context ):
                 imgui.separator()
 
         def _add_component( self ):
-            if self.settings.game_running: 
+            if self.settings.game_runtime: 
                 return
 
             path = False

@@ -424,7 +424,7 @@ class Renderer:
             pygame.mouse.set_visible( True )
 
     def editor_viewport_event_handler( self, event ):
-        if self.settings.game_running:
+        if self.settings.game_runtime:
             return
 
         if not self.ImGuiInput:

@@ -84,7 +84,7 @@ class Camera:
         :return: The viewmatrix from the current active camera
         :rtype: matrix44 or Matrix44
         """
-        if self.settings.game_running:
+        if self.settings.game_runtime:
             return self.get_view_matrix_running()
  
         # return editor camera
@@ -158,7 +158,7 @@ class Camera:
 
     def new_frame( self ):
         """Called on beginning of a frame, trigger keyboard and mouse processing when in editor mode"""
-        if not self.context.renderer.ImGuiInput and not self.settings.game_running:
+        if not self.context.renderer.ImGuiInput and not self.settings.game_runtime:
             self.context.camera.process_keyboard()
             self.context.camera.process_mouse_movement()
 
