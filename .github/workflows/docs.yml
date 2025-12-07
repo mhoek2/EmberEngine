@@ -25,9 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install sphinx 
           pip install sphinx-design 
+          pip install myst-parser 
+          pip install pydata-sphinx-theme
           pip install pyrr
           pip install numpy
-          pip install pydata-sphinx-theme
 
       - name: Build the docs
         run: |

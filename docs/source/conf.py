@@ -54,6 +54,10 @@ html_static_path = ['_static']
 html_logo = "_static/logo.ico"
 html_favicon = "_static/logo.png"
 
+html_css_files = [
+    'main.css',
+]
+
 myst_enable_extensions = [
     "colon_fence",      # allows ::: directives
     #"linkify",          # auto-detect URLs

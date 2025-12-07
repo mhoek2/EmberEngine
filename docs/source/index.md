@@ -1,23 +1,20 @@
+
+
 ::::::{div} landing-title
-:style: "padding: 0.1rem 0.5rem 0.6rem 0; background-image: linear-gradient(270deg, #e2b48000 0%, #d1705412 74%); clip-path: polygon(0px 0px, 100% 0%, 100% 100%, 0% calc(100% - 1.5rem)); -webkit-clip-path: polygon(0px 0px, 100% 0%, 100% 100%, 0% calc(100% - 1.5rem));"
+:style: "margin-bottom:100px;padding: 0.1rem 0.5rem 0.6rem 0; background-image: linear-gradient(270deg, #e2b48000 0%, #d1705412 74%); clip-path: polygon(0px 0px, 100% 0%, 100% 100%, 0% calc(100% - 1.5rem)); -webkit-clip-path: polygon(0px 0px, 100% 0%, 100% 100%, 0% calc(100% - 1.5rem));"
 
 ::::{grid}
 :reverse:
 :gutter: 2 3 3 3
 :margin: 4 4 1 2
 
-:::{grid-item}
-:columns: 12 4 4 4
-
-
-:::
 
 :::{grid-item}
-:columns: 12 8 8 8
+:columns: 12 12 12 12
 :child-align: justify
-:class: sd-text-white sd-fs-3
+:class: sd-text-white sd-fs-3 sd-text-center
 
-Not a Spark, but a Start
+Where Ideas Find Their Ember.
 
 ::::{grid}
 :reverse:
@@ -57,6 +54,7 @@ Engine Docs
 :color: warning
 :class: sd-px-4 sd-fs-5
 :align: left
+:target: blank
 
 Get Latest Release
 ```
@@ -69,54 +67,42 @@ Get Latest Release
 ::::::
 
 
-::::{grid} 2
-:gutter: 3 3 4 5
-:margin: 5 5 0 0
-:padding: 5 5 0 0
+### Features
+::::{grid} 1
+:gutter: 0
 
 :::{grid-item}
-```{button-link} engine/index.html
-:color: info
-:align: right
+:::{gallery-grid}
+:grid-columns: 1 2 2 3
 
-See Engine Docs
-```
+- header: "{fas}`binary;pst-color-warning` Export to Binary"
+  content: "Export a runtime scene to a Windows executable"
+
+- header: "{fas}`code;pst-color-warning` Script Behaivior"
+  content: "Write and attach scripts to objects. Including attribute exporting to the Inspector."
+
+- header: "{fas}`sitemap;pst-color-warning` Hierarchy"
+  content: "Organize objects by dragging them into parent-child relationships and control how they move together."
+
+- header: "{fas}`group-arrows-rotate;pst-color-warning` Viewport Gizmos"
+  content: "[ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo): Allowing for easy object transform manipulations."
+
+- header: "{fas}`person-falling-burst;pst-color-warning` PyBullet Integration"
+  content: "[PyBullet](https://github.com/bulletphysics/bullet3): Real-time collision detection and multi-physics simulation for VR, games, visual effects, robotics, machine learning etc."
+
+- header: "{fas}`cube;pst-color-warning` OpenGL and PyGame"
+  content: "PyGame controls window context and event handlers, Native OpenGL is used for rendering."
+
+- header: "{fas}`tv;pst-color-warning` Working With Scenes"
+  content: "Scenes are stored as serialized JSON, making it easy to create, save, and switch between them."
+
+- header: "{fas}`keyboard;pst-color-warning` Integrated IDE"
+  content: "[ImColorTextEdit](https://github.com/CedricGuillemet/ImGuizmo): Scripts can be edited directly in the Engine."
+
 :::
-:::{grid-item}
-
-```{button-link} https://github.com/mhoek2/EmberEngine/releases/tag/latest
-:color: warning
-:align: left
- 
-Get Latest Release
-```
 :::
 ::::
 
-
-### Features
-```{gallery-grid}
-:grid-columns: 1 2 2 3
-
-- header: "{fas}`bolt;pst-color-primary` Export to Binary"
-  content: "Export a runtime scene to a Windows executable"
-
-- header: "{fas}`circle-half-stroke;pst-color-primary` Script Behaivior"
-  content: "Write and attach scripts to game objects. Including attribute exporting to the Inspector"
-
-- header: "{fab}`bootstrap;pst-color-primary` Hierarchy"
-  content: "Organize game objects by dragging them into parent-child relationships and control how they move together"
-
-- header: "{fas}`lightbulb;pst-color-primary` Viewport Gizmos"
-  content: "[ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo) integrated in the viewport"
-
-- header: "{fas}`palette;pst-color-primary` PyBullet Integration"
-  content: "[PyBullet](https://github.com/bulletphysics/bullet3): Real-time collision detection and multi-physics simulation for VR, games, visual effects, robotics, machine learning etc."
-
-- header: "{fab}`python;pst-color-primary` OpenGL and PyGame"
-  content: "PyGame controls window context and event handlers, Native OpenGL is used for rendering"
-
-```
 
 #### Educational
 ::::{grid} 1
@@ -128,54 +114,92 @@ Get Latest Release
 :class: warning
 
 #### Design Philosophy
-**Modern AAA 3D engines are like sparks** --Powerful, instant and designed to ignite a fire of ideas. \
+**Modern AAA 3D engines are like sparks** --Powerful, instant and designed to ignite a fire of ideas.  
 They're packed with optimized tools that turn a concept into an inferno of graphics and performance
 
-**Ember Engine is diffrent**. Its not the spark at the start of the fire, but the ember at the end of one.\
+**Ember Engine is diffrent**. Its not the spark at the start of the fire, but the ember at the end of one.  
 It burns slower, softer and with less intensity.
 
-3D Engines are rarely written in Python. --And for good reason. Python is interpreted, resulting in runtime overhead and [efficiency](https://en.wikipedia.org/wiki/Interpreter_(computing)#Efficiency) loss \
+3D Engines are rarely written in Python. --And for good reason. Python is interpreted, resulting in runtime overhead and [efficiency](https://en.wikipedia.org/wiki/Interpreter_(computing)#Efficiency) loss  
 It simply cannot match the raw speed offered by AAA Engines.
 
-**But an ember has its own purpose.** It's warm, safe and approachable. Yet holds the power to grow and rekindle itself.
+**But an ember has its own purpose.** It's warm, safe and approachable.  
+Yet holds the power to grow and rekindle itself.
 
-#### Ember Engine
-The Gui, Physics, Renderer back-end, and Scripting are implemented in Python. \
+#### Python at its Core
+The Gui, Physics, Renderer back-end, and Scripting are implemented in Python.  
 Though ```C++ -> Python bindings``` are used. --The core logic that connects everything is pure Python.
 
-"How controversial it may be. it provides a nice way to explore engine design and game development concepts hands-on.
-
-And I value that as a good exercise!"
+"How controversial it may be. it provides a nice way to explore engine design and development concepts hands-on.  
+I value that as a good exercise!"
 ```
 :::
 ::::
 
+#### Showcase
+:::::{div} preview-showcase
+
+::::{grid} 1
+:gutter: 3
+
+:::{grid-item}
+![](_static/showcase/ImGuizmo.gif)
+:::
+
+:::{grid-item}
+![](_static/showcase/inspector_script.jpg)
+:::
+
+:::{grid-item}
+![](_static/showcase/PyBullet.gif)
+:::
+
+:::{grid-item}
+![](_static/showcase/hierarchy.jpg)
+
+:::
+::::
+:::::
+
+
 
 ### Development
-1. Download this repository
-2. Open a terminal of your choice
-3. Browse to the root folder of the downloaded project files
-4. install dependencies using: ``pip install -r requirements.txt``
-5. Download binary dependency [Assimp](https://github.com/assimp/assimp/releases)
+1. Install ```python``` from [the website](https://www.python.org/downloads/) ```*verified version: 12.0.7```
+2. Create a directory, then [download](https://github.com/mhoek2/EmberEngine/archive/refs/heads/main.zip) and extract the codebase there.
+3. Open a terminal in the fresh copy of the codebase and install the requirements
+	```bash
+	pip install -r requirements.txt
+	```
+4. Download binary dependency [Assimp](https://github.com/assimp/assimp/releases)
 	1. Move ``Release\assimp-vc143-mt.dll`` from the ``zip`` to one of the PATH folders listed in your system variables
-6. Open project folder in your preferred IDE and set main.py as startup item
+5. Open project folder in your preferred IDE and set main.py as startup item
 
-### Build local docs
-1. Open a terminal of your choice
-2. Install ``python -m pip install sphinx pydata-sphinx-theme``
-3. Execute ``python -m sphinx -b html docs/source docs/build`` from project root
+#### Build local docs
+1. Open a terminal of your choice in the root of the codebase
+2. Install sphinx and theme requirements
+	```bash
+	pip install sphinx sphinx-design myst-parser pydata-sphinx-theme
+	```
+3. Build the docs 
+	```bash
+	python -m sphinx -b html docs/source docs/build
+	```
+4. Open docs/build/index.html in the browser
 
-### Engine Documentation
+#### Documentation
+```{button-link} engine/index.html
+:color: info
+:align: left
+
+See Engine Docs
+```
 
 ```{toctree}
+:hidden:
 :maxdepth: 2
 
 engine/index
 engine/modules
 engine/gameObjects
 
-```
-
-```sources:
-https://sphinx-design.readthedocs.io/en/pydata-theme/
 ```
