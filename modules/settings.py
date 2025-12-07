@@ -13,6 +13,15 @@ class Settings:
         self.msaa = 8
         self.msaaEnabled = True if self.msaa > 0 else False
 
+        # extensions
+        self.SCENE_EXTENSION    : str = ".scene"
+        self.SCRIPT_EXTENSION   : str = ".py"
+        self.MODEL_EXTENSION    : list[str] = [
+            ".fbx",
+            ".obj",
+            ".glb",
+        ]
+
         self.rootdir = Path.cwd()
 
         self.engineAssets   = f"{self.rootdir}\\engineAssets\\"
@@ -23,7 +32,7 @@ class Settings:
         self.engine_texture_path    = f"{self.engineAssets}\\textures\\"
         self.engine_gui_path        = f"{self.engineAssets}\\gui\\"
 
-        self.default_scene          = Path(f"{self.engineAssets}\\scenes\engine_default.scene")
+        self.default_scene          = Path(f"{self.engineAssets}\\scenes\engine_default{self.SCENE_EXTENSION}")
         self.default_environment    = f"{self.engineAssets}\\cubemaps\\day"
 
         self.default_light_color     = ( 1.0, 1.0, 1.0, 1.0 )

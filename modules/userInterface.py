@@ -334,7 +334,7 @@ class UserInterface( Context ):
  
             This will replace all tabs '\t' with 4 spaces, not just the freshly added tab
             """
-            if self._current_file.suffix == ".py":
+            if self._current_file.suffix == self.settings.SCRIPT_EXTENSION:
                 _text = self.ed.get_text()
                 self.ed.set_text( _text.replace("\t", "    ") )
 
@@ -1500,7 +1500,8 @@ class UserInterface( Context ):
             self._icon_dim = imgui.ImVec2(75.0, 75.0)  
 
         def open_file( self, path ) -> None:
-            if path.suffix == ".fbx" or path.suffix == ".obj":
+            # model
+            if path.suffix in self.settings.MODEL_EXTENSION:
                 game_object_name = path.name.replace(path.suffix, "")
                 self.context.addGameObject( 
                         Mesh( self.context,
@@ -1510,11 +1511,14 @@ class UserInterface( Context ):
                         scale       = [ 1, 1, 1 ],
                         rotation    = [ 0.0, 0.0, 0.0 ]
                 ) )
-            if path.suffix == ".scene":
+
+            # scene
+            if path.suffix == self.settings.SCENE_EXTENSION:
                 self.scene.clearEditorScene()
                 self.scene.loadScene( path.stem )
 
-            if path.suffix == ".py":
+            # script
+            if path.suffix == self.settings.SCRIPT_EXTENSION:
                 self.context.gui.text_editor.open_file( path )
 
         def get_rootpath( self ) -> Path:

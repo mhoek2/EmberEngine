@@ -175,7 +175,7 @@ class SceneManager:
                 scene : SceneManager.Scene = json.load(buffer)
                 scene["name"] = name
 
-            _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
+            _scene_filename = f"{self.settings.assets}\\{_scene_uid}{self.settings.SCENE_EXTENSION}"
             with open(_scene_filename, 'w') as buffer:
                 json.dump(scene, buffer, indent=4)
 
@@ -320,7 +320,7 @@ class SceneManager:
             self.console.warn( "Cannot overwrite engine's default empty scene" )
             return
         
-        _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
+        _scene_filename = f"{self.settings.assets}\\{_scene_uid}{self.settings.SCENE_EXTENSION}"
         _scene = self.getCurrentScene()
 
         scene : SceneManager.Scene = SceneManager.Scene()
@@ -367,7 +367,7 @@ class SceneManager:
 
         if any(path.glob("*")):
             for file in path.glob("*"):
-                if file.is_file() and file.suffix == ".scene":
+                if file.is_file() and file.suffix == self.settings.SCENE_EXTENSION:
                     self.getScene( file )
 
     def clearEditorScene( self ):

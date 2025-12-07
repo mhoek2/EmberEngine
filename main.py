@@ -112,7 +112,7 @@ class EmberEngine:
         :return: List of Path's containing each .py script
         :rtype: List[Path]
         """
-        return [path for path in folder.rglob("*.py")]
+        return [path for path in folder.rglob( f"*{self.settings.SCRIPT_EXTENSION}" )]
 
     def loadDefaultEnvironment( self ) -> None:
         """Load the default environment cubemap"""

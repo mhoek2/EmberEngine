@@ -354,7 +354,7 @@ class GameObject( Context, Transform ):
         """
         __func_name__ = inspect.currentframe().f_code.co_name
 
-        if script.path.suffix != ".py":
+        if script.path.suffix != self.settings.SCRIPT_EXTENSION:
             self.console.error( f"Extension: {script.path.suffix} is invalid!" )
             return
 
