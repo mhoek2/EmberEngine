@@ -1464,6 +1464,36 @@ class UserInterface( Context ):
 
             imgui.tree_pop()
 
+        def _camera( self ) -> None:
+            if not self.context.gui.selectedObject:
+                return
+            
+            gameObject = self.context.gui.selectedObject
+
+            if not isinstance( gameObject, Camera ):
+                return
+
+            if imgui.tree_node_ex( f"{fa.ICON_FA_CAMERA} Camera properties", imgui.TreeNodeFlags_.default_open ):
+                changed, value = imgui.drag_float(
+                    f"Fov", gameObject.fov, 1
+                )
+                if changed:
+                    gameObject.fov = value
+
+                changed, value = imgui.drag_float(
+                    f"Near", gameObject.near, 1
+                )
+                if changed:
+                    gameObject.near = value
+
+                changed, value = imgui.drag_float(
+                    f"Far", gameObject.far, 1
+                )
+                if changed:
+                    gameObject.far = value
+
+                imgui.tree_pop()
+
         def render( self ) -> None:
             imgui.begin( "Inspector" )
   
@@ -1489,8 +1519,11 @@ class UserInterface( Context ):
                 self._transform()
                 imgui.separator()
 
+                self._camera()
+                imgui.separator()
+
                 # physics  
-                if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING} Physics", imgui.TreeNodeFlags_.default_open ):
+                if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics", imgui.TreeNodeFlags_.default_open ):
                     changed, gameObject.mass = imgui.drag_float(
                             f"Mass", gameObject.mass, 1
                     )
@@ -1501,6 +1534,7 @@ class UserInterface( Context ):
                 imgui.separator()
 
                 self._scripts()
+                imgui.separator()
 
                 self._add_component()
 

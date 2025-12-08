@@ -114,7 +114,9 @@ class SceneManager:
             return False
 
     def setCamera( self, uuid : uid.UUID, scene_id = -1):
-        """Set the current camera based on gameObject uid
+        """Set the current runtime camera based on gameObject uid
+
+            During game runtime, update the projection matrix a well.
 
         :param uid: The uid of a Camera gameObject
         :type uid: int
@@ -126,16 +128,18 @@ class SceneManager:
         _scene = scene_id if scene_id >= 0 else self.current_scene
         _editor_camera = None
 
-        # mark camera as default/start scene camera
-        for i, obj in enumerate(self.context.gameObjects):
-            if isinstance(obj, Camera) and obj.uuid == uuid:
-                obj.is_default_camera = True
-                self.scenes[_scene]["camera"] = obj
+        obj = self.context.findGameObject( uuid )
 
-                # update the camera
-                if self.context.renderer.game_runtime:
-                    _editor_camera = obj
+        # set camera as default runtime camera
+        if obj and isinstance(obj, Camera):
+            obj.is_default_camera = True
+            self.scenes[_scene]["camera"] = obj
 
+            # switch camera during runtime
+            if self.context.renderer.game_runtime:
+                _editor_camera = obj
+
+        # invoke a camera and projection update using the setter
         self.context.camera.camera = _editor_camera
 
     def getCamera( self ):
@@ -301,6 +305,9 @@ class SceneManager:
 
             if _scene_camera and isinstance( obj, Camera ):
                 buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
+                buffer["instance_data"]["fov"]  = obj.fov
+                buffer["instance_data"]["near"] = obj.near
+                buffer["instance_data"]["far"]  = obj.far
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -450,12 +457,20 @@ class SceneManager:
 
             # todo:
             # implement scene settings, so a camera or sun can be assigned
+            _instance_data = obj.get("instance_data", {})
+
             if isinstance( gameObject, Light ):
                 self.context.sun = index
 
             if isinstance( gameObject, Camera ):
-                if obj.get("instance_data", {}).get("is_default_camera", False):
-                    self.setCamera( gameObject.uuid, scene_id = scene_id )
+                if _instance_data:
+                    if "fov"    in _instance_data: gameObject._fov   = _instance_data.get("fov")
+                    if "near"   in _instance_data: gameObject._near  = _instance_data.get("near")
+                    if "far"    in _instance_data: gameObject._far   = _instance_data.get("far")
+
+                    # set this is current runtime camera
+                    if _instance_data.get("is_default_camera", False):
+                        self.setCamera( gameObject.uuid, scene_id = scene_id )
 
             if "active" in obj:
                 gameObject.active = obj["active"]

@@ -37,7 +37,10 @@
             "mass": -1.0,
             "scripts": [],
             "instance_data": {
-                "is_default_camera": true
+                "is_default_camera": true,
+                "fov": 45.0,
+                "near": 0.1,
+                "far": 1000.0
             },
             "children": []
         },
@@ -74,7 +77,10 @@
                 }
             ],
             "instance_data": {
-                "is_default_camera": false
+                "is_default_camera": false,
+                "fov": 90.0,
+                "near": 0.1,
+                "far": 1000.0
             },
             "children": []
         },
@@ -136,7 +142,11 @@
                     "file": "assets\\script.py",
                     "active": true,
                     "exports": {
-                        "value": 1
+                        "value": 1.0,
+                        "boost": 30.0,
+                        "manipulate": {
+                            "uuid": "259294da29e84da38f41af3c3e7f9052"
+                        }
                     }
                 }
             ],
@@ -396,6 +406,34 @@
                     "children": []
                 }
             ]
+        },
+        {
+            "uuid": "259294da29e84da38f41af3c3e7f9052",
+            "name": "manipulate",
+            "active": true,
+            "instance": "Mesh",
+            "visible": true,
+            "model_file": "engineAssets\\models\\cube\\model.obj",
+            "material": 0,
+            "translate": [
+                -2.9238739013671875,
+                2.3509864807128906,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                -0.0,
+                -0.0
+            ],
+            "scale": [
+                0.21000003814697266,
+                0.21000003814697266,
+                0.21000003814697266
+            ],
+            "mass": 1.0,
+            "scripts": [],
+            "instance_data": {},
+            "children": []
         }
     ]
 }

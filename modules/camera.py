@@ -60,15 +60,25 @@ class Camera:
 
     @camera.setter
     def camera( self, camera : "GameObject_Camera" ):
+        """Set the current camera, and updates the projection matrix
+        
+        :param camera: The new camera gameObject, None for editor camera
+        :type camera: GameObject, Camera
+        """
         from gameObjects.camera import Camera as GameObject_Camera
 
         self._camera = camera
 
-        if isinstance( camera, GameObject_Camera ):
-            self._fov = self._camera.fov
+        if isinstance(camera, GameObject_Camera):
+            self._fov  = self._camera.fov
+            self._near = self._camera.near
+            self._far  = self._camera.far
 
+        # editor default. (camera=None)
         else:
-            self._fov = self.default_fov
+            self._fov  = self.default_fov
+            self._near = self.default_near
+            self._far  = self.default_far
 
         self.context.renderer.setup_projection_matrix()
 

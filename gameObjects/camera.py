@@ -15,7 +15,49 @@ class Camera( GameObject ):
 
         self.is_default_camera = False
 
-        self.fov = 90.0
+        self._fov    : float = 90.0
+        self._near   : float = 0.1
+        self._far    : float = 1000.0
+
+    def update_renderer_camera( self ):
+        """If this camera is the current active one, update the projection matrix"""
+        if self.context.camera.camera != self:
+            return
+
+        self.context.camera.camera = self
+
+    @property
+    def fov( self ) -> float:
+        """Get the 'field-of-view' parameter"""
+        return self._fov
+
+    @fov.setter
+    def fov( self, data ) -> None:
+        """Set the 'field-of-view' parameter and update projection matrix if camera is current"""
+        self._fov = data
+        self.update_renderer_camera()
+
+    @property
+    def near( self ) -> float:
+        """Get the 'near' parameter"""
+        return self._near
+
+    @near.setter
+    def near( self, data ) -> None:
+        """Set the 'near' parameter and update projection matrix if camera is current"""
+        self._near = data
+        self.update_renderer_camera()
+
+    @property
+    def far( self ) -> float:
+        """Get the 'far' parameter"""
+        return self._far
+
+    @far.setter
+    def far( self, data ) -> None:
+        """Set the 'far' parameter and update projection matrix if camera is current"""
+        self._far = data
+        self.update_renderer_camera()
 
     def onStart( self ) -> None:
         """Executes whenever the object is added to scene"""

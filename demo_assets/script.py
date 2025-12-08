@@ -1,32 +1,32 @@
 class MyScript:
-    value       : int = export(1)
-      
+    value         : float     = export(1.0)
+    boost         : float     = export(30.0)
+    manipulate    : Transform = export()
+    
     """Default script template"""
     def onStart( self ) -> None:
         self.camera = self.scene.getCamera()
-        #print('onStart()')
         pass
 
     def onEnable( self ):
-        #print('onEnable()')
         pass
 
     def onDisable( self ):
-        #print('onDisable()')
         pass
         
     def onUpdate( self ) -> None:
         # print exported value for debugging purposes
         #print(self.value)
- 
+
         keypress = self.key.get_pressed()
         velocity = self.value
 
         if keypress[pygame.K_u]:
-            self.gameObject.setActive(False)
-    
+            #self.gameObject.setActive(False)
+            self.manipulate.position[1] += 0.5
+            
         if keypress[pygame.K_LCTRL] or keypress[pygame.K_RCTRL]:
-            velocity *= 10
+            velocity *= self.boost
 
         move = self.renderer.deltaTime * velocity
 
