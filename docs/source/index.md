@@ -33,7 +33,7 @@ Where Ideas Find Their Ember.
 :columns: 6
 :child-align: center
 
-```{button-link} engine/index.html
+```{button-link} engine/engine.html
 :ref-type: doc
 :outline:
 :color: white
@@ -187,7 +187,8 @@ I value that as a good exercise!"
 4. Open docs/build/index.html in the browser
 
 #### Documentation
-```{button-link} engine/index.html
+```{button-link} engine/engine.html
+:hidden:
 :color: info
 :align: left
 
@@ -195,11 +196,10 @@ See Engine Docs
 ```
 
 ```{toctree}
-:hidden:
 :maxdepth: 2
 
-engine/index
-engine/modules
-engine/gameObjects
+engine/engine.rst
+engine/modules.rst
+engine/gameObjects.rst
 
 ```

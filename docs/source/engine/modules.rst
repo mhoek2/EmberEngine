@@ -2,7 +2,7 @@ Modules
 =======
 
 .. autosummary::
-   :toctree: modules/
+   :toctree: modules
    :template: module.rst
    :recursive:
 

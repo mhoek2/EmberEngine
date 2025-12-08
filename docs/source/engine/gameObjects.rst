@@ -2,7 +2,7 @@ gameObjects
 ===========
 
 .. autosummary::
-   :toctree: gameObjects/
+   :toctree: gameObjects
    :template: module.rst
    :recursive:
 
