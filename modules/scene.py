@@ -339,8 +339,8 @@ class SceneManager:
 
         scene : SceneManager.Scene = SceneManager.Scene()
         scene["name"]           = _scene["name"]
-        scene["light_color"]    = _scene["light_color"]
-        scene["ambient_color"]  = _scene["ambient_color"]
+        scene["light_color"]    = list(_scene["light_color"])
+        scene["ambient_color"]  = list(_scene["ambient_color"])
 
         _gameObjects : List[SceneManager._GameObject] = []
 

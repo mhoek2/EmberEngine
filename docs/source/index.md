@@ -164,7 +164,7 @@ I value that as a good exercise!"
 
 
 ### Development
-1. Install ```python``` from [the website](https://www.python.org/downloads/) ```*verified version: 12.0.7```
+1. Install ```python``` from [the website](https://www.python.org/downloads/) ```*verified version: 3.12.7```
 2. Create a directory, then [download](https://github.com/mhoek2/EmberEngine/archive/refs/heads/main.zip) and extract the codebase there.
 3. Open a terminal in the fresh copy of the codebase and install the requirements
 	```bash

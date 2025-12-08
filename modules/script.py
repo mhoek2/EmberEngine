@@ -219,7 +219,7 @@ class Script:
         for name, exported in self.exports.items():
             # engine type (uuid)
             if isinstance( exported.default, uid.UUID ):
-                _t_engine_type : EngineTypes.EngineTypeMeta = EngineTypes.get_engine_type( exported.type )
+                _t_engine_type : EngineTypes.Meta = EngineTypes.get_engine_type( exported.type )
 
                 obj : "GameObject" = self.context.findGameObject( exported.default )
 

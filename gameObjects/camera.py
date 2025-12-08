@@ -15,7 +15,7 @@ class Camera( GameObject ):
 
         self.is_default_camera = False
 
-        self._fov    : float = 90.0
+        self._fov    : float = 45.0
         self._near   : float = 0.1
         self._far    : float = 1000.0
 

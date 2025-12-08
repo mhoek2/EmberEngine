@@ -1,14 +1,14 @@
 {
     "name": "demo",
     "light_color": [
+        0.9818339347839355,
         1.0,
-        1.0,
-        1.0
+        0.6911764740943909
     ],
     "ambient_color": [
-        0.30000001192092896,
-        0.30000001192092896,
-        0.30000001192092896
+        0.517709493637085,
+        0.6601179242134094,
+        0.7598038911819458
     ],
     "gameObjects": [
         {
@@ -432,6 +432,45 @@
             ],
             "mass": 1.0,
             "scripts": [],
+            "instance_data": {},
+            "children": []
+        },
+        {
+            "uuid": "f4a5e507e0f34e8485a44bc15e71ba89",
+            "name": "light",
+            "active": true,
+            "instance": "Light",
+            "visible": true,
+            "model_file": "engineAssets\\models\\sphere\\model.obj",
+            "material": -1,
+            "translate": [
+                1,
+                -1,
+                1
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                80.0
+            ],
+            "scale": [
+                0.5,
+                0.5,
+                0.5
+            ],
+            "mass": -1.0,
+            "scripts": [
+                {
+                    "uuid": "34c8a845c77948b6a5f48eb8aafec957",
+                    "file": "assets\\sun.py",
+                    "active": true,
+                    "exports": {
+                        "test": null,
+                        "test7": "",
+                        "test3": 10.25
+                    }
+                }
+            ],
             "instance_data": {},
             "children": []
         }

@@ -1150,13 +1150,13 @@ class UserInterface( Context ):
 
         _scene = self.scene.getCurrentScene()
 
-        #changed, _scene["light_color"] = imgui.color_edit3(
-        #    "Light color", _scene["light_color"]
-        #)
-        #
-        #changed, _scene["ambient_color"] = imgui.color_edit3(
-        #    "Ambient color", _scene["ambient_color"]
-        #)
+        changed, _scene["light_color"] = imgui.color_edit3(
+            "Light color", _scene["light_color"]
+        )
+        
+        changed, _scene["ambient_color"] = imgui.color_edit3(
+            "Ambient color", _scene["ambient_color"]
+        )
 
         imgui.end()
         return
@@ -1333,7 +1333,7 @@ class UserInterface( Context ):
                 _value = class_attr.get()
                 _t = class_attr.type
                 _changed = False
-                _t_engine_type : EngineTypes.EngineTypeMeta = EngineTypes.get_engine_type( _t )
+                _t_engine_type : EngineTypes.Meta = EngineTypes.get_engine_type( _t )
 
                 # FLOAT
                 if _t is float:

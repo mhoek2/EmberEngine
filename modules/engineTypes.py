@@ -1,7 +1,7 @@
 class EngineTypes:
     _registry = None
 
-    class EngineTypeMeta:
+    class Meta:
         """Structure that hold meta data per engine type, name and class reference"""
         def __init__( self, _class ):
             self._name    = _class.__name__
@@ -16,7 +16,7 @@ class EngineTypes:
             - initialized only once per Python process
             - shared across all imports and all scripts
 
-        :return: Map of engine type classes to EngineTypeMeta
+        :return: Map of engine type classes to Meta
         :rtype: dict
         """
         if EngineTypes._registry is None:
@@ -25,8 +25,8 @@ class EngineTypes:
             from modules.transform import Transform
 
             EngineTypes._registry = {
-                Transform: EngineTypes.EngineTypeMeta( Transform ),
-                GameObject: EngineTypes.EngineTypeMeta( GameObject ),
+                Transform: EngineTypes.Meta( Transform ),
+                GameObject: EngineTypes.Meta( GameObject ),
             }
 
         return EngineTypes._registry
@@ -43,13 +43,13 @@ class EngineTypes:
         return t in EngineTypes.registry()
 
     @staticmethod
-    def get_engine_type( t : type ) -> EngineTypeMeta:
+    def get_engine_type( t : type ) -> Meta:
         """Get the engine type meta
 
         :param t: The type of a variable, e.g., type(variable)
         :type t: type
-        :return: EngineTypeMeta object if t is a registered engine type, None if not
-        :rtype: EngineTypeMeta
+        :return: Meta object if t is a registered engine type, None if not
+        :rtype: Meta
         """
         if not EngineTypes.is_engine_type( t ):
             return None
