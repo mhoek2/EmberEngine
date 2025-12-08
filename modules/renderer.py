@@ -15,6 +15,7 @@ from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
 import numpy as np
+import enum
 
 from modules.settings import Settings
 from modules.project import ProjectManager
@@ -27,6 +28,12 @@ if TYPE_CHECKING:
     from main import EmberEngine
 
 class Renderer:
+    class GameState_(enum.IntEnum):
+        """Runtime states"""
+        none        = 0             # (= 0)
+        running     = enum.auto()   # (= 1)
+        paused      = enum.auto()   # (= 2)
+
     """The rendering backend"""
     def __init__( self, context ):
         """Renderer backend, creating window instance, openGL, FBO's, shaders and rendertargets
@@ -68,10 +75,16 @@ class Renderer:
 
         self.render_backend = PygameRenderer()
 
+        # application
         self.paused = False
         self.running = True
         self.ImGuiInput = True # True: imgui, Fase: Game
         self.ImGuiInputFocussed = False # True: imgui, Fase: Game
+
+        # game runtime
+        self._game_state = self.GameState_.none
+        self.game_start = False
+        self.game_stop = False
 
         # frames and timing
         self.clock = pygame.time.Clock()
@@ -138,10 +151,66 @@ class Renderer:
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        self.setup_projection_matrix( self.display_size)
+        self.setup_projection_matrix( 
+            size = self.display_size 
+        )
 
         # physics
         self._initPhysics()
+
+    @property
+    def game_state( self ) -> GameState_:
+        """Get the current game state.
+        
+        :return: The current set enum integer
+        :rtype: GameState_
+        """
+        return self._game_state
+
+    @game_state.setter
+    def game_state( self, new_state : GameState_ ):
+        """Set a new game state, and trigger start/stop events."""
+        if self._game_state is new_state:
+            return
+
+        match new_state:
+            case self.GameState_.none: 
+                self.game_stop = True
+                self.camera.camera = None   # editor default
+
+            case self.GameState_.running:
+                if not self.game_paused:
+                    self.game_start = True
+                    self.camera.camera = self.context.scene.getCamera()
+
+        self._game_state = new_state
+
+    @property
+    def game_runtime( self ) -> bool:
+        """"Check current state of the runtime
+
+        :return: True if GameState_.running or GameState_.paused
+        :rtype: bool
+        """
+        return self._game_state is self.GameState_.running or self._game_state is self.GameState_.paused
+
+    @property
+    def game_running( self ) -> bool:
+        """"Check current state of the runtime
+
+        :return: True if GameState_.running
+        :rtype: bool
+        """
+        return self._game_state is self.GameState_.running
+
+    @property
+    def game_paused( self ) -> bool:
+        """"Check current state of the runtime
+
+        :return: True if GameState_.paused
+        :rtype: bool
+        """
+        return self._game_state is self.GameState_.paused
 
     @staticmethod
     def check_opengl_error():
@@ -399,17 +468,22 @@ class Renderer:
         self.color = Shader( self.context, "color" )
         self.resolve = Shader( self.context, "resolve" )
 
-    def setup_projection_matrix( self, size : Vector2 ) -> None:
+    def setup_projection_matrix( self, size : Vector2 = None ) -> None:
         """Setup the viewport and projection matrix using Matrix44
 
         :param size: The dimensions of the current viewport
         :type size: Vector2
         """
-        glViewport( 0, 0, int(size.x), int(size.y) )
+        if size:
+            glViewport( 0, 0, int(size.x), int(size.y) )
+            self.aspect_ratio = size.x / size.y
 
-        self.aspect_ratio = size.x / size.y
-        self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 1000.0)
-        self.view = matrix44.create_identity() # identity as placeholder
+        self.projection = matrix44.create_perspective_projection_matrix( 
+            fovy    = self.camera._fov, 
+            aspect  = self.aspect_ratio, 
+            near    = self.camera._near, 
+            far     = self.camera._far
+        )
 
     def toggle_input_state( self ) -> None:
         """Toggle input between application and viewport
@@ -424,7 +498,7 @@ class Renderer:
             pygame.mouse.set_visible( True )
 
     def editor_viewport_event_handler( self, event ):
-        if self.settings.game_runtime:
+        if self.game_runtime:
             return
 
         if not self.ImGuiInput:
@@ -522,7 +596,7 @@ class Renderer:
 
     def _runPhysics( self ):
         """Run the step simulation when game is running"""
-        if self.settings.game_running:
+        if self.game_running:
             for _ in range( int(self.deltaTime / (1./240.)) ):
                 p.stepSimulation()
 

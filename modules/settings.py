@@ -3,19 +3,9 @@ from pathlib import Path
 import enum
 
 class Settings:
-    class GameState_(enum.IntEnum):
-        """Runtime states"""
-        none        = 0             # (= 0)
-        running     = enum.auto()   # (= 1)
-        paused      = enum.auto()   # (= 2)
-
     def __init__( self ) -> None:
         """Global applictaion settings"""
         self.application_name = "Ember Engine 3D"
-
-        self._game_state = self.GameState_.none
-        self.game_start = False
-        self.game_stop = False
 
         self.msaa = 8
         self.msaaEnabled = True if self.msaa > 0 else False
@@ -79,58 +69,6 @@ class Settings:
         }
 
         self.ENGINE_ROTATION = "YXZ"
-
-    @property
-    def game_state( self ) -> GameState_:
-        """Get the current game state.
-        
-        :return: The current set enum integer
-        :rtype: GameState_
-        """
-        return self._game_state
-
-    @game_state.setter
-    def game_state( self, new_state : GameState_ ):
-        """Set a new game state, and trigger start/stop events."""
-        if self._game_state is new_state:
-            return
-
-        match new_state:
-            case self.GameState_.none: 
-                self.game_stop = True
-
-            case self.GameState_.running:
-                if not self.game_paused:
-                    self.game_start = True
-
-        self._game_state = new_state
-
-    @property
-    def game_runtime( self ) -> bool:
-        """"Check current state of the runtime
-
-        :return: True if GameState_.running or GameState_.paused
-        :rtype: bool
-        """
-        return self._game_state is self.GameState_.running or self._game_state is self.GameState_.paused
-
-    @property
-    def game_running( self ) -> bool:
-        """"Check current state of the runtime
-
-        :return: True if GameState_.running
-        :rtype: bool
-        """
-        return self._game_state is self.GameState_.running
-
-    @property
-    def game_paused( self ) -> bool:
-        """"Check current state of the runtime
-
-        :return: True if GameState_.paused
-        :rtype: bool
-        """
-        return self._game_state is self.GameState_.paused
 
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""

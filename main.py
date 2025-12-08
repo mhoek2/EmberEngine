@@ -302,15 +302,15 @@ class EmberEngine:
 
             # (re)store states
             if not app.settings.is_exported:
-                if self.settings.game_start:
+                if self.renderer.game_start:
                     obj.onEnable( _on_start=True )
 
-                if self.settings.game_stop:
+                if self.renderer.game_stop:
                     obj.onDisable( _on_stop=True )
 
             # start exported application
             else:
-                if self.settings.game_start:
+                if self.renderer.game_start:
                     obj.onEnable( _on_start=True )
 
             obj.onUpdate();  # engine update
@@ -381,7 +381,7 @@ class EmberEngine:
                 glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
                 glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
                 
-                if self.settings.game_start:
+                if self.renderer.game_start:
                     self.console.clear()
 
                 # trigger update function in registered gameObjects
@@ -398,11 +398,11 @@ class EmberEngine:
                 #
                 #    self.gameObjects.remove( obj )
 
-                if self.settings.game_start:
-                    self.settings.game_start = False
+                if self.renderer.game_start:
+                    self.renderer.game_start = False
 
-                if self.settings.game_stop:
-                    self.settings.game_stop = False
+                if self.renderer.game_stop:
+                    self.renderer.game_stop = False
 
                 self.renderer.end_frame()
 
@@ -417,6 +417,6 @@ if __name__ == '__main__':
 
     # start runtime for exported apps
     if app.settings.is_exported:
-        app.settings.game_state = app.settings.GameState_.running 
+        app.renderer.game_state = app.renderer.GameState_.running 
 
     app.run()

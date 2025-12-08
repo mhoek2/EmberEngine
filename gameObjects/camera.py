@@ -15,6 +15,8 @@ class Camera( GameObject ):
 
         self.is_default_camera = False
 
+        self.fov = 90.0
+
     def onStart( self ) -> None:
         """Executes whenever the object is added to scene"""
         super().onStart()
@@ -25,5 +27,5 @@ class Camera( GameObject ):
         """Executes every frame, issuing draw commands"""
         super().onUpdate()
 
-        if not self.settings.game_runtime:
+        if not self.renderer.game_runtime:
             self.models.draw( self.model, self.transform._getModelMatrix() )   

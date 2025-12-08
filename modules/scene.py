@@ -123,13 +123,20 @@ class SceneManager:
         """
         from gameObjects.camera import Camera
 
-        scene = scene_id if scene_id >= 0 else self.current_scene
+        _scene = scene_id if scene_id >= 0 else self.current_scene
+        _editor_camera = None
 
         # mark camera as default/start scene camera
         for i, obj in enumerate(self.context.gameObjects):
             if isinstance(obj, Camera) and obj.uuid == uuid:
                 obj.is_default_camera = True
-                self.scenes[scene]["camera"] = obj
+                self.scenes[_scene]["camera"] = obj
+
+                # update the camera
+                if self.context.renderer.game_runtime:
+                    _editor_camera = obj
+
+        self.context.camera.camera = _editor_camera
 
     def getCamera( self ):
         """Get the current default/start camera

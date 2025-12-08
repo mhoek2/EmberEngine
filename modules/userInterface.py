@@ -82,18 +82,18 @@ class UserInterface( Context ):
             {
                 "name"  : "Start",
                 "icon"  : fa.ICON_FA_CIRCLE_PLAY,
-                "flag"  : self.context.settings.GameState_.running,
+                "flag"  : self.context.renderer.GameState_.running,
             },
             {
                 "name"  : "Pause",
                 "icon"  : fa.ICON_FA_CIRCLE_PAUSE,
-                "flag"  : self.context.settings.GameState_.paused,
-                "hide"  : lambda: not self.context.settings.game_runtime
+                "flag"  : self.context.renderer.GameState_.paused,
+                "hide"  : lambda: not self.context.renderer.game_runtime
             },
             {
                 "name"  : "Stop",
                 "icon"  : fa.ICON_FA_CIRCLE_STOP,
-                "flag"  : self.context.settings.GameState_.none,
+                "flag"  : self.context.renderer.GameState_.none,
             }
         ]
         self._game_state_lookup = {
@@ -579,7 +579,9 @@ class UserInterface( Context ):
 
         if window_size != imgui.ImVec2(self.renderer.viewport_size.x, self.renderer.viewport_size.y):
             self.renderer.viewport_size = imgui.ImVec2( int(window_size.x), int(window_size.y) )
-            self.renderer.setup_projection_matrix( self.renderer.viewport_size - imgui.ImVec2(0, bias_y) )
+            self.renderer.setup_projection_matrix( 
+                size = self.renderer.viewport_size - imgui.ImVec2(0, bias_y) 
+            )
 
         glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["output"] )
 
@@ -598,12 +600,12 @@ class UserInterface( Context ):
         _rect_min.x += 10.0
         _game_state_changed, _new_game_state, group_width = self.radio_group( "game_state_mode",
             items           = self.game_state_modes,
-            current_index   = self._game_state_lookup.get( self.context.settings.game_state, 0 ),
+            current_index   = self._game_state_lookup.get( self.context.renderer.game_state, 0 ),
             start_pos       = _rect_min
         )
 
         if _game_state_changed:
-            self.context.settings.game_state = self.game_state_modes[_new_game_state]["flag"]
+            self.context.renderer.game_state = self.game_state_modes[_new_game_state]["flag"]
 
         # select imguizmo operation
         _rect_min.x += (group_width + 10.0)
@@ -683,7 +685,7 @@ class UserInterface( Context ):
 
 
                 # Non-runtime editor GUI
-                if not self.settings.game_runtime:
+                if not self.renderer.game_runtime:
                     _region = imgui.get_content_region_avail()
 
                     # visibility
@@ -1319,7 +1321,7 @@ class UserInterface( Context ):
                 return
 
             # actions
-            if not self.settings.game_runtime: 
+            if not self.renderer.game_runtime: 
                 imgui.same_line()
 
                 if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
@@ -1391,7 +1393,7 @@ class UserInterface( Context ):
                 imgui.separator()
 
         def _add_component( self ):
-            if self.settings.game_runtime: 
+            if self.renderer.game_runtime: 
                 return
 
             path = False

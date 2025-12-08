@@ -205,7 +205,7 @@ class GameObject( Context, Transform ):
         self._hierarchy_active = _latest_state
 
         # runtime logic
-        if not self.settings.game_running:
+        if not self.renderer.game_running:
             return
 
         if self._hierarchy_active:
@@ -484,7 +484,7 @@ class GameObject( Context, Transform ):
 
     def _runPhysics( self ) -> bool:
         """Run phyisics engine on this gameObject updating position and orientation"""
-        if not self.settings.game_running or self.physics_id is None or self.mass < 0.0:
+        if not self.renderer.game_running or self.physics_id is None or self.mass < 0.0:
             return False
 
         world_position, world_rotation_quat = p.getBasePositionAndOrientation(self.physics_id)
@@ -576,7 +576,7 @@ class GameObject( Context, Transform ):
         if self._dirty & GameObject.DirtyFlag_.active_state:
             self.__updateActiveState()
 
-        if self.settings.game_running:
+        if self.renderer.game_running:
             self.onUpdateScripts();
 
         if self._dirty & GameObject.DirtyFlag_.transform:
@@ -584,7 +584,7 @@ class GameObject( Context, Transform ):
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
-            if self.settings.game_running:
+            if self.renderer.game_running:
                 self._updatePhysicsBody()
 
         if self._dirty:

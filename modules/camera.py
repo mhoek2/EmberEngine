@@ -8,6 +8,7 @@ from modules.scene import SceneManager
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import EmberEngine
+    from gameObjects.camera import Camera as GameObject_Camera
 
 import enum
 
@@ -42,6 +43,35 @@ class Camera:
         self.velocity_factor_slow   : float = 15;
         self.velocity_factor_fast   : float = 30;
 
+        # projection default (editor camera)
+        self.default_fov    : float = 45.0
+        self.default_near   : float = 0.1
+        self.default_far    : float = 1000.0
+
+        # current
+        self._camera        : "GameObject_Camera" = None
+        self._fov           : float = self.default_fov
+        self._near          : float = self.default_near
+        self._far           : float = self.default_far 
+
+    @property
+    def camera( self ) -> "GameObject_Camera":
+        return self._camera
+
+    @camera.setter
+    def camera( self, camera : "GameObject_Camera" ):
+        from gameObjects.camera import Camera as GameObject_Camera
+
+        self._camera = camera
+
+        if isinstance( camera, GameObject_Camera ):
+            self._fov = self._camera.fov
+
+        else:
+            self._fov = self.default_fov
+
+        self.context.renderer.setup_projection_matrix()
+
     def place_object_in_front_of_another( self, position, rotation_quat, distance ) -> Vector3:
         """-This should become a scriptable function perhaps
 
@@ -65,17 +95,15 @@ class Camera:
         :return: The viewmatrix from the active Camera gameobject, return Identity when no camera
         :rtype: matrix44 or Matrix44
         """
-        camera = self.scene.getCamera()
-
-        if not camera:
+        if not self._camera:
             return Matrix44.identity()
 
-        camera_rotation = Matrix44.from_quaternion(camera.transform._local_rotation_quat)
+        camera_rotation = Matrix44.from_quaternion(self._camera.transform._local_rotation_quat)
         up = camera_rotation * Vector3([0.0, 1.0, 0.0])
 
-        target = self.place_object_in_front_of_another( camera.transform._local_position, camera.transform._local_rotation_quat, 10.0 )
+        target = self.place_object_in_front_of_another( self._camera.transform._local_position, self._camera.transform._local_rotation_quat, 10.0 )
 
-        return matrix44.create_look_at(camera.transform._local_position, target, up)
+        return matrix44.create_look_at(self._camera.transform._local_position, target, up)
 
     def get_view_matrix( self ):
         """Get the current view matrix, based on if game is running,
@@ -84,7 +112,7 @@ class Camera:
         :return: The viewmatrix from the current active camera
         :rtype: matrix44 or Matrix44
         """
-        if self.settings.game_runtime:
+        if self.context.renderer.game_runtime:
             return self.get_view_matrix_running()
  
         # return editor camera
@@ -158,7 +186,7 @@ class Camera:
 
     def new_frame( self ):
         """Called on beginning of a frame, trigger keyboard and mouse processing when in editor mode"""
-        if not self.context.renderer.ImGuiInput and not self.settings.game_runtime:
+        if not self.context.renderer.ImGuiInput and not self.context.renderer.game_runtime:
             self.context.camera.process_keyboard()
             self.context.camera.process_mouse_movement()
 
