@@ -123,6 +123,33 @@ class UserInterface( Context ):
 
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
 
+    def initialize_context( self ) -> None:
+        if self.initialized:
+            return
+
+        self.materials  : Materials = self.context.materials
+        self.images     : Images = self.context.images
+        self.models     : Models = self.context.models
+
+        self.scene      : SceneManager = self.context.scene
+
+       # self.file_browser_init()
+        self.load_gui_icons()
+
+        # user inferface modules
+        self.console_window : UserInterface.ConsoleWindow = self.ConsoleWindow( self.context )
+        self.asset_browser  : UserInterface.AssetBrowser = self.AssetBrowser( self.context )
+        self.text_editor    : UserInterface.TextEditor = self.TextEditor( self.context )
+        self.project        : UserInterface.Project = self.Project( self.context )
+        self.inspector      : UserInterface.Inspector = self.Inspector( self.context )
+        self.hierarchy      : UserInterface.Hierarchy = self.Hierarchy( self.context )
+        self.guizmo         : UserInterface.ImGuizmo = self.ImGuizmo( self.context )
+
+        # drag and drop
+        self.dnd_payload    : UserInterface.DragAndDropPayload = UserInterface.DragAndDropPayload()
+
+        self.initialized = True
+
     def set_selected_object( self, obj : GameObject = None ):
             self.selectedObject = obj
 
@@ -386,32 +413,6 @@ class UserInterface( Context ):
                 icon_id = path.name.replace( path.suffix, "")
                 self.icons[f".{icon_id}"] = self.context.images.loadOrFindFullPath( path, flip_y=False )
 
-    def initialize_context( self ) -> None:
-        if self.initialized:
-            return
-
-        self.materials  : Materials = self.context.materials
-        self.images     : Images = self.context.images
-        self.models     : Models = self.context.models
-
-        self.scene      : SceneManager = self.context.scene
-
-       # self.file_browser_init()
-        self.load_gui_icons()
-
-        # user inferface modules
-        self.console_window : UserInterface.ConsoleWindow = self.ConsoleWindow( self.context )
-        self.asset_browser  : UserInterface.AssetBrowser = self.AssetBrowser( self.context )
-        self.text_editor    : UserInterface.TextEditor = self.TextEditor( self.context )
-        self.project        : UserInterface.Project = self.Project( self.context )
-        self.inspector      : UserInterface.Inspector = self.Inspector( self.context )
-        self.guizmo         : UserInterface.ImGuizmo = self.ImGuizmo( self.context )
-
-        # drag and drop
-        self.dnd_payload    : UserInterface.DragAndDropPayload = UserInterface.DragAndDropPayload()
-
-        self.initialized = True
-
     # https://github.com/pyimgui/pyimgui/blob/9adcc0511c5ce869c39ced7a2b423aa641f3e7c6/doc/examples/integrations_glfw3_docking.py#L10
     def docking_space(self, name: str):
         viewport = imgui.get_main_viewport()
@@ -625,136 +626,228 @@ class UserInterface( Context ):
 
         imgui.end()
 
-    def draw_gameObject_recursive( self, 
-        parent          : GameObject = None, 
-        objects         : List[GameObject] = [], 
-        depth           : int = 0,
-        base_tree_flags : imgui.TreeNodeFlags_ = imgui.TreeNodeFlags_.none
-        ):
+    class GameObjectTypes:
+        """Bind meta data to gameObject types, currently only used for the UserInterface
         
-        if not objects:
-            return
+        Whenever this finds use in a global scope, move this to: modules.gameObjectTypes.py
+        """
+        _registry = None
 
-        for n, obj in enumerate( objects ):
-            if isinstance( obj, GameObject ): # link class name
-                if obj is None:
-                    return False 
+        class Meta:
+            """Structure that hold meta data per gameObject type"""
+            def __init__( self, _class : type, _icon : str = "" ):
+                self._name      = _class.__name__
+                self._class     = _class
+                self._icon      = _icon
 
-                if obj._removed:
+        @staticmethod
+        def registry():
+            """Singleton registry of the gameObject types (inherting GameObject).
+
+                _registry is stored as a class variable, meaniung:
+
+                - initialized only once per Python process
+                - shared across all imports and all scripts
+
+            :return: Map of gameObject type classes to Meta
+            :rtype: dict
+            """
+            if UserInterface.GameObjectTypes._registry is None:
+                UserInterface.GameObjectTypes._registry = {
+                    Camera: UserInterface.GameObjectTypes.Meta( 
+                        _class  = Camera, 
+                        _icon   = fa.ICON_FA_CAMERA
+                    ),
+                    Mesh: UserInterface.GameObjectTypes.Meta( 
+                        _class  = Mesh, 
+                        _icon   = fa.ICON_FA_CUBE
+                    ),
+                    Light: UserInterface.GameObjectTypes.Meta( 
+                        _class  = Light, 
+                        _icon   = fa.ICON_FA_LIGHTBULB
+                    ),
+
+                    # baseclass
+                    GameObject: UserInterface.GameObjectTypes.Meta( 
+                        _class  = GameObject, 
+                        _icon   = fa.ICON_FA_CIRCLE_DOT
+                    ),
+                }
+
+            return UserInterface.GameObjectTypes._registry
+
+        @staticmethod
+        def is_gameobject_type( t : type ) -> bool:
+            """Check wheter a type is registered as gameObject type
+        
+            :param t: The type of a variable, e.g., type(variable)
+            :type t: type
+            :return: True if t is a registered gameObject type
+            :rtype: bool
+            """
+            return t in UserInterface.GameObjectTypes.registry()
+
+        @staticmethod
+        def get_gameobject_type( t : type ) -> Meta:
+            """Get the gameObject type meta
+
+            :param t: The type of a variable, e.g., type(variable)
+            :type t: type
+            :return: Meta object if t is a registered gameObject type, None if not
+            :rtype: Meta
+            """
+            if not UserInterface.GameObjectTypes.is_gameobject_type( t ):
+                return None
+
+            return UserInterface.GameObjectTypes.registry()[t]
+
+    class Hierarchy( Context ):
+        """Logic related to rendering the Hierarchy window"""
+        def __init__( self, context ):
+            super().__init__( context )
+
+        def draw_recursive( self, 
+            parent          : GameObject = None, 
+            objects         : list[GameObject] = [], 
+            depth           : int = 0,
+            base_tree_flags : imgui.TreeNodeFlags_ = imgui.TreeNodeFlags_.none
+            ) -> None:
+            """Recursivly render the gameObjects in a treenode
+
+            :param parent: The root object or parent during recursion
+            :param parent: GameObject
+            :param objects: A list of gameobjects, root or children during recursion
+            :type objects: list[GameObject]
+            :param depth: Current depth in the treenode, starting from 0
+            :type depth: int
+            :param base_tree_flags: Base ImGui tree flags applied to each tree node.
+            :type base_tree_flags: imgui.TreeNodeFlags_
+            """
+
+            if not objects:
+                return
+
+            for n, obj in enumerate( objects ):
+                if obj is None or obj._removed:
                     continue
 
                 if obj.parent != parent or obj.parent and parent == None:
                     continue
 
-                imgui.push_id( f"{obj._uuid_gui}" )
+                _t_game_object = UserInterface.GameObjectTypes.get_gameobject_type( type(obj) )
+ 
+                if _t_game_object:
+                    imgui.push_id( f"{obj._uuid_gui}" )
 
-                # treenode flags
-                tree_flags = base_tree_flags
-                if not obj.children:
-                    tree_flags |= imgui.TreeNodeFlags_.leaf
+                    # treenode flags
+                    tree_flags = base_tree_flags
+                    if not obj.children:
+                        tree_flags |= imgui.TreeNodeFlags_.leaf
 
-                if self.selectedObject == obj:
-                    tree_flags |= imgui.TreeNodeFlags_.selected
+                    if self.context.gui.selectedObject == obj:
+                        tree_flags |= imgui.TreeNodeFlags_.selected
 
-                _is_open = imgui.tree_node_ex( obj.name, tree_flags )
-                _is_hovered = imgui.is_item_hovered()
+                    icon : str = fa.ICON_FA_CUBE
 
-                #if imgui.is_item_clicked(): # and imgui.is_item_toggled_open():
-                if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(0):
-                    self.set_selected_object( obj )
+                    _is_open = imgui.tree_node_ex( f"{_t_game_object._icon} {obj.name}", tree_flags )
+                    _is_hovered = imgui.is_item_hovered()
+
+                    #if imgui.is_item_clicked(): # and imgui.is_item_toggled_open():
+                    if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(0):
+                        self.context.gui.set_selected_object( obj )
     
-                # dnd: source
-                if imgui.begin_drag_drop_source(imgui.DragDropFlags_.none):
-                    self.dnd_payload.set_payload(
-                        self.dnd_payload.Type_.hierarchy,
-                        obj._uuid_gui,
-                        obj
-                    )
-
-                    imgui.text(f"{obj.name}")
-                    imgui.end_drag_drop_source()
-
-                # dnd: receive
-                if imgui.begin_drag_drop_target():
-                    payload = imgui.accept_drag_drop_payload_py_id(self.dnd_payload.Type_.hierarchy)
-                    if payload is not None:
-                        payload_obj : GameObject = self.dnd_payload.get_payload_data()
-                        payload_obj.setParent(obj)
-
-                    imgui.end_drag_drop_target()
-
-
-                # Non-runtime editor GUI
-                if not self.renderer.game_runtime:
-                    _region = imgui.get_content_region_avail()
-
-                    # visibility
-                    #can_hide = True
-                    #if isinstance( obj, Camera ):
-                    #    can_hide = False
-                
-                    #if _is_hovered or not obj.visible:
-                    if self.context.gui.draw_button( 
-                        uid     = f"{self.visibility_icon[int(obj.visible)]}", 
-                        region  = _region.x - 5,
-                        colors  = self.context.gui.color_visibility
-                    ):
-                        obj.visible = not obj.visible
-
-                    # remove gameObject
-                    if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
-                        self.context.removeGameObject( obj )
-
-                if _is_open:
-                    if obj.children:
-                        self.draw_gameObject_recursive( 
-                            obj, 
-                            obj.children, 
-                            depth=depth+1,
-                            base_tree_flags=base_tree_flags
+                    # dnd: source
+                    if imgui.begin_drag_drop_source(imgui.DragDropFlags_.none):
+                        self.context.gui.dnd_payload.set_payload(
+                            self.context.gui.dnd_payload.Type_.hierarchy,
+                            obj._uuid_gui,
+                            obj
                         )
 
-                    imgui.tree_pop()
+                        imgui.text(f"{obj.name}")
+                        imgui.end_drag_drop_source()
 
-                imgui.pop_id()
+                    # dnd: receive
+                    if imgui.begin_drag_drop_target():
+                        payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
+                        if payload is not None:
+                            payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
+                            payload_obj.setParent(obj)
+
+                        imgui.end_drag_drop_target()
+
+
+                    # Non-runtime editor GUI
+                    if not self.renderer.game_runtime:
+                        _region = imgui.get_content_region_avail()
+
+                        # visibility
+                        #can_hide = True
+                        #if isinstance( obj, Camera ):
+                        #    can_hide = False
+                
+                        #if _is_hovered or not obj.visible:
+                        if self.context.gui.draw_button( 
+                            uid     = f"{self.context.gui.visibility_icon[int(obj.visible)]}", 
+                            region  = _region.x - 5,
+                            colors  = self.context.gui.color_visibility
+                        ):
+                            obj.visible = not obj.visible
+
+                        # remove gameObject
+                        if self.context.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
+                            self.context.removeGameObject( obj )
+
+                    if _is_open:
+                        if obj.children:
+                            self.draw_recursive( 
+                                obj, 
+                                obj.children, 
+                                depth=depth+1,
+                                base_tree_flags=base_tree_flags
+                            )
+
+                        imgui.tree_pop()
+
+                    imgui.pop_id()
         
-    def draw_hierarchy( self ) -> None:
-        imgui.begin( "Hierarchy" )
+        def render( self ) -> None:
+            imgui.begin( "Hierarchy" )
 
-        if imgui.button( "Cube" ):
-            self.context.addDefaultCube()
+            if imgui.button( "Cube" ):
+                self.context.addDefaultCube()
 
-        imgui.same_line()
+            imgui.same_line()
 
-        if imgui.button( "Light" ):
-            self.context.addDefaultLight()
+            if imgui.button( "Light" ):
+                self.context.addDefaultLight()
 
-        imgui.same_line()
+            imgui.same_line()
 
-        if imgui.button( "Empty" ):
-            self.context.addEmptyGameObject()
+            if imgui.button( "Empty" ):
+                self.context.addEmptyGameObject()
 
-        imgui.same_line()
+            imgui.same_line()
 
-        if imgui.button( "Camera" ):
-            self.context.addDefaultCamera()
+            if imgui.button( "Camera" ):
+                self.context.addDefaultCamera()
 
-        _base_tree_flags =  imgui.TreeNodeFlags_.default_open | \
-                            imgui.TreeNodeFlags_.draw_lines_full | \
-                            imgui.TreeNodeFlags_.open_on_double_click
+            _base_tree_flags =  imgui.TreeNodeFlags_.default_open | \
+                                imgui.TreeNodeFlags_.draw_lines_full | \
+                                imgui.TreeNodeFlags_.open_on_double_click
 
-        if imgui.tree_node_ex( "Hierarchy", _base_tree_flags ):
-            self.draw_gameObject_recursive( 
-                None, 
-                self.context.gameObjects,
-                depth=0,
-                base_tree_flags=_base_tree_flags
-            )
+            if imgui.tree_node_ex( "Hierarchy", _base_tree_flags ):
+                self.draw_recursive( 
+                    None, 
+                    self.context.gameObjects,
+                    depth=0,
+                    base_tree_flags=_base_tree_flags
+                )
             
-            imgui.tree_pop()
+                imgui.tree_pop()
 
-        imgui.end()
-        return
+            imgui.end()
+            return
 
     def draw_settings( self ) -> None:
         imgui.begin( "Settings" )
@@ -1092,6 +1185,7 @@ class UserInterface( Context ):
             degrees = enum.auto()
 
         def __init__( self, context ):
+            super().__init__( context )
             super().__init__( context )
 
             self.rotation_mode = self.RotationMode_.degrees
@@ -1872,7 +1966,7 @@ class UserInterface( Context ):
             # windows
             self.draw_viewport()
             self.asset_browser.render()
-            self.draw_hierarchy()
+            self.hierarchy.render()
             self.draw_settings()
             self.inspector.render()
             self.draw_environment()

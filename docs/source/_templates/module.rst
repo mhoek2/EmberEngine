@@ -28,6 +28,14 @@
    :members:
    :undoc-members:
    :show-inheritance:
+.. autoclass:: modules.userInterface.UserInterface.Hierarchy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+.. autoclass:: modules.userInterface.UserInterface.GameObjectTypes
+   :members:
+   :undoc-members:
+   :show-inheritance:
 .. autoclass:: modules.userInterface.UserInterface.Inspector
    :members:
    :undoc-members:
