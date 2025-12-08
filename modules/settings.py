@@ -32,8 +32,8 @@ class Settings:
         self.default_scene          = Path(f"{self.engineAssets}\\scenes\engine_default{self.SCENE_EXTENSION}")
         self.default_environment    = f"{self.engineAssets}\\cubemaps\\day"
 
-        self.default_light_color     = ( 1.0, 1.0, 1.0, 1.0 )
-        self.default_ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
+        self.default_light_color     : list[float] = [1.0, 1.0, 1.0]
+        self.default_ambient_color   : list[float] = [0.3, 0.3, 0.3]
 
         # wireframe
         self.drawWireframe = False

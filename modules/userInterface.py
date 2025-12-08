@@ -1558,6 +1558,34 @@ class UserInterface( Context ):
 
             imgui.tree_pop()
 
+        def _light( self ) -> None:
+            if not self.context.gui.selectedObject:
+                return
+            
+            gameObject = self.context.gui.selectedObject
+
+            if not isinstance( gameObject, Light ):
+                return
+
+            if imgui.tree_node_ex( f"{fa.ICON_FA_LIGHTBULB} Light", imgui.TreeNodeFlags_.default_open ):
+
+                type_names = [t.name for t in Light.Type_]
+
+                changed, new_light_index = imgui.combo(
+                    "Light type",
+                    gameObject.light_type,
+                    type_names
+                )
+                if changed:
+                    gameObject.light_type = Light.Type_(new_light_index)
+
+                changed, gameObject.light_color = imgui.color_edit3(
+                    "Light color", gameObject.light_color
+                )
+
+                imgui.separator()
+                imgui.tree_pop()
+
         def _camera( self ) -> None:
             if not self.context.gui.selectedObject:
                 return
@@ -1586,6 +1614,7 @@ class UserInterface( Context ):
                 if changed:
                     gameObject.far = value
 
+                imgui.separator()
                 imgui.tree_pop()
 
         def render( self ) -> None:
@@ -1614,7 +1643,7 @@ class UserInterface( Context ):
                 imgui.separator()
 
                 self._camera()
-                imgui.separator()
+                self._light()
 
                 # physics  
                 if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics", imgui.TreeNodeFlags_.default_open ):

@@ -265,6 +265,7 @@ class SceneManager:
     ):
         """Recursivly iterate over gameObject and its children"""
         from gameObjects.camera import Camera
+        from gameObjects.light import Light
 
         _scene_camera = self.getCamera()
 
@@ -304,10 +305,16 @@ class SceneManager:
             }
 
             if _scene_camera and isinstance( obj, Camera ):
-                buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
+                if _scene_camera:
+                    buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
+               
                 buffer["instance_data"]["fov"]  = obj.fov
                 buffer["instance_data"]["near"] = obj.near
                 buffer["instance_data"]["far"]  = obj.far
+
+            elif isinstance( obj, Light ):   
+                buffer["instance_data"]["light_type"] = obj.light_type
+                buffer["instance_data"]["light_color"] = list(obj.light_color)
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -388,7 +395,7 @@ class SceneManager:
         """Clear the scene in the editor, prepares loading a new scene
         This removes gameObjects, clears editor GUI state, resets camera index.
         """
-        self.context.sun = -1
+        self.context.sun = None
         self.setCamera( -1 )
         self.context.gui.set_selected_object()
         self.context.gameObjects.clear()
@@ -459,9 +466,6 @@ class SceneManager:
             # implement scene settings, so a camera or sun can be assigned
             _instance_data = obj.get("instance_data", {})
 
-            if isinstance( gameObject, Light ):
-                self.context.sun = index
-
             if isinstance( gameObject, Camera ):
                 if _instance_data:
                     if "fov"    in _instance_data: gameObject._fov   = _instance_data.get("fov")
@@ -471,6 +475,15 @@ class SceneManager:
                     # set this is current runtime camera
                     if _instance_data.get("is_default_camera", False):
                         self.setCamera( gameObject.uuid, scene_id = scene_id )
+
+            elif isinstance( gameObject, Light ):
+                if _instance_data:
+                    if "light_type"    in _instance_data: gameObject.light_type   = _instance_data.get("light_type")
+                    if "light_color"    in _instance_data: gameObject.light_color = list(_instance_data.get("light_color"))
+               
+                # first light is sun .. for now
+                if self.context.sun is None:
+                    self.context.sun = gameObject
 
             if "active" in obj:
                 gameObject.active = obj["active"]
@@ -506,7 +519,7 @@ class SceneManager:
             self.console.note( f"Loading scene: {scene_uid}" )
 
             try:
-                self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
+                self.setCamera( None, scene_id = i ) # default to None, find default camera when adding gameObjects
                     
                 scene["name"]    = scene.get("name", "default scene")
 

@@ -3,14 +3,12 @@
     "light_color": [
         1.0,
         1.0,
-        1.0,
         1.0
     ],
     "ambient_color": [
         0.3,
         0.3,
-        0.3,
-        1.0
+        0.3
     ],
     "gameObjects": [
         {
