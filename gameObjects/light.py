@@ -25,6 +25,7 @@ class Light( GameObject ):
         #self.light_type = kwargs.get('light_type', 1.0)
         self.light_type     : Light.Type_ = self.Type_.direct
         self.light_color    : list[float] = [ 0.98, 1.0, 0.69 ]
+        self.radius         : float = 12.0
 
     def onStart( self ) -> None:
         """Executes whenever the object is added to scene"""

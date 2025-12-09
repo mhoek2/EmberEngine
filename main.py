@@ -350,6 +350,20 @@ class EmberEngine:
                 #
                 self.renderer.use_shader( self.renderer.general )
 
+                #
+                # lights
+                #
+                lights: list[Renderer.LightUBO.Light] = [
+                    Renderer.LightUBO.Light(
+                        origin  = obj.transform.position,
+                        color   = obj.light_color,
+                        radius  = obj.radius,
+                    )
+                    # per-frame, slow
+                    for obj in filter(lambda x: x.hierachyActive() and isinstance(x, Light), self.gameObjects)
+                ]
+                self.renderer.bind_light_ubo( lights )
+
                 # environment
                 self.cubemaps.bind( self.environment_map, GL_TEXTURE5, "sEnvironment", 5 )
 

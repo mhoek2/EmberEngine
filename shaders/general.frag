@@ -27,7 +27,21 @@ in vec4 var_AmbientColor;
 
 out vec4 out_color;
 
+uniform vec4 u_ViewOrigin;
 uniform int in_renderMode;
+
+struct Light
+{
+	vec3	origin;
+	float	radius;
+	vec4	color;	
+};
+
+layout( std140 ) uniform Lights
+{
+	int u_num_lights;
+	Light u_lights[64];
+};
 
 vec3 Diffuse_Lambert(in vec3 DiffuseColor)
 {
@@ -106,6 +120,52 @@ vec3 CalcIBLContribution( in float roughness, in vec3 N, in vec3 E,
 	return cubeLightColor * (specular.rgb * EnvBRDF.x + EnvBRDF.y);
 }
 
+float CalcLightAttenuation(float normDist)
+{
+	// zero light at 1.0, approximating q3 style
+	float attenuation = 0.5 * normDist - 0.5;
+	return clamp(attenuation, 0.0, 1.0);
+}
+
+vec3 CalcDynamicLightContribution(
+	in float roughness,
+	in vec3 N,
+	in vec3 E,
+	in vec3 viewOrigin,
+	in vec3 viewDir,
+	in float NE,
+	in vec3 diffuse,
+	in vec3 specular,
+	in vec3 vertexNormal
+)
+{
+	vec3 outColor = vec3(0.0);
+	vec3 position = viewOrigin - viewDir;
+
+	for ( int i = 0; i < u_num_lights; i++ )
+	{
+		Light light = u_lights[i];
+
+		vec3  L  = light.origin.xyz - position;
+		float sqrLightDist = dot(L, L);
+
+		float attenuation = CalcLightAttenuation(light.radius * light.radius / sqrLightDist);
+
+		L /= sqrt(sqrLightDist);
+
+		vec3  H  = normalize(L + E);
+		float NL = clamp(dot(N, L), 0.0, 1.0);
+		float LH = clamp(dot(L, H), 0.0, 1.0);
+		float NH = clamp(dot(N, H), 0.0, 1.0);
+		float VH = clamp(dot(E, H), 0.0, 1.0);
+
+		vec3 reflectance = diffuse + CalcSpecular(specular, NH, NL, NE, LH, VH, roughness);
+
+		outColor += light.color.rgb * reflectance * attenuation * NL;
+	}
+	return outColor;
+}
+
 void main(){
 	vec4 diffuse;
 	float attenuation;
@@ -180,6 +240,9 @@ void main(){
 	out_color.rgb  = lightColor * reflectance * ( attenuation * NL );
 	out_color.rgb += ambientColor * diffuse.rgb;
 	out_color.rgb += emissiveColor;
+
+	vec3 light_contrib = CalcDynamicLightContribution( roughness, N, E, u_ViewOrigin.xyz, viewDir, NE, diffuse.rgb, specular.rgb, var_Normal.xyz );
+	out_color.rgb += light_contrib;
 	out_color.rgb += CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO );
 
 	out_color.a = diffuse.a;
@@ -215,6 +278,12 @@ void main(){
 			case 22 : out_color.rgb = CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO ); break;
 			case 23 : out_color.rgb = emissiveColor; break;
 			case 24 : out_color.rgb = vec3(opacity); break;
+			case 25 : out_color.rgb = vec3(light_contrib); break;
+			case 26 : out_color.rgb = vec3(u_ViewOrigin.xyz); break;
 		}
 	}
+
+	// debug
+	//out_color.rgb = vec3(u_lights[0].color);
+	//out_color = vec4(u_lights[0].radius, 0.0, 0.0, 1.0);
 }

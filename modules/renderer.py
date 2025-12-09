@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import os
 import math
@@ -13,6 +13,7 @@ from imgui_bundle import icons_fontawesome_6 as fa
 
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
+import struct
 
 import numpy as np
 import enum
@@ -100,8 +101,11 @@ class Renderer:
         # shaders
         self.create_shaders()
 
+        # ubo
+        self.ubo_lights = Renderer.LightUBO( self.general, "Lights", 0 )
+
         # debug
-        self.renderMode = 0
+        self.renderMode = 25
         self.renderModes : str = [
 	        "Final Image", 
 	        "Diffuse", 
@@ -128,6 +132,8 @@ class Renderer:
 	        "IBL Contribution",
             "Emissive",
             "Opacity",
+            "Light Contribution",
+            "View Origin",
             ]
 
         # FBO
@@ -462,11 +468,77 @@ class Renderer:
 
     def create_shaders( self ) -> None:
         """Create the GLSL shaders used for the editor and general pipeline"""
-        self.general = Shader( self.context, "general" )
-        self.skybox = Shader( self.context, "skybox" )
-        self.gamma = Shader( self.context, "gamma" )
-        self.color = Shader( self.context, "color" )
-        self.resolve = Shader( self.context, "resolve" )
+        self.general    = Shader( self.context, "general" )
+        self.skybox     = Shader( self.context, "skybox" )
+        self.gamma      = Shader( self.context, "gamma" )
+        self.color      = Shader( self.context, "color" )
+        self.resolve    = Shader( self.context, "resolve" )
+
+    class LightUBO:
+        MAX_LIGHTS = 64
+
+        # std140 layout:
+        # vec4(origin.xyz + radius) + vec4(color.xyzw) = 32 bytes
+        LIGHT_STRUCT = struct.Struct( b"4f 4f" )
+
+        class Light(TypedDict):
+            origin  : list[float]
+            color   : list[float]
+            radius  : int
+
+        def __init__(self, 
+                     shader : Shader, 
+                     block_name     : str ="Lights", 
+                     binding        : int = 0
+            ):
+            self.binding = binding
+            self.block_index = glGetUniformBlockIndex( shader.program, block_name )
+
+            if self.block_index == GL_INVALID_INDEX:
+                raise RuntimeError( f"Uniform block [{block_name}] not found in shader." )
+
+            glUniformBlockBinding( shader.program, self.block_index, binding )
+
+            self.ubo = glGenBuffers(1)
+            glBindBuffer( GL_UNIFORM_BUFFER, self.ubo )
+
+            # (u_num_lights 4b + 12bpad = 16 bytes) + 32 * 64 bytes
+            total_size = 16 + self.MAX_LIGHTS * self.LIGHT_STRUCT.size
+            glBufferData( GL_UNIFORM_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
+            glBindBuffer( GL_UNIFORM_BUFFER, 0 )
+            glBindBufferBase( GL_UNIFORM_BUFFER, binding, self.ubo )
+
+        def update( self, lights ):
+            num_lights = min(len(lights), self.MAX_LIGHTS)
+
+            data = bytearray()
+
+            # u_num_lights
+            data += struct.pack("I 3I", num_lights, 0, 0, 0)
+
+            # u_lights
+            for light in lights[:num_lights]:
+                ox, oy, oz  = light["origin"]
+                cx, cy, cz  = light["color"]
+                r           = light["radius"]
+
+                data += self.LIGHT_STRUCT.pack(
+                    ox, oy, oz, r,      # vec4(origin.xyz + radius)
+                    cx, cy, cz, 0.0,    # vec4(color)
+                )
+
+            # fill empty lights
+            empty_count = self.MAX_LIGHTS - num_lights
+            if empty_count:
+                empty = self.LIGHT_STRUCT.pack(
+                    0,0,0,0,    # vec4(origin.xyz + radius)
+                    0,0,0,0     # vec4(color)
+                )
+                data += empty * empty_count
+
+            glBindBuffer(GL_UNIFORM_BUFFER, self.ubo)
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, len(data), data)
+            glBindBuffer(GL_UNIFORM_BUFFER, 0)
 
     def setup_projection_matrix( self, size : Vector2 = None ) -> None:
         """Setup the viewport and projection matrix using Matrix44
@@ -599,6 +671,9 @@ class Renderer:
         if self.game_running:
             for _ in range( int(self.deltaTime / (1./240.)) ):
                 p.stepSimulation()
+
+    def bind_light_ubo( self, lights : LightUBO.Light ) -> None:
+        self.ubo_lights.update( lights )
 
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
