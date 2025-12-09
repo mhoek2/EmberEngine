@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
     from gameObjects.camera import Camera
+    from gameObjects.light import Light
 
 import traceback
 
@@ -27,6 +28,7 @@ class SceneManager:
         name            : str
         gameObjects     : List["_GameObject"]
         camera          : "Camera"
+        sun             : "Light"
         light_color     : List[float]
         ambient_color   : List[float]
 
@@ -130,12 +132,16 @@ class SceneManager:
 
         obj = self.context.findGameObject( uuid )
 
-        # set camera as default runtime camera
-        if obj and isinstance(obj, Camera):
+        if obj is None:
+            self.scenes[_scene]["sun"] = None
+            _editor_camera = None
+
+        # set default scene/runtime camera
+        elif obj and isinstance(obj, Camera):
             obj.is_default_camera = True
             self.scenes[_scene]["camera"] = obj
 
-            # switch camera during runtime
+            # switch scene/camera during runtime
             if self.context.renderer.game_runtime:
                 _editor_camera = obj
 
@@ -163,6 +169,44 @@ class SceneManager:
             #exc_type, exc_value, exc_tb = sys.exc_info()
             #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
+
+    def getSun( self ):
+        """Get the current sun
+
+        :return: The current scene sun, False if this fails
+        :rtype: Camera or bool
+        """
+        from gameObjects.light import Light
+
+        try:
+            _scene_light = self.scenes[self.current_scene]["sun"]
+
+            if not isinstance( _scene_light, Light ):
+                raise IndexError("invalid sun")
+
+            return _scene_light
+
+        except Exception as e:
+            #print( e )
+            #exc_type, exc_value, exc_tb = sys.exc_info()
+            #self.console.error( e, traceback.format_tb(exc_tb) )
+            return False
+
+
+    def setSun( self, uuid : uid.UUID, scene_id = -1):
+        from gameObjects.light import Light
+
+        _scene = scene_id if scene_id >= 0 else self.current_scene
+
+        obj = self.context.findGameObject( uuid )
+
+        if obj is None:
+            self.scenes[_scene]["sun"] = None
+
+        # set scene sun
+        elif obj and isinstance(obj, Light):
+            obj.is_sun = True
+            self.scenes[_scene]["sun"] = obj
 
     def newScene( self, name : str ):
         """Creates a new scene based on the engines default empty scene
@@ -268,6 +312,7 @@ class SceneManager:
         from gameObjects.light import Light
 
         _scene_camera = self.getCamera()
+        _scene_sun = self.getSun()
 
         for obj in objects:
             if obj._removed:
@@ -305,16 +350,21 @@ class SceneManager:
             }
 
             if _scene_camera and isinstance( obj, Camera ):
-                if _scene_camera:
-                    buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
-               
                 buffer["instance_data"]["fov"]  = obj.fov
                 buffer["instance_data"]["near"] = obj.near
                 buffer["instance_data"]["far"]  = obj.far
 
+                if _scene_camera:
+                    buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
+               
+
             elif isinstance( obj, Light ):   
                 buffer["instance_data"]["light_type"] = obj.light_type
                 buffer["instance_data"]["light_color"] = list(obj.light_color)
+
+                if _scene_sun:
+                    buffer["instance_data"]["is_sun"] = True if obj.uuid == _scene_sun.uuid else False
+               
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -396,7 +446,8 @@ class SceneManager:
         This removes gameObjects, clears editor GUI state, resets camera index.
         """
         self.context.sun = None
-        self.setCamera( -1 )
+        self.setCamera( None )
+        self.setSun( None )
         self.context.gui.set_selected_object()
         self.context.gameObjects.clear()
         self.current_scene = -1
@@ -472,18 +523,22 @@ class SceneManager:
                     if "near"   in _instance_data: gameObject._near  = _instance_data.get("near")
                     if "far"    in _instance_data: gameObject._far   = _instance_data.get("far")
 
-                    # set this is current runtime camera
+                    # set this is current scene/runtime camera
                     if _instance_data.get("is_default_camera", False):
                         self.setCamera( gameObject.uuid, scene_id = scene_id )
 
             elif isinstance( gameObject, Light ):
                 if _instance_data:
                     if "light_type"    in _instance_data: gameObject.light_type   = _instance_data.get("light_type")
-                    if "light_color"    in _instance_data: gameObject.light_color = list(_instance_data.get("light_color"))
+                    if "light_color"   in _instance_data: gameObject.light_color = list(_instance_data.get("light_color"))
                
+                    # set this is current scene sun
+                    if _instance_data.get("is_sun", False):
+                        self.setSun( gameObject.uuid, scene_id = scene_id )
+
                 # first light is sun .. for now
-                if self.context.sun is None:
-                    self.context.sun = gameObject
+                #if self.context.sun is None:
+                #    self.context.sun = gameObject
 
             if "active" in obj:
                 gameObject.active = obj["active"]
@@ -520,6 +575,7 @@ class SceneManager:
 
             try:
                 self.setCamera( None, scene_id = i ) # default to None, find default camera when adding gameObjects
+                self.setSun( None, scene_id = i ) # default to None, find sun when adding gameObjects
                     
                 scene["name"]    = scene.get("name", "default scene")
 

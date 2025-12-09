@@ -105,7 +105,7 @@ class Renderer:
         self.ubo_lights = Renderer.LightUBO( self.general, "Lights", 0 )
 
         # debug
-        self.renderMode = 25
+        self.renderMode = 0
         self.renderModes : str = [
 	        "Final Image", 
 	        "Diffuse", 

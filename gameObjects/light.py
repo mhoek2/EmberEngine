@@ -21,6 +21,8 @@ class Light( GameObject ):
         """
         super().__init__(context, *args, **kwargs)
 
+        self.is_sun = False
+
         # not implemented
         #self.light_type = kwargs.get('light_type', 1.0)
         self.light_type     : Light.Type_ = self.Type_.direct

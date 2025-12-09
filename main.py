@@ -180,7 +180,10 @@ class EmberEngine:
             obj._mark_dirty()
 
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
-                self.scene.setCamera( -1 )
+                self.scene.setCamera( None )
+
+            if isinstance( obj, Light ) and obj is self.scene.getSun():
+                self.scene.setSun( None )
 
             reparent_children = list(obj.children) # prevent mutation during iteration
             for child in reparent_children:
@@ -350,20 +353,6 @@ class EmberEngine:
                 #
                 self.renderer.use_shader( self.renderer.general )
 
-                #
-                # lights
-                #
-                lights: list[Renderer.LightUBO.Light] = [
-                    Renderer.LightUBO.Light(
-                        origin  = obj.transform.position,
-                        color   = obj.light_color,
-                        radius  = obj.radius,
-                    )
-                    # per-frame, slow
-                    for obj in filter(lambda x: x.hierachyActive() and isinstance(x, Light), self.gameObjects)
-                ]
-                self.renderer.bind_light_ubo( lights )
-
                 # environment
                 self.cubemaps.bind( self.environment_map, GL_TEXTURE5, "sEnvironment", 5 )
 
@@ -388,8 +377,14 @@ class EmberEngine:
                 _scene = self.scene.getCurrentScene()
 
                 # sun direction/position and color
-                light_dir = self.sun.transform.local_position if self.sun is not None else (0.0, 0.0, 1.0)
-                light_color = self.sun.light_color if self.sun is not None and self.sun.hierachyActive() else _scene["light_color"]
+                _sun = self.scene.getSun()
+                _sun_active = _sun and _sun.hierachyActive()
+
+                if not self.renderer.game_runtime:
+                    _sun_active = _sun_active and _sun.hierachyVisible()
+
+                light_dir   = _sun.transform.local_position if _sun_active else (0.0, 0.0, 0.0)
+                light_color = _sun.light_color              if _sun_active else (0.0, 0.0, 0.0)
 
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], light_color[0], light_color[1], light_color[2], 1.0 )
@@ -398,6 +393,35 @@ class EmberEngine:
                 glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
                 glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
                 
+                #
+                # lights
+                #
+                #lights: list[Renderer.LightUBO.Light] = [
+                #    Renderer.LightUBO.Light(
+                #        origin  = obj.transform.position,
+                #        color   = obj.light_color,
+                #        radius  = obj.radius,
+                #    )
+                #    # per-frame, slow
+                #    for obj in filter(lambda x: x.hierachyActive() and isinstance(x, Light) and x is not _sun, self.gameObjects)
+                #]
+                lights : list[Renderer.LightUBO.Light] = []
+
+                for obj in self.gameObjects:
+                    if not obj.hierachyActive() or not isinstance(obj, Light) or obj is _sun:
+                        continue
+
+                    if not self.renderer.game_runtime and not obj.hierachyVisible():
+                        continue
+
+                    lights.append( Renderer.LightUBO.Light(
+                        origin  = obj.transform.position,
+                        color   = obj.light_color,
+                        radius  = obj.radius,
+                    ) )
+
+                self.renderer.bind_light_ubo( lights )
+
                 if self.renderer.game_start:
                     self.console.clear()
 

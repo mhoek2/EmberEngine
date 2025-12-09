@@ -1047,7 +1047,7 @@ class UserInterface( Context ):
 
             if clicked:
                 imgui.end_popup()
-                return True, -1
+                return True, None
 
             for i, obj in enumerate(self.context.gameObjects):
                 if filter is not None and not filter(obj) or obj._removed :
@@ -1121,6 +1121,8 @@ class UserInterface( Context ):
         _camera : GameObject = self.scene.getCamera()
         _camera_name : str = _camera.name if _camera else "None" 
 
+        imgui.push_id( f"gui_camera_selected" )
+
         if imgui.button( _camera_name ):
             imgui.open_popup("##select_camera")
 
@@ -1141,6 +1143,42 @@ class UserInterface( Context ):
         if changed:
             self.scene.setCamera( _uuid )
 
+        imgui.pop_id()
+
+    def draw_sun_selector( self ) -> None:
+        imgui.text("sun")
+        imgui.same_line(100.0)
+
+        changed : bool = False
+        _uuid   : uid.UUID = None
+
+        _sun : GameObject = self.scene.getSun()
+        _sun_name : str = _sun.name if _sun else "None" 
+
+        imgui.push_id( f"gui_sun_selected" )
+
+        if imgui.button( _sun_name ):
+            imgui.open_popup("##select_sun")
+
+        # dnd: receive
+        if imgui.begin_drag_drop_target():
+            payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
+            if payload is not None:
+                payload_obj : GameObject = self.dnd_payload.get_payload_data()
+                _uuid = payload_obj.uuid
+                changed = True
+
+            imgui.end_drag_drop_target()
+
+        else: 
+            changed, _uuid = self.draw_popup_gameObject(
+                "##select_sun", filter=lambda obj: isinstance(obj, Light ))
+
+        if changed:
+            self.scene.setSun( _uuid )
+        
+        imgui.pop_id()
+
     def draw_environment( self ) -> None:
         imgui.begin( "Environment" )
 
@@ -1150,13 +1188,16 @@ class UserInterface( Context ):
 
         _scene = self.scene.getCurrentScene()
 
-        changed, _scene["light_color"] = imgui.color_edit3(
-            "Light color", _scene["light_color"]
-        )
+        self.draw_sun_selector()
+        #changed, _scene["light_color"] = imgui.color_edit3(
+        #    "Light color", _scene["light_color"]
+        #)
         
         changed, _scene["ambient_color"] = imgui.color_edit3(
             "Ambient color", _scene["ambient_color"]
         )
+
+        imgui.separator()
 
         imgui.end()
         return
