@@ -396,7 +396,6 @@ class SceneManager:
 
         scene : SceneManager.Scene = SceneManager.Scene()
         scene["name"]           = _scene["name"]
-        scene["light_color"]    = list(_scene["light_color"])
         scene["ambient_color"]  = list(_scene["ambient_color"])
 
         _gameObjects : List[SceneManager._GameObject] = []
@@ -445,7 +444,6 @@ class SceneManager:
         """Clear the scene in the editor, prepares loading a new scene
         This removes gameObjects, clears editor GUI state, resets camera index.
         """
-        self.context.sun = None
         self.setCamera( None )
         self.setSun( None )
         self.context.gui.set_selected_object()
@@ -530,15 +528,11 @@ class SceneManager:
             elif isinstance( gameObject, Light ):
                 if _instance_data:
                     if "light_type"    in _instance_data: gameObject.light_type   = _instance_data.get("light_type")
-                    if "light_color"   in _instance_data: gameObject.light_color = list(_instance_data.get("light_color"))
+                    if "light_color"   in _instance_data: gameObject.light_color  = list(_instance_data.get("light_color"))
                
                     # set this is current scene sun
                     if _instance_data.get("is_sun", False):
                         self.setSun( gameObject.uuid, scene_id = scene_id )
-
-                # first light is sun .. for now
-                #if self.context.sun is None:
-                #    self.context.sun = gameObject
 
             if "active" in obj:
                 gameObject.active = obj["active"]
@@ -577,9 +571,7 @@ class SceneManager:
                 self.setCamera( None, scene_id = i ) # default to None, find default camera when adding gameObjects
                 self.setSun( None, scene_id = i ) # default to None, find sun when adding gameObjects
                     
-                scene["name"]    = scene.get("name", "default scene")
-
-                scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
+                scene["name"]           = scene.get("name", "default scene")
                 scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
 
                 if "gameObjects" in scene: 

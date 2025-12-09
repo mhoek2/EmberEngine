@@ -67,8 +67,6 @@ class EmberEngine:
         self.cubemaps   : Cubemap           = Cubemap( self )
         self.skybox     : Skybox            = Skybox( self )
 
-        self.sun : GameObject = None
-
         self.roughnessOverride = -1.0
         self.metallicOverride = -1.0
 
@@ -383,8 +381,8 @@ class EmberEngine:
                 if not self.renderer.game_runtime:
                     _sun_active = _sun_active and _sun.hierachyVisible()
 
-                light_dir   = _sun.transform.local_position if _sun_active else (0.0, 0.0, 0.0)
-                light_color = _sun.light_color              if _sun_active else (0.0, 0.0, 0.0)
+                light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
+                light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
 
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], light_color[0], light_color[1], light_color[2], 1.0 )
