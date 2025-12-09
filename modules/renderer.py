@@ -478,13 +478,15 @@ class Renderer:
         MAX_LIGHTS = 64
 
         # std140 layout:
-        # vec4(origin.xyz + radius) + vec4(color.xyzw) = 32 bytes
-        LIGHT_STRUCT = struct.Struct( b"4f 4f" )
+        # vec4(origin.xyz + radius) + vec4(color.xyzw) + vec3(rotation + pad0) = 48 bytes
+        LIGHT_STRUCT = struct.Struct( b"4f 4f 4f" )
 
         class Light(TypedDict):
-            origin  : list[float]
-            color   : list[float]
-            radius  : int
+            origin      : list[float]
+            rotation    : list[float]
+            color       : list[float]
+            radius      : int
+            t           : int # Light(GameObject).Type_
 
         def __init__(self, 
                      shader : Shader, 
@@ -520,19 +522,21 @@ class Renderer:
             for light in lights[:num_lights]:
                 ox, oy, oz  = light["origin"]
                 cx, cy, cz  = light["color"]
-                r           = light["radius"]
+                rx, ry, rz  = light["rotation"]
 
                 data += self.LIGHT_STRUCT.pack(
-                    ox, oy, oz, r,      # vec4(origin.xyz + radius)
-                    cx, cy, cz, 0.0,    # vec4(color)
+                    ox, oy, oz, light["radius"],    # vec4(origin.xyz + radius)
+                    cx, cy, cz, int(light["t"]),    # vec4(color.xyz + t(type))
+                    rx, ry, rz, 0,                  # vec4(rotation.xyz + pad0)
                 )
 
             # fill empty lights
             empty_count = self.MAX_LIGHTS - num_lights
             if empty_count:
                 empty = self.LIGHT_STRUCT.pack(
-                    0,0,0,0,    # vec4(origin.xyz + radius)
-                    0,0,0,0     # vec4(color)
+                    0, 0, 0, 0, # vec4(origin.xyz + radius)
+                    0, 0, 0, 0,  # vec4(color + type)
+                    0, 0, 0, 0  # vec4(rotation + pad0)
                 )
                 data += empty * empty_count
 

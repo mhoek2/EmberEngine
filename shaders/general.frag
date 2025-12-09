@@ -30,11 +30,15 @@ out vec4 out_color;
 uniform vec4 u_ViewOrigin;
 uniform int in_renderMode;
 
+#define LIGHT_TYPE_DIRECTIONAL	0
+#define LIGHT_TYPE_SPOT			1
+#define LIGHT_TYPE_AREA			2
+
 struct Light
 {
-	vec3	origin;
-	float	radius;
-	vec4	color;	
+	vec4	origin;
+	vec4	color;
+	vec4	rotation;
 };
 
 layout( std140 ) uniform Lights
@@ -142,18 +146,49 @@ vec3 CalcDynamicLightContribution(
 	vec3 outColor = vec3(0.0);
 	vec3 position = viewOrigin - viewDir;
 
-	for ( int i = 0; i < u_num_lights; i++ )
-	{
-		Light light = u_lights[i];
+    // Hard-coded spot cone
+    const float innerCos = 0.90;
+    const float outerCos = 0.70;
 
-		vec3  L  = light.origin.xyz - position;
-		float sqrLightDist = dot(L, L);
+    for ( int i = 0; i < u_num_lights; i++ )
+    {
+        Light light = u_lights[i];
 
-		float attenuation = CalcLightAttenuation(light.radius * light.radius / sqrLightDist);
+        vec3 L;
+        float attenuation = 1.0;
+        float radius = light.origin.w;
+        int light_type = int(light.color.w);
 
-		L /= sqrt(sqrLightDist);
+        if ( light_type == LIGHT_TYPE_DIRECTIONAL )
+        {
+            L = normalize(light.origin.xyz); 
+            attenuation = 1.0; // no distance attenuation
+        }
+		
+        // Spot and area lights are position-based
+        else
+        {
+            L = light.origin.xyz - position;
+            float sqrLightDist = dot(L, L);
+            L /= sqrt(sqrLightDist);
 
-		vec3  H  = normalize(L + E);
+            attenuation = CalcLightAttenuation(radius * radius / sqrLightDist);
+
+            if ( light_type == LIGHT_TYPE_SPOT )
+            {
+                // rotation.xyz contains forward direction for the spot
+                vec3 spotDir = normalize(light.rotation.xyz);
+
+                float cosAngle = dot(L, spotDir);
+
+                // hard-coded cone
+                float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
+
+                attenuation *= spotFactor;
+            }
+        }
+
+		vec3 H = normalize(L + E);
 		float NL = clamp(dot(N, L), 0.0, 1.0);
 		float LH = clamp(dot(L, H), 0.0, 1.0);
 		float NH = clamp(dot(N, H), 0.0, 1.0);

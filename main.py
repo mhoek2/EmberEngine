@@ -413,9 +413,11 @@ class EmberEngine:
                         continue
 
                     lights.append( Renderer.LightUBO.Light(
-                        origin  = obj.transform.position,
-                        color   = obj.light_color,
-                        radius  = obj.radius,
+                        origin      = obj.transform.position,
+                        rotation    = obj.transform.rotation,
+                        color       = obj.light_color,
+                        radius      = obj.radius,
+                        t           = obj.light_type
                     ) )
 
                 self.renderer.bind_light_ubo( lights )
