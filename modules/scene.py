@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from gameObjects.gameObject import GameObject
     from gameObjects.camera import Camera
     from gameObjects.light import Light
+    from gameObjects.skybox import Skybox
 
 import traceback
 
@@ -29,6 +30,7 @@ class SceneManager:
         gameObjects     : List["_GameObject"]
         camera          : "Camera"
         sun             : "Light"
+        sky_type        : "Skybox.Type_"
         light_color     : List[float]
         ambient_color   : List[float]
 
@@ -397,6 +399,7 @@ class SceneManager:
         scene : SceneManager.Scene = SceneManager.Scene()
         scene["name"]           = _scene["name"]
         scene["ambient_color"]  = list(_scene["ambient_color"])
+        scene["sky_type"]       = _scene["sky_type"]
 
         _gameObjects : List[SceneManager._GameObject] = []
 
@@ -572,7 +575,8 @@ class SceneManager:
                 self.setSun( None, scene_id = i ) # default to None, find sun when adding gameObjects
                     
                 scene["name"]           = scene.get("name", "default scene")
-                scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
+                scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color )
+                scene["sky_type"]       = scene.get("sky_type",         self.settings.default_sky_type )
 
                 if "gameObjects" in scene: 
                     self.loadGameObjectsRecursive( 

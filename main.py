@@ -334,10 +334,12 @@ class EmberEngine:
             if not self.renderer.paused:
                 self.renderer.begin_frame()
 
+                _scene = self.scene.getCurrentScene()
+
                 #
                 # skybox
                 #
-                self.skybox.draw()
+                self.skybox.draw( _scene )
 
                 #
                 # editor viewport
@@ -372,7 +374,6 @@ class EmberEngine:
                 #
                 # setup scene
                 #
-                _scene = self.scene.getCurrentScene()
 
                 # sun direction/position and color
                 _sun = self.scene.getSun()

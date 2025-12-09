@@ -23,6 +23,7 @@ from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.light import Light
 from gameObjects.camera import Camera
+from gameObjects.skybox import Skybox
 
 from pathlib import Path
 import textwrap
@@ -144,6 +145,7 @@ class UserInterface( Context ):
         self.inspector      : UserInterface.Inspector = self.Inspector( self.context )
         self.hierarchy      : UserInterface.Hierarchy = self.Hierarchy( self.context )
         self.guizmo         : UserInterface.ImGuizmo = self.ImGuizmo( self.context )
+        self.scene_settings : UserInterface.SceneSettings = self.SceneSettings( self.context )
 
         # drag and drop
         self.dnd_payload    : UserInterface.DragAndDropPayload = UserInterface.DragAndDropPayload()
@@ -1111,96 +1113,108 @@ class UserInterface( Context ):
             colors  = self.context.gui.color_button_trash
         )
 
-    def draw_camera_selector( self ) -> None:
-        imgui.text("camera")
-        imgui.same_line(100.0)
+    class SceneSettings( Context ):
 
-        changed : bool = False
-        _uuid   : uid.UUID = None
+        def __init__( self, context ):
+            super().__init__( context )
 
-        _camera : GameObject = self.scene.getCamera()
-        _camera_name : str = _camera.name if _camera else "None" 
+        def camera_selector( self ) -> None:
+            imgui.text("camera")
+            imgui.same_line(100.0)
 
-        imgui.push_id( f"gui_camera_selected" )
+            changed : bool = False
+            _uuid   : uid.UUID = None
 
-        if imgui.button( _camera_name ):
-            imgui.open_popup("##select_camera")
+            _camera : GameObject = self.scene.getCamera()
+            _camera_name : str = _camera.name if _camera else "None" 
 
-        # dnd: receive
-        if imgui.begin_drag_drop_target():
-            payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
-            if payload is not None:
-                payload_obj : GameObject = self.dnd_payload.get_payload_data()
-                _uuid = payload_obj.uuid
-                changed = True
+            imgui.push_id( f"gui_camera_selected" )
 
-            imgui.end_drag_drop_target()
+            if imgui.button( _camera_name ):
+                imgui.open_popup("##select_camera")
 
-        else: 
-            changed, _uuid = self.draw_popup_gameObject(
-                "##select_camera", filter=lambda obj: isinstance(obj, Camera ))
+            # dnd: receive
+            if imgui.begin_drag_drop_target():
+                payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
+                if payload is not None:
+                    payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
+                    _uuid = payload_obj.uuid
+                    changed = True
 
-        if changed:
-            self.scene.setCamera( _uuid )
+                imgui.end_drag_drop_target()
 
-        imgui.pop_id()
+            else: 
+                changed, _uuid = self.context.gui.draw_popup_gameObject(
+                    "##select_camera", filter=lambda obj: isinstance(obj, Camera ))
 
-    def draw_sun_selector( self ) -> None:
-        imgui.text("sun")
-        imgui.same_line(100.0)
+            if changed:
+                self.scene.setCamera( _uuid )
 
-        changed : bool = False
-        _uuid   : uid.UUID = None
+            imgui.pop_id()
+            imgui.separator()
 
-        _sun : GameObject = self.scene.getSun()
-        _sun_name : str = _sun.name if _sun else "None" 
+        def sun_selector( self ) -> None:
+            imgui.text("sun")
+            imgui.same_line(100.0)
 
-        imgui.push_id( f"gui_sun_selected" )
+            changed : bool = False
+            _uuid   : uid.UUID = None
 
-        if imgui.button( _sun_name ):
-            imgui.open_popup("##select_sun")
+            _sun : GameObject = self.scene.getSun()
+            _sun_name : str = _sun.name if _sun else "None" 
 
-        # dnd: receive
-        if imgui.begin_drag_drop_target():
-            payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
-            if payload is not None:
-                payload_obj : GameObject = self.dnd_payload.get_payload_data()
-                _uuid = payload_obj.uuid
-                changed = True
+            imgui.push_id( f"gui_sun_selected" )
 
-            imgui.end_drag_drop_target()
+            if imgui.button( _sun_name ):
+                imgui.open_popup("##select_sun")
 
-        else: 
-            changed, _uuid = self.draw_popup_gameObject(
-                "##select_sun", filter=lambda obj: isinstance(obj, Light ))
+            # dnd: receive
+            if imgui.begin_drag_drop_target():
+                payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
+                if payload is not None:
+                    payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
+                    _uuid = payload_obj.uuid
+                    changed = True
 
-        if changed:
-            self.scene.setSun( _uuid )
+                imgui.end_drag_drop_target()
+
+            else: 
+                changed, _uuid = self.context.gui.draw_popup_gameObject(
+                    "##select_sun", filter=lambda obj: isinstance(obj, Light ))
+
+            if changed:
+                self.scene.setSun( _uuid )
         
-        imgui.pop_id()
+            imgui.pop_id()
+            imgui.separator()
 
-    def draw_environment( self ) -> None:
-        imgui.begin( "Environment" )
+        def sky_settings( self, scene : SceneManager.Scene ) -> None:
+            type_names = [t.name for t in Skybox.Type_]
 
-        self.draw_camera_selector()
+            changed, new_index = imgui.combo(
+                "Sky type",
+                scene["sky_type"],
+                type_names
+            )
+            if changed:
+                scene["sky_type"] = Skybox.Type_( new_index )
 
-        imgui.separator()
+            # ambient
+            changed, scene["ambient_color"] = imgui.color_edit3(
+                "Ambient color", scene["ambient_color"]
+            )
 
-        _scene = self.scene.getCurrentScene()
+            imgui.separator()
 
-        self.draw_sun_selector()
-        #changed, _scene["light_color"] = imgui.color_edit3(
-        #    "Light color", _scene["light_color"]
-        #)
-        
-        changed, _scene["ambient_color"] = imgui.color_edit3(
-            "Ambient color", _scene["ambient_color"]
-        )
+        def render( self ) -> None:
+            imgui.begin( "Scene" )
+            _scene = self.scene.getCurrentScene()
 
-        imgui.separator()
+            self.camera_selector()
+            self.sun_selector()
+            self.sky_settings( _scene )
 
-        imgui.end()
-        return
+            imgui.end()
 
     # combo example
     #selected = 0
@@ -1226,7 +1240,6 @@ class UserInterface( Context ):
             degrees = enum.auto()
 
         def __init__( self, context ):
-            super().__init__( context )
             super().__init__( context )
 
             self.rotation_mode = self.RotationMode_.degrees
@@ -2039,7 +2052,7 @@ class UserInterface( Context ):
             self.hierarchy.render()
             self.draw_settings()
             self.inspector.render()
-            self.draw_environment()
+            self.scene_settings.render()
 
             self.console_window.render()
             self.text_editor.render()

@@ -7,9 +7,18 @@ from OpenGL.GLU import *
 
 from modules.context import Context
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from modules.scene import SceneManager
+
 import numpy as np
+import enum
 
 class Skybox( Context ):
+    class Type_(enum.IntEnum):
+        procedural      = 0             # (= 0)
+        skybox          = enum.auto()   # (= 1)
+
     """This class is responsible for setting up the VAO and VBO for the skybox, also rendering commands to draw the skybox"""
     def __init__( self, context ):
         """Handles VAO, VBO creation for the skybox
@@ -80,13 +89,15 @@ class Skybox( Context ):
         glBindBuffer( GL_ARRAY_BUFFER, 0 );
         glBindVertexArray( 0 );
 
-        # procedural
-        self.procedural : bool = True
-
-    def draw( self ) -> None:
+    def draw( self, scene : "SceneManager.Scene" = None ) -> None:
         """Issue render commands to draw the skybox"""
 
-        if self.procedural:
+        if not scene:
+            return
+
+        _sky_type : Skybox.Type_ = Skybox.Type_( scene["sky_type"] )
+
+        if _sky_type == Skybox.Type_.procedural:
             self.renderer.use_shader( self.renderer.skybox_proc )
         else:
             self.renderer.use_shader( self.renderer.skybox )
@@ -97,7 +108,7 @@ class Skybox( Context ):
         # viewmatrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
 
-        if self.procedural:
+        if _sky_type == Skybox.Type_.procedural:
             _sun = self.scene.getSun()
             _sun_active = _sun and _sun.hierachyActive()
 
