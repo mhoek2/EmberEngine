@@ -468,11 +468,12 @@ class Renderer:
 
     def create_shaders( self ) -> None:
         """Create the GLSL shaders used for the editor and general pipeline"""
-        self.general    = Shader( self.context, "general" )
-        self.skybox     = Shader( self.context, "skybox" )
-        self.gamma      = Shader( self.context, "gamma" )
-        self.color      = Shader( self.context, "color" )
-        self.resolve    = Shader( self.context, "resolve" )
+        self.general            = Shader( self.context, "general" )
+        self.skybox             = Shader( self.context, "skybox" )
+        self.skybox_proc        = Shader( self.context, "skybox_proc" )
+        self.gamma              = Shader( self.context, "gamma" )
+        self.color              = Shader( self.context, "color" )
+        self.resolve            = Shader( self.context, "resolve" )
 
     class LightUBO:
         MAX_LIGHTS = 64
