@@ -39,6 +39,9 @@ class Settings:
         self.default_procedural_sky_color       : list[float]  = [0.4, 0.6, 1.0]
         self.default_procedural_horizon_color   : list[float]  = [0.9, 0.9, 1.0]
         self.default_procedural_ground_color    : list[float]  = [0.2, 0.25, 0.3]
+        self.default_procedural_sunset_color    : list[float]  = [0.5, 0., 0.3]
+        self.default_procedural_night_color     : list[float]  = [0.3, 0.2, 0.3]
+        self.default_procedural_night_brightness : float = 0.05
 
         # wireframe
         self.drawWireframe = False

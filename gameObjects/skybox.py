@@ -122,12 +122,22 @@ class Skybox( Context ):
             _horizon_color  = scene["procedural_horizon_color"]
             _ground_color   = scene["procedural_ground_color"]
 
+            _sunset_color   = scene["procedural_sunset_color"]
+            _night_color    = scene["procedural_night_color"]
+
+            _night_brightness = scene["procedural_night_brightness"]
+
             glUniform3f( self.renderer.shader.uniforms["uSkyColor"], _sky_color[0], _sky_color[1], _sky_color[2] )
             glUniform3f( self.renderer.shader.uniforms["uHorizonColor"], _horizon_color[0], _horizon_color[1], _horizon_color[2] )
             glUniform3f( self.renderer.shader.uniforms["uGroundColor"], _ground_color[0], _ground_color[1], _ground_color[2] )
 
+            glUniform3f( self.renderer.shader.uniforms["uSunsetColor"], _sunset_color[0], _sunset_color[1], _sunset_color[2] )
+            glUniform3f( self.renderer.shader.uniforms["uNightColor"], _night_color[0], _night_color[1], _night_color[2] )
+
             glUniform3f( self.renderer.shader.uniforms["uSunDirection"], light_dir[0], light_dir[1], light_dir[2] )
             glUniform3f( self.renderer.shader.uniforms["uSunColor"], light_color[0], light_color[1], light_color[2] )
+            
+            glUniform1f( self.renderer.shader.uniforms["uNightBrightness"], _night_brightness )
 
         else:
             self.context.cubemaps.bind( self.context.environment_map, GL_TEXTURE0, "sEnvironment", 0 )

@@ -1232,6 +1232,17 @@ class UserInterface( Context ):
                         "Ground color", scene["procedural_ground_color"]
                     )
 
+                    _, scene["procedural_sunset_color"] = imgui.color_edit3(
+                        "Sunset color", scene["procedural_sunset_color"]
+                    )
+
+                    _, scene["procedural_night_brightness"] = imgui.drag_float(
+                        f"Fov", scene["procedural_night_brightness"], 0.01
+                    )
+                    _, scene["procedural_night_color"] = imgui.color_edit3(
+                        "Night color", scene["procedural_night_color"]
+                    )
+
                     imgui.tree_pop()
 
             imgui.separator()

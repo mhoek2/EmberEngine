@@ -37,6 +37,9 @@ class SceneManager:
         procedural_sky_color        : List[float]
         procedural_horizon_color    : List[float]
         procedural_ground_color     : List[float]
+        procedural_sunset_color     : List[float]
+        procedural_night_color      : List[float]
+        procedural_night_brightness : float
 
     class _GameObject(TypedDict):
         """Typedef for a gameObjects in a scene file"""
@@ -412,6 +415,9 @@ class SceneManager:
         scene["procedural_sky_color"]       = _scene["procedural_sky_color"]
         scene["procedural_horizon_color"]   = _scene["procedural_horizon_color"]
         scene["procedural_ground_color"]    = _scene["procedural_ground_color"]
+        scene["procedural_sunset_color"]    = _scene["procedural_sunset_color"]
+        scene["procedural_night_color"]     = _scene["procedural_night_color"]
+        scene["procedural_night_brightness"]     = _scene["procedural_night_brightness"]
 
         _gameObjects : List[SceneManager._GameObject] = []
 
@@ -596,6 +602,9 @@ class SceneManager:
                 scene["procedural_sky_color"]       = scene.get("procedural_sky_color",     self.settings.default_procedural_sky_color )
                 scene["procedural_horizon_color"]   = scene.get("procedural_horizon_color", self.settings.default_procedural_horizon_color )
                 scene["procedural_ground_color"]    = scene.get("procedural_ground_color",  self.settings.default_procedural_ground_color )
+                scene["procedural_sunset_color"]    = scene.get("procedural_sunset_color",  self.settings.default_procedural_sunset_color )
+                scene["procedural_night_color"]     = scene.get("procedural_night_color",   self.settings.default_procedural_night_color )
+                scene["procedural_night_brightness"]     = scene.get("procedural_night_brightness",   self.settings.default_procedural_night_brightness )
 
                 if "gameObjects" in scene: 
                     self.loadGameObjectsRecursive( 
