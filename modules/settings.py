@@ -36,6 +36,10 @@ class Settings:
         self.default_light_color     : list[float]  = [0.0, 0.0, 0.0]
         self.default_ambient_color   : list[float]  = [0.0, 0.0, 0.0]
 
+        self.default_procedural_sky_color       : list[float]  = [0.4, 0.6, 1.0]
+        self.default_procedural_horizon_color   : list[float]  = [0.9, 0.9, 1.0]
+        self.default_procedural_ground_color    : list[float]  = [0.2, 0.25, 0.3]
+
         # wireframe
         self.drawWireframe = False
 

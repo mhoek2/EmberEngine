@@ -34,6 +34,10 @@ class SceneManager:
         light_color     : List[float]
         ambient_color   : List[float]
 
+        procedural_sky_color        : List[float]
+        procedural_horizon_color    : List[float]
+        procedural_ground_color     : List[float]
+
     class _GameObject(TypedDict):
         """Typedef for a gameObjects in a scene file"""
         instance    : str
@@ -404,6 +408,11 @@ class SceneManager:
         scene["ambient_color"]  = list(_scene["ambient_color"])
         scene["sky_type"]       = _scene["sky_type"]
 
+        # procedural sky settings
+        scene["procedural_sky_color"]       = _scene["procedural_sky_color"]
+        scene["procedural_horizon_color"]   = _scene["procedural_horizon_color"]
+        scene["procedural_ground_color"]    = _scene["procedural_ground_color"]
+
         _gameObjects : List[SceneManager._GameObject] = []
 
         self.saveGameObjectRecursive( 
@@ -582,6 +591,11 @@ class SceneManager:
                 scene["name"]           = scene.get("name", "default scene")
                 scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color )
                 scene["sky_type"]       = scene.get("sky_type",         self.settings.default_sky_type )
+
+                # procedural sky settings
+                scene["procedural_sky_color"]       = scene.get("procedural_sky_color",     self.settings.default_procedural_sky_color )
+                scene["procedural_horizon_color"]   = scene.get("procedural_horizon_color", self.settings.default_procedural_horizon_color )
+                scene["procedural_ground_color"]    = scene.get("procedural_ground_color",  self.settings.default_procedural_ground_color )
 
                 if "gameObjects" in scene: 
                     self.loadGameObjectsRecursive( 

@@ -854,9 +854,20 @@ class UserInterface( Context ):
     def draw_settings( self ) -> None:
         imgui.begin( "Settings" )
 
-        changed, self.settings.drawWireframe = imgui.checkbox( 
+        _, self.settings.drawWireframe = imgui.checkbox( 
             "Wireframe", self.settings.drawWireframe 
         )
+
+        imgui.same_line()
+        _, self.settings.drawGrid = imgui.checkbox( 
+            "Grid", self.settings.drawGrid 
+        )
+
+        imgui.same_line()
+        _, self.settings.drawAxis = imgui.checkbox( 
+            "Axis", self.settings.drawAxis 
+        )
+
 
         imgui.separator()
 
@@ -1203,6 +1214,25 @@ class UserInterface( Context ):
             changed, scene["ambient_color"] = imgui.color_edit3(
                 "Ambient color", scene["ambient_color"]
             )
+
+            imgui.separator()
+
+            # procedural settings
+            if scene["sky_type"] == Skybox.Type_.procedural:
+                if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
+                    _, scene["procedural_sky_color"] = imgui.color_edit3(
+                        "Sky color", scene["procedural_sky_color"]
+                    )
+
+                    _, scene["procedural_horizon_color"] = imgui.color_edit3(
+                        "Horizon color", scene["procedural_horizon_color"]
+                    )
+
+                    _, scene["procedural_ground_color"] = imgui.color_edit3(
+                        "Ground color", scene["procedural_ground_color"]
+                    )
+
+                    imgui.tree_pop()
 
             imgui.separator()
 

@@ -118,9 +118,13 @@ class Skybox( Context ):
             light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
             light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
 
-            glUniform3f( self.renderer.shader.uniforms["uSkyColor"], 0.4, 0.6, 1.0)
-            glUniform3f( self.renderer.shader.uniforms["uHorizonColor"], 0.9, 0.9, 1.0)
-            glUniform3f( self.renderer.shader.uniforms["uGroundColor"], 0.2, 0.25, 0.3)
+            _sky_color      = scene["procedural_sky_color"]
+            _horizon_color  = scene["procedural_horizon_color"]
+            _ground_color   = scene["procedural_ground_color"]
+
+            glUniform3f( self.renderer.shader.uniforms["uSkyColor"], _sky_color[0], _sky_color[1], _sky_color[2] )
+            glUniform3f( self.renderer.shader.uniforms["uHorizonColor"], _horizon_color[0], _horizon_color[1], _horizon_color[2] )
+            glUniform3f( self.renderer.shader.uniforms["uGroundColor"], _ground_color[0], _ground_color[1], _ground_color[2] )
 
             glUniform3f( self.renderer.shader.uniforms["uSunDirection"], light_dir[0], light_dir[1], light_dir[2] )
             glUniform3f( self.renderer.shader.uniforms["uSunColor"], light_color[0], light_color[1], light_color[2] )
