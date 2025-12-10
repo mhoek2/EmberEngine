@@ -221,6 +221,9 @@ class EmberEngine:
 
     def draw_grid( self ):
         """Draw the horizontal grid to the framebuffer"""
+        if not self.settings.drawGrid:
+            return
+
         self.renderer.use_shader( self.renderer.color )
         # bind projection matrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
@@ -251,6 +254,9 @@ class EmberEngine:
 
     def draw_axis( self, length : float = 1.0, width : float = 3.0, centered : bool = False ):
         """Draw axis lines. width and length can be adjust, also if axis is centered or half-axis"""
+        if not self.settings.drawAxis:
+            return
+        
         glLineWidth(width)
 
         self.renderer.use_shader(self.renderer.color)
@@ -344,7 +350,7 @@ class EmberEngine:
                 #
                 # editor viewport
                 #
-                if not app.settings.is_exported:
+                if not app.settings.is_exported and not app.renderer.game_runtime:
                     self.draw_grid()
                     self.draw_axis(100.0, centered=True)
 

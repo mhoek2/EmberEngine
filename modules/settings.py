@@ -44,9 +44,13 @@ class Settings:
         self.drawWireframe = False
 
         # grid
-        self.grid_color = ( 0.83, 0.74, 94.0, 1.0 )
-        self.grid_size = 10.0
-        self.grid_spacing = 0.5
+        self.drawGrid       = True
+        self.grid_color     = ( 0.83, 0.74, 94.0, 1.0 )
+        self.grid_size      = 10.0
+        self.grid_spacing   = 0.5
+
+        # axis
+        self.drawAxis       = True
 
         # scriptable behaivior
         self.SCRIPT_AUTO_IMPORT_MODULES = {
