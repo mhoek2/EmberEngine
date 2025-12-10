@@ -115,7 +115,15 @@ class EmberEngine:
 
     def loadDefaultEnvironment( self ) -> None:
         """Load the default environment cubemap"""
-        self.environment_map = self.cubemaps.loadOrFind(self.settings.default_environment)
+        _scene = self.scene.getCurrentScene()
+
+        # needs if else for cubemap skybox or procedural skybox.
+
+        # if cubemap:
+        #self.environment_map = self.cubemaps.loadOrFind(self.settings.default_environment)
+
+        #elif procedural
+        self.environment_map = self.skybox.create_procedural_cubemap( _scene )
 
     ##
     ## Need to move this to dedicated class

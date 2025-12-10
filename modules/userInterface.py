@@ -124,6 +124,9 @@ class UserInterface( Context ):
 
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
 
+        #debug 
+        self.test_cubemap = None
+
     def initialize_context( self ) -> None:
         if self.initialized:
             return
@@ -1244,6 +1247,37 @@ class UserInterface( Context ):
                     )
 
                     imgui.tree_pop()
+
+
+            # skybox IBL debug
+
+            if not self.context.gui.test_cubemap:
+                faceIndex = 0
+
+                side_image = self.context.cubemaps.cubemap[self.context.environment_map]
+                pixels = glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, GL_RGBA, GL_UNSIGNED_BYTE)
+
+                size = 0
+                for i in range(6):
+                    w = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_WIDTH)
+                    h = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_HEIGHT)
+                    print(f"Face {i}: {w} x {h}")
+
+                    size = w
+
+                self.context.gui.test_cubemap = glGenTextures(1);
+                glBindTexture(GL_TEXTURE_2D, self.context.gui.test_cubemap)
+                glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, size, size)
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size, size, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
+
+            if self.context.gui.test_cubemap:
+                glBindTexture( GL_TEXTURE_2D, self.context.gui.test_cubemap )
+
+                image       = imgui.ImTextureRef(self.context.gui.test_cubemap)
+                image_size  = imgui.ImVec2(50, 50);
+                image_uv0   = imgui.ImVec2( 0, 1 )
+                image_uv1   = imgui.ImVec2( 1, 0 )
+                imgui.image( image, image_size, image_uv0, image_uv1 )
 
             imgui.separator()
 
