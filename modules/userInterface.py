@@ -1637,6 +1637,14 @@ class UserInterface( Context ):
                     "Light color", gameObject.light_color
                 )
 
+                changed, gameObject.radius = imgui.drag_float(
+                    f"Radius", gameObject.radius, 0.1
+                )
+
+                changed, gameObject.intensity = imgui.drag_float(
+                    f"Intensity", gameObject.intensity, 0.1
+                )
+
                 imgui.separator()
                 imgui.tree_pop()
 

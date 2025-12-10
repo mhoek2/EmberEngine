@@ -487,6 +487,7 @@ class Renderer:
             rotation    : list[float]
             color       : list[float]
             radius      : int
+            intensity   : float
             t           : int # Light(GameObject).Type_
 
         def __init__(self, 
@@ -528,7 +529,7 @@ class Renderer:
                 data += self.LIGHT_STRUCT.pack(
                     ox, oy, oz, light["radius"],    # vec4(origin.xyz + radius)
                     cx, cy, cz, int(light["t"]),    # vec4(color.xyz + t(type))
-                    rx, ry, rz, 0,                  # vec4(rotation.xyz + pad0)
+                    rx, ry, rz, light["intensity"], # vec4(rotation.xyz + intensity)
                 )
 
             # fill empty lights
@@ -537,7 +538,7 @@ class Renderer:
                 empty = self.LIGHT_STRUCT.pack(
                     0, 0, 0, 0, # vec4(origin.xyz + radius)
                     0, 0, 0, 0,  # vec4(color + type)
-                    0, 0, 0, 0  # vec4(rotation + pad0)
+                    0, 0, 0, 0  # vec4(rotation + intensiry)
                 )
                 data += empty * empty_count
 

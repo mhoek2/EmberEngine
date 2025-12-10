@@ -361,8 +361,11 @@ class SceneManager:
                
 
             elif isinstance( obj, Light ):   
-                buffer["instance_data"]["light_type"] = obj.light_type
-                buffer["instance_data"]["light_color"] = list(obj.light_color)
+                buffer["instance_data"]["light_type"]   = obj.light_type
+                buffer["instance_data"]["light_color"]  = list(obj.light_color)
+                buffer["instance_data"]["radius"]       = obj.radius
+                buffer["instance_data"]["intensity"]    = obj.intensity
+
 
                 if _scene_sun:
                     buffer["instance_data"]["is_sun"] = True if obj.uuid == _scene_sun.uuid else False
@@ -532,6 +535,8 @@ class SceneManager:
                 if _instance_data:
                     if "light_type"    in _instance_data: gameObject.light_type   = _instance_data.get("light_type")
                     if "light_color"   in _instance_data: gameObject.light_color  = list(_instance_data.get("light_color"))
+                    if "radius"        in _instance_data: gameObject.radius       = _instance_data.get("radius")
+                    if "intensity"     in _instance_data: gameObject.intensity    = _instance_data.get("intensity")
                
                     # set this is current scene sun
                     if _instance_data.get("is_sun", False):

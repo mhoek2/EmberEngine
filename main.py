@@ -418,6 +418,7 @@ class EmberEngine:
                         rotation    = obj.transform.rotation,
                         color       = obj.light_color,
                         radius      = obj.radius,
+                        intensity   = obj.intensity,
                         t           = obj.light_type
                     ) )
 

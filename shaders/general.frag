@@ -158,6 +158,7 @@ vec3 CalcDynamicLightContribution(
         float attenuation = 1.0;
         float radius = light.origin.w;
         int light_type = int(light.color.w);
+        float light_intensity = light.rotation.w;
 
         if ( light_type == LIGHT_TYPE_DIRECTIONAL )
         {
@@ -196,7 +197,7 @@ vec3 CalcDynamicLightContribution(
 
 		vec3 reflectance = diffuse + CalcSpecular(specular, NH, NL, NE, LH, VH, roughness);
 
-		outColor += light.color.rgb * reflectance * attenuation * NL;
+		outColor += light.color.rgb * reflectance * attenuation * NL * light_intensity;
 	}
 	return outColor;
 }
