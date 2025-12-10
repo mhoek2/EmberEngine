@@ -124,9 +124,6 @@ class UserInterface( Context ):
 
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
 
-        #debug 
-        self.test_cubemap = None
-
     def initialize_context( self ) -> None:
         if self.initialized:
             return
@@ -1132,7 +1129,12 @@ class UserInterface( Context ):
         def __init__( self, context ):
             super().__init__( context )
 
-        def camera_selector( self ) -> None:
+            self.test_cubemap_initialized = False
+
+            self.test_cubemap = None
+            self.test_cubemap_update = True
+
+        def _camera_selector( self ) -> None:
             imgui.text("camera")
             imgui.same_line(100.0)
 
@@ -1167,7 +1169,7 @@ class UserInterface( Context ):
             imgui.pop_id()
             imgui.separator()
 
-        def sun_selector( self ) -> None:
+        def _sun_selector( self ) -> None:
             imgui.text("sun")
             imgui.same_line(100.0)
 
@@ -1202,7 +1204,57 @@ class UserInterface( Context ):
             imgui.pop_id()
             imgui.separator()
 
-        def sky_settings( self, scene : SceneManager.Scene ) -> None:
+        def _skybox_preview( self, scene : SceneManager.Scene ) -> None:
+            """Preview skybox sides
+            
+            This logic needs to be refactored, its basicly implemented as concept
+            """
+            if not self.test_cubemap_initialized:
+                self.test_cubemap = glGenTextures(6)
+
+            if self.test_cubemap_update:
+                skybox = self.context.cubemaps.cubemap[self.context.environment_map]
+                glBindTexture(GL_TEXTURE_CUBE_MAP, skybox)
+                pixels = []
+                
+                size = 0
+                for i in range(6):
+                    # extract pixels
+                    pixels.append( glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, GL_UNSIGNED_BYTE) )
+
+                    size = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_WIDTH)    # width
+                    #h = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_HEIGHT)     # height
+                    print(f"Size {i}: {size}")
+
+                    glBindTexture(GL_TEXTURE_2D, self.test_cubemap[i])
+                    
+                    # allocate storag once
+                    if not self.test_cubemap_initialized: 
+                        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, size, size)
+
+                    # copy
+                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size, size, GL_RGBA, GL_UNSIGNED_BYTE, pixels[i])
+                    
+                    self.test_cubemap_update = False
+
+                # just for storage lol
+                if not self.test_cubemap_initialized:
+                    self.test_cubemap_initialized = True
+
+            if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Skybox preview", 0 ):
+                if self.test_cubemap is not None:
+                    for i in range(6):
+                        glBindTexture( GL_TEXTURE_2D, self.test_cubemap[i] )
+
+                        image       = imgui.ImTextureRef(self.test_cubemap[i])
+                        image_size  = imgui.ImVec2(100, 100);
+                        image_uv0   = imgui.ImVec2( 0, 1 )
+                        image_uv1   = imgui.ImVec2( 1, 0 )
+                        imgui.image( image, image_size, image_uv0, image_uv1 )
+
+                imgui.tree_pop()
+
+        def _sky_settings( self, scene : SceneManager.Scene ) -> None:
             type_names = [t.name for t in Skybox.Type_]
 
             changed, new_index = imgui.combo(
@@ -1213,6 +1265,10 @@ class UserInterface( Context ):
             if changed:
                 scene["sky_type"] = Skybox.Type_( new_index )
 
+                # update, regular skybox cubemaps probably allocates a new cubemap still ..
+                self.context.loadDefaultEnvironment()
+
+ 
             # ambient
             changed, scene["ambient_color"] = imgui.color_edit3(
                 "Ambient color", scene["ambient_color"]
@@ -1222,62 +1278,57 @@ class UserInterface( Context ):
 
             # procedural settings
             if scene["sky_type"] == Skybox.Type_.procedural:
-                if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
-                    _, scene["procedural_sky_color"] = imgui.color_edit3(
+                if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Procedural Skybox", imgui.TreeNodeFlags_.default_open ):
+                    _, self.context.skybox.realtime = imgui.checkbox( f"Realtime", self.context.skybox.realtime )
+                    imgui.set_item_tooltip("Realtime OR generated cubemap (rebuilt when sky changes)")
+
+                    any_changed = False
+                   
+                    changed, scene["procedural_sky_color"] = imgui.color_edit3(
                         "Sky color", scene["procedural_sky_color"]
                     )
+                    if changed:
+                        any_changed = True
 
-                    _, scene["procedural_horizon_color"] = imgui.color_edit3(
+                    changed, scene["procedural_horizon_color"] = imgui.color_edit3(
                         "Horizon color", scene["procedural_horizon_color"]
                     )
+                    if changed:
+                        any_changed = True
 
-                    _, scene["procedural_ground_color"] = imgui.color_edit3(
+                    changed, scene["procedural_ground_color"] = imgui.color_edit3(
                         "Ground color", scene["procedural_ground_color"]
                     )
+                    if changed:
+                        any_changed = True
 
-                    _, scene["procedural_sunset_color"] = imgui.color_edit3(
+                    changed, scene["procedural_sunset_color"] = imgui.color_edit3(
                         "Sunset color", scene["procedural_sunset_color"]
                     )
+                    if changed:
+                        any_changed = True
 
-                    _, scene["procedural_night_brightness"] = imgui.drag_float(
-                        f"Fov", scene["procedural_night_brightness"], 0.01
+                    changed, scene["procedural_night_brightness"] = imgui.drag_float(
+                        f"Night intensity", scene["procedural_night_brightness"], 0.01
                     )
-                    _, scene["procedural_night_color"] = imgui.color_edit3(
+                    if changed:
+                        any_changed = True
+
+                    changed, scene["procedural_night_color"] = imgui.color_edit3(
                         "Night color", scene["procedural_night_color"]
                     )
+                    if changed:
+                        any_changed = True
+
+                    # update skybox (cubemap)
+                    if any_changed:
+                        self.context.skybox.extract_procedural_cubemap( scene )
 
                     imgui.tree_pop()
 
 
             # skybox IBL debug
-
-            if not self.context.gui.test_cubemap:
-                faceIndex = 0
-
-                side_image = self.context.cubemaps.cubemap[self.context.environment_map]
-                pixels = glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, GL_RGBA, GL_UNSIGNED_BYTE)
-
-                size = 0
-                for i in range(6):
-                    w = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_WIDTH)
-                    h = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_HEIGHT)
-                    print(f"Face {i}: {w} x {h}")
-
-                    size = w
-
-                self.context.gui.test_cubemap = glGenTextures(1);
-                glBindTexture(GL_TEXTURE_2D, self.context.gui.test_cubemap)
-                glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, size, size)
-                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size, size, GL_RGBA, GL_UNSIGNED_BYTE, pixels)
-
-            if self.context.gui.test_cubemap:
-                glBindTexture( GL_TEXTURE_2D, self.context.gui.test_cubemap )
-
-                image       = imgui.ImTextureRef(self.context.gui.test_cubemap)
-                image_size  = imgui.ImVec2(50, 50);
-                image_uv0   = imgui.ImVec2( 0, 1 )
-                image_uv1   = imgui.ImVec2( 1, 0 )
-                imgui.image( image, image_size, image_uv0, image_uv1 )
+            self._skybox_preview( scene )
 
             imgui.separator()
 
@@ -1285,9 +1336,9 @@ class UserInterface( Context ):
             imgui.begin( "Scene" )
             _scene = self.scene.getCurrentScene()
 
-            self.camera_selector()
-            self.sun_selector()
-            self.sky_settings( _scene )
+            self._camera_selector()
+            self._sun_selector()
+            self._sky_settings( _scene )
 
             imgui.end()
 

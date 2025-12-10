@@ -4,6 +4,8 @@ uniform mat4 uMMatrix;	// not required, keep for shader uniform location compat 
 uniform mat4 uVMatrix;
 uniform mat4 uPMatrix;
  
+uniform bool uisProcedural;
+
 layout(location = 0) in vec3 aVertex;
 
 out vec3 vTexCoord;
@@ -13,7 +15,15 @@ void main()
 	//vec4 pos = uPMatrix * uVMatrix * vec4( aVertex, 1.0 );
 	//gl_Position = vec4( pos.x, pos.y, pos.w, pos.w );
 	//vTexCoord = vec3(aVertex.x, aVertex.y, -aVertex.z);
+    //vTexCoord = aVertex;
 
-    vTexCoord = aVertex;
+    vTexCoord = vec3(
+        (uisProcedural ? aVertex.x : -aVertex.x),
+        aVertex.y,
+        -aVertex.z
+        //(uisProcedural ? -aVertex.z : -aVertex.z)
+    );
+
+
     gl_Position = ( uPMatrix * uVMatrix ) * vec4( -aVertex, 1.0 );
 }
