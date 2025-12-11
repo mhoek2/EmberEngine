@@ -1,7 +1,7 @@
 import math
 import pygame
 from pygame.locals import *
-from pyrr import matrix44
+from pyrr import matrix44, Matrix44
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -29,7 +29,13 @@ class Skybox( Context ):
         """
         super().__init__( context )
 
-        size = 200
+        self.realtime = False
+
+        self.procedural_cubemap = None
+        self.procedural_cubemap_size = 256
+        self.procedural_cubemap_fbo = None
+
+        size = 256
         self.skyboxVertices = np.array([
             # positions          
             -size,  size, -size,
@@ -90,155 +96,190 @@ class Skybox( Context ):
         glBindBuffer( GL_ARRAY_BUFFER, 0 );
         glBindVertexArray( 0 );
 
-    def create_procedural_cubemap( self, scene : "SceneManager.Scene" )  -> int:
+    def extract_procedural_cubemap( self, scene : "SceneManager.Scene" ) -> None:
+        if self.procedural_cubemap is None:
+            print("Procedural cubemap GlTexture is not invalid")
+            return
 
-        index = self.context.cubemaps._num_cubemaps
+        if self.procedural_cubemap_fbo is None:
+            print("Procedural cubemap FBO is not invalid")
+            return
 
-        glBindTexture( GL_TEXTURE_CUBE_MAP, index )
-        size : int = 1024
+        # Set FBO and drawbuffer
+        glBindFramebuffer( GL_FRAMEBUFFER, self.procedural_cubemap_fbo )
+        glDrawBuffer( GL_COLOR_ATTACHMENT0 )
 
-        for i in range(6):
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                         0, GL_RGBA16F,
-                         size, size, 0,
-                         GL_RGBA, GL_FLOAT, None)
+        cubemap = self.context.cubemaps.cubemap[self.procedural_cubemap]
+        size = self.procedural_cubemap_size
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
-
-        # Create FBO
-        fbo = glGenFramebuffers(1)
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo)
-
-        # Create depth renderbuffer
-        depth_rb = glGenRenderbuffers(1)
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_rb)
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size, size)
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb)
-
-        # Set draw buffer
-        glDrawBuffer(GL_COLOR_ATTACHMENT0)
-
-        # Cubemap face orientations
         targets = [
-            np.array([1, 0, 0]),   # +X
-            np.array([-1, 0, 0]),  # -X
-            np.array([0, 1, 0]),   # +Y
-            np.array([0,-1, 0]),   # -Y
+            np.array([-1, 0, 0]),  # +X
+            np.array([1, 0, 0]),   # -X
+            np.array([0,-1, 0]),   # +Y
+            np.array([0, 1, 0]),   # -Y
             np.array([0, 0, 1]),   # +Z
             np.array([0, 0,-1])    # -Z
         ]
 
         ups = [
-            np.array([0,-1,0]),
-            np.array([0,-1,0]),
-            np.array([0, 0,1]),
-            np.array([0, 0,-1]),
-            np.array([0,-1,0]),
-            np.array([0,-1,0])
+            np.array([0, 1, 0]),    # +X 
+            np.array([0, 1, 0]),    # -X 
+            np.array([0, 0, 1]),    # +Y
+            np.array([0, 0,-1]),    # -Y
+            np.array([0, 1, 0]),    # +Z
+            np.array([0, 1, 0])     # -Z
         ]
 
-        projection = matrix44.create_perspective_projection_matrix( 
+        _projection : Matrix44 = matrix44.create_perspective_projection_matrix( 
             fovy    = 90, 
             aspect  = 1.0, 
             near    = 0.1, 
             far     = 1000
         )
 
-        # Render each face
         for i in range(6):
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                                   index, 0)
+            _view = matrix44.create_look_at( np.zeros(3), targets[i], ups[i] )
 
-            status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+            glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                                   cubemap, 0 )
+
+            status = glCheckFramebufferStatus( GL_FRAMEBUFFER )
             if status != GL_FRAMEBUFFER_COMPLETE:
-                print("Framebuffer error:", hex(status))
+                print( "Framebuffer error:", hex( status ) )
                 return
 
-            glViewport(0, 0, size, size)
-            glDisable(GL_DEPTH_TEST)
+            glViewport( 0, 0, self.procedural_cubemap_size, self.procedural_cubemap_size )
+            glDisable( GL_DEPTH_TEST )
 
-            #view = lookAt(np.zeros(3), targets[i], ups[i])
-            view = matrix44.create_look_at(np.zeros(3), targets[i], ups[i])
+            self._draw_procedural( 
+                scene, 
+                _view, 
+                _projection, 
+                extract_cubemap = True
+            )
 
-            # Render procedural skybox using THIS projection + view
-            self.draw(scene, projection, view)
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-
+        # reset renderer
         self.renderer.setup_projection_matrix( 
             size = self.renderer.viewport_size 
         )
+
+        # rebuild gui preview
+        if self.context.gui.initialized:
+            self.context.gui.scene_settings.test_cubemap_update = True
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glEnable(GL_DEPTH_TEST)
 
-        self.context.cubemaps._num_cubemaps += 1
+    def create_procedural_cubemap( self, scene : "SceneManager.Scene" )  -> int:
+        # Create textures
+        if self.procedural_cubemap is None:
+            self.procedural_cubemap = self.context.cubemaps._num_cubemaps
 
-        return index
+            size = self.procedural_cubemap_size
 
-    def draw( self, scene : "SceneManager.Scene" = None, projection = None, view = None ) -> None:
-        """Issue render commands to draw the skybox"""
+            cubemap = self.context.cubemaps.cubemap[self.procedural_cubemap]
 
-        if not scene:
-            return
+            glBindTexture( GL_TEXTURE_CUBE_MAP, cubemap )
+ 
+            for i in range(6):
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                             0, GL_RGBA16F,
+                             size, size, 0,
+                             GL_RGBA, GL_FLOAT, None)
 
-        # check this for performance!
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
+
+            self.context.cubemaps._num_cubemaps += 1
+
+        # Create FBO
+        if self.procedural_cubemap_fbo is None:
+            self.procedural_cubemap_fbo = glGenFramebuffers(1)
+        
+        # Depth renderbuffer (not required)
+        #depth_rb = glGenRenderbuffers(1)
+        #glBindRenderbuffer(GL_RENDERBUFFER, depth_rb)
+        #glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size, size)
+        #glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb)
+
+        # Extract to cubemap sides
+        self.extract_procedural_cubemap( scene )
+
+        return self.procedural_cubemap
+
+    def __set_mvp( self, view : Matrix44 = None, projection : Matrix44 = None ):
         if projection is None:
             projection = self.renderer.projection
 
         if view is None:
             view = self.renderer.view
 
-        _sky_type : Skybox.Type_ = Skybox.Type_( scene["sky_type"] )
-
-        if _sky_type == Skybox.Type_.procedural:
-            self.renderer.use_shader( self.renderer.skybox_proc )
-        else:
-            self.renderer.use_shader( self.renderer.skybox )
-
-        # bind projection matrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, projection )
-
-        # viewmatrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, view )
 
-        if _sky_type == Skybox.Type_.procedural:
-            _sun = self.scene.getSun()
-            _sun_active = _sun and _sun.hierachyActive()
+    def _draw_procedural( self, 
+                          scene             : "SceneManager.Scene", 
+                          view              : Matrix44 = None, 
+                          projection        : Matrix44 = None, 
+                          extract_cubemap   : bool = False
+        ) -> None:
+        if not scene:
+            return
 
-            if not self.renderer.game_runtime:
-                _sun_active = _sun_active and _sun.hierachyVisible()
+        self.renderer.use_shader( self.renderer.skybox_proc )
 
-            light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
-            light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
+        self.__set_mvp( view, projection )
 
-            _sky_color      = scene["procedural_sky_color"]
-            _horizon_color  = scene["procedural_horizon_color"]
-            _ground_color   = scene["procedural_ground_color"]
+        _sun = self.scene.getSun()
+        _sun_active = _sun and _sun.hierachyActive()
 
-            _sunset_color   = scene["procedural_sunset_color"]
-            _night_color    = scene["procedural_night_color"]
+        if not self.renderer.game_runtime:
+            _sun_active = _sun_active and _sun.hierachyVisible()
 
-            _night_brightness = scene["procedural_night_brightness"]
+        light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
+        light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
 
-            glUniform3f( self.renderer.shader.uniforms["uSkyColor"], _sky_color[0], _sky_color[1], _sky_color[2] )
-            glUniform3f( self.renderer.shader.uniforms["uHorizonColor"], _horizon_color[0], _horizon_color[1], _horizon_color[2] )
-            glUniform3f( self.renderer.shader.uniforms["uGroundColor"], _ground_color[0], _ground_color[1], _ground_color[2] )
+        _sky_color      = scene["procedural_sky_color"]
+        _horizon_color  = scene["procedural_horizon_color"]
+        _ground_color   = scene["procedural_ground_color"]
 
-            glUniform3f( self.renderer.shader.uniforms["uSunsetColor"], _sunset_color[0], _sunset_color[1], _sunset_color[2] )
-            glUniform3f( self.renderer.shader.uniforms["uNightColor"], _night_color[0], _night_color[1], _night_color[2] )
+        _sunset_color   = scene["procedural_sunset_color"]
+        _night_color    = scene["procedural_night_color"]
 
-            glUniform3f( self.renderer.shader.uniforms["uSunDirection"], light_dir[0], light_dir[1], light_dir[2] )
-            glUniform3f( self.renderer.shader.uniforms["uSunColor"], light_color[0], light_color[1], light_color[2] )
+        _night_brightness = scene["procedural_night_brightness"]
+
+        glUniform3f( self.renderer.shader.uniforms["uSkyColor"], _sky_color[0], _sky_color[1], _sky_color[2] )
+        glUniform3f( self.renderer.shader.uniforms["uHorizonColor"], _horizon_color[0], _horizon_color[1], _horizon_color[2] )
+        glUniform3f( self.renderer.shader.uniforms["uGroundColor"], _ground_color[0], _ground_color[1], _ground_color[2] )
+
+        glUniform3f( self.renderer.shader.uniforms["uSunsetColor"], _sunset_color[0], _sunset_color[1], _sunset_color[2] )
+        glUniform3f( self.renderer.shader.uniforms["uNightColor"], _night_color[0], _night_color[1], _night_color[2] )
+
+        glUniform3f( self.renderer.shader.uniforms["uSunDirection"], light_dir[0], light_dir[1], light_dir[2] )
+        glUniform3f( self.renderer.shader.uniforms["uSunColor"], light_color[0], light_color[1], light_color[2] )
             
-            glUniform1f( self.renderer.shader.uniforms["uNightBrightness"], _night_brightness )
+        glUniform1f( self.renderer.shader.uniforms["uNightBrightness"], _night_brightness )
 
-        else:
-            self.context.cubemaps.bind( self.context.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
+        # flip the vertex.x handedness for cubemap extraction
+        glUniform1i( self.renderer.shader.uniforms['uExtractCubemap'], int(extract_cubemap) )
 
+        self.__render()
+
+    def _draw_skybox( self ):
+        self.renderer.use_shader( self.renderer.skybox )
+
+        self.__set_mvp()
+
+        self.context.cubemaps.bind( self.context.environment_map, GL_TEXTURE0, "sEnvironment", 0 )
+
+        self.__render()
+
+    def __render( self ):
+        """Issue the glDrawArrays drawcall, then reset"""
         glDisable(GL_DEPTH_TEST);
         glBindVertexArray( self.VAO )
 
@@ -248,9 +289,23 @@ class Skybox( Context ):
 
         glDrawArrays(GL_TRIANGLES, 0, 36);
          
+        # reset 
         glEnable(GL_DEPTH_TEST);
         glBindBuffer( GL_ARRAY_BUFFER, 0 );
         glBindVertexArray( 0 )
         glUseProgram(0);
+
+    def draw( self,  scene : "SceneManager.Scene" ) -> None:
+        """Issue render commands to draw the skybox"""
+        if not scene:
+            return
+
+        _sky_type : Skybox.Type_ = Skybox.Type_( scene["sky_type"] )
+        use_procedural : bool = _sky_type == Skybox.Type_.procedural and self.realtime
+
+        if use_procedural:
+            self._draw_procedural( scene )
+        else:
+            self._draw_skybox()
 
         return

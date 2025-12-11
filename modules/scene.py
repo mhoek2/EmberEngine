@@ -201,7 +201,6 @@ class SceneManager:
             #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
 
-
     def setSun( self, uuid : uid.UUID, scene_id = -1):
         from gameObjects.light import Light
 

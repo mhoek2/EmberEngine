@@ -119,11 +119,11 @@ class EmberEngine:
 
         # needs if else for cubemap skybox or procedural skybox.
 
-        # if cubemap:
-        #self.environment_map = self.cubemaps.loadOrFind(self.settings.default_environment)
+        if _scene["sky_type"] == Skybox.Type_.skybox:
+            self.environment_map = self.cubemaps.loadOrFind( self.settings.default_environment )
 
-        #elif procedural
-        self.environment_map = self.skybox.create_procedural_cubemap( _scene )
+        elif _scene["sky_type"] == Skybox.Type_.procedural:
+            self.environment_map = self.skybox.create_procedural_cubemap( _scene )
 
     ##
     ## Need to move this to dedicated class
