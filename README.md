@@ -14,6 +14,9 @@ Python is interpreted, resulting in runtime overhead and efficiency loss
 I value that as a good exercise!"
 
 ## :high_brightness: Showcase
+
+https://github.com/user-attachments/assets/52a6dc86-628a-4592-92fe-6af80bde8c8c
+
 ![](docs/source/_static/showcase/ImGuizmo.gif)
 
 ![](docs/source/_static/showcase/inspector_script.jpg)
@@ -47,10 +50,6 @@ Download [Release or Beta](https://github.com/mhoek2/EmberEngine/releases) here.
 	python -m sphinx -b html docs/source docs/build
 	```
 4. Open docs/build/index.html in the browser
-
-
-## Latest version:
-![](docs/source/_static/showcase/video_1.0.1.mp4)
 
 ## Older versions:
 https://github.com/user-attachments/assets/7746df9e-e854-4730-9cb1-69f35433d842
