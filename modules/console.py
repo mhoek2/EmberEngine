@@ -10,10 +10,18 @@ import inspect
 
 class Console:
     class Entry(TypedDict):
-        type_id     : str
+        type_id     : int
         message     : str
         traceback   : None
         _n_lines    : int   # imgui info
+
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class Type_(enum.IntEnum):
+        none    = 0              # (= 0)
+        error   = enum.auto()    # (= 1)
+        warning = enum.auto()    # (= 2)
+        note    = enum.auto()    # (= 3)
 
     def __init__( self, context ) -> None:
         """Console manager
@@ -33,17 +41,9 @@ class Console:
             (0.38, 0.82, 0.32),      # Type_.note
         ]
 
-    # IntFlag is bitwise  (1 << index)
-    # IntEnum is seqential
-    class Type_(enum.IntEnum):
-        none    = enum.auto()    # (= 0)
-        error   = enum.auto()    # (= 1)
-        warning = enum.auto()    # (= 2)
-        note    = enum.auto()    # (= 3)
-
     def get_entry_color( self, entry : Entry ) -> None:
         """Get the color of a given entry"""
-        return self._entry_type_color[ (entry["type_id"] - 1) ]
+        return self._entry_type_color[entry["type_id"]]
     
     @overload
     def log( self, message : str ) -> None: ...

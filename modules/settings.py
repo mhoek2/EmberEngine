@@ -1,17 +1,23 @@
 import os
 from pathlib import Path
+import enum
 
 class Settings:
     def __init__( self ) -> None:
         """Global applictaion settings"""
         self.application_name = "Ember Engine 3D"
 
-        self.game_running = False
-        self.game_start = False
-        self.game_stop = False
-
         self.msaa = 8
         self.msaaEnabled = True if self.msaa > 0 else False
+
+        # extensions
+        self.SCENE_EXTENSION    : str = ".scene"
+        self.SCRIPT_EXTENSION   : str = ".py"
+        self.MODEL_EXTENSION    : list[str] = [
+            ".fbx",
+            ".obj",
+            ".glb",
+        ]
 
         self.rootdir = Path.cwd()
 
@@ -23,26 +29,38 @@ class Settings:
         self.engine_texture_path    = f"{self.engineAssets}\\textures\\"
         self.engine_gui_path        = f"{self.engineAssets}\\gui\\"
 
-        self.default_scene          = Path(f"{self.engineAssets}\\scenes\engine_default.scene")
+        self.default_scene          = Path(f"{self.engineAssets}\\scenes\engine_default{self.SCENE_EXTENSION}")
         self.default_environment    = f"{self.engineAssets}\\cubemaps\\day"
 
-        self.default_light_color     = ( 1.0, 1.0, 1.0, 1.0 )
-        self.default_ambient_color   = ( 0.3, 0.3, 0.3, 1.0 )
+        self.default_sky_type        : int          = 0 # procedural
+        self.default_light_color     : list[float]  = [0.0, 0.0, 0.0]
+        self.default_ambient_color   : list[float]  = [0.0, 0.0, 0.0]
+
+        self.default_procedural_sky_color       : list[float]  = [0.4, 0.6, 1.0]
+        self.default_procedural_horizon_color   : list[float]  = [0.9, 0.9, 1.0]
+        self.default_procedural_ground_color    : list[float]  = [0.2, 0.25, 0.3]
+        self.default_procedural_sunset_color    : list[float]  = [0.5, 0., 0.3]
+        self.default_procedural_night_color     : list[float]  = [0.3, 0.2, 0.3]
+        self.default_procedural_night_brightness : float = 0.05
 
         # wireframe
         self.drawWireframe = False
 
         # grid
-        self.grid_color = ( 0.83, 0.74, 94.0, 1.0 )
-        self.grid_size = 10.0
-        self.grid_spacing = 0.5
+        self.drawGrid       = True
+        self.grid_color     = ( 0.83, 0.74, 94.0, 1.0 )
+        self.grid_size      = 10.0
+        self.grid_spacing   = 0.5
+
+        # axis
+        self.drawAxis       = True
 
         # scriptable behaivior
         self.SCRIPT_AUTO_IMPORT_MODULES = {
             # module        # as
             "pygame"                : None,
             "pybullet"              : "p",
-            "modules.Transform"     : None
+            #"modules.transform"     : None
         }
 
         # exported application

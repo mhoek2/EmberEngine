@@ -2,6 +2,12 @@ from gameObjects.gameObject import GameObject
 import enum
 
 class Light( GameObject ):
+    # IntFlag is bitwise  (1 << index)
+    # IntEnum is seqential
+    class Type_(enum.IntEnum):
+        direct  = 0             # (= 0)
+        spot    = enum.auto()   # (= 1)
+        area    = enum.auto()   # (= 2)
 
     def __init__(self, context, *args, **kwargs):
         """Base class for Light gameObjects, holds the various light types
@@ -15,16 +21,14 @@ class Light( GameObject ):
         """
         super().__init__(context, *args, **kwargs)
 
+        self.is_sun = False
+
         # not implemented
         #self.light_type = kwargs.get('light_type', 1.0)
-        self.light_type = self.Type_.direct
-
-    # IntFlag is bitwise  (1 << index)
-    # IntEnum is seqential
-    class Type_(enum.IntEnum):
-        direct  = enum.auto()    # (= 0)
-        spot    = enum.auto()    # (= 1)
-        area    = enum.auto()    # (= 2)
+        self.light_type     : Light.Type_ = self.Type_.direct
+        self.light_color    : list[float] = [ 0.98, 1.0, 0.69 ]
+        self.radius         : float = 12.0
+        self.intensity      : float = 1.0
 
     def onStart( self ) -> None:
         """Executes whenever the object is added to scene"""
@@ -35,6 +39,10 @@ class Light( GameObject ):
 
     def onUpdate( self ) -> None:
         """Executes every frame, issuing draw commands"""
+
+        if self._dirty and self.scene.isSun( self.uuid ):
+            self.context.skybox.procedural_cubemap_update = True
+
         super().onUpdate()
 
         if self.model != -1 and self.visible:

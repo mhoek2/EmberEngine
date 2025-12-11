@@ -27,7 +27,25 @@ in vec4 var_AmbientColor;
 
 out vec4 out_color;
 
+uniform vec4 u_ViewOrigin;
 uniform int in_renderMode;
+
+#define LIGHT_TYPE_DIRECTIONAL	0
+#define LIGHT_TYPE_SPOT			1
+#define LIGHT_TYPE_AREA			2
+
+struct Light
+{
+	vec4	origin;
+	vec4	color;
+	vec4	rotation;
+};
+
+layout( std140 ) uniform Lights
+{
+	int u_num_lights;
+	Light u_lights[64];
+};
 
 vec3 Diffuse_Lambert(in vec3 DiffuseColor)
 {
@@ -106,6 +124,84 @@ vec3 CalcIBLContribution( in float roughness, in vec3 N, in vec3 E,
 	return cubeLightColor * (specular.rgb * EnvBRDF.x + EnvBRDF.y);
 }
 
+float CalcLightAttenuation(float normDist)
+{
+	// zero light at 1.0, approximating q3 style
+	float attenuation = 0.5 * normDist - 0.5;
+	return clamp(attenuation, 0.0, 1.0);
+}
+
+vec3 CalcDynamicLightContribution(
+	in float roughness,
+	in vec3 N,
+	in vec3 E,
+	in vec3 viewOrigin,
+	in vec3 viewDir,
+	in float NE,
+	in vec3 diffuse,
+	in vec3 specular,
+	in vec3 vertexNormal
+)
+{
+	vec3 outColor = vec3(0.0);
+	vec3 position = viewOrigin - viewDir;
+
+    // Hard-coded spot cone
+    const float innerCos = 0.90;
+    const float outerCos = 0.70;
+
+    for ( int i = 0; i < u_num_lights; i++ )
+    {
+        Light light = u_lights[i];
+
+        vec3 L;
+        float attenuation = 1.0;
+        float radius = light.origin.w;
+        int light_type = int(light.color.w);
+        float light_intensity = light.rotation.w;
+
+        if ( light_type == LIGHT_TYPE_DIRECTIONAL )
+        {
+            L = normalize(light.origin.xyz); 
+            attenuation = 1.0; // no distance attenuation
+        }
+		
+        // Spot and area lights are position-based
+        else
+        {
+            L = light.origin.xyz - position;
+            float sqrLightDist = dot(L, L);
+            L /= sqrt(sqrLightDist);
+
+            attenuation = CalcLightAttenuation(radius * radius / sqrLightDist);
+
+            if ( light_type == LIGHT_TYPE_SPOT )
+            {
+                // rotation.xyz contains forward direction for the spot
+                vec3 spotDir = normalize(light.rotation.xyz);
+
+                float cosAngle = dot(L, spotDir);
+
+                // hard-coded cone
+                float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
+
+                attenuation *= spotFactor;
+            }
+        }
+
+		vec3 H = normalize(L + E);
+		float NL = clamp(dot(N, L), 0.0, 1.0);
+		float LH = clamp(dot(L, H), 0.0, 1.0);
+		float NH = clamp(dot(N, H), 0.0, 1.0);
+		float VH = clamp(dot(E, H), 0.0, 1.0);
+
+		vec3 reflectance = diffuse + CalcSpecular(specular, NH, NL, NE, LH, VH, roughness);
+
+		outColor += light.color.rgb * reflectance * attenuation * NL * light_intensity;
+	}
+	return outColor;
+}
+
 void main(){
 	vec4 diffuse;
 	float attenuation;
@@ -180,6 +276,9 @@ void main(){
 	out_color.rgb  = lightColor * reflectance * ( attenuation * NL );
 	out_color.rgb += ambientColor * diffuse.rgb;
 	out_color.rgb += emissiveColor;
+
+	vec3 light_contrib = CalcDynamicLightContribution( roughness, N, E, u_ViewOrigin.xyz, viewDir, NE, diffuse.rgb, specular.rgb, var_Normal.xyz );
+	out_color.rgb += light_contrib;
 	out_color.rgb += CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO );
 
 	out_color.a = diffuse.a;
@@ -215,6 +314,12 @@ void main(){
 			case 22 : out_color.rgb = CalcIBLContribution( roughness, N, E, NE, specular.rgb * AO ); break;
 			case 23 : out_color.rgb = emissiveColor; break;
 			case 24 : out_color.rgb = vec3(opacity); break;
+			case 25 : out_color.rgb = vec3(light_contrib); break;
+			case 26 : out_color.rgb = vec3(u_ViewOrigin.xyz); break;
 		}
 	}
+
+	// debug
+	//out_color.rgb = vec3(u_lights[0].color);
+	//out_color = vec4(u_lights[0].radius, 0.0, 0.0, 1.0);
 }

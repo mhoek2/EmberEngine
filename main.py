@@ -67,7 +67,6 @@ class EmberEngine:
         self.cubemaps   : Cubemap           = Cubemap( self )
         self.skybox     : Skybox            = Skybox( self )
 
-        self.sun = -1
         self.roughnessOverride = -1.0
         self.metallicOverride = -1.0
 
@@ -112,11 +111,17 @@ class EmberEngine:
         :return: List of Path's containing each .py script
         :rtype: List[Path]
         """
-        return [path for path in folder.rglob("*.py")]
+        return [path for path in folder.rglob( f"*{self.settings.SCRIPT_EXTENSION}" )]
 
     def loadDefaultEnvironment( self ) -> None:
         """Load the default environment cubemap"""
-        self.environment_map = self.cubemaps.loadOrFind(self.settings.default_environment)
+        _scene = self.scene.getCurrentScene()
+
+        if _scene["sky_type"] == Skybox.Type_.skybox:
+            self.environment_map = self.cubemaps.loadOrFind( self.settings.default_environment )
+
+        elif _scene["sky_type"] == Skybox.Type_.procedural:
+            self.environment_map = self.skybox.create_procedural_cubemap( _scene )
 
     ##
     ## Need to move this to dedicated class
@@ -179,7 +184,10 @@ class EmberEngine:
             obj._mark_dirty()
 
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
-                self.scene.setCamera( -1 )
+                self.scene.setCamera( None )
+
+            if isinstance( obj, Light ) and obj is self.scene.getSun():
+                self.scene.setSun( None )
 
             reparent_children = list(obj.children) # prevent mutation during iteration
             for child in reparent_children:
@@ -219,6 +227,9 @@ class EmberEngine:
 
     def draw_grid( self ):
         """Draw the horizontal grid to the framebuffer"""
+        if not self.settings.drawGrid:
+            return
+
         self.renderer.use_shader( self.renderer.color )
         # bind projection matrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
@@ -249,6 +260,9 @@ class EmberEngine:
 
     def draw_axis( self, length : float = 1.0, width : float = 3.0, centered : bool = False ):
         """Draw axis lines. width and length can be adjust, also if axis is centered or half-axis"""
+        if not self.settings.drawAxis:
+            return
+        
         glLineWidth(width)
 
         self.renderer.use_shader(self.renderer.color)
@@ -302,15 +316,15 @@ class EmberEngine:
 
             # (re)store states
             if not app.settings.is_exported:
-                if self.settings.game_start:
+                if self.renderer.game_start:
                     obj.onEnable( _on_start=True )
 
-                if self.settings.game_stop:
+                if self.renderer.game_stop:
                     obj.onDisable( _on_stop=True )
 
             # start exported application
             else:
-                if self.settings.game_start:
+                if self.renderer.game_start:
                     obj.onEnable( _on_start=True )
 
             obj.onUpdate();  # engine update
@@ -332,15 +346,17 @@ class EmberEngine:
             if not self.renderer.paused:
                 self.renderer.begin_frame()
 
+                _scene = self.scene.getCurrentScene()
+
                 #
                 # skybox
                 #
-                self.skybox.draw()
+                self.skybox.draw( _scene )
 
                 #
                 # editor viewport
                 #
-                if not app.settings.is_exported:
+                if not app.settings.is_exported and not app.renderer.game_runtime:
                     self.draw_grid()
                     self.draw_axis(100.0, centered=True)
 
@@ -370,18 +386,57 @@ class EmberEngine:
                 #
                 # setup scene
                 #
-                _scene = self.scene.getCurrentScene()
 
                 # sun direction/position and color
-                light_dir = self.gameObjects[self.sun].transform.local_position if self.sun != -1 else (0.0, 0.0, 1.0)
+                _sun = self.scene.getSun()
+                _sun_active = _sun and _sun.hierachyActive()
+
+                if not self.renderer.game_runtime:
+                    _sun_active = _sun_active and _sun.hierachyVisible()
+
+                light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
+                light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
+
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
-                glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], _scene["light_color"][0], _scene["light_color"][1], _scene["light_color"][2], 1.0 )
+                glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], light_color[0], light_color[1], light_color[2], 1.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )
 
                 glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
                 glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
                 
-                if self.settings.game_start:
+                #
+                # lights
+                #
+                #lights: list[Renderer.LightUBO.Light] = [
+                #    Renderer.LightUBO.Light(
+                #        origin  = obj.transform.position,
+                #        color   = obj.light_color,
+                #        radius  = obj.radius,
+                #    )
+                #    # per-frame, slow
+                #    for obj in filter(lambda x: x.hierachyActive() and isinstance(x, Light) and x is not _sun, self.gameObjects)
+                #]
+                lights : list[Renderer.LightUBO.Light] = []
+
+                for obj in self.gameObjects:
+                    if not obj.hierachyActive() or not isinstance(obj, Light) or obj is _sun:
+                        continue
+
+                    if not self.renderer.game_runtime and not obj.hierachyVisible():
+                        continue
+
+                    lights.append( Renderer.LightUBO.Light(
+                        origin      = obj.transform.position,
+                        rotation    = obj.transform.rotation,
+                        color       = obj.light_color,
+                        radius      = obj.radius,
+                        intensity   = obj.intensity,
+                        t           = obj.light_type
+                    ) )
+
+                self.renderer.bind_light_ubo( lights )
+
+                if self.renderer.game_start:
                     self.console.clear()
 
                 # trigger update function in registered gameObjects
@@ -398,11 +453,11 @@ class EmberEngine:
                 #
                 #    self.gameObjects.remove( obj )
 
-                if self.settings.game_start:
-                    self.settings.game_start = False
+                if self.renderer.game_start:
+                    self.renderer.game_start = False
 
-                if self.settings.game_stop:
-                    self.settings.game_stop = False
+                if self.renderer.game_stop:
+                    self.renderer.game_stop = False
 
                 self.renderer.end_frame()
 
@@ -417,7 +472,6 @@ if __name__ == '__main__':
 
     # start runtime for exported apps
     if app.settings.is_exported:
-        app.settings.game_start = True
-        app.settings.game_running = True 
+        app.renderer.game_state = app.renderer.GameState_.running 
 
     app.run()

@@ -1,20 +1,24 @@
 #from __future__ import annotations
 
-from pyexpat import model
 import sys
 from pathlib import Path
+#import importlib
 from typing import TYPE_CHECKING, List, Dict, TypedDict
 import json
 import uuid as uid
 
 from modules.console import Console
 from modules.settings import Settings
-
+from modules.transform import Transform
+from modules.script import Script
+from gameObjects.scriptBehaivior import ScriptBehaivior
 
 if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
     from gameObjects.camera import Camera
+    from gameObjects.light import Light
+    from gameObjects.skybox import Skybox
 
 import traceback
 
@@ -24,9 +28,18 @@ class SceneManager:
         uid             : str
         name            : str
         gameObjects     : List["_GameObject"]
-        camera          : int
+        camera          : "Camera"
+        sun             : "Light"
+        sky_type        : "Skybox.Type_"
         light_color     : List[float]
         ambient_color   : List[float]
+
+        procedural_sky_color        : List[float]
+        procedural_horizon_color    : List[float]
+        procedural_ground_color     : List[float]
+        procedural_sunset_color     : List[float]
+        procedural_night_color      : List[float]
+        procedural_night_brightness : float
 
     class _GameObject(TypedDict):
         """Typedef for a gameObjects in a scene file"""
@@ -39,7 +52,8 @@ class SceneManager:
         rotation    : List[float]
         scale       : List[float]
         mass        : float
-        scripts     : List["GameObject.Script"]
+        scripts     : List[Script]
+        transform   : Transform 
         instance_data : Dict # additional instance data
         #children    : Dict
         children    : List["_GameObject"] = []
@@ -110,8 +124,10 @@ class SceneManager:
         except:
             return False
 
-    def setCamera( self, uid : int, scene_id = -1):
-        """Set the current camera based on gameObject uid
+    def setCamera( self, uuid : uid.UUID, scene_id = -1):
+        """Set the current runtime camera based on gameObject uid
+
+            During game runtime, update the projection matrix a well.
 
         :param uid: The uid of a Camera gameObject
         :type uid: int
@@ -120,14 +136,26 @@ class SceneManager:
         """
         from gameObjects.camera import Camera
 
-        scene = scene_id if scene_id >= 0 else self.current_scene
+        _scene = scene_id if scene_id >= 0 else self.current_scene
+        _editor_camera = None
 
-        self.scenes[scene]["camera"] = uid
+        obj = self.context.findGameObject( uuid )
 
-        # mark camera as default/start scene camera
-        for i, obj in enumerate(self.context.gameObjects):
-            if isinstance(obj, Camera) and i == uid:
-                obj.is_default_camera = True
+        if obj is None:
+            self.scenes[_scene]["sun"] = None
+            _editor_camera = None
+
+        # set default scene/runtime camera
+        elif obj and isinstance(obj, Camera):
+            obj.is_default_camera = True
+            self.scenes[_scene]["camera"] = obj
+
+            # switch scene/camera during runtime
+            if self.context.renderer.game_runtime:
+                _editor_camera = obj
+
+        # invoke a camera and projection update using the setter
+        self.context.camera.camera = _editor_camera
 
     def getCamera( self ):
         """Get the current default/start camera
@@ -135,18 +163,71 @@ class SceneManager:
         :return: The current scene default/start camera, False if this fails
         :rtype: Camera or bool
         """
-        try:
-            _scene_camera_id = self.scenes[self.current_scene]["camera"]
+        from gameObjects.camera import Camera
 
-            if _scene_camera_id == -1:
+        try:
+            _scene_camera = self.scenes[self.current_scene]["camera"]
+
+            if not isinstance( _scene_camera, Camera ):
                 raise IndexError("invalid camera")
 
-            return self.context.gameObjects[_scene_camera_id]
+            return _scene_camera
+
         except Exception as e:
             #print( e )
             #exc_type, exc_value, exc_tb = sys.exc_info()
             #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
+
+    def getSun( self ):
+        """Get the current sun
+
+        :return: The current scene sun, False if this fails
+        :rtype: Camera or bool
+        """
+        from gameObjects.light import Light
+
+        try:
+            _scene_light = self.scenes[self.current_scene]["sun"]
+
+            if not isinstance( _scene_light, Light ):
+                raise IndexError("invalid sun")
+
+            return _scene_light
+
+        except Exception as e:
+            #print( e )
+            #exc_type, exc_value, exc_tb = sys.exc_info()
+            #self.console.error( e, traceback.format_tb(exc_tb) )
+            return False
+
+    def isSun( self, uuid : uid.UUID ) -> bool:
+        """If the provided object the current sun
+        
+        :return: True if the it is the sun, False if not
+        :rtype: Camera or bool
+        """
+        _sun = self.getSun()
+
+        if _sun and _sun.uuid == uuid:
+            return True
+
+        return False
+
+    def setSun( self, uuid : uid.UUID, scene_id = -1):
+        from gameObjects.light import Light
+
+        _scene = scene_id if scene_id >= 0 else self.current_scene
+
+        obj = self.context.findGameObject( uuid )
+
+        if obj is None:
+            self.scenes[_scene]["sun"] = None
+
+        # set scene sun
+        elif obj and isinstance(obj, Light):
+            obj.is_sun = True
+            self.scenes[_scene]["sun"] = obj
 
     def newScene( self, name : str ):
         """Creates a new scene based on the engines default empty scene
@@ -170,7 +251,7 @@ class SceneManager:
                 scene : SceneManager.Scene = json.load(buffer)
                 scene["name"] = name
 
-            _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
+            _scene_filename = f"{self.settings.assets}\\{_scene_uid}{self.settings.SCENE_EXTENSION}"
             with open(_scene_filename, 'w') as buffer:
                 json.dump(scene, buffer, indent=4)
 
@@ -202,6 +283,46 @@ class SceneManager:
 
         _scene["name"] = _current_name # restore current scenes's name
 
+    def serialize_export( self, exported : ScriptBehaivior.Exported ):
+        if isinstance(exported.default, uid.UUID):
+            return {
+                "uuid"  : exported.default.hex,
+                #"type"  : exported.type.__name__    # deprecated use case
+            }
+
+        return exported.default
+
+    #def resolve_type( self, type_path: str ):
+    #    module_name, class_name = type_path.rsplit(".", 1)
+    #    module = importlib.import_module(module_name)
+    #
+    #    return getattr(module, class_name)
+
+    def deserialize_export( self, name, data ):
+        #ENGINE_TYPES = {
+        #    "Transform": "modules.transform.Transform",
+        #    "GameObject": "gameObjects.gameObject.GameObject",
+        #}
+
+        # engine type
+        if isinstance(data, dict) and "uuid" in data:
+            raw_value = uid.UUID(hex=data["uuid"])
+
+            # extract the type from scene, but this is not desired.
+            # use type from script class attribute, as it is leading ..
+            #type_name = data["type"]
+            #if type_name in ENGINE_TYPES:
+            #    t = self.resolve_type( ENGINE_TYPES[type_name] )
+            #lse:
+            #   t = eval( type_name, globals(), locals() )  
+
+            exported = ScriptBehaivior.Exported( raw_value )
+            #exported.type = t
+            return exported
+
+        # primitive type
+        return ScriptBehaivior.Exported( data )
+
     def saveGameObjectRecursive( self, 
         parent          : "GameObject" = None,
         objects         : List["GameObject"] = [],
@@ -209,6 +330,10 @@ class SceneManager:
     ):
         """Recursivly iterate over gameObject and its children"""
         from gameObjects.camera import Camera
+        from gameObjects.light import Light
+
+        _scene_camera = self.getCamera()
+        _scene_sun = self.getSun()
 
         for obj in objects:
             if obj._removed:
@@ -229,14 +354,15 @@ class SceneManager:
                 "rotation"      : obj.transform.local_rotation,
                 "scale"         : obj.transform.local_scale,
                 "mass"          : obj.mass,
-                #"scripts"       : [str(x["path"]) for x in obj.scripts],
                 "scripts": [
                     {
-                        "uuid"          : x["uuid"].hex,
-                        "file"          : str(x["path"]),
-                        "active"        : x["active"],
-                        #"class_name"   : x["class_name"],
-                        "exports"       : { k: v.default for k, v in x["exports"].items() }
+                        "uuid"          : x.uuid.hex,
+                        "file"          : str(x.path),
+                        "active"        : x.active,
+                        "exports"       : { 
+                                            k: self.serialize_export( v )
+                                                for k, v in x.exports.items() 
+                                          }
                     }
                     for x in obj.scripts
                 ],
@@ -244,8 +370,25 @@ class SceneManager:
                 "children"      : []
             }
 
-            if isinstance( obj, Camera ):
-                buffer["instance_data"]["is_default_camera"] = obj.is_default_camera
+            if _scene_camera and isinstance( obj, Camera ):
+                buffer["instance_data"]["fov"]  = obj.fov
+                buffer["instance_data"]["near"] = obj.near
+                buffer["instance_data"]["far"]  = obj.far
+
+                if _scene_camera:
+                    buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
+               
+
+            elif isinstance( obj, Light ):   
+                buffer["instance_data"]["light_type"]   = obj.light_type
+                buffer["instance_data"]["light_color"]  = list(obj.light_color)
+                buffer["instance_data"]["radius"]       = obj.radius
+                buffer["instance_data"]["intensity"]    = obj.intensity
+
+
+                if _scene_sun:
+                    buffer["instance_data"]["is_sun"] = True if obj.uuid == _scene_sun.uuid else False
+               
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -272,13 +415,21 @@ class SceneManager:
             self.console.warn( "Cannot overwrite engine's default empty scene" )
             return
         
-        _scene_filename = f"{self.settings.assets}\\{_scene_uid}.scene"
+        _scene_filename = f"{self.settings.assets}\\{_scene_uid}{self.settings.SCENE_EXTENSION}"
         _scene = self.getCurrentScene()
 
         scene : SceneManager.Scene = SceneManager.Scene()
         scene["name"]           = _scene["name"]
-        scene["light_color"]    = _scene["light_color"]
-        scene["ambient_color"]  = _scene["ambient_color"]
+        scene["ambient_color"]  = list(_scene["ambient_color"])
+        scene["sky_type"]       = _scene["sky_type"]
+
+        # procedural sky settings
+        scene["procedural_sky_color"]       = _scene["procedural_sky_color"]
+        scene["procedural_horizon_color"]   = _scene["procedural_horizon_color"]
+        scene["procedural_ground_color"]    = _scene["procedural_ground_color"]
+        scene["procedural_sunset_color"]    = _scene["procedural_sunset_color"]
+        scene["procedural_night_color"]     = _scene["procedural_night_color"]
+        scene["procedural_night_brightness"]     = _scene["procedural_night_brightness"]
 
         _gameObjects : List[SceneManager._GameObject] = []
 
@@ -319,15 +470,15 @@ class SceneManager:
 
         if any(path.glob("*")):
             for file in path.glob("*"):
-                if file.is_file() and file.suffix == ".scene":
+                if file.is_file() and file.suffix == self.settings.SCENE_EXTENSION:
                     self.getScene( file )
 
     def clearEditorScene( self ):
         """Clear the scene in the editor, prepares loading a new scene
         This removes gameObjects, clears editor GUI state, resets camera index.
         """
-        self.context.sun = -1
-        self.setCamera( -1 )
+        self.setCamera( None )
+        self.setSun( None )
         self.context.gui.set_selected_object()
         self.context.gameObjects.clear()
         self.current_scene = -1
@@ -342,11 +493,11 @@ class SceneManager:
         """
         for obj in self.context.gameObjects:
             for script in obj.scripts:
-                if path != script["path"]:
+                if path != script.path:
                     continue
 
                 # (re)init
-                obj.init_external_script( script )
+                script.init_instance( obj )
 
     def loadGameObjectsRecursive( self,
         parent          : "GameObject" = None,
@@ -371,14 +522,17 @@ class SceneManager:
                     scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
                     rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
                     mass        = obj["mass"]               if "mass"       in obj else -1.0,
-                    #scripts     = [Path((self.settings.rootdir / x).resolve()) for x in obj["scripts"]]
                     scripts     = [
-                        {
-                            "uuid"      : uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
-                            "path"      : (self.settings.rootdir / x["file"]).resolve(),
-                            "active"    : bool(x.get("active", True)),
-                            "exports"   : x.get("exports", {})
-                        }
+                        Script(
+                            context     = self.context,
+                            uuid        = uid.UUID(hex=x["uuid"]) if "uuid" in x else None,
+                            path        = Path(self.settings.rootdir / x["file"]).resolve(),
+                            active      = bool(x.get("active", True)),
+                            exports     = { 
+                                            k: self.deserialize_export( k, v )
+                                                for k, v in x.get("exports", {}).items() 
+                                          }
+                        )
                         for x in obj["scripts"]
                     ]
                 )
@@ -392,12 +546,28 @@ class SceneManager:
 
             # todo:
             # implement scene settings, so a camera or sun can be assigned
-            if isinstance( gameObject, Light ):
-                self.context.sun = index
+            _instance_data = obj.get("instance_data", {})
 
             if isinstance( gameObject, Camera ):
-                if obj.get("instance_data", {}).get("is_default_camera", False):
-                    self.setCamera( index, scene_id = scene_id )
+                if _instance_data:
+                    if "fov"    in _instance_data: gameObject._fov   = _instance_data.get("fov")
+                    if "near"   in _instance_data: gameObject._near  = _instance_data.get("near")
+                    if "far"    in _instance_data: gameObject._far   = _instance_data.get("far")
+
+                    # set this is current scene/runtime camera
+                    if _instance_data.get("is_default_camera", False):
+                        self.setCamera( gameObject.uuid, scene_id = scene_id )
+
+            elif isinstance( gameObject, Light ):
+                if _instance_data:
+                    if "light_type"    in _instance_data: gameObject.light_type   = _instance_data.get("light_type")
+                    if "light_color"   in _instance_data: gameObject.light_color  = list(_instance_data.get("light_color"))
+                    if "radius"        in _instance_data: gameObject.radius       = _instance_data.get("radius")
+                    if "intensity"     in _instance_data: gameObject.intensity    = _instance_data.get("intensity")
+               
+                    # set this is current scene sun
+                    if _instance_data.get("is_sun", False):
+                        self.setSun( gameObject.uuid, scene_id = scene_id )
 
             if "active" in obj:
                 gameObject.active = obj["active"]
@@ -433,12 +603,20 @@ class SceneManager:
             self.console.note( f"Loading scene: {scene_uid}" )
 
             try:
-                self.setCamera( -1, scene_id = i ) # default to None, find default camera when adding gameObjects
+                self.setCamera( None, scene_id = i ) # default to None, find default camera when adding gameObjects
+                self.setSun( None, scene_id = i ) # default to None, find sun when adding gameObjects
                     
-                scene["name"]    = scene.get("name", "default scene")
+                scene["name"]           = scene.get("name", "default scene")
+                scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color )
+                scene["sky_type"]       = scene.get("sky_type",         self.settings.default_sky_type )
 
-                scene["light_color"]    = scene.get("light_color",      self.settings.default_light_color)
-                scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color)
+                # procedural sky settings
+                scene["procedural_sky_color"]       = scene.get("procedural_sky_color",     self.settings.default_procedural_sky_color )
+                scene["procedural_horizon_color"]   = scene.get("procedural_horizon_color", self.settings.default_procedural_horizon_color )
+                scene["procedural_ground_color"]    = scene.get("procedural_ground_color",  self.settings.default_procedural_ground_color )
+                scene["procedural_sunset_color"]    = scene.get("procedural_sunset_color",  self.settings.default_procedural_sunset_color )
+                scene["procedural_night_color"]     = scene.get("procedural_night_color",   self.settings.default_procedural_night_color )
+                scene["procedural_night_brightness"]     = scene.get("procedural_night_brightness",   self.settings.default_procedural_night_brightness )
 
                 if "gameObjects" in scene: 
                     self.loadGameObjectsRecursive( 

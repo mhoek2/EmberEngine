@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import os
 import math
@@ -13,8 +13,10 @@ from imgui_bundle import icons_fontawesome_6 as fa
 
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
+import struct
 
 import numpy as np
+import enum
 
 from modules.settings import Settings
 from modules.project import ProjectManager
@@ -27,6 +29,12 @@ if TYPE_CHECKING:
     from main import EmberEngine
 
 class Renderer:
+    class GameState_(enum.IntEnum):
+        """Runtime states"""
+        none        = 0             # (= 0)
+        running     = enum.auto()   # (= 1)
+        paused      = enum.auto()   # (= 2)
+
     """The rendering backend"""
     def __init__( self, context ):
         """Renderer backend, creating window instance, openGL, FBO's, shaders and rendertargets
@@ -68,10 +76,16 @@ class Renderer:
 
         self.render_backend = PygameRenderer()
 
+        # application
         self.paused = False
         self.running = True
         self.ImGuiInput = True # True: imgui, Fase: Game
         self.ImGuiInputFocussed = False # True: imgui, Fase: Game
+
+        # game runtime
+        self._game_state = self.GameState_.none
+        self.game_start = False
+        self.game_stop = False
 
         # frames and timing
         self.clock = pygame.time.Clock()
@@ -85,7 +99,11 @@ class Renderer:
         pygame.mouse.set_pos( self.screen_center )
 
         # shaders
+        self.shader : Shader = None
         self.create_shaders()
+
+        # ubo
+        self.ubo_lights = Renderer.LightUBO( self.general, "Lights", 0 )
 
         # debug
         self.renderMode = 0
@@ -115,10 +133,12 @@ class Renderer:
 	        "IBL Contribution",
             "Emissive",
             "Opacity",
+            "Light Contribution",
+            "View Origin",
             ]
 
         # FBO
-        self.current_fbo = False;
+        self.current_fbo = None;
         self.create_screen_vao()
 
         self.main_fbo = {}
@@ -138,10 +158,66 @@ class Renderer:
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        self.setup_projection_matrix( self.display_size)
+        self.setup_projection_matrix( 
+            size = self.display_size 
+        )
 
         # physics
         self._initPhysics()
+
+    @property
+    def game_state( self ) -> GameState_:
+        """Get the current game state.
+        
+        :return: The current set enum integer
+        :rtype: GameState_
+        """
+        return self._game_state
+
+    @game_state.setter
+    def game_state( self, new_state : GameState_ ):
+        """Set a new game state, and trigger start/stop events."""
+        if self._game_state is new_state:
+            return
+
+        match new_state:
+            case self.GameState_.none: 
+                self.game_stop = True
+                self.camera.camera = None   # editor default
+
+            case self.GameState_.running:
+                if not self.game_paused:
+                    self.game_start = True
+                    self.camera.camera = self.context.scene.getCamera()
+
+        self._game_state = new_state
+
+    @property
+    def game_runtime( self ) -> bool:
+        """"Check current state of the runtime
+
+        :return: True if GameState_.running or GameState_.paused
+        :rtype: bool
+        """
+        return self._game_state is self.GameState_.running or self._game_state is self.GameState_.paused
+
+    @property
+    def game_running( self ) -> bool:
+        """"Check current state of the runtime
+
+        :return: True if GameState_.running
+        :rtype: bool
+        """
+        return self._game_state is self.GameState_.running
+
+    @property
+    def game_paused( self ) -> bool:
+        """"Check current state of the runtime
+
+        :return: True if GameState_.paused
+        :rtype: bool
+        """
+        return self._game_state is self.GameState_.paused
 
     @staticmethod
     def check_opengl_error():
@@ -357,7 +433,7 @@ class Renderer:
     def unbind_fbo( self ) -> None:
         """Stop rending to current fbo, and unbind framebuffer (FBO)"""
         if self.current_fbo:
-            self.current_fbo = False
+            self.current_fbo = None
 
         glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 
@@ -393,23 +469,100 @@ class Renderer:
 
     def create_shaders( self ) -> None:
         """Create the GLSL shaders used for the editor and general pipeline"""
-        self.general = Shader( self.context, "general" )
-        self.skybox = Shader( self.context, "skybox" )
-        self.gamma = Shader( self.context, "gamma" )
-        self.color = Shader( self.context, "color" )
-        self.resolve = Shader( self.context, "resolve" )
+        self.general            = Shader( self.context, "general" )
+        self.skybox             = Shader( self.context, "skybox" )
+        self.skybox_proc        = Shader( self.context, "skybox_proc" )
+        self.gamma              = Shader( self.context, "gamma" )
+        self.color              = Shader( self.context, "color" )
+        self.resolve            = Shader( self.context, "resolve" )
 
-    def setup_projection_matrix( self, size : Vector2 ) -> None:
+    class LightUBO:
+        MAX_LIGHTS = 64
+
+        # std140 layout:
+        # vec4(origin.xyz + radius) + vec4(color.xyzw) + vec3(rotation + pad0) = 48 bytes
+        LIGHT_STRUCT = struct.Struct( b"4f 4f 4f" )
+
+        class Light(TypedDict):
+            origin      : list[float]
+            rotation    : list[float]
+            color       : list[float]
+            radius      : int
+            intensity   : float
+            t           : int # Light(GameObject).Type_
+
+        def __init__(self, 
+                     shader : Shader, 
+                     block_name     : str ="Lights", 
+                     binding        : int = 0
+            ):
+            self.binding = binding
+            self.block_index = glGetUniformBlockIndex( shader.program, block_name )
+
+            if self.block_index == GL_INVALID_INDEX:
+                raise RuntimeError( f"Uniform block [{block_name}] not found in shader." )
+
+            glUniformBlockBinding( shader.program, self.block_index, binding )
+
+            self.ubo = glGenBuffers(1)
+            glBindBuffer( GL_UNIFORM_BUFFER, self.ubo )
+
+            # (u_num_lights 4b + 12bpad = 16 bytes) + 32 * 64 bytes
+            total_size = 16 + self.MAX_LIGHTS * self.LIGHT_STRUCT.size
+            glBufferData( GL_UNIFORM_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
+            glBindBuffer( GL_UNIFORM_BUFFER, 0 )
+            glBindBufferBase( GL_UNIFORM_BUFFER, binding, self.ubo )
+
+        def update( self, lights ):
+            num_lights = min(len(lights), self.MAX_LIGHTS)
+
+            data = bytearray()
+
+            # u_num_lights
+            data += struct.pack("I 3I", num_lights, 0, 0, 0)
+
+            # u_lights
+            for light in lights[:num_lights]:
+                ox, oy, oz  = light["origin"]
+                cx, cy, cz  = light["color"]
+                rx, ry, rz  = light["rotation"]
+
+                data += self.LIGHT_STRUCT.pack(
+                    ox, oy, oz, light["radius"],    # vec4(origin.xyz + radius)
+                    cx, cy, cz, int(light["t"]),    # vec4(color.xyz + t(type))
+                    rx, ry, rz, light["intensity"], # vec4(rotation.xyz + intensity)
+                )
+
+            # fill empty lights
+            empty_count = self.MAX_LIGHTS - num_lights
+            if empty_count:
+                empty = self.LIGHT_STRUCT.pack(
+                    0, 0, 0, 0, # vec4(origin.xyz + radius)
+                    0, 0, 0, 0,  # vec4(color + type)
+                    0, 0, 0, 0  # vec4(rotation + intensiry)
+                )
+                data += empty * empty_count
+
+            glBindBuffer(GL_UNIFORM_BUFFER, self.ubo)
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, len(data), data)
+            glBindBuffer(GL_UNIFORM_BUFFER, 0)
+
+    def setup_projection_matrix( self, size : Vector2 = None ) -> None:
         """Setup the viewport and projection matrix using Matrix44
 
         :param size: The dimensions of the current viewport
         :type size: Vector2
         """
-        glViewport( 0, 0, int(size.x), int(size.y) )
+        if size:
+            glViewport( 0, 0, int(size.x), int(size.y) )
+            self.aspect_ratio = size.x / size.y
 
-        self.aspect_ratio = size.x / size.y
-        self.projection = matrix44.create_perspective_projection_matrix(45.0, self.aspect_ratio, 0.1, 1000.0)
-        self.view = matrix44.create_identity() # identity as placeholder
+        self.projection = matrix44.create_perspective_projection_matrix( 
+            fovy    = self.camera._fov, 
+            aspect  = self.aspect_ratio, 
+            near    = self.camera._near, 
+            far     = self.camera._far
+        )
 
     def toggle_input_state( self ) -> None:
         """Toggle input between application and viewport
@@ -423,6 +576,35 @@ class Renderer:
             self.ImGuiInput = True
             pygame.mouse.set_visible( True )
 
+    def editor_viewport_event_handler( self, event ):
+        if self.game_runtime:
+            return
+
+        if not self.ImGuiInput:
+            if event.type == pygame.KEYUP:
+                if (event.key & pygame.KMOD_SHIFT) or (event.key & pygame.KMOD_LCTRL):
+                    self.camera.velocity_mode = Camera.VelocityModifier_.normal
+
+            elif event.type == pygame.KEYDOWN:
+                if (event.mod & pygame.KMOD_SHIFT):
+                    self.camera.velocity_mode = Camera.VelocityModifier_.speed_up
+
+                elif (event.mod & pygame.KMOD_LCTRL):
+                    self.camera.velocity_mode = Camera.VelocityModifier_.slow_down
+
+        # toggle between viewport and gui input
+        if event.type == pygame.MOUSEBUTTONUP:
+            if not self.ImGuiInput and event.button == 3:
+                self.toggle_input_state()
+
+        elif event.type == pygame.MOUSEBUTTONDOWN :
+            if self.ImGuiInput and event.button == 3:
+                self.toggle_input_state()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F1:
+                self.toggle_input_state()
+
     def event_handler( self ) -> None:
         """The main event handler for the application itself, handling input event states
         eg. Keep mouse hidden and in center of window when F1 is pressed to go into 3D space."""
@@ -434,15 +616,15 @@ class Renderer:
             if event.type == pygame.QUIT:
                 self.running = False
 
+            # handle events for editor viewport
+            self.editor_viewport_event_handler( event )
+
             #if event.type == pygame.VIDEORESIZE:
                 #screen_size = (event.w, event.h)
                 #screen = pygame.display.set_mode(screen_size, pygame.DOUBLEBUF | pygame.OPENGL | pygame.RESIZABLE)
                 #imgui.get_io().display_size = screen_size  # Update ImGui display size
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F1:
-                    self.toggle_input_state()
-
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
 
@@ -493,9 +675,12 @@ class Renderer:
 
     def _runPhysics( self ):
         """Run the step simulation when game is running"""
-        if self.settings.game_running:
+        if self.game_running:
             for _ in range( int(self.deltaTime / (1./240.)) ):
                 p.stepSimulation()
+
+    def bind_light_ubo( self, lights : LightUBO.Light ) -> None:
+        self.ubo_lights.update( lights )
 
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
