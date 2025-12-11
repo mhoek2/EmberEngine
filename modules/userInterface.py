@@ -1224,7 +1224,7 @@ class UserInterface( Context ):
 
                     size = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_WIDTH)    # width
                     #h = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_HEIGHT)     # height
-                    print(f"Size {i}: {size}")
+
 
                     glBindTexture(GL_TEXTURE_2D, self.test_cubemap[i])
                     

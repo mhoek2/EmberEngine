@@ -97,6 +97,26 @@ class Skybox( Context ):
         glBindVertexArray( 0 );
 
     def extract_procedural_cubemap( self, scene : "SceneManager.Scene" ) -> None:
+        """Extract the prodedural sky to a cubemap.
+        
+        Used in:
+
+            - Environmental reflections (IBL)
+            - Optimization when the procedural skybox is NOT in realtime mode.
+
+        Steps:
+
+            1. For each of the 6 cubemap faces:
+                - Position the camera at the origin
+                - Orient the camera using the face side look direction and up vector
+                - Set a 90deg Field-of-view projection
+            2. Render the procedural skybox using the same pipeline as realtime mode
+               (i.e., call self._draw_procedural, with extract_cubemap=True)
+            3. Render into the procedural-sky framebuffer and texture.
+        
+        :param scene: The scene data
+        :type scene: Scene
+        """
         if self.procedural_cubemap is None:
             print("Procedural cubemap GlTexture is not invalid")
             return
@@ -164,14 +184,21 @@ class Skybox( Context ):
             size = self.renderer.viewport_size 
         )
 
-        # rebuild gui preview
-        if self.context.gui.initialized:
-            self.context.gui.scene_settings.test_cubemap_update = True
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glEnable(GL_DEPTH_TEST)
 
-    def create_procedural_cubemap( self, scene : "SceneManager.Scene" )  -> int:
+        # Rebuild gui preview
+        if self.context.gui.initialized:
+            self.context.gui.scene_settings.test_cubemap_update = True
+
+    def create_procedural_cubemap( self, scene : "SceneManager.Scene" ) -> int:
+        """Create the procedural cubemap Texture:GL_TEXTURE_CUBE_MAP and FBO, then extract
+        
+        :param scene: The scene data
+        :type scene: Scene
+        :return: The index of the texture array in  modules.Cubemap.cubemaps[]
+        :rtype: int
+        """
         # Create textures
         if self.procedural_cubemap is None:
             self.procedural_cubemap = self.context.cubemaps._num_cubemaps
@@ -211,7 +238,14 @@ class Skybox( Context ):
 
         return self.procedural_cubemap
 
-    def __set_mvp( self, view : Matrix44 = None, projection : Matrix44 = None ):
+    def __set_mvp( self, view : Matrix44 = None, projection : Matrix44 = None ) -> None:
+        """Upload the view an projection matrices to the GPU uniform
+        
+        :param view: The view matrix, None to use current renderer matrix
+        :type view: Matrix44
+        :param projection: The projection matrix, None to use current renderer matrix
+        :type projection: Matrix44
+        """
         if projection is None:
             projection = self.renderer.projection
 
@@ -227,6 +261,17 @@ class Skybox( Context ):
                           projection        : Matrix44 = None, 
                           extract_cubemap   : bool = False
         ) -> None:
+        """Draw the procedural sky, ether realtime, or to extract a cubemap
+        
+        :param scene: The scene data
+        :type scene: Scene
+        :param view: The view matrix, None for auto
+        :type view: Matrix44
+        :param projection: The projection matrix, None for auto
+        :type projection: Matrix44
+        :param extract_cubemap: The scene data
+        :type extract_cubemap: bool
+        """
         if not scene:
             return
 
@@ -270,6 +315,10 @@ class Skybox( Context ):
         self.__render()
 
     def _draw_skybox( self ):
+        """Render a cubemap to the skybox geometry
+        
+            This can be either a cubemap from assets, or a cubemap extracted from the procedural sky
+        """
         self.renderer.use_shader( self.renderer.skybox )
 
         self.__set_mvp()
