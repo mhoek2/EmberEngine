@@ -143,6 +143,15 @@ I value that as a good exercise!"
 :gutter: 3
 
 :::{grid-item}
+```{raw} html
+<video sttyle="width:100%" controls>
+  <source src="_static/showcase/video_1.0.1.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+```
+:::
+
+:::{grid-item}
 ![](_static/showcase/ImGuizmo.gif)
 :::
 

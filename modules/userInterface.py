@@ -1226,7 +1226,6 @@ class UserInterface( Context ):
                     size = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_WIDTH)    # width
                     #h = glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_TEXTURE_HEIGHT)     # height
 
-
                     glBindTexture(GL_TEXTURE_2D, self.test_cubemap[i])
                     
                     # allocate storag once
@@ -1252,6 +1251,9 @@ class UserInterface( Context ):
                         image_uv0   = imgui.ImVec2( 0, 1 )
                         image_uv1   = imgui.ImVec2( 1, 0 )
                         imgui.image( image, image_size, image_uv0, image_uv1 )
+
+                        if i % 3 != 2:
+                            imgui.same_line()
 
                 imgui.tree_pop()
 

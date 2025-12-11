@@ -50,9 +50,11 @@ Download [Release or Beta](https://github.com/mhoek2/EmberEngine/releases) here.
 
 
 ## Latest version:
+![](docs/source/_static/showcase/video_1.0.1.mp4)
+
+## Older versions:
 https://github.com/user-attachments/assets/7746df9e-e854-4730-9cb1-69f35433d842
 
-## Older version:
 https://github.com/user-attachments/assets/3027674b-0132-4761-9c3c-612fa972be97
 
 ## First version:
