@@ -1,0 +1,9 @@
+﻿modules.cubemap
+===============
+
+
+.. automodule:: modules.cubemap
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

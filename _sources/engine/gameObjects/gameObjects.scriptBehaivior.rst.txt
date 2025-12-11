@@ -1,0 +1,9 @@
+﻿gameObjects.scriptBehaivior
+===========================
+
+
+.. automodule:: gameObjects.scriptBehaivior
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

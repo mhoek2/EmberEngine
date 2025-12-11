@@ -1,0 +1,9 @@
+﻿modules.material
+================
+
+
+.. automodule:: modules.material
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

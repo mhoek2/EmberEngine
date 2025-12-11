@@ -30,6 +30,8 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/main.css?v=b37d803e" />
   
   <!-- So that users can add custom icons -->
   <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
@@ -40,7 +42,9 @@
     <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="icon" href="_static/logo.png"/>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -106,8 +110,16 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
   
-    <p class="title logo__title">EmberEngine 1.0.0 documentation</p>
+  
+    <p class="title logo__title">EmberEngine</p>
   
 </a></div>
     
@@ -122,21 +134,21 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="main.html">
-    Main
+  <a class="nav-link nav-internal" href="engine/engine.html">
+    Engine
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="modules.html">
+  <a class="nav-link nav-internal" href="engine/modules.html">
     Modules
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="gameObjects.html">
+  <a class="nav-link nav-internal" href="engine/gameObjects.html">
     gameObjects
   </a>
 </li>
@@ -167,6 +179,34 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mhoek2.github.io/" title="Author" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-regular fa-address-card fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Author</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mhoek2/EmberEngine" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
       
     </div>
     
@@ -213,21 +253,21 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="main.html">
-    Main
+  <a class="nav-link nav-internal" href="engine/engine.html">
+    Engine
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="modules.html">
+  <a class="nav-link nav-internal" href="engine/modules.html">
     Modules
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="gameObjects.html">
+  <a class="nav-link nav-internal" href="engine/gameObjects.html">
     gameObjects
   </a>
 </li>
@@ -249,6 +289,34 @@
   <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
   <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
 </button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mhoek2.github.io/" title="Author" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-regular fa-address-card fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Author</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mhoek2/EmberEngine" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
         
       </div>
     
@@ -301,6 +369,7 @@
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -312,34 +381,42 @@
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.__init__">__init__() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.__init__">__init__() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
 
       <ul>
-        <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.__init__">(gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
+        <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.__init__">(gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
 </li>
-        <li><a href="gameObjects.html#gameObjects.skybox.Skybox.__init__">(gameObjects.skybox.Skybox method)</a>
+        <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.__init__">(gameObjects.skybox.Skybox method)</a>
 </li>
-        <li><a href="modules.html#modules.camera.Camera.__init__">(modules.camera.Camera method)</a>
+        <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.__init__">(modules.camera.Camera method)</a>
 </li>
-        <li><a href="modules.html#modules.console.Console.__init__">(modules.console.Console method)</a>
+        <li><a href="engine/modules/modules.console.html#modules.console.Console.__init__">(modules.console.Console method)</a>
 </li>
-        <li><a href="modules.html#modules.cubemap.Cubemap.__init__">(modules.cubemap.Cubemap method)</a>
+        <li><a href="engine/modules/modules.cubemap.html#modules.cubemap.Cubemap.__init__">(modules.cubemap.Cubemap method)</a>
 </li>
-        <li><a href="modules.html#modules.files.FileHandler.__init__">(modules.files.FileHandler method)</a>
+        <li><a href="engine/modules/modules.engineTypes.html#modules.engineTypes.EngineTypes.Meta.__init__">(modules.engineTypes.EngineTypes.Meta method)</a>
 </li>
-        <li><a href="modules.html#modules.images.Images.__init__">(modules.images.Images method)</a>
+        <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.__init__">(modules.files.FileHandler method)</a>
 </li>
-        <li><a href="modules.html#modules.jsonHandling.JsonHandler.__init__">(modules.jsonHandling.JsonHandler method)</a>
+        <li><a href="engine/modules/modules.images.html#modules.images.Images.__init__">(modules.images.Images method)</a>
 </li>
-        <li><a href="modules.html#modules.material.Materials.__init__">(modules.material.Materials method)</a>
+        <li><a href="engine/modules/modules.jsonHandling.html#modules.jsonHandling.JsonHandler.__init__">(modules.jsonHandling.JsonHandler method)</a>
 </li>
-        <li><a href="modules.html#modules.models.Models.__init__">(modules.models.Models method)</a>
+        <li><a href="engine/modules/modules.material.html#modules.material.Materials.__init__">(modules.material.Materials method)</a>
 </li>
-        <li><a href="modules.html#modules.scene.SceneManager.__init__">(modules.scene.SceneManager method)</a>
+        <li><a href="engine/modules/modules.models.html#modules.models.Models.__init__">(modules.models.Models method)</a>
 </li>
-        <li><a href="modules.html#modules.settings.Settings.__init__">(modules.settings.Settings method)</a>
+        <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.__init__">(modules.scene.SceneManager method)</a>
 </li>
-        <li><a href="modules.html#modules.shader.Shader.__init__">(modules.shader.Shader method)</a>
+        <li><a href="engine/modules/modules.script.html#modules.script.Script.__init__">(modules.script.Script method)</a>
+</li>
+        <li><a href="engine/modules/modules.settings.html#modules.settings.Settings.__init__">(modules.settings.Settings method)</a>
+</li>
+        <li><a href="engine/modules/modules.shader.html#modules.shader.Shader.__init__">(modules.shader.Shader method)</a>
+</li>
+        <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.__init__">(modules.transform.Transform method)</a>
+</li>
+        <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.vectorInterface.__init__">(modules.transform.Transform.vectorInterface method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -348,13 +425,13 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.material.Materials.add_ao_suffix">add_ao_suffix() (modules.material.Materials static method)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.add_ao_suffix">add_ao_suffix() (modules.material.Materials static method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.material.Materials.Material.albedo">albedo (modules.material.Materials.Material attribute)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.Material.albedo">albedo (modules.material.Materials.Material attribute)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.Scene.ambient_color">ambient_color (modules.scene.SceneManager.Scene attribute)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.ambient_color">ambient_color (modules.scene.SceneManager.Scene attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -362,19 +439,19 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.cubemap.Cubemap.bind">bind() (modules.cubemap.Cubemap method)</a>
+      <li><a href="engine/modules/modules.cubemap.html#modules.cubemap.Cubemap.bind">bind() (modules.cubemap.Cubemap method)</a>
 
       <ul>
-        <li><a href="modules.html#modules.images.Images.bind">(modules.images.Images method)</a>
+        <li><a href="engine/modules/modules.images.html#modules.images.Images.bind">(modules.images.Images method)</a>
 </li>
-        <li><a href="modules.html#modules.material.Materials.bind">(modules.material.Materials method)</a>
+        <li><a href="engine/modules/modules.material.html#modules.material.Materials.bind">(modules.material.Materials method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.shader.Shader.bind_uniforms">bind_uniforms() (modules.shader.Shader method)</a>
+      <li><a href="engine/modules/modules.shader.html#modules.shader.Shader.bind_uniforms">bind_uniforms() (modules.shader.Shader method)</a>
 </li>
-      <li><a href="modules.html#modules.material.Materials.buildMaterial">buildMaterial() (modules.material.Materials method)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.buildMaterial">buildMaterial() (modules.material.Materials method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -382,39 +459,49 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.camera.Camera">Camera (class in modules.camera)</a>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera">Camera (class in modules.camera)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.Scene.camera">camera (modules.scene.SceneManager.Scene attribute)</a>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.camera">camera (modules.camera.Camera property)</a>
+
+      <ul>
+        <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.camera">(modules.scene.SceneManager.Scene attribute)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.clear">clear() (modules.console.Console method)</a>
+      </ul></li>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.VelocityModifier_">Camera.VelocityModifier_ (class in modules.camera)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.clearEditorScene">clearEditorScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.clear">clear() (modules.console.Console method)</a>
 </li>
-      <li><a href="modules.html#modules.models.Models.compute_tangents_bitangents">compute_tangents_bitangents() (modules.models.Models method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.clearEditorScene">clearEditorScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console">Console (class in modules.console)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.compose_matrix">compose_matrix() (modules.transform.Transform method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.Entry">Console.Entry (class in modules.console)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.compute_tangents_bitangents">compute_tangents_bitangents() (modules.models.Models method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.Type_">Console.Type_ (class in modules.console)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console">Console (class in modules.console)</a>
+</li>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Entry">Console.Entry (class in modules.console)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.imageLoader.create_black_image">create_black_image() (in module modules.imageLoader)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Type_">Console.Type_ (class in modules.console)</a>
 </li>
-      <li><a href="modules.html#modules.cubemap.Cubemap.create_brdf_lut">create_brdf_lut() (modules.cubemap.Cubemap method)</a>
+      <li><a href="engine/modules/modules.imageLoader.html#modules.imageLoader.create_black_image">create_black_image() (in module modules.imageLoader)</a>
 </li>
-      <li><a href="modules.html#modules.cubemap.Cubemap.create_brdf_texture">create_brdf_texture() (modules.cubemap.Cubemap static method)</a>
+      <li><a href="engine/modules/modules.cubemap.html#modules.cubemap.Cubemap.create_brdf_lut">create_brdf_lut() (modules.cubemap.Cubemap method)</a>
 </li>
-      <li><a href="modules.html#modules.imageLoader.create_grey_image">create_grey_image() (in module modules.imageLoader)</a>
+      <li><a href="engine/modules/modules.cubemap.html#modules.cubemap.Cubemap.create_brdf_texture">create_brdf_texture() (modules.cubemap.Cubemap static method)</a>
 </li>
-      <li><a href="modules.html#modules.imageLoader.create_image_pygame">create_image_pygame() (in module modules.imageLoader)</a>
+      <li><a href="engine/modules/modules.imageLoader.html#modules.imageLoader.create_grey_image">create_grey_image() (in module modules.imageLoader)</a>
 </li>
-      <li><a href="modules.html#modules.imageLoader.create_rmo_map">create_rmo_map() (in module modules.imageLoader)</a>
+      <li><a href="engine/modules/modules.imageLoader.html#modules.imageLoader.create_image_pygame">create_image_pygame() (in module modules.imageLoader)</a>
 </li>
-      <li><a href="modules.html#modules.imageLoader.create_white_image">create_white_image() (in module modules.imageLoader)</a>
+      <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.create_procedural_cubemap">create_procedural_cubemap() (gameObjects.skybox.Skybox method)</a>
 </li>
-      <li><a href="modules.html#modules.cubemap.Cubemap">Cubemap (class in modules.cubemap)</a>
+      <li><a href="engine/modules/modules.imageLoader.html#modules.imageLoader.create_rmo_map">create_rmo_map() (in module modules.imageLoader)</a>
+</li>
+      <li><a href="engine/modules/modules.imageLoader.html#modules.imageLoader.create_white_image">create_white_image() (in module modules.imageLoader)</a>
+</li>
+      <li><a href="engine/modules/modules.cubemap.html#modules.cubemap.Cubemap">Cubemap (class in modules.cubemap)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -422,17 +509,19 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.default_for_annotation_type">default_for_annotation_type() (gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.default_for_annotation_type">default_for_annotation_type() (gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
 </li>
-      <li><a href="gameObjects.html#gameObjects.skybox.Skybox.draw">draw() (gameObjects.skybox.Skybox method)</a>
-
-      <ul>
-        <li><a href="modules.html#modules.models.Models.draw">(modules.models.Models method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.deserialize_export">deserialize_export() (modules.scene.SceneManager method)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.models.Models.draw_node">draw_node() (modules.models.Models method)</a>
+      <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.draw">draw() (gameObjects.skybox.Skybox method)</a>
+
+      <ul>
+        <li><a href="engine/modules/modules.models.html#modules.models.Models.draw">(modules.models.Models method)</a>
+</li>
+      </ul></li>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.draw_node">draw_node() (modules.models.Models method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -440,17 +529,33 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.material.Materials.Material.emissive">emissive (modules.material.Materials.Material attribute)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.Material.emissive">emissive (modules.material.Materials.Material attribute)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.Type_.error">error (modules.console.Console.Type_ attribute)</a>
+      <li><a href="engine/modules/modules.engineTypes.html#modules.engineTypes.EngineTypes">EngineTypes (class in modules.engineTypes)</a>
+</li>
+      <li><a href="engine/modules/modules.engineTypes.html#modules.engineTypes.EngineTypes.Meta">EngineTypes.Meta (class in modules.engineTypes)</a>
+</li>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Type_.error">error (modules.console.Console.Type_ attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.error">error() (modules.console.Console method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.euler_to_quat">euler_to_quat() (modules.transform.Transform method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.console.Console.error">error() (modules.console.Console method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.export">export() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
 </li>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.export">export() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.extension">extension (modules.files.FileHandler attribute)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.extension">extension (modules.files.FileHandler attribute)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.extract_euler">extract_euler() (modules.transform.Transform method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.extract_position">extract_position() (modules.transform.Transform method)</a>
+</li>
+      <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.extract_procedural_cubemap">extract_procedural_cubemap() (gameObjects.skybox.Skybox method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.extract_quat">extract_quat() (modules.transform.Transform method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.extract_scale">extract_scale() (modules.transform.Transform method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -458,15 +563,15 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.jsonHandling.JsonHandler.file">file (modules.jsonHandling.JsonHandler attribute)</a>
+      <li><a href="engine/modules/modules.jsonHandling.html#modules.jsonHandling.JsonHandler.file">file (modules.jsonHandling.JsonHandler attribute)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler">FileHandler (class in modules.files)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler">FileHandler (class in modules.files)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.files.FileHandler.filename">filename (modules.files.FileHandler attribute)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.filename">filename (modules.files.FileHandler attribute)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.full_path">full_path (modules.files.FileHandler attribute)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.full_path">full_path (modules.files.FileHandler attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -474,59 +579,63 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.scene.SceneManager.Scene.gameObjects">gameObjects (modules.scene.SceneManager.Scene attribute)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.gameObjects">gameObjects (modules.scene.SceneManager.Scene attribute)</a>
 </li>
       <li>
     gameObjects.scriptBehaivior
 
       <ul>
-        <li><a href="gameObjects.html#module-gameObjects.scriptBehaivior">module</a>
+        <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#module-gameObjects.scriptBehaivior">module</a>
 </li>
       </ul></li>
       <li>
     gameObjects.skybox
 
       <ul>
-        <li><a href="gameObjects.html#module-gameObjects.skybox">module</a>
+        <li><a href="engine/gameObjects/gameObjects.skybox.html#module-gameObjects.skybox">module</a>
 </li>
       </ul></li>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.get">get() (gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.get">get() (gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.get_entry_color">get_entry_color() (modules.console.Console method)</a>
+      <li><a href="engine/modules/modules.engineTypes.html#modules.engineTypes.EngineTypes.get_engine_type">get_engine_type() (modules.engineTypes.EngineTypes static method)</a>
 </li>
-      <li><a href="modules.html#modules.camera.Camera.get_view_matrix">get_view_matrix() (modules.camera.Camera method)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.get_entry_color">get_entry_color() (modules.console.Console method)</a>
 </li>
-      <li><a href="modules.html#modules.camera.Camera.get_view_matrix_running">get_view_matrix_running() (modules.camera.Camera method)</a>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.get_view_matrix">get_view_matrix() (modules.camera.Camera method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.getCamera">getCamera() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.get_view_matrix_running">get_view_matrix_running() (modules.camera.Camera method)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.getContent">getContent() (modules.files.FileHandler method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getCamera">getCamera() (modules.scene.SceneManager method)</a>
+</li>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.getContent">getContent() (modules.files.FileHandler method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.scene.SceneManager.getCurrentScene">getCurrentScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getCurrentScene">getCurrentScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.getCurrentSceneUID">getCurrentSceneUID() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getCurrentSceneUID">getCurrentSceneUID() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.getDefaultScene">getDefaultScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getDefaultScene">getDefaultScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.getEntries">getEntries() (modules.console.Console method)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.getEntries">getEntries() (modules.console.Console method)</a>
 </li>
-      <li><a href="modules.html#modules.jsonHandling.JsonHandler.getJson">getJson() (modules.jsonHandling.JsonHandler method)</a>
+      <li><a href="engine/modules/modules.jsonHandling.html#modules.jsonHandling.JsonHandler.getJson">getJson() (modules.jsonHandling.JsonHandler method)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.getLines">getLines() (modules.files.FileHandler method)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.getLines">getLines() (modules.files.FileHandler method)</a>
 </li>
-      <li><a href="modules.html#modules.material.Materials.getMaterialByIndex">getMaterialByIndex() (modules.material.Materials method)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.getMaterialByIndex">getMaterialByIndex() (modules.material.Materials method)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.getPath">getPath() (modules.files.FileHandler method)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.getPath">getPath() (modules.files.FileHandler method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.getScene">getScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getScene">getScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.getSceneById">getSceneById() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getSceneById">getSceneById() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.getSceneByUID">getSceneByUID() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getSceneByUID">getSceneByUID() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.getScenes">getScenes() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getScenes">getScenes() (modules.scene.SceneManager method)</a>
+</li>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.getSun">getSun() (modules.scene.SceneManager method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -534,13 +643,21 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.images.Images">Images (class in modules.images)</a>
+      <li><a href="engine/modules/modules.images.html#modules.images.Images">Images (class in modules.images)</a>
+</li>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh.indices">indices (modules.models.Models.Mesh attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.script.html#modules.script.Script.init_instance">init_instance() (modules.script.Script method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.models.Models.Mesh.indices">indices (modules.models.Models.Mesh attribute)</a>
+      <li><a href="engine/modules/modules.settings.html#modules.settings.Settings.is_app_exported">is_app_exported() (modules.settings.Settings method)</a>
 </li>
-      <li><a href="modules.html#modules.settings.Settings.is_app_exported">is_app_exported() (modules.settings.Settings method)</a>
+      <li><a href="engine/modules/modules.engineTypes.html#modules.engineTypes.EngineTypes.is_engine_type">is_engine_type() (modules.engineTypes.EngineTypes static method)</a>
+</li>
+      <li><a href="engine/modules/modules.engineTypes.html#modules.engineTypes.EngineTypes.is_primitive_type">is_primitive_type() (modules.engineTypes.EngineTypes static method)</a>
+</li>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.isSun">isSun() (modules.scene.SceneManager method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -548,7 +665,7 @@
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.jsonHandling.JsonHandler">JsonHandler (class in modules.jsonHandling)</a>
+      <li><a href="engine/modules/modules.jsonHandling.html#modules.jsonHandling.JsonHandler">JsonHandler (class in modules.jsonHandling)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -556,37 +673,43 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.scene.SceneManager.Scene.light_color">light_color (modules.scene.SceneManager.Scene attribute)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.light_color">light_color (modules.scene.SceneManager.Scene attribute)</a>
 </li>
-      <li><a href="modules.html#modules.imageLoader.load_cubemap_pygame">load_cubemap_pygame() (in module modules.imageLoader)</a>
+      <li><a href="engine/modules/modules.imageLoader.html#modules.imageLoader.load_cubemap_pygame">load_cubemap_pygame() (in module modules.imageLoader)</a>
 </li>
-      <li><a href="modules.html#modules.imageLoader.load_image_pygame">load_image_pygame() (in module modules.imageLoader)</a>
+      <li><a href="engine/modules/modules.imageLoader.html#modules.imageLoader.load_image_pygame">load_image_pygame() (in module modules.imageLoader)</a>
 </li>
-      <li><a href="modules.html#modules.shader.Shader.load_program">load_program() (modules.shader.Shader method)</a>
+      <li><a href="engine/modules/modules.shader.html#modules.shader.Shader.load_program">load_program() (modules.shader.Shader method)</a>
 </li>
-      <li><a href="modules.html#modules.shader.Shader.load_shader">load_shader() (modules.shader.Shader method)</a>
+      <li><a href="engine/modules/modules.shader.html#modules.shader.Shader.load_shader">load_shader() (modules.shader.Shader method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.loadDefaultScene">loadDefaultScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.loadDefaultScene">loadDefaultScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.loadGameObjectsRecursive">loadGameObjectsRecursive() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.loadGameObjectsRecursive">loadGameObjectsRecursive() (modules.scene.SceneManager method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.cubemap.Cubemap.loadOrFind">loadOrFind() (modules.cubemap.Cubemap method)</a>
+      <li><a href="engine/modules/modules.cubemap.html#modules.cubemap.Cubemap.loadOrFind">loadOrFind() (modules.cubemap.Cubemap method)</a>
 
       <ul>
-        <li><a href="modules.html#modules.material.Materials.loadOrFind">(modules.material.Materials method)</a>
+        <li><a href="engine/modules/modules.material.html#modules.material.Materials.loadOrFind">(modules.material.Materials method)</a>
 </li>
-        <li><a href="modules.html#modules.models.Models.loadOrFind">(modules.models.Models method)</a>
+        <li><a href="engine/modules/modules.models.html#modules.models.Models.loadOrFind">(modules.models.Models method)</a>
 </li>
       </ul></li>
-      <li><a href="modules.html#modules.images.Images.loadOrFindFullPath">loadOrFindFullPath() (modules.images.Images method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="engine/modules/modules.images.html#modules.images.Images.loadOrFindFullPath">loadOrFindFullPath() (modules.images.Images method)</a>
 </li>
-      <li><a href="modules.html#modules.images.Images.loadOrFindPhysicalMap">loadOrFindPhysicalMap() (modules.images.Images method)</a>
+      <li><a href="engine/modules/modules.images.html#modules.images.Images.loadOrFindPhysicalMap">loadOrFindPhysicalMap() (modules.images.Images method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.loadScene">loadScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.loadScene">loadScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.log">log() (modules.console.Console method)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.local_position">local_position (modules.transform.Transform property)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.local_rotation">local_rotation (modules.transform.Transform property)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.local_scale">local_scale (modules.transform.Transform property)</a>
+</li>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.log">log() (modules.console.Console method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -594,135 +717,162 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.models.Models.Mesh.material">material (modules.models.Models.Mesh attribute)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh.material">material (modules.models.Models.Mesh attribute)</a>
 </li>
-      <li><a href="modules.html#modules.material.Materials">Materials (class in modules.material)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials">Materials (class in modules.material)</a>
 </li>
-      <li><a href="modules.html#modules.material.Materials.Material">Materials.Material (class in modules.material)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.Material">Materials.Material (class in modules.material)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.Entry.message">message (modules.console.Console.Entry attribute)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Entry.message">message (modules.console.Console.Entry attribute)</a>
 </li>
-      <li><a href="modules.html#modules.models.Models">Models (class in modules.models)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models">Models (class in modules.models)</a>
 </li>
-      <li><a href="modules.html#modules.models.Models.Mesh">Models.Mesh (class in modules.models)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh">Models.Mesh (class in modules.models)</a>
 </li>
       <li>
     module
 
       <ul>
-        <li><a href="gameObjects.html#module-gameObjects.scriptBehaivior">gameObjects.scriptBehaivior</a>
+        <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#module-gameObjects.scriptBehaivior">gameObjects.scriptBehaivior</a>
 </li>
-        <li><a href="gameObjects.html#module-gameObjects.skybox">gameObjects.skybox</a>
+        <li><a href="engine/gameObjects/gameObjects.skybox.html#module-gameObjects.skybox">gameObjects.skybox</a>
 </li>
-        <li><a href="modules.html#module-modules.camera">modules.camera</a>
+        <li><a href="engine/modules/modules.camera.html#module-modules.camera">modules.camera</a>
 </li>
-        <li><a href="modules.html#module-modules.console">modules.console</a>
+        <li><a href="engine/modules/modules.console.html#module-modules.console">modules.console</a>
 </li>
-        <li><a href="modules.html#module-modules.cubemap">modules.cubemap</a>
+        <li><a href="engine/modules/modules.cubemap.html#module-modules.cubemap">modules.cubemap</a>
 </li>
-        <li><a href="modules.html#module-modules.files">modules.files</a>
+        <li><a href="engine/modules/modules.engineTypes.html#module-modules.engineTypes">modules.engineTypes</a>
 </li>
-        <li><a href="modules.html#module-modules.imageLoader">modules.imageLoader</a>
+        <li><a href="engine/modules/modules.files.html#module-modules.files">modules.files</a>
 </li>
-        <li><a href="modules.html#module-modules.images">modules.images</a>
+        <li><a href="engine/modules/modules.imageLoader.html#module-modules.imageLoader">modules.imageLoader</a>
 </li>
-        <li><a href="modules.html#module-modules.jsonHandling">modules.jsonHandling</a>
+        <li><a href="engine/modules/modules.images.html#module-modules.images">modules.images</a>
 </li>
-        <li><a href="modules.html#module-modules.material">modules.material</a>
+        <li><a href="engine/modules/modules.jsonHandling.html#module-modules.jsonHandling">modules.jsonHandling</a>
 </li>
-        <li><a href="modules.html#module-modules.models">modules.models</a>
+        <li><a href="engine/modules/modules.material.html#module-modules.material">modules.material</a>
 </li>
-        <li><a href="modules.html#module-modules.scene">modules.scene</a>
+        <li><a href="engine/modules/modules.models.html#module-modules.models">modules.models</a>
 </li>
-        <li><a href="modules.html#module-modules.settings">modules.settings</a>
+        <li><a href="engine/modules/modules.scene.html#module-modules.scene">modules.scene</a>
 </li>
-        <li><a href="modules.html#module-modules.shader">modules.shader</a>
+        <li><a href="engine/modules/modules.script.html#module-modules.script">modules.script</a>
+</li>
+        <li><a href="engine/modules/modules.settings.html#module-modules.settings">modules.settings</a>
+</li>
+        <li><a href="engine/modules/modules.shader.html#module-modules.shader">modules.shader</a>
+</li>
+        <li><a href="engine/modules/modules.transform.html#module-modules.transform">modules.transform</a>
 </li>
       </ul></li>
       <li>
     modules.camera
 
       <ul>
-        <li><a href="modules.html#module-modules.camera">module</a>
+        <li><a href="engine/modules/modules.camera.html#module-modules.camera">module</a>
+</li>
+      </ul></li>
+      <li>
+    modules.console
+
+      <ul>
+        <li><a href="engine/modules/modules.console.html#module-modules.console">module</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
-    modules.console
-
-      <ul>
-        <li><a href="modules.html#module-modules.console">module</a>
-</li>
-      </ul></li>
-      <li>
     modules.cubemap
 
       <ul>
-        <li><a href="modules.html#module-modules.cubemap">module</a>
+        <li><a href="engine/modules/modules.cubemap.html#module-modules.cubemap">module</a>
+</li>
+      </ul></li>
+      <li>
+    modules.engineTypes
+
+      <ul>
+        <li><a href="engine/modules/modules.engineTypes.html#module-modules.engineTypes">module</a>
 </li>
       </ul></li>
       <li>
     modules.files
 
       <ul>
-        <li><a href="modules.html#module-modules.files">module</a>
+        <li><a href="engine/modules/modules.files.html#module-modules.files">module</a>
 </li>
       </ul></li>
       <li>
     modules.imageLoader
 
       <ul>
-        <li><a href="modules.html#module-modules.imageLoader">module</a>
+        <li><a href="engine/modules/modules.imageLoader.html#module-modules.imageLoader">module</a>
 </li>
       </ul></li>
       <li>
     modules.images
 
       <ul>
-        <li><a href="modules.html#module-modules.images">module</a>
+        <li><a href="engine/modules/modules.images.html#module-modules.images">module</a>
 </li>
       </ul></li>
       <li>
     modules.jsonHandling
 
       <ul>
-        <li><a href="modules.html#module-modules.jsonHandling">module</a>
+        <li><a href="engine/modules/modules.jsonHandling.html#module-modules.jsonHandling">module</a>
 </li>
       </ul></li>
       <li>
     modules.material
 
       <ul>
-        <li><a href="modules.html#module-modules.material">module</a>
+        <li><a href="engine/modules/modules.material.html#module-modules.material">module</a>
 </li>
       </ul></li>
       <li>
     modules.models
 
       <ul>
-        <li><a href="modules.html#module-modules.models">module</a>
+        <li><a href="engine/modules/modules.models.html#module-modules.models">module</a>
 </li>
       </ul></li>
       <li>
     modules.scene
 
       <ul>
-        <li><a href="modules.html#module-modules.scene">module</a>
+        <li><a href="engine/modules/modules.scene.html#module-modules.scene">module</a>
+</li>
+      </ul></li>
+      <li>
+    modules.script
+
+      <ul>
+        <li><a href="engine/modules/modules.script.html#module-modules.script">module</a>
 </li>
       </ul></li>
       <li>
     modules.settings
 
       <ul>
-        <li><a href="modules.html#module-modules.settings">module</a>
+        <li><a href="engine/modules/modules.settings.html#module-modules.settings">module</a>
 </li>
       </ul></li>
       <li>
     modules.shader
 
       <ul>
-        <li><a href="modules.html#module-modules.shader">module</a>
+        <li><a href="engine/modules/modules.shader.html#module-modules.shader">module</a>
+</li>
+      </ul></li>
+      <li>
+    modules.transform
+
+      <ul>
+        <li><a href="engine/modules/modules.transform.html#module-modules.transform">module</a>
 </li>
       </ul></li>
   </ul></td>
@@ -731,25 +881,29 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.scene.SceneManager.Scene.name">name (modules.scene.SceneManager.Scene attribute)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.name">name (modules.scene.SceneManager.Scene attribute)</a>
 </li>
-      <li><a href="modules.html#modules.camera.Camera.new_frame">new_frame() (modules.camera.Camera method)</a>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.new_frame">new_frame() (modules.camera.Camera method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.newScene">newScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.newScene">newScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.Type_.none">none (modules.console.Console.Type_ attribute)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Type_.none">none (modules.console.Console.Type_ attribute)</a>
 </li>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.VelocityModifier_.normal">normal (modules.camera.Camera.VelocityModifier_ attribute)</a>
+
+      <ul>
+        <li><a href="engine/modules/modules.material.html#modules.material.Materials.Material.normal">(modules.material.Materials.Material attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.material.Materials.Material.normal">normal (modules.material.Materials.Material attribute)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.normalize">normalize() (modules.models.Models static method)</a>
 </li>
-      <li><a href="modules.html#modules.models.Models.normalize">normalize() (modules.models.Models static method)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Type_.note">note (modules.console.Console.Type_ attribute)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.Type_.note">note (modules.console.Console.Type_ attribute)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.note">note() (modules.console.Console method)</a>
 </li>
-      <li><a href="modules.html#modules.console.Console.note">note() (modules.console.Console method)</a>
-</li>
-      <li><a href="modules.html#modules.models.Models.Mesh.num_indices">num_indices (modules.models.Models.Mesh attribute)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh.num_indices">num_indices (modules.models.Models.Mesh attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -757,17 +911,17 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.onDisable">onDisable() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.onDisable">onDisable() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
 </li>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.onEnable">onEnable() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.onEnable">onEnable() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.onStart">onStart() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.onStart">onStart() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
 </li>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.onUpdate">onUpdate() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.onUpdate">onUpdate() (gameObjects.scriptBehaivior.ScriptBehaivior method)</a>
 </li>
-      <li><a href="modules.html#modules.material.Materials.Material.opacity">opacity (modules.material.Materials.Material attribute)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.Material.opacity">opacity (modules.material.Materials.Material attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -775,25 +929,49 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.shader.Shader.parse_uniforms">parse_uniforms() (modules.shader.Shader method)</a>
+      <li><a href="engine/modules/modules.shader.html#modules.shader.Shader.parse_uniforms">parse_uniforms() (modules.shader.Shader method)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.path">path (modules.files.FileHandler attribute)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.path">path (modules.files.FileHandler attribute)</a>
 </li>
-      <li><a href="modules.html#modules.material.Materials.Material.phyiscal">phyiscal (modules.material.Materials.Material attribute)</a>
+      <li><a href="engine/modules/modules.material.html#modules.material.Materials.Material.phyiscal">phyiscal (modules.material.Materials.Material attribute)</a>
 </li>
-      <li><a href="modules.html#modules.camera.Camera.place_object_in_front_of_another">place_object_in_front_of_another() (modules.camera.Camera method)</a>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.place_object_in_front_of_another">place_object_in_front_of_another() (modules.camera.Camera method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.position">position (modules.transform.Transform property)</a>
+</li>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.prepare_gl_buffers">prepare_gl_buffers() (modules.models.Models method)</a>
+</li>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.printInvalid">printInvalid() (modules.files.FileHandler method)</a>
+</li>
+      <li><a href="engine/modules/modules.shader.html#modules.shader.Shader.printOpenGLError">printOpenGLError() (modules.shader.Shader method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.models.Models.prepare_gl_buffers">prepare_gl_buffers() (modules.models.Models method)</a>
+      <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.Type_.procedural">procedural (gameObjects.skybox.Skybox.Type_ attribute)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.printInvalid">printInvalid() (modules.files.FileHandler method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.procedural_ground_color">procedural_ground_color (modules.scene.SceneManager.Scene attribute)</a>
 </li>
-      <li><a href="modules.html#modules.shader.Shader.printOpenGLError">printOpenGLError() (modules.shader.Shader method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.procedural_horizon_color">procedural_horizon_color (modules.scene.SceneManager.Scene attribute)</a>
 </li>
-      <li><a href="modules.html#modules.camera.Camera.process_keyboard">process_keyboard() (modules.camera.Camera method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.procedural_night_brightness">procedural_night_brightness (modules.scene.SceneManager.Scene attribute)</a>
 </li>
-      <li><a href="modules.html#modules.camera.Camera.process_mouse_movement">process_mouse_movement() (modules.camera.Camera method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.procedural_night_color">procedural_night_color (modules.scene.SceneManager.Scene attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.procedural_sky_color">procedural_sky_color (modules.scene.SceneManager.Scene attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.procedural_sunset_color">procedural_sunset_color (modules.scene.SceneManager.Scene attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.process_keyboard">process_keyboard() (modules.camera.Camera method)</a>
+</li>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.process_mouse_movement">process_mouse_movement() (modules.camera.Camera method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.quat_to_euler">quat_to_euler() (modules.transform.Transform method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -801,7 +979,13 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.models.Models.render">render() (modules.models.Models method)</a>
+      <li><a href="engine/modules/modules.engineTypes.html#modules.engineTypes.EngineTypes.registry">registry() (modules.engineTypes.EngineTypes static method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.render">render() (modules.models.Models method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.rotation">rotation (modules.transform.Transform property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -809,35 +993,69 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.scene.SceneManager.saveGameObjectRecursive">saveGameObjectRecursive() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.safe_asin">safe_asin() (modules.transform.Transform method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.saveScene">saveScene() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.saveGameObjectRecursive">saveGameObjectRecursive() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.saveSceneAs">saveSceneAs() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.saveScene">saveScene() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager">SceneManager (class in modules.scene)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.saveSceneAs">saveSceneAs() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.Scene">SceneManager.Scene (class in modules.scene)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.scale">scale (modules.transform.Transform property)</a>
 </li>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior">ScriptBehaivior (class in gameObjects.scriptBehaivior)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager">SceneManager (class in modules.scene)</a>
 </li>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported">ScriptBehaivior.Exported (class in gameObjects.scriptBehaivior)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene">SceneManager.Scene (class in modules.scene)</a>
+</li>
+      <li><a href="engine/modules/modules.script.html#modules.script.Script">Script (class in modules.script)</a>
+</li>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior">ScriptBehaivior (class in gameObjects.scriptBehaivior)</a>
+</li>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported">ScriptBehaivior.Exported (class in gameObjects.scriptBehaivior)</a>
+</li>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.serialize_export">serialize_export() (modules.scene.SceneManager method)</a>
+</li>
+      <li><a href="engine/gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.set">set() (gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.set_local_position">set_local_position() (modules.transform.Transform method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.set_local_rotation">set_local_rotation() (modules.transform.Transform method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.set_local_scale">set_local_scale() (modules.transform.Transform method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="gameObjects.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported.set">set() (gameObjects.scriptBehaivior.ScriptBehaivior.Exported method)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.set_position">set_position() (modules.transform.Transform method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.setCamera">setCamera() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.set_rotation">set_rotation() (modules.transform.Transform method)</a>
 </li>
-      <li><a href="modules.html#modules.files.FileHandler.setContent">setContent() (modules.files.FileHandler method)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.set_scale">set_scale() (modules.transform.Transform method)</a>
 </li>
-      <li><a href="modules.html#modules.settings.Settings">Settings (class in modules.settings)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.setCamera">setCamera() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.shader.Shader">Shader (class in modules.shader)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.setContent">setContent() (modules.files.FileHandler method)</a>
 </li>
-      <li><a href="gameObjects.html#gameObjects.skybox.Skybox">Skybox (class in gameObjects.skybox)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.setSun">setSun() (modules.scene.SceneManager method)</a>
 </li>
-      <li><a href="modules.html#modules.jsonHandling.JsonHandler.storeJson">storeJson() (modules.jsonHandling.JsonHandler method)</a>
+      <li><a href="engine/modules/modules.settings.html#modules.settings.Settings">Settings (class in modules.settings)</a>
+</li>
+      <li><a href="engine/modules/modules.shader.html#modules.shader.Shader">Shader (class in modules.shader)</a>
+</li>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.sky_type">sky_type (modules.scene.SceneManager.Scene attribute)</a>
+</li>
+      <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox">Skybox (class in gameObjects.skybox)</a>
+</li>
+      <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.Type_.skybox">skybox (gameObjects.skybox.Skybox.Type_ attribute)</a>
+</li>
+      <li><a href="engine/gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.Type_">Skybox.Type_ (class in gameObjects.skybox)</a>
+</li>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.VelocityModifier_.slow_down">slow_down (modules.camera.Camera.VelocityModifier_ attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.VelocityModifier_.speed_up">speed_up (modules.camera.Camera.VelocityModifier_ attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.jsonHandling.html#modules.jsonHandling.JsonHandler.storeJson">storeJson() (modules.jsonHandling.JsonHandler method)</a>
+</li>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.sun">sun (modules.scene.SceneManager.Scene attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -845,11 +1063,15 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.console.Console.Entry.traceback">traceback (modules.console.Console.Entry attribute)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Entry.traceback">traceback (modules.console.Console.Entry attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform">Transform (class in modules.transform)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.console.Console.Entry.type_id">type_id (modules.console.Console.Entry attribute)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.vectorInterface">Transform.vectorInterface (class in modules.transform)</a>
+</li>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Entry.type_id">type_id (modules.console.Console.Entry attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -857,13 +1079,15 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.scene.SceneManager.Scene.uid">uid (modules.scene.SceneManager.Scene attribute)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.Scene.uid">uid (modules.scene.SceneManager.Scene attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.update_camera_vectors">update_camera_vectors() (modules.camera.Camera method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.camera.Camera.update_camera_vectors">update_camera_vectors() (modules.camera.Camera method)</a>
+      <li><a href="engine/modules/modules.camera.html#modules.camera.Camera.update_yaw_pitch_from_front">update_yaw_pitch_from_front() (modules.camera.Camera method)</a>
 </li>
-      <li><a href="modules.html#modules.scene.SceneManager.updateScriptonGameObjects">updateScriptonGameObjects() (modules.scene.SceneManager method)</a>
+      <li><a href="engine/modules/modules.scene.html#modules.scene.SceneManager.updateScriptonGameObjects">updateScriptonGameObjects() (modules.scene.SceneManager method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -871,17 +1095,21 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.files.FileHandler.valid_file">valid_file (modules.files.FileHandler attribute)</a>
+      <li><a href="engine/modules/modules.files.html#modules.files.FileHandler.valid_file">valid_file (modules.files.FileHandler attribute)</a>
 </li>
-      <li><a href="modules.html#modules.models.Models.Mesh.vao">vao (modules.models.Models.Mesh attribute)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh.vao">vao (modules.models.Models.Mesh attribute)</a>
+</li>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh.vbo">vbo (modules.models.Models.Mesh attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.models.Models.Mesh.vbo">vbo (modules.models.Models.Mesh attribute)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh.vbo_shape">vbo_shape (modules.models.Models.Mesh attribute)</a>
 </li>
-      <li><a href="modules.html#modules.models.Models.Mesh.vbo_shape">vbo_shape (modules.models.Models.Mesh attribute)</a>
+      <li><a href="engine/modules/modules.models.html#modules.models.Models.Mesh.vbo_size">vbo_size (modules.models.Models.Mesh attribute)</a>
 </li>
-      <li><a href="modules.html#modules.models.Models.Mesh.vbo_size">vbo_size (modules.models.Models.Mesh attribute)</a>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.vec_to_degrees">vec_to_degrees() (modules.transform.Transform static method)</a>
+</li>
+      <li><a href="engine/modules/modules.transform.html#modules.transform.Transform.vec_to_radians">vec_to_radians() (modules.transform.Transform static method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -889,11 +1117,11 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.console.Console.warn">warn() (modules.console.Console method)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.warn">warn() (modules.console.Console method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modules.html#modules.console.Console.Type_.warning">warning (modules.console.Console.Type_ attribute)</a>
+      <li><a href="engine/modules/modules.console.html#modules.console.Console.Type_.warning">warning (modules.console.Console.Type_ attribute)</a>
 </li>
   </ul></td>
 </tr></table>

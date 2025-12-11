@@ -1,0 +1,924 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>modules.scene &#8212; EmberEngine 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/main.css?v=b37d803e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'engine/modules/modules.scene';</script>
+    <link rel="icon" href="../../_static/logo.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="modules.shader" href="modules.shader.html" />
+    <link rel="prev" title="modules.models" href="modules.models.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="../../_static/logo.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">EmberEngine</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../engine.html">
+    Engine
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../modules.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../gameObjects.html">
+    gameObjects
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mhoek2.github.io/" title="Author" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-regular fa-address-card fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Author</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mhoek2/EmberEngine" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../engine.html">
+    Engine
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../modules.html">
+    Modules
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../gameObjects.html">
+    gameObjects
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://mhoek2.github.io/" title="Author" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-regular fa-address-card fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Author</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/mhoek2/EmberEngine" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="modules.settings.html">modules.settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.engineTypes.html">modules.engineTypes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.script.html">modules.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.transform.html">modules.transform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.console.html">modules.console</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.models.html">modules.models</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">modules.scene</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.shader.html">modules.shader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.camera.html">modules.camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.cubemap.html">modules.cubemap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.files.html">modules.files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.imageLoader.html">modules.imageLoader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.images.html">modules.images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.jsonHandling.html">modules.jsonHandling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.material.html">modules.material</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../engine.html" class="nav-link">Engine</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../modules.html" class="nav-link">Modules</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">modules.scene</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-modules.scene">
+<span id="modules-scene"></span><h1>modules.scene<a class="headerlink" href="#module-modules.scene" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="modules.scene.SceneManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.scene.</span></span><span class="sig-name descname"><span class="pre">SceneManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Scene</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<p>Typedef for a scene file</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.ambient_color">
+<span class="sig-name descname"><span class="pre">ambient_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.ambient_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.camera">
+<span class="sig-name descname"><span class="pre">camera</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modules.camera.html#modules.camera.Camera" title="modules.camera.Camera"><span class="pre">Camera</span></a></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.camera" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.gameObjects">
+<span class="sig-name descname"><span class="pre">gameObjects</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">_GameObject</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.gameObjects" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.light_color">
+<span class="sig-name descname"><span class="pre">light_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.light_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_ground_color">
+<span class="sig-name descname"><span class="pre">procedural_ground_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_ground_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_horizon_color">
+<span class="sig-name descname"><span class="pre">procedural_horizon_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_horizon_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_night_brightness">
+<span class="sig-name descname"><span class="pre">procedural_night_brightness</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_night_brightness" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_night_color">
+<span class="sig-name descname"><span class="pre">procedural_night_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_night_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_sky_color">
+<span class="sig-name descname"><span class="pre">procedural_sky_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_sky_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_sunset_color">
+<span class="sig-name descname"><span class="pre">procedural_sunset_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_sunset_color" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.sky_type">
+<span class="sig-name descname"><span class="pre">sky_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.Type_" title="gameObjects.skybox.Skybox.Type_"><span class="pre">Skybox.Type_</span></a></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.sky_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.sun">
+<span class="sig-name descname"><span class="pre">sun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Light</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.sun" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.uid">
+<span class="sig-name descname"><span class="pre">uid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.uid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.__init__" title="Link to this definition">#</a></dt>
+<dd><p>scene manager</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.clearEditorScene">
+<span class="sig-name descname"><span class="pre">clearEditorScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.clearEditorScene" title="Link to this definition">#</a></dt>
+<dd><p>Clear the scene in the editor, prepares loading a new scene
+This removes gameObjects, clears editor GUI state, resets camera index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.deserialize_export">
+<span class="sig-name descname"><span class="pre">deserialize_export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.deserialize_export" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getCamera">
+<span class="sig-name descname"><span class="pre">getCamera</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.getCamera" title="Link to this definition">#</a></dt>
+<dd><p>Get the current default/start camera</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The current scene default/start camera, False if this fails</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="modules.camera.html#modules.camera.Camera" title="modules.camera.Camera">Camera</a> or bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getCurrentScene">
+<span class="sig-name descname"><span class="pre">getCurrentScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene"><span class="pre">Scene</span></a></span></span><a class="headerlink" href="#modules.scene.SceneManager.getCurrentScene" title="Link to this definition">#</a></dt>
+<dd><p>Get the current active scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The current scene object, False if this fails</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene">Scene</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getCurrentSceneUID">
+<span class="sig-name descname"><span class="pre">getCurrentSceneUID</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.getCurrentSceneUID" title="Link to this definition">#</a></dt>
+<dd><p>Get the current scene UID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The UID of the current scene, usualy this represents the filename of a .scene</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getDefaultScene">
+<span class="sig-name descname"><span class="pre">getDefaultScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene"><span class="pre">Scene</span></a></span></span><a class="headerlink" href="#modules.scene.SceneManager.getDefaultScene" title="Link to this definition">#</a></dt>
+<dd><p>Get reference to the default engine empty scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>reference to scene</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene">Scene</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getScene">
+<span class="sig-name descname"><span class="pre">getScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.getScene" title="Link to this definition">#</a></dt>
+<dd><p>Load and decode JSON from a scene file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_filename</strong> (<em>Path</em>) – The filename of a .scene</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getSceneById">
+<span class="sig-name descname"><span class="pre">getSceneById</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene"><span class="pre">Scene</span></a></span></span><a class="headerlink" href="#modules.scene.SceneManager.getSceneById" title="Link to this definition">#</a></dt>
+<dd><p>Get a scene by the index it is in the scenes List</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_id</strong> (<em>int</em>) – The index of the scene</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The scene at that location, False if invalid</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene">Scene</a> or bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getSceneByUID">
+<span class="sig-name descname"><span class="pre">getSceneByUID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene"><span class="pre">Scene</span></a></span></span><a class="headerlink" href="#modules.scene.SceneManager.getSceneByUID" title="Link to this definition">#</a></dt>
+<dd><p>Get a scene by the UID, which is the filename withouth .scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_uid</strong> – The name of the .scene file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The scene at that location, False if invalid</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modules.scene.SceneManager.Scene" title="modules.scene.SceneManager.Scene">Scene</a> or bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getScenes">
+<span class="sig-name descname"><span class="pre">getScenes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.getScenes" title="Link to this definition">#</a></dt>
+<dd><p>search assets for .scene files, and calls the getScene to decode them</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.getSun">
+<span class="sig-name descname"><span class="pre">getSun</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.getSun" title="Link to this definition">#</a></dt>
+<dd><p>Get the current sun</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The current scene sun, False if this fails</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="modules.camera.html#modules.camera.Camera" title="modules.camera.Camera">Camera</a> or bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.isSun">
+<span class="sig-name descname"><span class="pre">isSun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UUID</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.isSun" title="Link to this definition">#</a></dt>
+<dd><p>If the provided object the current sun</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the it is the sun, False if not</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="modules.camera.html#modules.camera.Camera" title="modules.camera.Camera">Camera</a> or bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.loadDefaultScene">
+<span class="sig-name descname"><span class="pre">loadDefaultScene</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.loadDefaultScene" title="Link to this definition">#</a></dt>
+<dd><p>Load the default scene, meaing the engine empty scene</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.loadGameObjectsRecursive">
+<span class="sig-name descname"><span class="pre">loadGameObjectsRecursive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GameObject</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">_GameObject</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.loadGameObjectsRecursive" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.loadScene">
+<span class="sig-name descname"><span class="pre">loadScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.loadScene" title="Link to this definition">#</a></dt>
+<dd><p>Load scene (does not work with multiple scenes yet), if this return false, the engine will proceed to load the default scene.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_uid</strong> (<em>str</em>) – The name the scene is saved under, meaning the filename of .scene file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True of the scene loaded succesfully, False if was not found or errors occured</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.newScene">
+<span class="sig-name descname"><span class="pre">newScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.newScene" title="Link to this definition">#</a></dt>
+<dd><p>Creates a new scene based on the engines default empty scene</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the scene, which is also sanitized and use as filename for the .scene file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.saveGameObjectRecursive">
+<span class="sig-name descname"><span class="pre">saveGameObjectRecursive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">GameObject</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">GameObject</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_gameObjects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">SceneManager._GameObject</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.saveGameObjectRecursive" title="Link to this definition">#</a></dt>
+<dd><p>Recursivly iterate over gameObject and its children</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.saveScene">
+<span class="sig-name descname"><span class="pre">saveScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.saveScene" title="Link to this definition">#</a></dt>
+<dd><p>Save a scene, only serialize things actually needed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scene_uid</strong> (<em>str</em><em>, </em><em>optional</em>) – The name the scene is saved under, meaning the filename of .scene file. Use current scene name if this is empty</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.saveSceneAs">
+<span class="sig-name descname"><span class="pre">saveSceneAs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.saveSceneAs" title="Link to this definition">#</a></dt>
+<dd><p>Duplicate the current scene under a diffrent filename</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the scene, which is also sanitized and use as filename for the .scene file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.serialize_export">
+<span class="sig-name descname"><span class="pre">serialize_export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exported</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../gameObjects/gameObjects.scriptBehaivior.html#gameObjects.scriptBehaivior.ScriptBehaivior.Exported" title="gameObjects.scriptBehaivior.ScriptBehaivior.Exported"><span class="pre">Exported</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.serialize_export" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.setCamera">
+<span class="sig-name descname"><span class="pre">setCamera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UUID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.setCamera" title="Link to this definition">#</a></dt>
+<dd><p>Set the current runtime camera based on gameObject uid</p>
+<blockquote>
+<div><p>During game runtime, update the projection matrix a well.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uid</strong> (<em>int</em>) – The uid of a Camera gameObject</p></li>
+<li><p><strong>scene_id</strong> (<em>int</em><em>, </em><em>optional</em>) – The index in scens List of the scene the camera is set on, current scene when empty</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.setSun">
+<span class="sig-name descname"><span class="pre">setSun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UUID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scene_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager.setSun" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.scene.SceneManager.updateScriptonGameObjects">
+<span class="sig-name descname"><span class="pre">updateScriptonGameObjects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.updateScriptonGameObjects" title="Link to this definition">#</a></dt>
+<dd><p>Re-initialize specific script on GameObjects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – The path to a .py script file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="modules.models.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">modules.models</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="modules.shader.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">modules.shader</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager"><code class="docutils literal notranslate"><span class="pre">SceneManager</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.ambient_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.ambient_color</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.camera"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.camera</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.gameObjects"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.gameObjects</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.light_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.light_color</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.name"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.procedural_ground_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.procedural_ground_color</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.procedural_horizon_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.procedural_horizon_color</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.procedural_night_brightness"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.procedural_night_brightness</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.procedural_night_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.procedural_night_color</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.procedural_sky_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.procedural_sky_color</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.procedural_sunset_color"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.procedural_sunset_color</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.sky_type"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.sky_type</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.sun"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.sun</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.Scene.uid"><code class="docutils literal notranslate"><span class="pre">SceneManager.Scene.uid</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.__init__"><code class="docutils literal notranslate"><span class="pre">SceneManager.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.clearEditorScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.clearEditorScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.deserialize_export"><code class="docutils literal notranslate"><span class="pre">SceneManager.deserialize_export()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getCamera"><code class="docutils literal notranslate"><span class="pre">SceneManager.getCamera()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getCurrentScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.getCurrentScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getCurrentSceneUID"><code class="docutils literal notranslate"><span class="pre">SceneManager.getCurrentSceneUID()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getDefaultScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.getDefaultScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.getScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getSceneById"><code class="docutils literal notranslate"><span class="pre">SceneManager.getSceneById()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getSceneByUID"><code class="docutils literal notranslate"><span class="pre">SceneManager.getSceneByUID()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getScenes"><code class="docutils literal notranslate"><span class="pre">SceneManager.getScenes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.getSun"><code class="docutils literal notranslate"><span class="pre">SceneManager.getSun()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.isSun"><code class="docutils literal notranslate"><span class="pre">SceneManager.isSun()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadDefaultScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadDefaultScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadGameObjectsRecursive"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadGameObjectsRecursive()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.loadScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.loadScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.newScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.newScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveGameObjectRecursive"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveGameObjectRecursive()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveScene"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveScene()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.saveSceneAs"><code class="docutils literal notranslate"><span class="pre">SceneManager.saveSceneAs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.serialize_export"><code class="docutils literal notranslate"><span class="pre">SceneManager.serialize_export()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.setCamera"><code class="docutils literal notranslate"><span class="pre">SceneManager.setCamera()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.setSun"><code class="docutils literal notranslate"><span class="pre">SceneManager.setSun()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.scene.SceneManager.updateScriptonGameObjects"><code class="docutils literal notranslate"><span class="pre">SceneManager.updateScriptonGameObjects()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/engine/modules/modules.scene.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Marco Hoekstra.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+﻿modules.console
+===============
+
+
+.. automodule:: modules.console
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
