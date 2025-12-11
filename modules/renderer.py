@@ -99,6 +99,7 @@ class Renderer:
         pygame.mouse.set_pos( self.screen_center )
 
         # shaders
+        self.shader : Shader = None
         self.create_shaders()
 
         # ubo
@@ -137,7 +138,7 @@ class Renderer:
             ]
 
         # FBO
-        self.current_fbo = False;
+        self.current_fbo = None;
         self.create_screen_vao()
 
         self.main_fbo = {}
@@ -432,7 +433,7 @@ class Renderer:
     def unbind_fbo( self ) -> None:
         """Stop rending to current fbo, and unbind framebuffer (FBO)"""
         if self.current_fbo:
-            self.current_fbo = False
+            self.current_fbo = None
 
         glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 

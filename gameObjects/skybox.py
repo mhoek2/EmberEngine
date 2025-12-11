@@ -34,6 +34,7 @@ class Skybox( Context ):
         self.procedural_cubemap = None
         self.procedural_cubemap_size = 256
         self.procedural_cubemap_fbo = None
+        self.procedural_cubemap_update = False
 
         size = 256
         self.skyboxVertices = np.array([
@@ -96,7 +97,7 @@ class Skybox( Context ):
         glBindBuffer( GL_ARRAY_BUFFER, 0 );
         glBindVertexArray( 0 );
 
-    def extract_procedural_cubemap( self, scene : "SceneManager.Scene" ) -> None:
+    def extract_procedural_cubemap( self, scene : "SceneManager.Scene" = None ) -> None:
         """Extract the prodedural sky to a cubemap.
         
         Used in:
@@ -124,6 +125,12 @@ class Skybox( Context ):
         if self.procedural_cubemap_fbo is None:
             print("Procedural cubemap FBO is not invalid")
             return
+
+        if scene is None:
+            scene = self.scene.getCurrentScene()
+
+        _current_shader = self.renderer.shader
+        _current_fbo    = self.renderer.current_fbo
 
         # Set FBO and drawbuffer
         glBindFramebuffer( GL_FRAMEBUFFER, self.procedural_cubemap_fbo )
@@ -180,18 +187,19 @@ class Skybox( Context ):
             )
 
         # reset renderer
-        self.renderer.setup_projection_matrix( 
-            size = self.renderer.viewport_size 
-        )
+        if _current_shader:
+            self.renderer.use_shader( _current_shader )
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        glEnable(GL_DEPTH_TEST)
+        if _current_fbo:
+            self.renderer.bind_fbo( _current_fbo )
 
-        # Rebuild gui preview
+        self.renderer.setup_projection_matrix()
+ 
+        # Update Gui preview
         if self.context.gui.initialized:
             self.context.gui.scene_settings.test_cubemap_update = True
 
-    def create_procedural_cubemap( self, scene : "SceneManager.Scene" ) -> int:
+    def create_procedural_cubemap( self, scene : "SceneManager.Scene" = None ) -> int:
         """Create the procedural cubemap Texture:GL_TEXTURE_CUBE_MAP and FBO, then extract
         
         :param scene: The scene data
@@ -199,6 +207,9 @@ class Skybox( Context ):
         :return: The index of the texture array in  modules.Cubemap.cubemaps[]
         :rtype: int
         """
+        if scene is None:
+            scene = self.scene.getCurrentScene()
+
         # Create textures
         if self.procedural_cubemap is None:
             self.procedural_cubemap = self.context.cubemaps._num_cubemaps
@@ -234,7 +245,7 @@ class Skybox( Context ):
         #glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb)
 
         # Extract to cubemap sides
-        self.extract_procedural_cubemap( scene )
+        self.procedural_cubemap_update = True
 
         return self.procedural_cubemap
 
@@ -350,9 +361,21 @@ class Skybox( Context ):
             return
 
         _sky_type : Skybox.Type_ = Skybox.Type_( scene["sky_type"] )
-        use_procedural : bool = _sky_type == Skybox.Type_.procedural and self.realtime
+        use_procedural : bool = _sky_type == Skybox.Type_.procedural
 
-        if use_procedural:
+        # update requested
+        if self.procedural_cubemap_update:
+            if use_procedural:
+                self.extract_procedural_cubemap()
+
+                # update Gui preview
+                if self.context.gui.initialized:
+                    self.context.gui.scene_settings.test_cubemap_update = True
+
+
+            self.procedural_cubemap_update = False
+
+        if use_procedural and self.realtime:
             self._draw_procedural( scene )
         else:
             self._draw_skybox()

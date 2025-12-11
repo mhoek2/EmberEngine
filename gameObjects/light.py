@@ -39,6 +39,10 @@ class Light( GameObject ):
 
     def onUpdate( self ) -> None:
         """Executes every frame, issuing draw commands"""
+
+        if self._dirty and self.scene.isSun( self.uuid ):
+            self.context.skybox.procedural_cubemap_update = True
+
         super().onUpdate()
 
         if self.model != -1 and self.visible:

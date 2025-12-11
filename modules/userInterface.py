@@ -581,9 +581,10 @@ class UserInterface( Context ):
         bias_y = 58
 
         if window_size != imgui.ImVec2(self.renderer.viewport_size.x, self.renderer.viewport_size.y):
-            self.renderer.viewport_size = imgui.ImVec2( int(window_size.x), int(window_size.y) )
+            self.renderer.viewport_size = imgui.ImVec2( int(window_size.x), int(window_size.y) ) - imgui.ImVec2(0, bias_y)
+
             self.renderer.setup_projection_matrix( 
-                size = self.renderer.viewport_size - imgui.ImVec2(0, bias_y) 
+                size = self.renderer.viewport_size
             )
 
         glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["output"] )
@@ -1322,7 +1323,7 @@ class UserInterface( Context ):
 
                     # update skybox (cubemap)
                     if any_changed:
-                        self.context.skybox.extract_procedural_cubemap( scene )
+                        self.context.skybox.procedural_cubemap_update = True
 
                     imgui.tree_pop()
 

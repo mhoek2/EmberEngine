@@ -201,6 +201,19 @@ class SceneManager:
             #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
 
+    def isSun( self, uuid : uid.UUID ) -> bool:
+        """If the provided object the current sun
+        
+        :return: True if the it is the sun, False if not
+        :rtype: Camera or bool
+        """
+        _sun = self.getSun()
+
+        if _sun and _sun.uuid == uuid:
+            return True
+
+        return False
+
     def setSun( self, uuid : uid.UUID, scene_id = -1):
         from gameObjects.light import Light
 
