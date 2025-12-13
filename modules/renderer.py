@@ -685,12 +685,16 @@ class Renderer:
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
         Bind framebuffer (FBO), view matrix, frame&delta time"""
-        self.frameTime = self.clock.tick(60)
+        self.frameTime = self.clock.tick(0)
         self.deltaTime = self.frameTime / self.DELTA_SHIFT
+
+        # set the deltatime for ImGui
+        #print(self.clock.get_fps())
+        io = imgui.get_io()
+        io.delta_time = self.deltaTime 
 
         imgui.new_frame()
         self.camera.new_frame()
-
         # bind main FBO
         self.bind_fbo( self.main_fbo )
 
