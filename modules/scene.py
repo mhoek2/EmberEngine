@@ -370,6 +370,7 @@ class SceneManager:
                 "children"      : []
             }
 
+            # GameObject Types
             if _scene_camera and isinstance( obj, Camera ):
                 buffer["instance_data"]["fov"]  = obj.fov
                 buffer["instance_data"]["near"] = obj.near
@@ -521,7 +522,6 @@ class SceneManager:
                     translate   = obj["translate"]          if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
                     scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
                     rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
-                    mass        = obj["mass"]               if "mass"       in obj else -1.0,
                     scripts     = [
                         Script(
                             context     = self.context,

@@ -25,6 +25,8 @@ from gameObjects.light import Light
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
+from gameObjects.attachables.physic import Physic
+
 from pathlib import Path
 import textwrap
 import re
@@ -1577,8 +1579,8 @@ class UserInterface( Context ):
                         # set the UUID as the experted meta value
                         class_attr.set( new )
                         
-                        # get the component and set reference on instance attribute
-                        _ref = new_obj.get_component( _t_engine_type._name )
+                        # get the engine type (Transform, GameObject, etc) and set reference on instance attribute
+                        _ref = new_obj.getAttachable( _t_engine_type._name )
                         setattr( script.instance, class_attr_name, _ref )
 
                     # primitive types are a COPY
@@ -1669,75 +1671,91 @@ class UserInterface( Context ):
                 self._draw_script( script )
                 imgui.separator()
 
-        def _add_component( self ):
+        def _addAttachable( self ):
             if self.renderer.game_runtime: 
                 return
 
-            path = False
+            script_path = None
+            attachable_type = None
 
             _tree_flags =   imgui.TreeNodeFlags_.default_open | \
                             imgui.TreeNodeFlags_.leaf | \
                             imgui.TreeNodeFlags_.span_full_width
 
-            if not imgui.tree_node_ex( f"##AddComponentNode", _tree_flags ):
+            if not imgui.tree_node_ex( f"##AddAttachable", _tree_flags ):
                 return
 
             _region_x = imgui.get_content_region_avail().x
-            button_text = "Add Component"
+            button_text = "Add Attachable"
             button_width = imgui.calc_text_size(button_text).x + imgui.get_style().frame_padding.x * 2
             
             offset = (_region_x - button_width ) * 0.5
             imgui.set_cursor_pos_x(imgui.get_cursor_pos_x() + offset)
 
             if imgui.button( button_text ):
-                imgui.open_popup("add-script")
+                imgui.open_popup("add-attachable-popup")
 
             # dnd: receive
             if imgui.begin_drag_drop_target():
                 is_asset = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.asset)
                 if is_asset is not None:
-                    path = self.context.gui.dnd_payload.get_payload_data()
+                    script_path = self.context.gui.dnd_payload.get_payload_data()
 
                 imgui.end_drag_drop_target()
 
             imgui.same_line()
 
-            if imgui.begin_popup("add-script"):
+            if imgui.begin_popup("add-attachable-popup"):
 
                 # todo:
                 # perhaps there should be a separate thread for this
                 # that either updates periodicly, or tracks changes in assets folder
                 self.context.findScripts()
 
-                # project assets
-                assets = Path( self.settings.assets ).resolve()
-                for i, script in enumerate(self.context.asset_scripts):
-                    imgui.push_id(f"add_script_{str(script)}")
-                    clicked = False
+                # engine attachables
+                attachables : list[EngineTypes.Meta] = EngineTypes.getAttachables()
 
-                    name = str(script.relative_to(assets))
+                for attachable in attachables:
+                    imgui.push_id(f"addAttachable_{attachable._name}")
                     _, clicked = imgui.selectable(
-                        f"{name}", clicked
+                        f"{attachable._name}", False
                     )
 
                     if clicked:
-                        path = script
+                        attachable_type = script
 
                     imgui.pop_id()
 
-                # engine assets not supported yet
-                # ..
+                imgui.separator()
+
+                # project assets scripts
+                assets = Path( self.settings.assets ).resolve()
+                for i, script in enumerate(self.context.asset_scripts):
+                    imgui.push_id(f"add_script_{str(script)}")
+ 
+                    name = str(script.relative_to(assets))
+                    _, clicked = imgui.selectable(
+                        f"{name}", False
+                    )
+
+                    if clicked:
+                        script_path = script
+
+                    imgui.pop_id()
 
                 imgui.end_popup()
 
-            if path:
+            if script_path:
                 self.context.gui.selectedObject.addScript( 
                     Script( 
                         context = self.context,
-                        path    = path,
+                        path    = script_path,
                         active  = True
                     )   
                 )
+
+            #if attachable_type:
+            #    self.context.gui.selectedObject.addAttachable()
 
             imgui.tree_pop()
 
@@ -1829,7 +1847,6 @@ class UserInterface( Context ):
 
                 _, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
 
-                # components
                 self._transform()
                 imgui.separator()
 
@@ -1850,7 +1867,7 @@ class UserInterface( Context ):
                 self._scripts()
                 imgui.separator()
 
-                self._add_component()
+                self._addAttachable()
 
             imgui.end()
             return

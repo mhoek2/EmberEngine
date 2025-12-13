@@ -49,7 +49,6 @@ class GameObject( Context, Transform ):
                  translate      : list = [ 0.0, 0.0, 0.0 ], 
                  rotation       : list = [ 0.0, 0.0, 0.0 ], 
                  scale          : list = [ 1.0, 1.0, 1.0 ],
-                 mass           : int = -1.0,
                  scripts        : list[Script] = []
                  ) -> None:
         """Base class for gameObjects 
@@ -84,13 +83,17 @@ class GameObject( Context, Transform ):
         self._uuid_gui      : int = int(str(self.uuid.int)[0:8])
 
         self.name           : str = name
+
+        # list of references to attachables eg: Transform
+        self.attachables      : dict = {}
+
         self.materials      : Materials = context.materials
         self.images         : Images = context.images
         self.cubemaps       : Cubemap = context.cubemaps
         self.models         : Models = context.models
         self.scripts        : list[Script] = []
         self.material       : int = material
-        
+
         self.parent         : GameObject = None
         self.children       : List[GameObject] = []
 
@@ -100,14 +103,14 @@ class GameObject( Context, Transform ):
         self._visible           : bool = True
         self._hierarchy_visible : bool = True
 
-        self.transform      : Transform = Transform(
+        self.transform = self.addAttachable( Transform, Transform(
             context     = self.context,
             gameObject  = self,
             translate   = translate,
             rotation    = rotation,
             scale       = scale,
             name        = name
-        )
+        ) )
 
         # model
         self.model          : int = -1
@@ -121,6 +124,8 @@ class GameObject( Context, Transform ):
         self._removed       : bool = False
 
         self.onStart()
+
+
 
         # dynamic scripts
         for script in scripts:
@@ -145,18 +150,32 @@ class GameObject( Context, Transform ):
             for c in self.children:
                 c._mark_dirty( flag )
 
-    def get_component( self, component: str = "" ):
-        """Retrieve a reference to a component of this GameObject.
+    def addAttachable( self, t : type, object ):
+        """Add a attachable object to this gameObject
+        
+        :param t: The type of the attachable
+        :type t: type
+        :param object: The instance of the attachable
+        :type object: Any or None
+        :return: A reference to the added attachable
+        :rtype: Any or None
+        """
+        self.attachables[t] = object
 
-        :param component: Name of the engine type (component) to retrieve.
-        :type component: str
-        :return: The requested component reference, or None if the name is not recognized.
+        return self.attachables[t] 
+
+    def getAttachable( self, attachable: str = "" ):
+        """Retrieve a reference to a attachable of this GameObject.
+
+        :param attachable: Name of the engine type (attachable) to retrieve.
+        :type attachable: str
+        :return: The requested attachable reference, or None if the name is not recognized.
         :rtype: Any or None
         """
         _ref = None
 
-        match component:
-            case "Transform"    : _ref = self.transform
+        match attachable:
+            case "Transform"    : _ref = self.attachables.get( Transform )
             case "GameObject"   : _ref = self
 
         return _ref

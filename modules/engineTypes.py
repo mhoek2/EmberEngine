@@ -1,15 +1,18 @@
+from typing import Any
+
 class EngineTypes:
     _registry = None
 
     class Meta:
         """Structure that hold meta data per engine type, name and class reference"""
-        def __init__( self, _class ):
-            self._name    = _class.__name__
-            self._class   = _class              
+        def __init__( self, _class, attachable ):
+            self._name      : str       = _class.__name__
+            self._class     : type[Any] = _class   
+            self.attachable : bool      = attachable
 
     @staticmethod
     def registry():
-        """Singleton registry of the exportable engine types (components).
+        """Singleton registry of the exportable engine types and engine attachables.
 
             _registry is stored as a class variable, meaniung:
 
@@ -23,10 +26,11 @@ class EngineTypes:
             # initialize the registry
             from gameObjects.gameObject import GameObject
             from modules.transform import Transform
+            from gameObjects.attachables.physic import Physic
 
             EngineTypes._registry = {
-                Transform: EngineTypes.Meta( Transform ),
-                GameObject: EngineTypes.Meta( GameObject ),
+                Transform   : EngineTypes.Meta( Transform,    False ),
+                GameObject  : EngineTypes.Meta( GameObject,   False ),
             }
 
         return EngineTypes._registry
@@ -67,3 +71,13 @@ class EngineTypes:
         """
         return t in (int, float, bool, str)
 
+    def getAttachables() -> list:
+        return [
+            meta
+            for _class, meta in EngineTypes.registry().items()
+                if meta.attachable
+        ]
+
+    def is_attachable() -> bool:
+        meta = EngineTypes.get_engine_type(t)
+        return meta.attachable if meta else False
