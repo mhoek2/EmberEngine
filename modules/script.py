@@ -228,8 +228,8 @@ class Script:
                     setattr( self.instance, name, exported.default  )
                     continue
 
-                # get the behavior and set reference on instance attribute
-                _ref = obj.get_behavior( _t_engine_type._name )
+                # get the attachable and set reference on instance attribute
+                _ref = obj.getAttachable( _t_engine_type._name )
                 setattr( self.instance, name, _ref )
 
             # primitive types are a COPY

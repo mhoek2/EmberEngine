@@ -31,6 +31,7 @@ class EngineTypes:
             EngineTypes._registry = {
                 Transform   : EngineTypes.Meta( Transform,    False ),
                 GameObject  : EngineTypes.Meta( GameObject,   False ),
+                Physic      : EngineTypes.Meta( Physic,       True ),
             }
 
         return EngineTypes._registry

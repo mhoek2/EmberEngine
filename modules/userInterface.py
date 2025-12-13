@@ -1722,7 +1722,7 @@ class UserInterface( Context ):
                     )
 
                     if clicked:
-                        attachable_type = script
+                        attachable_type = attachable
 
                     imgui.pop_id()
 
@@ -1754,8 +1754,11 @@ class UserInterface( Context ):
                     )   
                 )
 
-            #if attachable_type:
-            #    self.context.gui.selectedObject.addAttachable()
+            if attachable_type:
+                self.context.gui.selectedObject.addAttachable( attachable._class, attachable._class(
+                       self.context, 
+                       self.context.gui.selectedObject ) 
+                )
 
             imgui.tree_pop()
 
@@ -1826,6 +1829,24 @@ class UserInterface( Context ):
                 imgui.separator()
                 imgui.tree_pop()
 
+        def _physic( self ) -> None:
+            if not self.context.gui.selectedObject:
+                return
+            
+            gameObject = self.context.gui.selectedObject
+
+            if Physic not in gameObject.attachables:
+                return
+
+            physic : Physic = gameObject.getAttachable(Physic)
+
+            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics", imgui.TreeNodeFlags_.default_open ):
+                changed, physic.mass = imgui.drag_float(
+                        f"Mass", physic.mass, 1
+                )
+
+                imgui.tree_pop()
+
         def render( self ) -> None:
             imgui.begin( "Inspector" )
   
@@ -1852,14 +1873,7 @@ class UserInterface( Context ):
 
                 self._camera()
                 self._light()
-
-                # physics  
-                if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics", imgui.TreeNodeFlags_.default_open ):
-                    changed, gameObject.mass = imgui.drag_float(
-                            f"Mass", gameObject.mass, 1
-                    )
-
-                    imgui.tree_pop()
+                self._physic()
 
                 self._material()
                 imgui.separator()

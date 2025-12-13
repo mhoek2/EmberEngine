@@ -13,6 +13,8 @@ from modules.transform import Transform
 from modules.script import Script
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
+from gameObjects.attachables.physic import Physic
+
 if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
@@ -353,7 +355,6 @@ class SceneManager:
                 "translate"     : obj.transform.local_position,
                 "rotation"      : obj.transform.local_rotation,
                 "scale"         : obj.transform.local_scale,
-                "mass"          : obj.mass,
                 "scripts": [
                     {
                         "uuid"          : x.uuid.hex,
@@ -390,6 +391,15 @@ class SceneManager:
                 if _scene_sun:
                     buffer["instance_data"]["is_sun"] = True if obj.uuid == _scene_sun.uuid else False
                
+            # gameObject attachables
+            # if self.physic, but explicitly use the designed method for this
+            physic : Physic = obj.getAttachable(Physic)
+            if physic:
+                physic : Physic = obj.getAttachable(Physic)
+
+                buffer["physic"] = {
+                    "mass": physic.mass
+                }
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -568,6 +578,11 @@ class SceneManager:
                     # set this is current scene sun
                     if _instance_data.get("is_sun", False):
                         self.setSun( gameObject.uuid, scene_id = scene_id )
+
+            if "physic" in obj:
+                gameObject.physic = gameObject.addAttachable( Physic, Physic( self.context, gameObject ) )
+                gameObject.physic.mass = float(obj["physic"]["mass"])
+
 
             if "active" in obj:
                 gameObject.active = obj["active"]

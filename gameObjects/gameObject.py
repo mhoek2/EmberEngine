@@ -8,8 +8,7 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from pyrr import Quaternion
-from typing import TYPE_CHECKING, TypedDict, List
+from typing import TYPE_CHECKING, TypedDict
 
 from modules.context import Context
 
@@ -21,6 +20,8 @@ from modules.transform import Transform
 from modules.script import Script
 
 from gameObjects.scriptBehaivior import ScriptBehaivior
+
+from gameObjects.attachables.physic import Physic
 
 import inspect
 import importlib
@@ -64,15 +65,13 @@ class GameObject( Context, Transform ):
         :param material: The index in the material buffer as override, -1 is default
         :type material: int
         :param translate: The position of the object, using getter and setter
-        :type translate: List
+        :type translate: list
         :param rotation: The rotation of the object, using getter and setter
-        :type rotation: List
+        :type rotation: list
         :param scale: The scale of the object
         :type scale: Vector3
-        :param mass: The mass of the object, -1.0 is noy physics?
-        :type mass: float
         :param scripts: A list containing Paths to dynamic scripts
-        :type scripts: List[scripts]
+        :type scripts: list[scripts]
         """
         super().__init__( context )
 
@@ -95,7 +94,7 @@ class GameObject( Context, Transform ):
         self.material       : int = material
 
         self.parent         : GameObject = None
-        self.children       : List[GameObject] = []
+        self.children       : list[GameObject] = []
 
         self._active            : bool = True
         self._hierarchy_active  : bool = True
@@ -112,13 +111,11 @@ class GameObject( Context, Transform ):
             name        = name
         ) )
 
+        self.physic = None  # reserved for physic attachment
+
         # model
         self.model          : int = -1
         self.model_file     = Path(model_file) if model_file else False
-
-        # physics
-        self.physics_id     : int = None
-        self.mass           : float = mass
 
         self._dirty         : GameObject.DirtyFlag_ = GameObject.DirtyFlag_.all
         self._removed       : bool = False
@@ -160,7 +157,15 @@ class GameObject( Context, Transform ):
         :return: A reference to the added attachable
         :rtype: Any or None
         """
+        if t in self.attachables:
+            self.console.warn( f"{self.name} already has attachable: {t.__name__}")
+
         self.attachables[t] = object
+
+        # special case for physics (for now)
+        # use reserved self.physic attribute as reference, dont want to do per frame lookups.
+        if t is Physic:
+            self.physic = self.attachables[t] 
 
         return self.attachables[t] 
 
@@ -174,8 +179,12 @@ class GameObject( Context, Transform ):
         """
         _ref = None
 
+        if isinstance(attachable, type):
+            attachable = attachable.__name__
+
         match attachable:
             case "Transform"    : _ref = self.attachables.get( Transform )
+            case "Physic"       : _ref = self.attachables.get( Physic )
             case "GameObject"   : _ref = self
 
         return _ref
@@ -463,91 +472,6 @@ class GameObject( Context, Transform ):
         #self.scripts                    = copy.deepcopy(state["scripts")
 
     #
-    # physics
-    #
-    def _initPhysics( self ) -> None:
-        """
-        Initialize physics for this gameObject, sets position, orientation and mass
-        https://github.com/bulletphysics/bullet3/blob/master/docs/pybullet_quickstartguide.pdf
-        """
-        self.transform._createWorldModelMatrix()
-
-        if self.physics_id or self.mass < 0.0:
-            return
-
-        _, world_rotation_quat, world_position = self.transform.world_model_matrix.decompose()
-
-        collision_shape = p.createCollisionShape(
-            p.GEOM_BOX, 
-            halfExtents = self.transform.local_scale
-        )
-
-        self.physics_id = p.createMultiBody(
-            baseMass                = self.mass, 
-            baseCollisionShapeIndex = collision_shape, 
-            basePosition            = world_position,
-            baseOrientation         = [
-                world_rotation_quat[0], 
-                world_rotation_quat[1], 
-                world_rotation_quat[2], 
-                -world_rotation_quat[3] # handedness
-            ] 
-        )
-
-    def _deInitPhysics( self) -> None:
-        if self.physics_id is None or self.mass < 0.0:
-            return
-
-        p.removeBody( self.physics_id )
-        self.physics_id = None
-
-    def _runPhysics( self ) -> bool:
-        """Run phyisics engine on this gameObject updating position and orientation"""
-        if not self.renderer.game_running or self.physics_id is None or self.mass < 0.0:
-            return False
-
-        world_position, world_rotation_quat = p.getBasePositionAndOrientation(self.physics_id)
-
-        self.transform.world_model_matrix = self.compose_matrix(
-            world_position,
-            Quaternion([
-                world_rotation_quat[0], 
-                world_rotation_quat[1], 
-                world_rotation_quat[2], 
-                -world_rotation_quat[3] # ~handedness
-            ]),
-            self.transform.local_scale
-        )
-
-        if self.mass > 0.0:
-            self.transform._update_local_from_world()
-
-        return True
-
-    def _updatePhysicsBody(self):
-        """
-        Physics engine requires are update call 
-        whenever translation or rotation has changed externally (gui or script)
-        """
-        if self.physics_id is None or self.mass < 0.0:
-            return
-        
-        pos = self.transform.extract_position(self.transform.world_model_matrix)
-        rot = self.transform.extract_quat(self.transform.world_model_matrix)
-
-        p.resetBasePositionAndOrientation( 
-            self.physics_id, 
-            pos, 
-            #rot.xyzw
-            [
-                rot[0],
-                rot[1], 
-                rot[2], 
-                -rot[3] # ~handedness
-            ] 
-        )
-
-    #
     # enable and disable
     #
     def onEnable( self, _on_start=False ) -> None:
@@ -567,7 +491,8 @@ class GameObject( Context, Transform ):
         if _on_start:
             self.onStartScripts();
 
-        self._initPhysics()
+        if self.physic:
+            self.physic._initPhysics()
 
     def onDisable( self, _on_stop=False ) -> None:
         self.onDisableScripts();
@@ -577,7 +502,8 @@ class GameObject( Context, Transform ):
             self._restore_state()
             #deinit scripts?
 
-        self._deInitPhysics()
+        if self.physic:
+            self.physic._deInitPhysics()
 
     #
     # start and update
@@ -603,8 +529,8 @@ class GameObject( Context, Transform ):
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
-            if self.renderer.game_running:
-                self._updatePhysicsBody()
+            if self.renderer.game_running and self.physic:
+                self.physic._updatePhysicsBody()
 
         if self._dirty:
             self._dirty = GameObject.DirtyFlag_.none
@@ -615,5 +541,6 @@ class GameObject( Context, Transform ):
                 return 
 
             # Run physics and update non-kinematic local transforms
-            self._runPhysics()
+            if self.physic:
+                self.physic._runPhysics()
 
