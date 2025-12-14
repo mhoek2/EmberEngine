@@ -1,6 +1,6 @@
 import os, sys, enum
 
-from pyrr import Quaternion
+from pyrr import Quaternion, Matrix44
 
 from modules.settings import Settings
 from modules.engineTypes import EngineTypes
@@ -49,26 +49,6 @@ class Physic:
 
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
-
-    def compute_physics_local_transform( self, child_tf : "Transform", parent_tf : "Transform" ):
-        # Extract WORLD transforms (no scale)
-        Pc = child_tf.extract_position()
-        Qc = child_tf.extract_quat()
-
-        Pp = parent_tf.extract_position()
-        Qp = parent_tf.extract_quat()
-
-        # Quaternion inverse
-        invQp = Qp.inverse
-
-        # Local position (parent space)
-        delta = Pc - Pp
-        local_pos = invQp * delta  # quaternion-vector rotate
-
-        # Local orientation (parent space)
-        local_rot = invQp * Qc
-
-        return tuple(local_pos), tuple(local_rot)
 
     def pybullet_joint_type( self, joint_type : PhysicLink.Joint.Type_ = 0 ):
         if joint_type == PhysicLink.Joint.Type_.fixed:
@@ -168,7 +148,7 @@ class Physic:
             #if link is self.root_link:
             #    continue
 
-            gameObject = link.gameObject
+            gameObject : GameObject = link.gameObject
 
             # parent/link indexing
             parent = link.joint.getParent()
@@ -186,13 +166,14 @@ class Physic:
             linkParents.append(parent_index)
 
             # position & orientation
-            local_pos, local_rot = self.compute_physics_local_transform(
-                gameObject.transform,
-                parent.transform
-            )
+            parent_inv = self.gameObject.transform.world_model_matrix.inverse
+            #parent_inv = parent.transform.world_model_matrix.inverse
+            local_matrix = parent_inv * Matrix44(gameObject.transform.world_model_matrix)
+            scale, rot_quat, pos = local_matrix.decompose()
 
-            linkPositions.append(local_pos)
-            linkOrientations.append(local_rot)
+
+            linkPositions.append( tuple(pos) )
+            linkOrientations.append( tuple(rot_quat) )
 
             # mass
             linkMasses.append(link.inertia.mass)
