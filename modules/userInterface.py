@@ -38,6 +38,8 @@ import uuid as uid
 from modules.transform import Transform
 from modules.engineTypes import EngineTypes
 
+import pybullet as p
+
 class CustomEvent( Context ):
     def __init__(self):
         self._queue : List = []
@@ -1841,6 +1843,13 @@ class UserInterface( Context ):
 
             physic : Physic = gameObject.getAttachable(Physic)
 
+            if self.context.renderer.game_running and physic.physics_id is not None:
+                _num_joints = p.getNumJoints( physic.physics_id )
+
+                imgui.separator()
+                imgui.text( f"Runtime: joints:{_num_joints}" )
+                imgui.separator()
+
             if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
                 imgui.text("This is where joints are created")
 
@@ -1864,8 +1873,24 @@ class UserInterface( Context ):
             if PhysicLink not in gameObject.attachables:
                 return
 
-            physic : PhysicLink = gameObject.getAttachable(PhysicLink)
+            physic_link : PhysicLink = gameObject.getAttachable(PhysicLink)
   
+            if self.context.renderer.game_running and physic_link.runtime_base_physic:
+                _base           = physic_link.runtime_base_physic.gameObject
+                _link_index   = physic_link.runtime_link_index
+                _link_parent   = physic_link.joint.getParent()  # set by joint 
+                if not _link_parent:
+                    _link_parent = _base
+
+                #_linked_to      = physic_link.runtime_base_physic.physics_links[ _linked_index ]
+
+
+                imgui.separator()
+                imgui.text( f"Physic base: {_base.name}" )
+                imgui.text( f"Joint parent: {_link_parent.name}" )
+                imgui.text( f"Joint index: {_link_index}" )
+                imgui.separator()
+
             if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
 
                 imgui.push_id("##PhysicTabs")
@@ -1873,13 +1898,13 @@ class UserInterface( Context ):
 
                 if imgui.begin_tab_bar( "PhysicProperties", _flags ):
                     if imgui.begin_tab_item("Inertia##Tab1")[0]:
-                        inertia : PhysicLink.Inertia = physic.inertia
+                        inertia : PhysicLink.Inertia = physic_link.inertia
 
                         _, inertia.mass = imgui.drag_float("Mass", inertia.mass, 1.0)
                         imgui.end_tab_item()
 
                     if imgui.begin_tab_item("Joint##Tab2")[0]:
-                        joint : PhysicLink.Joint = physic.joint
+                        joint : PhysicLink.Joint = physic_link.joint
 
                         active_changed, active_state = imgui.checkbox( "Active", joint.active )
                         if active_changed:

@@ -641,11 +641,11 @@ class SceneManager:
                         joint.setParent( uid.UUID(hex=_parent_uuid) )
 
                     # store links in base 
-                    _base_parent : GameObject = gameObject.getParent( filter_physic_base=True )
-                    if _base_parent:
-                        _base_physic : Physic = _base_parent.getAttachable( Physic )
+                    _base : GameObject = gameObject.getParent( filter_physic_base=True )
+                    if _base:
+                        _base_physic : Physic = _base.getAttachable( Physic )
                         _base_physic.physics_links.append( gameObject.physic_link )
-                        print(_base_parent.name)
+                        print(_base.name)
 
 
             if "children" in obj:

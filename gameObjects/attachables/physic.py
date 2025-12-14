@@ -41,9 +41,9 @@ class Physic:
         self.physics_base   : bool = False
         self.physics_links  : list["PhysicLink"] = []
 
-        self.root_link : PhysicLink = PhysicLink( self.context, self.gameObject )
-        self.root_link.joint.setParent( self.uuid  )
-        self.physics_links.append( self.root_link )
+        #self.root_link : PhysicLink = PhysicLink( self.context, self.gameObject )
+        #self.root_link.joint.setParent( self.uuid  )
+        #self.physics_links.append( self.root_link )
 
         self.base_mass : float = -1.0
 
@@ -140,17 +140,18 @@ class Physic:
         #Base/root (0)
         # |_ Link A (1)
         #     |_ Link B (2)
-
-        self._physics_link_index = {}
-        i = 0
-
-        for link in self.physics_links:
-            if link is self.root_link:
-                continue
-
-            link.runtime_link_index = i
-            self._physics_link_index[link] = i + 1
-            i += 1
+        _link_to_index = {}
+        #i = 0
+        #for link in self.physics_links:
+        #    if link is self.root_link:
+        #        continue
+        #
+        #    link.runtime_link_index = i
+        #    _link_to_index[link] = i + 1
+        #    i += 1
+        for i, link in enumerate( self.physics_links ):
+            link.runtime_link_index = i     # matches this indexing
+            _link_to_index[link] = i + 1     # offset +1, because root is 0
 
         linkMasses = []
         linkParents = []
@@ -164,8 +165,8 @@ class Physic:
         linkInertialFrameOrientations = [] 
 
         for link in self.physics_links:
-            if link is self.root_link:
-                continue
+            #if link is self.root_link:
+            #    continue
 
             gameObject = link.gameObject
 
@@ -180,7 +181,7 @@ class Physic:
                 parent_index = 0  # parent is base (self/this)
             else:
                 parent_link : PhysicLink = parent.getAttachable(PhysicLink)
-                parent_index = self._physics_link_index[parent_link]
+                parent_index = _link_to_index[parent_link]
                 #parent_index = parent_link.runtime_link_index
             linkParents.append(parent_index)
 
