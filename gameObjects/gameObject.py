@@ -22,6 +22,7 @@ from modules.script import Script
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
 from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
 
 import inspect
 import importlib
@@ -111,7 +112,8 @@ class GameObject( Context, Transform ):
             name        = name
         ) )
 
-        self.physic = None  # reserved for physic attachment
+        self.physic : Physic = None  # reserved for physic attachment
+        self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
         self.model          : int = -1
@@ -163,7 +165,10 @@ class GameObject( Context, Transform ):
         self.attachables[t] = object
 
         # special case for physics (for now)
-        # use reserved self.physic attribute as reference, dont want to do per frame lookups.
+        # use reserved self.physic_link attribute as reference, dont want to do per frame lookups.
+        if t is PhysicLink:
+            self.physic_link = self.attachables[t] 
+
         if t is Physic:
             self.physic = self.attachables[t] 
 
@@ -184,6 +189,7 @@ class GameObject( Context, Transform ):
 
         match attachable:
             case "Transform"    : _ref = self.attachables.get( Transform )
+            case "PhysicLink"   : _ref = self.attachables.get( PhysicLink )
             case "Physic"       : _ref = self.attachables.get( Physic )
             case "GameObject"   : _ref = self
 
@@ -358,6 +364,13 @@ class GameObject( Context, Transform ):
             self.transform._update_local_from_world()
 
         self._mark_dirty( GameObject.DirtyFlag_.all  )
+
+    def getParent( self, filter_physic_base : bool = False ) -> "GameObject":
+        if self.parent and filter_physic_base:
+            if not self.parent.getAttachable( Physic ):
+                return self.parent.getParent( filter_physic_base )
+        
+        return self.parent
 
     #
     # scripting
@@ -543,4 +556,7 @@ class GameObject( Context, Transform ):
             # Run physics and update non-kinematic local transforms
             if self.physic:
                 self.physic._runPhysics()
+
+            elif self.physic_link:
+                self.physic_link._runPhysics()
 

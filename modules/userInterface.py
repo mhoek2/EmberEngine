@@ -26,6 +26,7 @@ from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
 from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
 
 from pathlib import Path
 import textwrap
@@ -1755,7 +1756,7 @@ class UserInterface( Context ):
                 )
 
             if attachable_type:
-                self.context.gui.selectedObject.addAttachable( attachable._class, attachable._class(
+                self.context.gui.selectedObject.addAttachable( attachable_type._class, attachable_type._class(
                        self.context, 
                        self.context.gui.selectedObject ) 
                 )
@@ -1840,10 +1841,103 @@ class UserInterface( Context ):
 
             physic : Physic = gameObject.getAttachable(Physic)
 
-            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics", imgui.TreeNodeFlags_.default_open ):
-                changed, physic.mass = imgui.drag_float(
-                        f"Mass", physic.mass, 1
-                )
+            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
+                imgui.text("This is where joints are created")
+
+                _, physic.base_mass = imgui.drag_float("Base Mass", physic.base_mass, 1.0)
+
+                for link in physic.physics_links:
+                    imgui.text( link.gameObject.name )
+
+                imgui.separator()
+                imgui.tree_pop()
+
+        def _physicLink( self ) -> None:
+            # inspiration:
+            # https://tobas-wiki.readthedocs.io/en/latest/create_urdf/
+
+            if not self.context.gui.selectedObject:
+                return
+            
+            gameObject = self.context.gui.selectedObject
+
+            if PhysicLink not in gameObject.attachables:
+                return
+
+            physic : PhysicLink = gameObject.getAttachable(PhysicLink)
+  
+            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
+
+                imgui.push_id("##PhysicTabs")
+                _flags = imgui.TabBarFlags_.none
+
+                if imgui.begin_tab_bar( "PhysicProperties", _flags ):
+                    if imgui.begin_tab_item("Inertia##Tab1")[0]:
+                        inertia : PhysicLink.Inertia = physic.inertia
+
+                        _, inertia.mass = imgui.drag_float("Mass", inertia.mass, 1.0)
+                        imgui.end_tab_item()
+
+                    if imgui.begin_tab_item("Joint##Tab2")[0]:
+                        joint : PhysicLink.Joint = physic.joint
+
+                        active_changed, active_state = imgui.checkbox( "Active", joint.active )
+                        if active_changed:
+                            joint.active = active_state
+
+                        # name
+                        _, joint.name = imgui.input_text("Name##JointName", joint.name)
+
+                        # type
+                        type_names = [t.name for t in PhysicLink.Joint.Type_]
+
+                        changed, new_index = imgui.combo(
+                            "Joint type",
+                            joint.type,
+                            type_names
+                        )
+                        if changed:
+                            joint.type = PhysicLink.Joint.Type_( new_index )
+
+                        # begin parent
+                        imgui.push_id( f"physic_join_selector" )
+
+                        changed : bool = False
+                        _uuid   : uid.UUID = None
+
+                        _parent : GameObject = joint.getParent()
+                        _parent_name : str = _parent.name if _parent else "None" 
+
+                        if imgui.button( _parent_name):
+                            imgui.open_popup("##select_parent")
+
+                        # dnd: receive
+                        if imgui.begin_drag_drop_target():
+                            payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
+                            if payload is not None:
+                                payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
+                                _uuid = payload_obj.uuid
+                                changed = True
+
+                            imgui.end_drag_drop_target()
+
+                        else: 
+                            changed, _uuid = self.context.gui.draw_popup_gameObject(
+                                "##select_parent", filter=lambda obj: isinstance(obj, GameObject ))
+
+                        if changed:
+                            joint.setParent( _uuid )
+
+                        imgui.pop_id()
+                        # end parent
+
+                        imgui.end_tab_item()
+
+                    # End tab bar
+                    imgui.end_tab_bar()
+
+                imgui.separator()
+                imgui.pop_id()
 
                 imgui.tree_pop()
 
@@ -1874,6 +1968,7 @@ class UserInterface( Context ):
                 self._camera()
                 self._light()
                 self._physic()
+                self._physicLink()
 
                 self._material()
                 imgui.separator()

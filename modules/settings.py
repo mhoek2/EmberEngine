@@ -14,6 +14,7 @@ class Settings:
         self.SCENE_EXTENSION    : str = ".scene"
         self.SCRIPT_EXTENSION   : str = ".py"
         self.MODEL_EXTENSION    : list[str] = [
+            ".stl",
             ".fbx",
             ".obj",
             ".glb",

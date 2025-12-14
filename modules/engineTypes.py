@@ -27,11 +27,13 @@ class EngineTypes:
             from gameObjects.gameObject import GameObject
             from modules.transform import Transform
             from gameObjects.attachables.physic import Physic
+            from gameObjects.attachables.physicLink import PhysicLink
 
             EngineTypes._registry = {
                 Transform   : EngineTypes.Meta( Transform,    False ),
                 GameObject  : EngineTypes.Meta( GameObject,   False ),
                 Physic      : EngineTypes.Meta( Physic,       True ),
+                PhysicLink  : EngineTypes.Meta( PhysicLink,   True ),
             }
 
         return EngineTypes._registry
