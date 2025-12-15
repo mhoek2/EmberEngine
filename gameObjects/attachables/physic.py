@@ -24,21 +24,9 @@ class Physic( PhysicLink ):
                     uuid            : uid.UUID      = None,
                     active          : bool          = False,
                  ) -> None :
-        self.context    = context
-        self.settings   = context.settings
-        self.renderer   = context.renderer
-
-        self.gameObject = gameObject
-        self.transform  = self.gameObject.transform
-
-        if uuid is None:
-            uuid = self.__create_uuid()
-
-        self.uuid           : uid.UUID = uuid
-        self.active         : bool     = active
+        super().__init__( context, gameObject )
 
         self.physics_id     : int = None
-        self.physics_base   : bool = False
         self.physics_links  : list["PhysicLink"] = []
 
         self.base_mass : float = -1.0

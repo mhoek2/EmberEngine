@@ -394,22 +394,12 @@ class SceneManager:
                 if _scene_sun:
                     buffer["instance_data"]["is_sun"] = True if obj.uuid == _scene_sun.uuid else False
                
-            # gameObject attachables
-            physic : Physic = obj.getAttachable(Physic)
-            if physic:
-                buffer["physic"] = { 
-                    "is_base"       : bool(physic.physics_base),
-                    "base_mass"     : float(physic.base_mass)
-                }
-
-            physic_link : PhysicLink = obj.getAttachable(PhysicLink)
-            # if self.physic_link, but explicitly use the designed method for this
-            if physic_link:
+            def physicLink( buffer, physic_link ):
                 inertia     : PhysicLink.Inertia        = physic_link.inertia
                 joint       : PhysicLink.Joint          = physic_link.joint
                 collision   : PhysicLink.Collision      = physic_link.collision
 
-                buffer["physicLink"] = {
+                buffer[ type(physic_link).__name__ ] = {
                     "inertia": {
                         "mass": inertia.mass 
                     },
@@ -430,6 +420,15 @@ class SceneManager:
                     }
                 }
 
+            # gameObject attachables
+            physic : Physic = obj.getAttachable(Physic)
+            if physic:
+                physicLink( buffer, physic )
+
+            physic_link : PhysicLink = obj.getAttachable(PhysicLink)
+            # if self.physic_link, but explicitly use the designed method for this
+            if physic_link:
+                physicLink( buffer, physic_link )
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -621,28 +620,17 @@ class SceneManager:
             #
             # attachables
             #
-            if "physic" in obj:
-                _physic = obj["physic"]
-
-                gameObject.physic : Physic = gameObject.addAttachable( Physic, Physic( self.context, gameObject ) )
-                gameObject.physic.physics_base = True
-                gameObject.physic.base_mass = _physic.get("base_mass", -1.0)
-
-            if "physicLink" in obj:
-                _physic_link    = obj["physicLink"]
-                _inertia        = _physic_link.get("inertia")
-                _joint          = _physic_link.get("joint")
-                _collision      = _physic_link.get("collision")
-
-                gameObject.physic_link : PhysicLink = gameObject.addAttachable( PhysicLink, PhysicLink( self.context, gameObject ) )
-                gameObject.physic_link.physics_base = _physic_link.get( "is_base", False )
+            def physicLink( _link : dict, physic_link : PhysicLink | Physic ):
+                _inertia        = _link.get("inertia")
+                _joint          = _link.get("joint")
+                _collision      = _link.get("collision")
 
                 if _inertia:
-                    inertia : PhysicLink.Inertia = gameObject.physic_link.inertia
+                    inertia : PhysicLink.Inertia = physic_link.inertia
                     inertia.mass = float(_inertia["mass"])
 
                 if _joint:
-                    joint : PhysicLink.Joint = gameObject.physic_link.joint
+                    joint : PhysicLink.Joint = physic_link.joint
 
                     joint.active = bool(_joint.get( "active", False ))
                     joint.name = str(_joint.get( "name", "-" ))
@@ -661,11 +649,11 @@ class SceneManager:
                     _base : GameObject = gameObject.getParent( filter_physic_base=True )
                     if _base:
                         _base_physic : Physic = _base.getAttachable( Physic )
-                        _base_physic.physics_links.append( gameObject.physic_link )
+                        _base_physic.physics_links.append( physic_link )
                         print(_base.name)
 
                 if _collision:
-                    collision : PhysicLink.Collision = gameObject.physic_link.collision
+                    collision : PhysicLink.Collision = physic_link.collision
 
                     collision.geom_type    = PhysicLink.GeometryType_( _collision.get( "type", 0 ) )
 
@@ -673,6 +661,20 @@ class SceneManager:
                     collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
                     collision.transform._createWorldModelMatrix()
+
+            if "Physic" in obj:
+                _physic = obj["Physic"]
+
+                gameObject.physic : Physic = gameObject.addAttachable( Physic, Physic( self.context, gameObject ) )
+                gameObject.physic.base_mass = _physic.get("base_mass", -1.0)
+
+                physicLink( _physic, gameObject.physic )
+
+            if "PhysicLink" in obj:
+                _physic_link    = obj["PhysicLink"]
+
+                gameObject.physic_link : PhysicLink = gameObject.addAttachable( PhysicLink, PhysicLink( self.context, gameObject ) )
+                physicLink( _physic_link, gameObject.physic_link )
 
             if "children" in obj:
                 self.loadGameObjectsRecursive( 
