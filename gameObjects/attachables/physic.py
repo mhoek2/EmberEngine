@@ -18,7 +18,7 @@ import uuid as uid
 
 import pybullet as p
 
-class Physic:
+class Physic( PhysicLink ):
     def __init__( self, context : "EmberEngine",
                     gameObject      : "GameObject",
                     uuid            : uid.UUID      = None,
@@ -41,37 +41,11 @@ class Physic:
         self.physics_base   : bool = False
         self.physics_links  : list["PhysicLink"] = []
 
-        #self.root_link : PhysicLink = PhysicLink( self.context, self.gameObject )
-        #self.root_link.joint.setParent( self.uuid  )
-        #self.physics_links.append( self.root_link )
-
         self.base_mass : float = -1.0
 
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
-    def pybullet_joint_type( self, joint_type : PhysicLink.Joint.Type_ = 0 ):
-        if joint_type == PhysicLink.Joint.Type_.fixed:
-            return p.JOINT_FIXED
-
-        if joint_type in (
-            PhysicLink.Joint.Type_.revolute,
-            PhysicLink.Joint.Type_.continuous,
-        ):
-            return p.JOINT_REVOLUTE
-
-        if joint_type == PhysicLink.Joint.Type_.prismatic:
-            return p.JOINT_PRISMATIC
-
-        if joint_type in (
-            PhysicLink.Joint.Type_.planar,
-            PhysicLink.Joint.Type_.floating,
-        ):
-            raise NotImplementedError(
-                "PyBullet does not support planar or floating joints in createMultiBody"
-            )
-
-        raise ValueError(f"Unknown joint type {joint_type}")
 
     def _initPhysics( self ) -> None:
         """
@@ -85,6 +59,30 @@ class Physic:
 
         _, world_rotation_quat, world_position = self.transform.world_model_matrix.decompose()
 
+        # p.createCollisionShape(...)
+        # shapeType (int) REQUIRED:
+        #   p.GEOM_SPHERE | BOX | CAPSULE | CYLINDER | PLANE | MESH | HEIGHTFIELD
+        #
+        # radius (float, default=0.5)        : SPHERE, CAPSULE, CYLINDER
+        # halfExtents (vec3, default=[1,1,1]): BOX (half-size per axis)
+        # height (float, default=1.0)        : CAPSULE, CYLINDER
+        #
+        # fileName (str)                     : MESH (.obj, convex hull per 'o')
+        # meshScale (vec3, default=[1,1,1])  : MESH
+        # flags (int)                        : MESH (p.GEOM_FORCE_CONCAVE_TRIMESH -> static only)
+        #
+        # planeNormal (vec3, default=[0,0,1]): PLANE
+        #
+        # collisionFramePosition (vec3)      : local offset of shape
+        # collisionFrameOrientation (quat)   : local rotation (x,y,z,w)
+        #
+        # HEIGHTFIELD only:
+        #   vertices (list[vec3]), indices (list[int])
+        #   numHeightfieldRows (int), numHeightfieldColumns (int)
+        #   heightfieldTextureScaling (float)
+        #   replaceHeightfieldIndex (int)
+        #
+        # physicsClientId (int)              : multi-client support
         collision_shape = p.createCollisionShape(
             p.GEOM_BOX, 
             halfExtents = self.transform.local_scale
@@ -121,17 +119,9 @@ class Physic:
         # |_ Link A (1)
         #     |_ Link B (2)
         _link_to_index = {}
-        #i = 0
-        #for link in self.physics_links:
-        #    if link is self.root_link:
-        #        continue
-        #
-        #    link.runtime_link_index = i
-        #    _link_to_index[link] = i + 1
-        #    i += 1
         for i, link in enumerate( self.physics_links ):
             link.runtime_link_index = i     # matches this indexing
-            _link_to_index[link] = i + 1     # offset +1, because root is 0
+            _link_to_index[link] = i     # offset +1, because root is 0
 
         linkMasses = []
         linkParents = []
@@ -145,9 +135,6 @@ class Physic:
         linkInertialFrameOrientations = [] 
 
         for link in self.physics_links:
-            #if link is self.root_link:
-            #    continue
-
             gameObject : GameObject = link.gameObject
 
             # parent/link indexing
@@ -158,7 +145,7 @@ class Physic:
                 parent = self.gameObject
 
             if parent is self.gameObject:
-                parent_index = 0  # parent is base (self/this)
+                parent_index = -1  # parent is base (self/this)
             else:
                 parent_link : PhysicLink = parent.getAttachable(PhysicLink)
                 parent_index = _link_to_index[parent_link]
@@ -166,11 +153,12 @@ class Physic:
             linkParents.append(parent_index)
 
             # position & orientation
-            parent_inv = self.gameObject.transform.world_model_matrix.inverse
-            #parent_inv = parent.transform.world_model_matrix.inverse
-            local_matrix = parent_inv * Matrix44(gameObject.transform.world_model_matrix)
-            scale, rot_quat, pos = local_matrix.decompose()
-
+            parent_inv      = self.gameObject.transform.world_model_matrix.inverse
+            #parent_inv     = parent.transform.world_model_matrix.inverse
+            local_matrix    = parent_inv * Matrix44(gameObject.transform.world_model_matrix)
+            #scale, rot_quat, pos = local_matrix.decompose()
+            pos             = gameObject.transform.extract_position(local_matrix)
+            rot_quat        = gameObject.transform.extract_quat(local_matrix)
 
             linkPositions.append( tuple(pos) )
             linkOrientations.append( tuple(rot_quat) )
@@ -179,25 +167,34 @@ class Physic:
             linkMasses.append(link.inertia.mass)
 
             # type
-            linkJointTypes.append( self.pybullet_joint_type(link.joint.type) )
-            linkJointAxis.append([0,1,0])  # example
+            linkJointTypes.append( PhysicLink.pybullet_joint_type( link.joint.geom_type ) )
+            linkJointAxis.append([1,1,1])  # example
 
             # collision shape
-            linkCollisionShapes.append(-1)
+
+            collision_shape = p.createCollisionShape(
+                PhysicLink.pybullet_geom_type( link.collision.geom_type ),
+                halfExtents = link.collision.transform.local_scale,
+            )
+
+            linkCollisionShapes.append( collision_shape )
 
             # visuals shape
             linkVisualShapes.append(-1)
 
             # inertials
-            linkInertialFramePositions.append( 0 )
-            linkInertialFrameOrientations.append( 0 )
+            linkInertialFramePositions.append((0.0, 0.0, 0.0))
+            linkInertialFrameOrientations.append((0.0, 0.0, 0.0, 1.0))
 
             # debug
             print( f"{gameObject.name} links to {parent_index}: {parent.name}" )
 
+        # quick hack for now
+        base_collision_shape = collision_shape if not self.gameObject.children else -1
+
         self.physics_id = p.createMultiBody(
             baseMass                = self.base_mass, 
-            baseCollisionShapeIndex = collision_shape, 
+            baseCollisionShapeIndex = base_collision_shape, 
             basePosition            = world_position,
             baseOrientation         = [
                 world_rotation_quat[0], 

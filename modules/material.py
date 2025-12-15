@@ -33,6 +33,8 @@ class Materials( Context ):
         self.materials : List[Materials.Material] = [{} for i in range(300)]
         self._num_materials : int = 0;
 
+        self.defaultMaterial = self.buildMaterial()
+
     @staticmethod
     def add_ao_suffix( filename ):
         base, ext = os.path.splitext(filename)
@@ -103,7 +105,7 @@ class Materials( Context ):
         if index < self._num_materials:
             return self.materials[index]
         
-        return self.materials[self.context.defaultMaterial]
+        return self.materials[self.context.materials.defaultMaterial]
 
     def loadOrFind( self, material : ImpasseMaterial, path : Path ) -> int:
         """Create a material by parsing model material info and loading textures
@@ -185,7 +187,7 @@ class Materials( Context ):
         if index < self._num_materials:
             mat = self.materials[index]
         else:
-            mat = self.materials[self.context.defaultMaterial]
+            mat = self.materials[self.context.materials.defaultMaterial]
 
         self.images.bind( mat.get("albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
         self.images.bind( mat.get("normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )

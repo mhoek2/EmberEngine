@@ -955,6 +955,41 @@ class UserInterface( Context ):
         return changed_any
 
     # helper
+    def _draw_transform_local( self, _t : Transform ) -> None:
+        # position
+        self.draw_vec3_control( "Position", _t.local_position, 0.0 )
+
+        # rotation
+        match self.inspector.rotation_mode:
+            case self.inspector.RotationMode_.degrees:
+                self.draw_vec3_control(
+                    "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
+                    onChange=lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
+                )
+            case self.inspector.RotationMode_.radians:
+                self.draw_vec3_control("Rotation", _t.local_rotation, 0.0)
+
+        # scale
+        self.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
+
+    # helper
+    def _draw_transform_world( self, _t : Transform ) -> None:
+        # position
+        self.draw_vec3_control( "Position", _t.position, 0.0 )
+
+        # rotation
+        match self.inspector.rotation_mode:
+            case self.inspector.RotationMode_.degrees:
+                self.draw_vec3_control( "Rotation", Transform.vec_to_degrees( _t.rotation ), 0.0,
+                    onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
+                )
+            case self.RotationMode_.radians:
+                self.inspector.draw_vec3_control( "Rotation", _t.rotation, 0.0 )
+
+        # scale
+        self.draw_vec3_control( "Scale", _t.scale, 0.0 )
+
+    # helper
     def radio_group( self, 
                      label           : str, 
                      items           : list[RadioStruct],
@@ -1376,7 +1411,7 @@ class UserInterface( Context ):
         def __init__( self, context ):
             super().__init__( context )
 
-            self.rotation_mode = self.RotationMode_.degrees
+            self.rotation_mode = self.RotationMode_.radians
 
         def _transform( self ) -> None:
             if not self.context.gui.selectedObject:
@@ -1396,42 +1431,13 @@ class UserInterface( Context ):
 
             # local space
             if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
-                # position
-                self.context.gui.draw_vec3_control( "Position", _t.local_position, 0.0 )
-
-                # rotation
-                match self.rotation_mode:
-                    case self.RotationMode_.degrees:
-                        self.context.gui.draw_vec3_control(
-                            "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
-                            onChange=lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
-                        )
-                    case self.RotationMode_.radians:
-                        self.context.gui.draw_vec3_control("Rotation", _t.local_rotation, 0.0)
-
-                # scale
-                self.context.gui.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
-
+                self.context.gui._draw_transform_local( _t )
                 imgui.tree_pop()
 
             # world space --should b hidden or disabled?
-            if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
-                # position
-                self.context.gui.draw_vec3_control( "Position", _t.position, 0.0 )
-
-                # rotation
-                match self.rotation_mode:
-                    case self.RotationMode_.degrees:
-                        self.context.gui.draw_vec3_control( "Rotation", Transform.vec_to_degrees( _t.rotation ), 0.0,
-                            onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
-                        )
-                    case self.RotationMode_.radians:
-                        self.context.gui.draw_vec3_control( "Rotation", _t.rotation, 0.0 )
-
-                # scale
-                self.context.gui.draw_vec3_control( "Scale", _t.scale, 0.0 )
-
-                imgui.tree_pop()
+            #if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
+            #    self.context.gui._draw_transform_world( _t )
+            #    imgui.tree_pop()
 
         def _material_thumb( self, label, texture_id ) -> None:
             imgui.text( f"{label}" );
@@ -1918,11 +1924,11 @@ class UserInterface( Context ):
 
                         changed, new_index = imgui.combo(
                             "Joint type",
-                            joint.type,
+                            joint.geom_type,
                             type_names
                         )
                         if changed:
-                            joint.type = PhysicLink.Joint.Type_( new_index )
+                            joint.geom_type = PhysicLink.Joint.Type_( new_index )
 
                         # begin parent
                         imgui.push_id( f"physic_join_selector" )
@@ -1955,6 +1961,29 @@ class UserInterface( Context ):
 
                         imgui.pop_id()
                         # end parent
+
+                        # transform
+                        _t : Transform = joint.transform
+                        self.context.gui._draw_transform_local( _t )
+
+                        imgui.end_tab_item()
+
+                    if imgui.begin_tab_item("Collision##Tab4")[0]:
+                        collision : PhysicLink.Collision = physic_link.collision
+
+                        # type
+                        geom_type_names = [t.name for t in PhysicLink.GeometryType_]
+
+                        changed, new_index = imgui.combo(
+                            "Geometry type",
+                            collision.geom_type,
+                            geom_type_names
+                        )
+                        if changed:
+                            collision.geom_type = PhysicLink.GeometryType_( new_index )
+
+                        _t : Transform = collision.transform
+                        self.context.gui._draw_transform_local( _t )
 
                         imgui.end_tab_item()
 

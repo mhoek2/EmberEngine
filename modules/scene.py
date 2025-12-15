@@ -405,20 +405,31 @@ class SceneManager:
             physic_link : PhysicLink = obj.getAttachable(PhysicLink)
             # if self.physic_link, but explicitly use the designed method for this
             if physic_link:
-                inertia : PhysicLink.Inertia = physic_link.inertia
-                joint : PhysicLink.Joint = physic_link.joint
+                inertia     : PhysicLink.Inertia        = physic_link.inertia
+                joint       : PhysicLink.Joint          = physic_link.joint
+                collision   : PhysicLink.Collision      = physic_link.collision
 
                 buffer["physicLink"] = {
                     "inertia": {
                         "mass": inertia.mass 
                     },
                     "joint": {
-                        "active"    : joint.active,
-                        "name"      : joint.name,
-                        "type"      : joint.type,
-                        "parent"    : joint.parent.uuid.hex if joint.parent else None
+                        "active"        : joint.active,
+                        "name"          : joint.name,
+                        "type"          : joint.geom_type,
+                        "parent"        : joint.parent.uuid.hex if joint.parent else None,
+                        "translate"     : joint.transform.local_position,
+                        "rotation"      : joint.transform.local_rotation,
+                        "scale"         : joint.transform.local_scale
+                    },
+                    "collision": {
+                        "type"          : collision.geom_type,
+                        "translate"     : collision.transform.local_position,
+                        "rotation"      : collision.transform.local_rotation,
+                        "scale"         : collision.transform.local_scale
                     }
                 }
+
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -618,9 +629,10 @@ class SceneManager:
                 gameObject.physic.base_mass = _physic.get("base_mass", -1.0)
 
             if "physicLink" in obj:
-                _physic_link = obj["physicLink"]
-                _inertia = _physic_link.get("inertia")
-                _joint = _physic_link.get("joint")
+                _physic_link    = obj["physicLink"]
+                _inertia        = _physic_link.get("inertia")
+                _joint          = _physic_link.get("joint")
+                _collision      = _physic_link.get("collision")
 
                 gameObject.physic_link : PhysicLink = gameObject.addAttachable( PhysicLink, PhysicLink( self.context, gameObject ) )
                 gameObject.physic_link.physics_base = _physic_link.get( "is_base", False )
@@ -634,7 +646,12 @@ class SceneManager:
 
                     joint.active = bool(_joint.get( "active", False ))
                     joint.name = str(_joint.get( "name", "-" ))
-                    joint.type = PhysicLink.Joint.Type_( _joint.get( "type", 0 ) )
+                    joint.geom_type = PhysicLink.Joint.Type_( _joint.get( "type", 0 ) )
+
+                    joint.transform.local_position    = tuple(_joint.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
+                    joint.transform.local_rotation    = tuple(_joint.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
+                    joint.transform.local_scale       = tuple(_joint.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+                    joint.transform._createWorldModelMatrix()
 
                     _parent_uuid = _joint.get("parent")
                     if _parent_uuid:
@@ -647,6 +664,15 @@ class SceneManager:
                         _base_physic.physics_links.append( gameObject.physic_link )
                         print(_base.name)
 
+                if _collision:
+                    collision : PhysicLink.Collision = gameObject.physic_link.collision
+
+                    collision.geom_type    = PhysicLink.GeometryType_( _collision.get( "type", 0 ) )
+
+                    collision.transform.local_position      = tuple(_collision.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
+                    collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
+                    collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+                    collision.transform._createWorldModelMatrix()
 
             if "children" in obj:
                 self.loadGameObjectsRecursive( 
