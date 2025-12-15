@@ -83,6 +83,8 @@ class Settings:
 
         self.ENGINE_ROTATION = "YXZ"
 
+        self.DEBUG_COLLIDER = True
+
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""
         return os.getenv("EE_EXPORTED") == "1"

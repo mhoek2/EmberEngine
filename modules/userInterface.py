@@ -1838,39 +1838,6 @@ class UserInterface( Context ):
                 imgui.separator()
                 imgui.tree_pop()
 
-        def _physic( self ) -> None:
-            if not self.context.gui.selectedObject:
-                return
-            
-            gameObject = self.context.gui.selectedObject
-
-            if Physic not in gameObject.attachables:
-                return
-
-            physic : Physic = gameObject.getAttachable(Physic)
-
-            if self.context.renderer.game_running and physic.physics_id is not None:
-                _num_joints = p.getNumJoints( physic.physics_id )
-
-                imgui.separator()
-                imgui.text( f"Runtime: joints:{_num_joints}" )
-                imgui.separator()
-
-            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
-                imgui.text("This is where joints are created")
-
-                _, physic.base_mass = imgui.drag_float("Base Mass", physic.base_mass, 1.0)
-
-                # with no children its no base object:
-                if not gameObject.children:
-                    self._physicProperties( physic )
-
-                for link in physic.physics_links:
-                    imgui.text( link.gameObject.name )
-
-                imgui.separator()
-                imgui.tree_pop()
-
         def _physicProperties( self, physic_link : PhysicLink ) -> None:
 
             imgui.push_id("##PhysicTabs")
@@ -1966,6 +1933,42 @@ class UserInterface( Context ):
 
             imgui.separator()
             imgui.pop_id()
+        
+        def _physic( self ) -> None:
+            if not self.context.gui.selectedObject:
+                return
+            
+            gameObject = self.context.gui.selectedObject
+            is_base_physic = bool(gameObject.children)
+
+            if Physic not in gameObject.attachables:
+                return
+
+            physic : Physic = gameObject.getAttachable(Physic)
+            is_base_physic = bool(gameObject.children)
+
+            if self.context.renderer.game_running and physic.physics_id is not None:
+                _num_joints = p.getNumJoints( physic.physics_id )
+
+                imgui.separator()
+                imgui.text( f"Runtime: joints:{_num_joints}" )
+                imgui.separator()
+
+            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
+                imgui.text("This is where joints are created")
+
+                # no children, meaning its just a single world physic object
+                if not is_base_physic:
+                    self._physicProperties( physic )
+
+                else:
+                    _, physic.base_mass = imgui.drag_float("Base Mass", physic.base_mass, 1.0)
+
+                    for link in physic.physics_links:
+                        imgui.text( link.gameObject.name )
+
+                imgui.separator()
+                imgui.tree_pop()
 
         def _physicLink( self ) -> None:
             # inspiration:

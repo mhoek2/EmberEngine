@@ -468,6 +468,20 @@ class GameObject( Context, Transform ):
             #"scripts"   : copy.deepcopy(self.scripts),
         }
 
+        if self.physic:
+            self._state_snapshot["Physic"] = {
+                "translate" : list(self.physic.collision.transform.local_position),
+                "rotation"  : list(self.physic.collision.transform.local_rotation),
+                "scale"     : list(self.physic.collision.transform.local_scale),
+            }
+
+        if self.physic_link:
+            self._state_snapshot["PhysicLink"] = {
+                "translate" : list(self.physic_link.collision.transform.local_position),
+                "rotation"  : list(self.physic_link.collision.transform.local_rotation),
+                "scale"     : list(self.physic_link.collision.transform.local_scale),
+            }
+
     def _restore_state(self):
         """Restore the object to the saved initial state."""
         if not hasattr(self, "_state_snapshot"):
@@ -484,6 +498,17 @@ class GameObject( Context, Transform ):
         self.parent                     = state["parent"]
         #self.scripts                    = copy.deepcopy(state["scripts")
 
+        if "Physic" in state: 
+            _physic = state["Physic"]
+            self.physic.collision.transform.local_position   = _physic["translate"]
+            self.physic.collision.transform.local_rotation   = _physic["rotation"]
+            self.physic.collision.transform.local_scale      = _physic["scale"]
+
+        if "PhysicLink" in state: 
+            _physic_link = state["PhysicLink"]
+            self.physic_link.collision.transform.local_position   = _physic_link["translate"]
+            self.physic_link.collision.transform.local_rotation   = _physic_link["rotation"]
+            self.physic_link.collision.transform.local_scale      = _physic_link["scale"]
     #
     # enable and disable
     #
@@ -560,3 +585,55 @@ class GameObject( Context, Transform ):
             elif self.physic_link:
                 self.physic_link._runPhysics()
 
+    def onRender( self ) -> None:
+        is_visible : bool = True if self.renderer.game_runtime else self.hierachyVisible()
+        
+        if not is_visible:
+            return
+
+        if self.context.settings.DEBUG_COLLIDER:
+            # debug draw collision geometry
+            #if not self.renderer.game_runtime and self.physic_link is not None:
+            _physic = self.physic_link or self.physic
+
+            # dont visualize
+            if self.physic and self.children:
+                _physic = None
+
+            if _physic is not None:
+                _current_shader = self.renderer.shader
+
+                self.renderer.use_shader( self.renderer.color )
+
+                _color = ( 0.83, 0.34, 0.0, 1.0 )
+                glUniform4f( self.renderer.shader.uniforms['uColor'],  _color[0],  _color[1], _color[2], 0.7 )
+
+                glEnable(GL_DEPTH_TEST)
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+                glLineWidth(5)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
+                _collision_model = _physic.collision.model or self.context.models.default_cube
+
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
+
+                self.models.draw(
+                    _collision_model,
+                    _physic.collision.transform._getModelMatrix()
+                )
+
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                glLineWidth(1)
+
+                if _current_shader:
+                    self.renderer.use_shader( _current_shader )
+
+                    glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+                    glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
+
+        # render the model geometry
+        if self.model != -1 and is_visible:
+            self.models.draw( self.model, self.transform._getModelMatrix() ) 

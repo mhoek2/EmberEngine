@@ -423,6 +423,9 @@ class SceneManager:
             # gameObject attachables
             physic : Physic = obj.getAttachable(Physic)
             if physic:
+                buffer[ type(Physic).__name__ ] = { 
+                    "base_mass"     : float(physic.base_mass)
+                }
                 physicLink( buffer, physic )
 
             physic_link : PhysicLink = obj.getAttachable(PhysicLink)

@@ -204,25 +204,31 @@ class PhysicLink:
         if not state:
             return False
 
-        world_pos = state[4]
-        world_orn = state[5]
+        world_position = state[4]
+        world_rotation_quat = state[5]
 
         # Update world transform (ignore scale for physics)
-        self.gameObject.transform.world_model_matrix = (
+        _model_matrix = (
             self.gameObject.transform.compose_matrix(
-                world_pos,
+                world_position,
                 Quaternion([
-                    world_orn[0],
-                    world_orn[1],
-                    world_orn[2],
-                    -world_orn[3]
+                    world_rotation_quat[0],
+                    world_rotation_quat[1],
+                    world_rotation_quat[2],
+                    -world_rotation_quat[3]
                 ]),
                 self.gameObject.transform.local_scale
             )
         )
 
         # Recompute local transform if parented
+        self.gameObject.transform.world_model_matrix = _model_matrix
         self.gameObject.transform._update_local_from_world()
+
+        # debug to visualize collisions in runtime:
+        if self.context.settings.DEBUG_COLLIDER:
+            self.gameObject.physic_link.collision.transform.world_model_matrix = _model_matrix
+            self.gameObject.physic_link.collision.transform._update_local_from_world()
 
         return True
 
