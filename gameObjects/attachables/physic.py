@@ -26,14 +26,26 @@ class Physic( PhysicLink ):
                  ) -> None :
         super().__init__( context, gameObject )
 
-        self.physics_id     : int = None
-        self.physics_links  : list["PhysicLink"] = []
+        self.physics_id             : int = None
+        self.physics_children_flat  : list[PhysicLink] = []
 
         self.base_mass : float = -1.0
 
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
+    def find_physic_children( self, obj : "GameObject", _list ):
+        for c in obj.children:
+            _physic_link = c.getAttachable( PhysicLink )
+            if _physic_link:
+                _list.append( _physic_link )
+
+            self.find_physic_children( c, _list )
+            
+    def construct_physic_child_list_flat( self ) -> list[PhysicLink]:
+        self.physics_children_flat = []
+
+        self.find_physic_children( self.gameObject, self.physics_children_flat )
 
     def _initPhysics( self ) -> None:
         """
@@ -41,9 +53,12 @@ class Physic( PhysicLink ):
         https://github.com/bulletphysics/bullet3/blob/master/docs/pybullet_quickstartguide.pdf
         """
         is_base_physic = bool(self.gameObject.children)
+
         if self.physics_id or (not is_base_physic and self.inertia.mass < 0.0):
             return
 
+        # Create a list of all links connected this base_footprint recursivly
+        self.construct_physic_child_list_flat()
  
         # p.createCollisionShape(...)
         # shapeType (int) REQUIRED:
@@ -114,12 +129,12 @@ class Physic( PhysicLink ):
             # |_ Link A (1)
             #     |_ Link B (2)
             _link_to_index = {}
-            for i, link in enumerate( self.physics_links ):
+            for i, link in enumerate( self.physics_children_flat ):
                 link.runtime_link_index = i     # matches this indexing
-                _link_to_index[link] = i     # offset +1, because root is 0
+                _link_to_index[link]    = i + 1     # offset +1, because root is 0
 
             # bind child links and joints
-            for link in self.physics_links:
+            for link in self.physics_children_flat:
                 gameObject : GameObject = link.gameObject
 
                 # parent/link indexing
@@ -130,7 +145,7 @@ class Physic( PhysicLink ):
                     parent = self.gameObject
 
                 if parent is self.gameObject:
-                    parent_index = -1  # parent is base (self/this)
+                    parent_index = 0  # parent is base (self/this)
                 else:
                     parent_link : PhysicLink = parent.getAttachable(PhysicLink)
                     parent_index = _link_to_index[parent_link]
@@ -138,12 +153,20 @@ class Physic( PhysicLink ):
                 linkParents.append(parent_index)
 
                 # position & orientation
-                parent_inv      = self.gameObject.transform.world_model_matrix.inverse
-                #parent_inv     = parent.transform.world_model_matrix.inverse
-                local_matrix    = parent_inv * Matrix44(gameObject.transform.world_model_matrix)
-                #scale, rot_quat, pos = local_matrix.decompose()
-                pos             = gameObject.transform.extract_position(local_matrix)
-                rot_quat        = gameObject.transform.extract_quat(local_matrix)
+                #parent_inv      = self.gameObject.transform.world_model_matrix.inverse
+                ##parent_inv     = parent.transform.world_model_matrix.inverse
+                #local_matrix    = parent_inv * Matrix44(gameObject.transform.world_model_matrix)
+                ##scale, rot_quat, pos = local_matrix.decompose()
+                #pos             = gameObject.transform.extract_position(local_matrix)
+                #rot_quat        = gameObject.transform.extract_quat(local_matrix)
+
+                pos         = link.gameObject.transform.local_position
+                rot_quat    = [
+                    link.gameObject.transform._local_rotation_quat[0], 
+                    link.gameObject.transform._local_rotation_quat[1], 
+                    link.gameObject.transform._local_rotation_quat[2], 
+                    -link.gameObject.transform._local_rotation_quat[3] # handedness
+                ]
 
                 linkPositions.append( tuple(pos) )
                 linkOrientations.append( tuple(rot_quat) )
@@ -153,15 +176,16 @@ class Physic( PhysicLink ):
 
                 # type
                 linkJointTypes.append( PhysicLink.pybullet_joint_type( link.joint.geom_type ) )
-                linkJointAxis.append([1,1,1])  # example
+                linkJointAxis.append([0,1,0])  # example
 
                 # collision shape
+                _extent = link.gameObject.transform.local_scale * link.collision.transform.local_scale
 
-                collision_shape = p.createCollisionShape(
-                    PhysicLink.pybullet_geom_type( link.collision.geom_type ),
-                    halfExtents = link.collision.transform.local_scale,
-                )
-
+                #collision_shape = p.createCollisionShape(
+                #    PhysicLink.pybullet_geom_type( link.collision.geom_type ),
+                #    halfExtents = _extent,
+                #)
+                collision_shape = PhysicLink.create_collision_shape( link )
                 linkCollisionShapes.append( collision_shape )
 
                 # visuals shape
@@ -190,11 +214,8 @@ class Physic( PhysicLink ):
             _, world_rotation_quat, world_position = self.collision.transform.world_model_matrix.decompose()
 
             _base_mass              = self.inertia.mass
+            _base_collision_shape   = PhysicLink.create_collision_shape( self )
 
-            _base_collision_shape   =  p.createCollisionShape(
-                PhysicLink.pybullet_geom_type( self.collision.geom_type ),
-                halfExtents = self.collision.transform.local_scale
-            )
 
         _base_position      = world_position
         _base_orientation   = [
@@ -226,7 +247,7 @@ class Physic( PhysicLink ):
         )
 
         # update the physics id on links to reference this multibody
-        for link in self.physics_links:
+        for link in self.physics_children_flat:
             link.runtime_base_physic = self
             link.physics_id = self.physics_id
 
@@ -267,8 +288,13 @@ class Physic( PhysicLink ):
 
         # debug to visualize collisions in runtime:
         if self.context.settings.DEBUG_COLLIDER:
-            self.gameObject.physic.collision.transform.world_model_matrix = _model_matrix
-            self.gameObject.physic.collision.transform._update_local_from_world()
+            _collision = self.gameObject.physic.collision
+            local_matrix = _collision.transform.compose_matrix(
+                _collision.transform.local_position,
+                _collision.transform._local_rotation_quat,
+                _collision.transform.local_scale
+            )
+            _collision.transform.world_model_matrix = _model_matrix * local_matrix
 
         return True
 

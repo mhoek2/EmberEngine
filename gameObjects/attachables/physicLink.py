@@ -24,7 +24,8 @@ class PhysicLink:
     class GeometryType_(enum.IntEnum):
         sphere      = 0              # (= 0)
         box         = enum.auto()    # (= 1)
-        mesh         = enum.auto()   # (= 2)
+        mesh        = enum.auto()    # (= 2)
+        cilinder    = enum.auto()    # (= 3)
 
     @staticmethod
     def pybullet_geom_type( _t : int = 0 ) :
@@ -37,13 +38,60 @@ class PhysicLink:
         if _t == PhysicLink.GeometryType_.mesh:
             return p.GEOM_MESH
 
-        #p.GEOM_CYLINDER
+        if _t == PhysicLink.GeometryType_.cilinder:
+            return p.GEOM_CYLINDER
+
         #p.GEOM_PLANE
         #p.GEOM_CAPSULE
         #p.GEOM_HEIGHTFIELD
         raise NotImplementedError(
             "Not yet supported"
         )
+
+    @staticmethod
+    def create_collision_shape( link : "PhysicLink" ):
+
+        world_scale = (
+            link.gameObject.transform.local_scale *
+            link.collision.transform.local_scale
+        )
+
+        geom_type = PhysicLink.pybullet_geom_type(link.collision.geom_type)
+
+        if geom_type == p.GEOM_BOX:
+            return p.createCollisionShape(
+                geom_type,
+                halfExtents=[
+                    world_scale[0],
+                    world_scale[1],
+                    world_scale[2],
+                ]
+            )
+
+        elif geom_type == p.GEOM_SPHERE:
+            # assume uniform scale, take X
+            return p.createCollisionShape(
+                geom_type,
+                radius=world_scale[0]
+            )
+
+        elif geom_type == p.GEOM_CYLINDER:
+            # Bullet cylinder axis = Z
+            return p.createCollisionShape(
+                geom_type,
+                radius=world_scale[0] * 0.5,
+                height=world_scale[2]
+            )
+
+        elif geom_type == p.GEOM_MESH:
+            return p.createCollisionShape(
+                geom_type,
+                fileName=link.collision.mesh_path,
+                meshScale=list(world_scale)
+            )
+
+        else:
+            raise NotImplementedError("Unsupported geometry type")
 
     @staticmethod
     def pybullet_joint_type( _t : int = 0 ):
@@ -227,8 +275,14 @@ class PhysicLink:
 
         # debug to visualize collisions in runtime:
         if self.context.settings.DEBUG_COLLIDER:
-            self.gameObject.physic_link.collision.transform.world_model_matrix = _model_matrix
-            self.gameObject.physic_link.collision.transform._update_local_from_world()
+            _collision = self.gameObject.physic_link.collision
+            local_matrix = _collision.transform.compose_matrix(
+                _collision.transform.local_position,
+                _collision.transform._local_rotation_quat,
+                _collision.transform.local_scale
+            )
+            _collision.transform.world_model_matrix = _model_matrix * local_matrix
+            #self.gameObject.physic_link.collision.transform._update_local_from_world()
 
         return True
 

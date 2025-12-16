@@ -567,6 +567,11 @@ class GameObject( Context, Transform ):
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
+            if self.physic_link or self.physic:
+                _physic = self.physic_link or self.physic
+                _physic.collision.transform._createWorldModelMatrix()
+                
+
             if self.renderer.game_running and self.physic:
                 self.physic._updatePhysicsBody()
 

@@ -26,6 +26,9 @@ class Transform:
         if local_callback is None:
             local_callback = partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform)
 
+        # physic stuff
+        self.is_physic_collider = False
+
         # coordination
         # row-major, post-multiply, intrinsic rotation
         # R = Rx * Ry * Rz
@@ -47,6 +50,7 @@ class Transform:
         self._world_position_proxy  = self.vectorInterface( self.extract_position(),    None, name, setter=self.set_position )
         self._world_rotation_proxy  = self.vectorInterface( self.extract_euler(),       None, name, setter=self.set_rotation )
         self._world_scale_proxy     = self.vectorInterface( self.extract_scale(),       None, name, setter=self.set_scale )
+
 
     @staticmethod
     def vec_to_degrees( v ):
@@ -111,6 +115,15 @@ class Transform:
 
         def __eq__( self, other ):
             return list(self) == list(other)
+
+        def __mul__(self, other):
+            if isinstance(other, (int, float)):
+                return list([v * other for v in self])
+
+            elif isinstance(other, (list, tuple, Transform.vectorInterface)):
+                return list([a * b for a, b in zip(self, other)])
+
+            return NotImplemented
 
     #
     # LOCAL (master)
@@ -309,10 +322,14 @@ class Transform:
             self._local_scale
         )
 
-        if self.gameObject.parent is not None:
-            self.world_model_matrix = Matrix44(self._getParentModelMatrix() * local_matrix)
+        if self.is_physic_collider:
+            self.world_model_matrix = self.gameObject.transform._getModelMatrix() * local_matrix
+
         else:
-            self.world_model_matrix = Matrix44(local_matrix)
+            if self.gameObject.parent is not None:
+                self.world_model_matrix = Matrix44(self._getParentModelMatrix() * local_matrix)
+            else:
+                self.world_model_matrix = Matrix44(local_matrix)
 
         return self.world_model_matrix
 

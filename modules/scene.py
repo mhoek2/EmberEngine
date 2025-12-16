@@ -644,18 +644,18 @@ class SceneManager:
                     joint.transform.local_scale       = tuple(_joint.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
                     joint.transform._createWorldModelMatrix()
 
-                    _parent_uuid = _joint.get("parent")
-                    if _parent_uuid:
-                        joint.setParent( uid.UUID(hex=_parent_uuid) )
+                    #_parent_uuid = _joint.get("parent")
+                    #if _parent_uuid:
+                    #    joint.setParent( uid.UUID(hex=_parent_uuid) )
 
-                    # store links in base 
-                    _base : GameObject = gameObject.getParent( filter_physic_base=True )
-                    if _base:
-                        _base_physic : Physic = _base.getAttachable( Physic )
-                        _base_physic.physics_links.append( physic_link )
-                        print(_base.name)
+# #                   # store links in base 
+                    #_base : GameObject = gameObject.getParent( filter_physic_base=True )
+                    #if _base:
+                    #    _base_physic : Physic = _base.getAttachable( Physic )
+                    #    _base_physic.physics_links.append( physic_link )
+                    #    print(_base.name)
 
-                if _collision:
+#                if _collision:
                     collision : PhysicLink.Collision = physic_link.collision
 
                     collision.geom_type    = PhysicLink.GeometryType_( _collision.get( "type", 0 ) )
@@ -663,6 +663,8 @@ class SceneManager:
                     collision.transform.local_position      = tuple(_collision.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+
+                    collision.transform.is_physic_collider = True
                     collision.transform._createWorldModelMatrix()
 
             if "Physic" in obj:

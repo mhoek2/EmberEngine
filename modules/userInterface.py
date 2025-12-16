@@ -1964,7 +1964,7 @@ class UserInterface( Context ):
                 else:
                     _, physic.base_mass = imgui.drag_float("Base Mass", physic.base_mass, 1.0)
 
-                    for link in physic.physics_links:
+                    for link in physic.physics_children_flat:
                         imgui.text( link.gameObject.name )
 
                 imgui.separator()
