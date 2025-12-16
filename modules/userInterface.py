@@ -1857,9 +1857,6 @@ class UserInterface( Context ):
                     if active_changed:
                         joint.active = active_state
 
-                    # name
-                    _, joint.name = imgui.input_text("Name##JointName", joint.name)
-
                     # type
                     type_names = [t.name for t in PhysicLink.Joint.Type_]
 
@@ -1870,38 +1867,6 @@ class UserInterface( Context ):
                     )
                     if changed:
                         joint.geom_type = PhysicLink.Joint.Type_( new_index )
-
-                    # begin parent
-                    imgui.push_id( f"physic_join_selector" )
-
-                    changed : bool = False
-                    _uuid   : uid.UUID = None
-
-                    _parent : GameObject = joint.getParent()
-                    _parent_name : str = _parent.name if _parent else "None" 
-
-                    if imgui.button( _parent_name):
-                        imgui.open_popup("##select_parent")
-
-                    # dnd: receive
-                    if imgui.begin_drag_drop_target():
-                        payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
-                        if payload is not None:
-                            payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
-                            _uuid = payload_obj.uuid
-                            changed = True
-
-                        imgui.end_drag_drop_target()
-
-                    else: 
-                        changed, _uuid = self.context.gui.draw_popup_gameObject(
-                            "##select_parent", filter=lambda obj: isinstance(obj, GameObject ))
-
-                    if changed:
-                        joint.setParent( _uuid )
-
-                    imgui.pop_id()
-                    # end parent
 
                     # transform
                     _t : Transform = joint.transform
@@ -1987,7 +1952,7 @@ class UserInterface( Context ):
             if self.context.renderer.game_running and physic_link.runtime_base_physic:
                 _base           = physic_link.runtime_base_physic.gameObject
                 _link_index   = physic_link.runtime_link_index
-                _link_parent   = physic_link.joint.getParent()  # set by joint 
+                _link_parent   = physic_link.gameObject.getParent()  # set by joint 
                 if not _link_parent:
                     _link_parent = _base
 

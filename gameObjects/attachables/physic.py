@@ -43,6 +43,7 @@ class Physic( PhysicLink ):
             self.find_physic_children( c, _list )
             
     def construct_physic_child_list_flat( self ) -> list[PhysicLink]:
+        """Create a flat list of this physic base children with PhysicLink attached"""
         self.physics_children_flat = []
 
         self.find_physic_children( self.gameObject, self.physics_children_flat )
@@ -138,18 +139,18 @@ class Physic( PhysicLink ):
                 gameObject : GameObject = link.gameObject
 
                 # parent/link indexing
-                parent = link.joint.getParent()
+                parent = link.gameObject.getParent()
 
                 # connect to base, when no parent
-                if not parent:
-                    parent = self.gameObject
+                #if not parent:
+                #    parent = self.gameObject
 
                 if parent is self.gameObject:
                     parent_index = 0  # parent is base (self/this)
                 else:
                     parent_link : PhysicLink = parent.getAttachable(PhysicLink)
                     parent_index = _link_to_index[parent_link]
-                    #parent_index = parent_link.runtime_link_index
+
                 linkParents.append(parent_index)
 
                 # position & orientation

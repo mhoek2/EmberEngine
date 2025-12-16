@@ -121,7 +121,6 @@ class PhysicLink:
         def __init__( self, context : "EmberEngine" ):
             self.context = context
 
-            self.active : bool = False
             self.mass   : float = -1.0
             pass
 
@@ -140,10 +139,7 @@ class PhysicLink:
 
             self.gameObject = gameObject
 
-            self.active : bool = False
-            self.name   : str = "-"
             self.geom_type   : PhysicLink.Joint.Type_ = PhysicLink.Joint.Type_.fixed
-            self.parent : "GameObject" = None
 
             self.transform : Transform = Transform(
                 context         = self.context,
@@ -154,12 +150,6 @@ class PhysicLink:
                 name            = f"{gameObject.name}_physic_joint",
                 local_callback  = lambda : self.transform._createWorldModelMatrix()
             )
-
-        def getParent( self ) -> "GameObject":
-            return self.parent
-
-        def setParent( self, uuid : uid.UUID ):
-            self.parent = self.context.findGameObject( uuid )
 
     class Collision:
         def __init__( self, context         : "EmberEngine", 
@@ -237,7 +227,7 @@ class PhysicLink:
 
         num_joints = p.getNumJoints( self.runtime_base_physic.physics_id )
         print(f"joints: {num_joints} -- {self.gameObject.name} index: {self.runtime_link_index}")
-        # inkWorldPosition (COM)	    state[0]
+        # linkWorldPosition (COM)	    state[0]
         # linkWorldOrientation (COM)	state[1]
         # localInertialFramePosition	state[2]
         # localInertialFrameOrientation	state[3]
