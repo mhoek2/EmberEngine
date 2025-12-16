@@ -149,6 +149,14 @@ class Physic( PhysicLink ):
                 pos             = gameObject.transform.extract_position(local_matrix)
                 rot_quat        = gameObject.transform.extract_quat(local_matrix)
 
+                pos      = link.joint.transform.local_position
+                rot_quat   = [
+                    link.joint.transform._local_rotation_quat[0], 
+                    link.joint.transform._local_rotation_quat[1], 
+                    link.joint.transform._local_rotation_quat[2], 
+                    -link.joint.transform._local_rotation_quat[3] # handedness
+                ]
+
                 linkPositions.append( tuple(pos) )
                 linkOrientations.append( tuple(rot_quat) )
 
