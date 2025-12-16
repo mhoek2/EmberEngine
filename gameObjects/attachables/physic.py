@@ -31,6 +31,9 @@ class Physic( PhysicLink ):
 
         self.base_mass : float = -1.0
 
+        self._link_to_index : dict = {}
+        self._index_to_link : dict = {}
+
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
@@ -113,13 +116,14 @@ class Physic( PhysicLink ):
             #Base/root (0)
             # |_ Link A (1)
             #     |_ Link B (2)
-            _link_to_index = {}
+            self._link_to_index = {}
             for i, link in enumerate( self.physics_links ):
-                link.runtime_link_index = i     # matches this indexing
-                _link_to_index[link] = i     # offset +1, because root is 0
+                link.runtime_link_index     = i     # matches this indexing
+                self._link_to_index[link]   = i + 1  
+                self._index_to_link[i]      = link
 
             # bind child links and joints
-            for link in self.physics_links:
+            for i, link in enumerate(self.physics_links):
                 gameObject : GameObject = link.gameObject
 
                 # parent/link indexing
@@ -130,17 +134,17 @@ class Physic( PhysicLink ):
                     parent = self.gameObject
 
                 if parent is self.gameObject:
-                    parent_index = -1  # parent is base (self/this)
+                    parent_index = 0  # parent is base_footprint (self/this)
                 else:
                     parent_link : PhysicLink = parent.getAttachable(PhysicLink)
-                    parent_index = _link_to_index[parent_link]
-                    #parent_index = parent_link.runtime_link_index
+                    parent_index = self._link_to_index[parent_link]
+
                 linkParents.append(parent_index)
 
                 # position & orientation
                 parent_inv      = self.gameObject.transform.world_model_matrix.inverse
-                #parent_inv     = parent.transform.world_model_matrix.inverse
-                local_matrix    = parent_inv * Matrix44(gameObject.transform.world_model_matrix)
+                #parent_inv      = link.gameObject.parent.transform.world_model_matrix.inverse
+                local_matrix    = parent_inv * Matrix44(link.joint.transform.world_model_matrix)
                 #scale, rot_quat, pos = local_matrix.decompose()
                 pos             = gameObject.transform.extract_position(local_matrix)
                 rot_quat        = gameObject.transform.extract_quat(local_matrix)
@@ -159,7 +163,9 @@ class Physic( PhysicLink ):
 
                 collision_shape = p.createCollisionShape(
                     PhysicLink.pybullet_geom_type( link.collision.geom_type ),
-                    halfExtents = link.collision.transform.local_scale,
+                    halfExtents                 = link.collision.transform.local_scale,
+                    collisionFramePosition      = link.collision.transform.local_position,
+                    collisionFrameOrientation   = link.collision.transform.local_rotation
                 )
 
                 linkCollisionShapes.append( collision_shape )
@@ -227,8 +233,8 @@ class Physic( PhysicLink ):
 
         # update the physics id on links to reference this multibody
         for link in self.physics_links:
-            link.runtime_base_physic = self
-            link.physics_id = self.physics_id
+            link.physics_id         = self.physics_id
+            link.base_footprint     = self
 
 
     def _deInitPhysics( self) -> None:
@@ -237,6 +243,10 @@ class Physic( PhysicLink ):
 
         p.removeBody( self.physics_id )
         self.physics_id = None
+
+        for link in self.physics_links:
+            link.physics_id         = None
+            link.base_footprint     = None
 
     def _runPhysics( self ) -> bool:
         """Run phyisics engine on this gameObject updating position and orientation"""
@@ -267,8 +277,19 @@ class Physic( PhysicLink ):
 
         # debug to visualize collisions in runtime:
         if self.context.settings.DEBUG_COLLIDER:
-            self.gameObject.physic.collision.transform.world_model_matrix = _model_matrix
-            self.gameObject.physic.collision.transform._update_local_from_world()
+            _collision = self.gameObject.physic.collision
+
+            _local_matrix = _collision.transform.compose_matrix(
+                _collision.transform._local_position,
+                _collision.transform._local_rotation_quat,
+                _collision.transform._local_scale
+            )
+
+            _collision.transform.world_model_matrix = _model_matrix
+            #_collision.transform.world_model_matrix = _model_matrix * _local_matrix
+
+            #self.gameObject.physic.collision.transform.world_model_matrix = _model_matrix
+            #self.gameObject.physic.collision.transform._update_local_from_world()
 
         return True
 

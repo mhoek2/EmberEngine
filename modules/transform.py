@@ -48,6 +48,10 @@ class Transform:
         self._world_rotation_proxy  = self.vectorInterface( self.extract_euler(),       None, name, setter=self.set_rotation )
         self._world_scale_proxy     = self.vectorInterface( self.extract_scale(),       None, name, setter=self.set_scale )
 
+
+        # additional meta
+        self.is_collision_transform = False
+
     @staticmethod
     def vec_to_degrees( v ):
         return [math.degrees(x) for x in v]
@@ -178,7 +182,7 @@ class Transform:
     def position( self, data ):
         T = Matrix44.from_translation( data )
 
-        if self.gameObject.parent is not None:
+        if self._getParent() is not None:
             # local = inverse(parent_world) * world
             parent_inv = self._getParentModelMatrix().inverse
             local_matrix = parent_inv * T
@@ -215,7 +219,7 @@ class Transform:
 
         quat : Quaternion = Quaternion()
 
-        if self.gameObject.parent is not None:
+        if self._getParent() is not None:
             parent_world_quat = self.extract_quat(self._getParentModelMatrix())
             quat = parent_world_quat.inverse * world_quat
         else:
@@ -249,7 +253,7 @@ class Transform:
     def scale( self, data ):
         data = Vector3(data)
 
-        if self.gameObject.parent is not None:
+        if self._getParent() is not None:
             parent_scale = self.extract_scale(self._getParentModelMatrix())
 
             # local scale = world / parent
@@ -271,7 +275,7 @@ class Transform:
     
         world_matrix = Matrix44(self.world_model_matrix)
 
-        if self.gameObject.parent is not None:
+        if self._getParent() is not None:
             parent_inv = self._getParentModelMatrix().inverse
             local_matrix = parent_inv * world_matrix
         else:
@@ -295,9 +299,22 @@ class Transform:
     def _getModelMatrix( self ) -> Matrix44:
         return self.world_model_matrix
 
+    def _getParent( self ):
+        # whenever the current transform is a link or joint, its parented.
+        # but not using the hierarchy, but using the physic joint parameters
+        if self.gameObject.physic_link:
+            if self.is_collision_transform:
+                return self.gameObject
+            else:
+                return self.gameObject.physic_link.joint.getParent()
+
+        return self.gameObject.parent
+    
     def _getParentModelMatrix( self ) -> Matrix44:
-        if self.gameObject.parent is not None:
-            return self.gameObject.parent.transform.world_model_matrix
+        _parent : Transform = self._getParent()
+
+        if _parent is not None:
+            return _parent.transform.world_model_matrix
         else:
             return Matrix44.identity()
 
@@ -309,7 +326,7 @@ class Transform:
             self._local_scale
         )
 
-        if self.gameObject.parent is not None:
+        if self._getParent() is not None:
             self.world_model_matrix = Matrix44(self._getParentModelMatrix() * local_matrix)
         else:
             self.world_model_matrix = Matrix44(local_matrix)

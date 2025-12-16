@@ -639,10 +639,10 @@ class SceneManager:
                     joint.name = str(_joint.get( "name", "-" ))
                     joint.geom_type = PhysicLink.Joint.Type_( _joint.get( "type", 0 ) )
 
-                    joint.transform.local_position    = tuple(_joint.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
-                    joint.transform.local_rotation    = tuple(_joint.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
-                    joint.transform.local_scale       = tuple(_joint.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
-                    joint.transform._createWorldModelMatrix()
+                    #joint.transform.local_position    = tuple(_joint.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
+                    #joint.transform.local_rotation    = tuple(_joint.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
+                    #joint.transform.local_scale       = tuple(_joint.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+                    #joint.transform._createWorldModelMatrix()
 
                     _parent_uuid = _joint.get("parent")
                     if _parent_uuid:
@@ -663,6 +663,8 @@ class SceneManager:
                     collision.transform.local_position      = tuple(_collision.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+                    
+                    collision.transform.is_collision_transform = True
                     collision.transform._createWorldModelMatrix()
 
             if "Physic" in obj:

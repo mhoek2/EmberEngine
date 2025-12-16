@@ -116,6 +116,9 @@ class EmberEngine:
         """Load the default environment cubemap"""
         _scene = self.scene.getCurrentScene()
 
+        if "sky_type" not in _scene:
+            _scene["sky_type"] = Skybox.Type_.skybox
+
         if _scene["sky_type"] == Skybox.Type_.skybox:
             self.environment_map = self.cubemaps.loadOrFind( self.settings.default_environment )
 

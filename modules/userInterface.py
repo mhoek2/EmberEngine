@@ -1904,8 +1904,8 @@ class UserInterface( Context ):
                     # end parent
 
                     # transform
-                    _t : Transform = joint.transform
-                    self.context.gui._draw_transform_local( _t )
+                    #_t : Transform = joint.transform
+                    #self.context.gui._draw_transform_local( _t )
 
                     imgui.end_tab_item()
 
@@ -1949,9 +1949,20 @@ class UserInterface( Context ):
 
             if self.context.renderer.game_running and physic.physics_id is not None:
                 _num_joints = p.getNumJoints( physic.physics_id )
-
-                imgui.separator()
                 imgui.text( f"Runtime: joints:{_num_joints}" )
+
+                for i in range(_num_joints):
+                    info = p.getJointInfo( physic.physics_id, i )
+                    _link_index         : int = i
+
+                    _link               : PhysicLink = physic._index_to_link[_link_index]
+                    parent_link_index   : int = info[16]
+                    _link_parent        : PhysicLink = physic._index_to_link[parent_link_index] if parent_link_index >= 0 else physic
+
+                    _info = f"index {_link_index} = {_link.gameObject.name} - link: {info[12].decode()} -> parent: {_link_parent.gameObject.name}"
+                    imgui.text( _info )
+                    imgui.separator()
+
                 imgui.separator()
 
             if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
@@ -1984,20 +1995,20 @@ class UserInterface( Context ):
 
             physic_link : PhysicLink = gameObject.getAttachable(PhysicLink)
   
-            if self.context.renderer.game_running and physic_link.runtime_base_physic:
-                _base           = physic_link.runtime_base_physic.gameObject
-                _link_index   = physic_link.runtime_link_index
-                _link_parent   = physic_link.joint.getParent()  # set by joint 
-                if not _link_parent:
-                    _link_parent = _base
+            #if self.context.renderer.game_running and physic_link.runtime_base_physic:
+            if physic_link.base_footprint:
+                _base_footprint : Physic = physic_link.base_footprint
+                _link_index     : int = physic_link.runtime_link_index
+                
+                _link           : PhysicLink = _base_footprint._index_to_link[_link_index]
+                parent_link_index   : int = -1
+                if _link.joint.parent and _link.joint.parent.physic_link:
+                    parent_link_index = _link.joint.parent.physic_link.runtime_link_index
 
-                #_linked_to      = physic_link.runtime_base_physic.physics_links[ _linked_index ]
+                _link_parent        : PhysicLink = _base_footprint._index_to_link[parent_link_index] if parent_link_index >= 0 else _base_footprint
 
-
-                imgui.separator()
-                imgui.text( f"Physic base: {_base.name}" )
-                imgui.text( f"Joint parent: {_link_parent.name}" )
-                imgui.text( f"Joint index: {_link_index}" )
+                _info = f"index {_link_index} = {_link.gameObject.name} -> parent: {_link_parent.gameObject.name}"
+                imgui.text(_info)
                 imgui.separator()
 
             if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):

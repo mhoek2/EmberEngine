@@ -84,6 +84,10 @@ class GameObject( Context, Transform ):
 
         self.name           : str = name
 
+        # reservce physic attributes
+        self.physic         : Physic        = None  # reserved for physic attachment
+        self.physic_link    : PhysicLink    = None  # reserved for physic attachment
+
         # list of references to attachables eg: Transform
         self.attachables      : dict = {}
 
@@ -112,8 +116,6 @@ class GameObject( Context, Transform ):
             name        = name
         ) )
 
-        self.physic : Physic = None  # reserved for physic attachment
-        self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
         self.model          : int = -1
@@ -148,6 +150,10 @@ class GameObject( Context, Transform ):
 
             for c in self.children:
                 c._mark_dirty( flag )
+
+            # mark physics children dirty:
+            if self.physic_link and flag & GameObject.DirtyFlag_.transform:
+                self.physic_link.joint.parent._mark_dirty( GameObject.DirtyFlag_.transform )
 
     def addAttachable( self, t : type, object ):
         """Add a attachable object to this gameObject
@@ -566,6 +572,17 @@ class GameObject( Context, Transform ):
             #if self.hierachyActive(): # not required
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
+
+            # update collision transform
+            if self.context.settings.DEBUG_COLLIDER:
+                _physic = self.physic_link or self.physic
+
+                # dont visualize
+                if self.physic and self.children:
+                    _physic = None
+                
+                if _physic:
+                    _physic.collision.transform._createWorldModelMatrix()
 
             if self.renderer.game_running and self.physic:
                 self.physic._updatePhysicsBody()

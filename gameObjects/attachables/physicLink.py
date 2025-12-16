@@ -96,16 +96,18 @@ class PhysicLink:
             self.name   : str = "-"
             self.geom_type   : PhysicLink.Joint.Type_ = PhysicLink.Joint.Type_.fixed
             self.parent : "GameObject" = None
+            
+            self.transform : Transform = gameObject.transform
 
-            self.transform : Transform = Transform(
-                context         = self.context,
-                gameObject      = gameObject,
-                translate       = ( 0.0, 0.0, 0.0 ),
-                rotation        = ( 0.0, 0.0, 0.0 ),
-                scale           = ( 0.0, 0.0, 0.0 ),
-                name            = f"{gameObject.name}_physic_joint",
-                local_callback  = lambda : self.transform._createWorldModelMatrix()
-            )
+            #self.transform : Transform = Transform(
+            #    context         = self.context,
+            #    gameObject      = gameObject,
+            #    translate       = ( 0.0, 0.0, 0.0 ),
+            #    rotation        = ( 0.0, 0.0, 0.0 ),
+            #    scale           = ( 0.0, 0.0, 0.0 ),
+            #    name            = f"{gameObject.name}_physic_joint",
+            #    local_callback  = lambda : self.transform._createWorldModelMatrix()
+            #)
 
         def getParent( self ) -> "GameObject":
             return self.parent
@@ -173,8 +175,9 @@ class PhysicLink:
         self.collision      : PhysicLink.Collision  = PhysicLink.Collision( context, self.gameObject )
 
         self.runtime_link_index = 0
-        self.runtime_base_physic : "Physic" = None
-        self.physics_id = 0     # this is the physics id of the base link
+        #self.runtime_base_physic : "Physic" = None
+        #self.physics_id = 0     # this is the physics id of the base link
+        self.base_footprint : "Physic" = None     # this is the physics id of the base link
 
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
@@ -183,22 +186,22 @@ class PhysicLink:
         if not self.context.renderer.game_running:
             return False
 
-        if not self.runtime_base_physic or self.runtime_base_physic.physics_id is None:
+        #if not self.runtime_base_physic or self.runtime_base_physic.physics_id is None:
+        if self.base_footprint is None:
             return False
 
-
-        num_joints = p.getNumJoints( self.runtime_base_physic.physics_id )
+        num_joints = p.getNumJoints( self.base_footprint.physics_id )
         print(f"joints: {num_joints} -- {self.gameObject.name} index: {self.runtime_link_index}")
-        # inkWorldPosition (COM)	    state[0]
+        # linkWorldPosition (COM)	    state[0]
         # linkWorldOrientation (COM)	state[1]
         # localInertialFramePosition	state[2]
         # localInertialFrameOrientation	state[3]
         # worldLinkFramePosition	    state[4]
         # worldLinkFrameOrientation	    state[5]
         state = p.getLinkState(
-            self.runtime_base_physic.physics_id,
-            self.runtime_link_index,
-            computeForwardKinematics=True
+            bodyUniqueId        = self.base_footprint.physics_id,
+            linkIndex           = self.runtime_link_index,
+            #computeForwardKinematics=True
         )
 
         if not state:
@@ -227,8 +230,28 @@ class PhysicLink:
 
         # debug to visualize collisions in runtime:
         if self.context.settings.DEBUG_COLLIDER:
-            self.gameObject.physic_link.collision.transform.world_model_matrix = _model_matrix
-            self.gameObject.physic_link.collision.transform._update_local_from_world()
+            #_model_matrix = (
+            #    self.gameObject.transform.compose_matrix(
+            #        world_position,
+            #        Quaternion([
+            #            world_rotation_quat[0],
+            #            world_rotation_quat[1],
+            #            world_rotation_quat[2],
+            #            -world_rotation_quat[3]
+            #        ]),
+            #        self.collision.transform.local_scale
+            #    )
+            #)
+            _collision = self.gameObject.physic_link.collision
+
+            _local_matrix = _collision.transform.compose_matrix(
+                _collision.transform._local_position,
+                _collision.transform._local_rotation_quat,
+                _collision.transform._local_scale
+            )
+
+            _collision.transform.world_model_matrix = _model_matrix * _local_matrix
+            #_collision.transform._update_local_from_world()
 
         return True
 
