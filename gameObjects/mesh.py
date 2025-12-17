@@ -1,5 +1,7 @@
 from gameObjects.gameObject import GameObject
 
+from OpenGL.GL import *
+
 class Mesh( GameObject ):
     """Base class for regular gameObjects, with mesh or empty, Derived from GameObject Class"""
     def onStart( self ) -> None:
@@ -16,7 +18,5 @@ class Mesh( GameObject ):
         if not self.hierachyActive():
             return
 
-        is_visible : bool = True if self.renderer.game_runtime else self.hierachyVisible()
-        
-        if self.model != -1 and is_visible:
-            self.models.draw( self.model, self.transform._getModelMatrix() ) 
+        super().onRender()
+

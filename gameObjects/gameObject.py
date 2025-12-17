@@ -22,6 +22,7 @@ from modules.script import Script
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
 from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
 
 import inspect
 import importlib
@@ -111,7 +112,8 @@ class GameObject( Context, Transform ):
             name        = name
         ) )
 
-        self.physic = None  # reserved for physic attachment
+        self.physic : Physic = None  # reserved for physic attachment
+        self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
         self.model          : int = -1
@@ -163,7 +165,10 @@ class GameObject( Context, Transform ):
         self.attachables[t] = object
 
         # special case for physics (for now)
-        # use reserved self.physic attribute as reference, dont want to do per frame lookups.
+        # use reserved self.physic_link attribute as reference, dont want to do per frame lookups.
+        if t is PhysicLink:
+            self.physic_link = self.attachables[t] 
+
         if t is Physic:
             self.physic = self.attachables[t] 
 
@@ -184,6 +189,7 @@ class GameObject( Context, Transform ):
 
         match attachable:
             case "Transform"    : _ref = self.attachables.get( Transform )
+            case "PhysicLink"   : _ref = self.attachables.get( PhysicLink )
             case "Physic"       : _ref = self.attachables.get( Physic )
             case "GameObject"   : _ref = self
 
@@ -359,6 +365,13 @@ class GameObject( Context, Transform ):
 
         self._mark_dirty( GameObject.DirtyFlag_.all  )
 
+    def getParent( self, filter_physic_base : bool = False ) -> "GameObject":
+        if self.parent and filter_physic_base:
+            if not self.parent.getAttachable( Physic ):
+                return self.parent.getParent( filter_physic_base )
+        
+        return self.parent
+
     #
     # scripting
     #
@@ -455,6 +468,20 @@ class GameObject( Context, Transform ):
             #"scripts"   : copy.deepcopy(self.scripts),
         }
 
+        if self.physic:
+            self._state_snapshot["Physic"] = {
+                "translate" : list(self.physic.collision.transform.local_position),
+                "rotation"  : list(self.physic.collision.transform.local_rotation),
+                "scale"     : list(self.physic.collision.transform.local_scale),
+            }
+
+        if self.physic_link:
+            self._state_snapshot["PhysicLink"] = {
+                "translate" : list(self.physic_link.collision.transform.local_position),
+                "rotation"  : list(self.physic_link.collision.transform.local_rotation),
+                "scale"     : list(self.physic_link.collision.transform.local_scale),
+            }
+
     def _restore_state(self):
         """Restore the object to the saved initial state."""
         if not hasattr(self, "_state_snapshot"):
@@ -471,6 +498,17 @@ class GameObject( Context, Transform ):
         self.parent                     = state["parent"]
         #self.scripts                    = copy.deepcopy(state["scripts")
 
+        if "Physic" in state: 
+            _physic = state["Physic"]
+            self.physic.collision.transform.local_position   = _physic["translate"]
+            self.physic.collision.transform.local_rotation   = _physic["rotation"]
+            self.physic.collision.transform.local_scale      = _physic["scale"]
+
+        if "PhysicLink" in state: 
+            _physic_link = state["PhysicLink"]
+            self.physic_link.collision.transform.local_position   = _physic_link["translate"]
+            self.physic_link.collision.transform.local_rotation   = _physic_link["rotation"]
+            self.physic_link.collision.transform.local_scale      = _physic_link["scale"]
     #
     # enable and disable
     #
@@ -529,6 +567,11 @@ class GameObject( Context, Transform ):
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
+            if self.physic_link or self.physic:
+                _physic = self.physic_link or self.physic
+                _physic.collision.transform._createWorldModelMatrix()
+                
+
             if self.renderer.game_running and self.physic:
                 self.physic._updatePhysicsBody()
 
@@ -544,3 +587,58 @@ class GameObject( Context, Transform ):
             if self.physic:
                 self.physic._runPhysics()
 
+            elif self.physic_link:
+                self.physic_link._runPhysics()
+
+    def onRender( self ) -> None:
+        is_visible : bool = True if self.renderer.game_runtime else self.hierachyVisible()
+        
+        if not is_visible:
+            return
+
+        if self.context.settings.DEBUG_COLLIDER:
+            # debug draw collision geometry
+            #if not self.renderer.game_runtime and self.physic_link is not None:
+            _physic = self.physic_link or self.physic
+
+            # dont visualize
+            if self.physic and self.children:
+                _physic = None
+
+            if _physic is not None:
+                _current_shader = self.renderer.shader
+
+                self.renderer.use_shader( self.renderer.color )
+
+                _color = ( 0.83, 0.34, 0.0, 1.0 )
+                glUniform4f( self.renderer.shader.uniforms['uColor'],  _color[0],  _color[1], _color[2], 0.7 )
+
+                glEnable(GL_DEPTH_TEST)
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+                glLineWidth(5)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
+                _collision_model = _physic.collision.model or self.context.models.default_cube
+
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
+
+                self.models.draw(
+                    _collision_model,
+                    _physic.collision.transform._getModelMatrix()
+                )
+
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                glLineWidth(1)
+
+                if _current_shader:
+                    self.renderer.use_shader( _current_shader )
+
+                    glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+                    glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
+
+        # render the model geometry
+        if self.model != -1 and is_visible:
+            self.models.draw( self.model, self.transform._getModelMatrix() ) 

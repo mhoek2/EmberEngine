@@ -12,6 +12,6 @@ out vec4 var_Color;
 
 void main()
 {
-    gl_Position = ( uPMatrix * uVMatrix ) * vec4( aVertex, 1.0 );
+    gl_Position = ( uPMatrix * uVMatrix * uMMatrix ) * vec4( aVertex, 1.0 );
 	var_Color = uColor;
 } 

@@ -14,6 +14,7 @@ class Settings:
         self.SCENE_EXTENSION    : str = ".scene"
         self.SCRIPT_EXTENSION   : str = ".py"
         self.MODEL_EXTENSION    : list[str] = [
+            ".stl",
             ".fbx",
             ".obj",
             ".glb",
@@ -81,6 +82,8 @@ class Settings:
         }
 
         self.ENGINE_ROTATION = "YXZ"
+
+        self.DEBUG_COLLIDER = True
 
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""

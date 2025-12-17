@@ -26,6 +26,7 @@ from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
 from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
 
 from pathlib import Path
 import textwrap
@@ -36,6 +37,8 @@ import uuid as uid
 
 from modules.transform import Transform
 from modules.engineTypes import EngineTypes
+
+import pybullet as p
 
 class CustomEvent( Context ):
     def __init__(self):
@@ -952,6 +955,41 @@ class UserInterface( Context ):
         return changed_any
 
     # helper
+    def _draw_transform_local( self, _t : Transform ) -> None:
+        # position
+        self.draw_vec3_control( "Position", _t.local_position, 0.0 )
+
+        # rotation
+        match self.inspector.rotation_mode:
+            case self.inspector.RotationMode_.degrees:
+                self.draw_vec3_control(
+                    "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
+                    onChange=lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
+                )
+            case self.inspector.RotationMode_.radians:
+                self.draw_vec3_control("Rotation", _t.local_rotation, 0.0)
+
+        # scale
+        self.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
+
+    # helper
+    def _draw_transform_world( self, _t : Transform ) -> None:
+        # position
+        self.draw_vec3_control( "Position", _t.position, 0.0 )
+
+        # rotation
+        match self.inspector.rotation_mode:
+            case self.inspector.RotationMode_.degrees:
+                self.draw_vec3_control( "Rotation", Transform.vec_to_degrees( _t.rotation ), 0.0,
+                    onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
+                )
+            case self.RotationMode_.radians:
+                self.inspector.draw_vec3_control( "Rotation", _t.rotation, 0.0 )
+
+        # scale
+        self.draw_vec3_control( "Scale", _t.scale, 0.0 )
+
+    # helper
     def radio_group( self, 
                      label           : str, 
                      items           : list[RadioStruct],
@@ -1373,7 +1411,7 @@ class UserInterface( Context ):
         def __init__( self, context ):
             super().__init__( context )
 
-            self.rotation_mode = self.RotationMode_.degrees
+            self.rotation_mode = self.RotationMode_.radians
 
         def _transform( self ) -> None:
             if not self.context.gui.selectedObject:
@@ -1393,42 +1431,13 @@ class UserInterface( Context ):
 
             # local space
             if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
-                # position
-                self.context.gui.draw_vec3_control( "Position", _t.local_position, 0.0 )
-
-                # rotation
-                match self.rotation_mode:
-                    case self.RotationMode_.degrees:
-                        self.context.gui.draw_vec3_control(
-                            "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
-                            onChange=lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
-                        )
-                    case self.RotationMode_.radians:
-                        self.context.gui.draw_vec3_control("Rotation", _t.local_rotation, 0.0)
-
-                # scale
-                self.context.gui.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
-
+                self.context.gui._draw_transform_local( _t )
                 imgui.tree_pop()
 
             # world space --should b hidden or disabled?
-            if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
-                # position
-                self.context.gui.draw_vec3_control( "Position", _t.position, 0.0 )
-
-                # rotation
-                match self.rotation_mode:
-                    case self.RotationMode_.degrees:
-                        self.context.gui.draw_vec3_control( "Rotation", Transform.vec_to_degrees( _t.rotation ), 0.0,
-                            onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
-                        )
-                    case self.RotationMode_.radians:
-                        self.context.gui.draw_vec3_control( "Rotation", _t.rotation, 0.0 )
-
-                # scale
-                self.context.gui.draw_vec3_control( "Scale", _t.scale, 0.0 )
-
-                imgui.tree_pop()
+            #if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
+            #    self.context.gui._draw_transform_world( _t )
+            #    imgui.tree_pop()
 
         def _material_thumb( self, label, texture_id ) -> None:
             imgui.text( f"{label}" );
@@ -1755,7 +1764,7 @@ class UserInterface( Context ):
                 )
 
             if attachable_type:
-                self.context.gui.selectedObject.addAttachable( attachable._class, attachable._class(
+                self.context.gui.selectedObject.addAttachable( attachable_type._class, attachable_type._class(
                        self.context, 
                        self.context.gui.selectedObject ) 
                 )
@@ -1829,21 +1838,141 @@ class UserInterface( Context ):
                 imgui.separator()
                 imgui.tree_pop()
 
+        def _physicProperties( self, physic_link : PhysicLink ) -> None:
+
+            imgui.push_id("##PhysicTabs")
+            _flags = imgui.TabBarFlags_.none
+
+            if imgui.begin_tab_bar( "PhysicProperties", _flags ):
+                if imgui.begin_tab_item("Inertia##Tab1")[0]:
+                    inertia : PhysicLink.Inertia = physic_link.inertia
+
+                    _, inertia.mass = imgui.drag_float("Mass", inertia.mass, 1.0)
+                    imgui.end_tab_item()
+
+                if imgui.begin_tab_item("Joint##Tab2")[0]:
+                    joint : PhysicLink.Joint = physic_link.joint
+
+                    # type
+                    type_names = [t.name for t in PhysicLink.Joint.Type_]
+
+                    changed, new_index = imgui.combo(
+                        "Joint type",
+                        joint.geom_type,
+                        type_names
+                    )
+                    if changed:
+                        joint.geom_type = PhysicLink.Joint.Type_( new_index )
+
+                    imgui.end_tab_item()
+
+                if imgui.begin_tab_item("Collision##Tab4")[0]:
+                    collision : PhysicLink.Collision = physic_link.collision
+
+                    # type
+                    geom_type_names = [t.name for t in PhysicLink.GeometryType_]
+
+                    changed, new_index = imgui.combo(
+                        "Geometry type",
+                        collision.geom_type,
+                        geom_type_names
+                    )
+                    if changed:
+                        collision.geom_type = PhysicLink.GeometryType_( new_index )
+
+                    _t : Transform = collision.transform
+                    self.context.gui._draw_transform_local( _t )
+
+                    imgui.end_tab_item()
+
+                # End tab bar
+                imgui.end_tab_bar()
+
+            imgui.separator()
+            imgui.pop_id()
+        
         def _physic( self ) -> None:
             if not self.context.gui.selectedObject:
                 return
             
             gameObject = self.context.gui.selectedObject
+            is_base_physic = bool(gameObject.children)
 
             if Physic not in gameObject.attachables:
                 return
 
             physic : Physic = gameObject.getAttachable(Physic)
+            is_base_physic = bool(gameObject.children)
 
-            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics", imgui.TreeNodeFlags_.default_open ):
-                changed, physic.mass = imgui.drag_float(
-                        f"Mass", physic.mass, 1
-                )
+            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
+
+                # no children, meaning its just a single world physic object
+                if not is_base_physic:
+                    self._physicProperties( physic )
+
+                else:
+                    _, physic.base_mass = imgui.drag_float("Base Mass", physic.base_mass, 1.0)
+
+                    # visualize relations
+                    if self.context.renderer.game_running and physic.physics_id is not None:
+                        imgui.separator()
+
+                        _num_joints = p.getNumJoints( physic.physics_id )
+                        imgui.text( f"Num Joints: {_num_joints}" )
+
+                        # should match with getJointInfo() below
+                        #for link in physic.physics_children_flat:
+                        #    imgui.text( link.gameObject.name )
+
+                        for i in range(_num_joints):
+                            info = p.getJointInfo( physic.physics_id, i )
+                            _link_index         : int = i
+
+                            _link               : PhysicLink = physic._index_to_link[_link_index]
+                            parent_link_index   : int = info[16]
+                            _link_parent        : PhysicLink = physic._index_to_link[parent_link_index] if parent_link_index >= 0 else physic
+
+                            _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name} | PyBullet link name: {info[12].decode()}"
+                            imgui.text( _info )
+                            imgui.separator()
+
+                imgui.separator()
+                imgui.tree_pop()
+
+        def _physicLink( self ) -> None:
+            # inspiration:
+            # https://tobas-wiki.readthedocs.io/en/latest/create_urdf/
+
+            if not self.context.gui.selectedObject:
+                return
+            
+            gameObject = self.context.gui.selectedObject
+
+            if PhysicLink not in gameObject.attachables:
+                return
+
+            physic_link : PhysicLink = gameObject.getAttachable(PhysicLink)
+
+            if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
+
+                # visualize relations
+                if physic_link.runtime_base_physic:
+                    _base_footprint : Physic = physic_link.runtime_base_physic
+                    _link_index     : int = physic_link.runtime_link_index
+                
+                    _link           : PhysicLink = _base_footprint._index_to_link[_link_index]
+                    parent_link_index   : int = -1
+                    if gameObject.parent and gameObject.parent.physic_link:
+                        parent_link_index = gameObject.parent.physic_link.runtime_link_index
+
+                    _link_parent        : PhysicLink = _base_footprint._index_to_link[parent_link_index] if parent_link_index >= 0 else _base_footprint
+
+                    _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name}"
+                    imgui.text(_info)
+
+                imgui.separator()
+
+                self._physicProperties( physic_link )
 
                 imgui.tree_pop()
 
@@ -1874,6 +2003,7 @@ class UserInterface( Context ):
                 self._camera()
                 self._light()
                 self._physic()
+                self._physicLink()
 
                 self._material()
                 imgui.separator()

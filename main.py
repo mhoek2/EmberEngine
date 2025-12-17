@@ -70,7 +70,6 @@ class EmberEngine:
         self.roughnessOverride = -1.0
         self.metallicOverride = -1.0
 
-        self.defaultMaterial = self.materials.buildMaterial()
         self.scene.getScene( self.settings.default_scene )
 
         self.scene.getScenes()
@@ -129,7 +128,7 @@ class EmberEngine:
     def addEmptyGameObject( self ):
         return self.addGameObject( Mesh( self,
             name        = "Empty GameObject",
-            material    = self.defaultMaterial,
+            material    = self.materials.defaultMaterial,
             translate   = [ 0, 0, 0 ],
             scale       = [ 1, 1, 1 ],
             rotation    = [ 0.0, 0.0, 0.0 ]
@@ -138,8 +137,8 @@ class EmberEngine:
     def addDefaultCube( self ):
         return self.addGameObject( Mesh( self,
             name        = "Default cube",
-            model_file  = f"{self.settings.engineAssets}models\\cube\\model.obj",
-            material    = self.defaultMaterial,
+            model_file  = self.models.default_cube_path,
+            material    = self.materials.defaultMaterial,
             translate   = [ 0, 1, 0 ],
             scale       = [ 1, 1, 1 ],
             rotation    = [ 0.0, 0.0, 0.0 ]
@@ -149,7 +148,7 @@ class EmberEngine:
         return self.addGameObject( Camera( self,
                         name        = "Camera",
                         model_file  = f"{self.settings.engineAssets}models\\camera\\model.fbx",
-                        material    = self.defaultMaterial,
+                        material    = self.materials.defaultMaterial,
                         translate   = [ 0, 5, -10 ],
                         scale       = [ 1, 1, 1 ],
                         rotation    = [ -0.4, 0.0, 0.0 ],
@@ -159,7 +158,7 @@ class EmberEngine:
     def addDefaultLight( self ) -> None:
         return self.addGameObject( Light( self,
                         name        = "light",
-                        model_file  = f"{self.settings.engineAssets}models\\sphere\\model.obj",
+                        model_file  = self.models.default_sphere_path,
                         translate   = [1, -1, 1],
                         scale       = [ 0.5, 0.5, 0.5 ],
                         rotation    = [ 0.0, 0.0, 80.0 ]
@@ -236,6 +235,9 @@ class EmberEngine:
         # viewmatrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
 
+        # modelamtrix identrity
+        glUniformMatrix4fv(self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix)
+
         # color
         grid_color = self.settings.grid_color
         glUniform4f( self.renderer.shader.uniforms['uColor'],  grid_color[0],  grid_color[1], grid_color[2], 1.0 )
@@ -271,6 +273,10 @@ class EmberEngine:
         
         # viewmatrix
         glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
+
+        # modelamtrix identrity
+        glUniformMatrix4fv(self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix)
+
 
         if centered:
             start = -length

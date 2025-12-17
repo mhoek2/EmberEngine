@@ -4,7 +4,7 @@ import os
 import math
 from OpenGL.arrays import returnPointer
 from pygame.math import Vector2
-from pyrr import matrix44
+from pyrr import matrix44, Matrix44
 import pygame
 from pygame.locals import *
 
@@ -161,6 +161,9 @@ class Renderer:
         self.setup_projection_matrix( 
             size = self.display_size 
         )
+
+        # identity matrix
+        self.identity_matrix : Matrix44 = Matrix44.identity()
 
         # physics
         self._initPhysics()

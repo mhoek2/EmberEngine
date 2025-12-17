@@ -42,6 +42,12 @@ class Models( Context ):
 
         self._num_models = 0
 
+        self.default_cube_path = f"{self.settings.engineAssets}models\\cube\\model.obj"
+        self.default_cube = self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial )
+
+        self.default_sphere_path = f"{self.settings.engineAssets}models\\sphere\\model.obj"
+        self.default_sphere = self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial )
+
         return
 
     @staticmethod

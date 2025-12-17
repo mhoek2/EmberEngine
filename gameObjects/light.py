@@ -45,5 +45,4 @@ class Light( GameObject ):
 
         super().onUpdate()
 
-        if self.model != -1 and self.visible:
-            self.models.draw( self.model, self.transform._getModelMatrix() )     
+        super().onRender() 
