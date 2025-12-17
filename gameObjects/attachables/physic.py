@@ -31,6 +31,14 @@ class Physic( PhysicLink ):
 
         self.base_mass : float = -1.0
 
+        # 0 : base_footprint
+        # 1 :     |_Base_link (0)
+        # 2 :       |_ Link A (1)
+        # 3 :           |_ Link B (2)
+        self._link_to_index : dict = {}
+        self._index_to_link : dict = {}
+
+
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
@@ -123,33 +131,29 @@ class Physic( PhysicLink ):
         linkInertialFramePositions = []
         linkInertialFrameOrientations = [] 
 
-
         if is_base_physic:
-            # hacky stuff :D
-            #Base/root (0)
-            # |_ Link A (1)
-            #     |_ Link B (2)
-            _link_to_index = {}
-            for i, link in enumerate( self.physics_children_flat ):
-                link.runtime_link_index = i     # matches this indexing
-                _link_to_index[link]    = i + 1     # offset +1, because root is 0
+
+            # build the link index mapping table
+            for i, obj_link in enumerate( self.physics_children_flat ):
+                # todo:
+                # this can be merged with the next enumerator
+                # because the hierarchy is flattened, and child always tails the parent..
+
+                obj_link.runtime_link_index     = i         # matches this indexing
+                self._link_to_index[obj_link]   = i + 1     # offset +1, because root is 0
+                self._index_to_link[i]          = obj_link
 
             # bind child links and joints
-            for link in self.physics_children_flat:
-                gameObject : GameObject = link.gameObject
+            for i, obj_link in enumerate( self.physics_children_flat ):
+                obj : GameObject = obj_link.gameObject
 
                 # parent/link indexing
-                parent = link.gameObject.getParent()
-
-                # connect to base, when no parent
-                #if not parent:
-                #    parent = self.gameObject
-
-                if parent is self.gameObject:
-                    parent_index = 0  # parent is base (self/this)
+                _parent = obj.getParent()
+                if _parent is self.gameObject:
+                    parent_index = 0  # parent is base_footprint (self/this/PhysicBase)
                 else:
-                    parent_link : PhysicLink = parent.getAttachable(PhysicLink)
-                    parent_index = _link_to_index[parent_link]
+                    parent_link : PhysicLink = _parent.getAttachable(PhysicLink)
+                    parent_index = self._link_to_index[parent_link]
 
                 linkParents.append(parent_index)
 
@@ -160,44 +164,37 @@ class Physic( PhysicLink ):
                 ##scale, rot_quat, pos = local_matrix.decompose()
                 #pos             = gameObject.transform.extract_position(local_matrix)
                 #rot_quat        = gameObject.transform.extract_quat(local_matrix)
-
-                pos         = link.gameObject.transform.local_position
+                pos         = obj.transform.local_position
                 rot_quat    = [
-                    link.gameObject.transform._local_rotation_quat[0], 
-                    link.gameObject.transform._local_rotation_quat[1], 
-                    link.gameObject.transform._local_rotation_quat[2], 
-                    -link.gameObject.transform._local_rotation_quat[3] # handedness
+                    obj.transform._local_rotation_quat[0], 
+                    obj.transform._local_rotation_quat[1], 
+                    obj.transform._local_rotation_quat[2], 
+                    -obj.transform._local_rotation_quat[3] # handedness
                 ]
 
                 linkPositions.append( tuple(pos) )
                 linkOrientations.append( tuple(rot_quat) )
 
                 # mass
-                linkMasses.append(link.inertia.mass)
+                linkMasses.append( obj_link.inertia.mass )
 
                 # type
-                linkJointTypes.append( PhysicLink.pybullet_joint_type( link.joint.geom_type ) )
-                linkJointAxis.append([0,1,0])  # example
+                linkJointTypes.append( PhysicLink.pybullet_joint_type( obj_link.joint.geom_type ) )
+                linkJointAxis.append([0,1,0])
 
                 # collision shape
-                _extent = link.gameObject.transform.local_scale * link.collision.transform.local_scale
-
-                #collision_shape = p.createCollisionShape(
-                #    PhysicLink.pybullet_geom_type( link.collision.geom_type ),
-                #    halfExtents = _extent,
-                #)
-                collision_shape = PhysicLink.create_collision_shape( link )
+                collision_shape = PhysicLink.create_collision_shape( obj_link )
                 linkCollisionShapes.append( collision_shape )
 
-                # visuals shape
-                linkVisualShapes.append(-1)
+                # visual shape
+                linkVisualShapes.append( -1 )
 
                 # inertials
-                linkInertialFramePositions.append((0.0, 0.0, 0.0))
-                linkInertialFrameOrientations.append((0.0, 0.0, 0.0, 1.0))
+                linkInertialFramePositions.append( (0.0, 0.0, 0.0) )
+                linkInertialFrameOrientations.append( (0.0, 0.0, 0.0, 1.0) )
 
                 # debug
-                print( f"{gameObject.name} links to {parent_index}: {parent.name}" )
+                print( f"{obj.name} links to {parent_index}: {_parent.name}" )
 
         # base physic properties
         _base_mass               = self.base_mass
@@ -248,10 +245,35 @@ class Physic( PhysicLink ):
         )
 
         # update the physics id on links to reference this multibody
-        for link in self.physics_children_flat:
-            link.runtime_base_physic = self
-            link.physics_id = self.physics_id
+        self.__link_phyisic_children()
 
+    def __link_phyisic_children( self ) -> None:
+        """
+        Link all physics child objects to this runtime physics instance.
+
+        This assigns the current object as the runtime base physics reference
+        for each child and propagates the physics ID to them. After this call,
+        all physics children share the same physics context as this object.
+        """
+        for i, obj_link in enumerate( self.physics_children_flat ):
+            obj_link.runtime_base_physic    = self
+            obj_link.physics_id             = self.physics_id
+
+    def __unlink_phyisic_children( self ) -> None:
+        """
+        Unlink all physics child objects from this runtime physics instance.
+
+        This clears internal link/index mappings and removes the runtime physics
+        reference and physics ID from each child. After this call, physics
+        children are no longer associated with this physics context.
+        """
+        self._link_to_index.clear()
+        self._index_to_link.clear()
+
+        for i, obj_link in enumerate( self.physics_children_flat ):
+            obj_link.runtime_base_physic    = None
+            obj_link.physics_id             = None
+        self.physics_children_flat.clear()
 
     def _deInitPhysics( self) -> None:
         if self.physics_id is None:
@@ -259,6 +281,9 @@ class Physic( PhysicLink ):
 
         p.removeBody( self.physics_id )
         self.physics_id = None
+
+        # cleanup links and joints
+        self.__unlink_phyisic_children()
 
     def _runPhysics( self ) -> bool:
         """Run phyisics engine on this gameObject updating position and orientation"""
