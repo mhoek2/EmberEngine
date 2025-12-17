@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
-from modules.gui.types import RadioStruct
+from modules.gui.types import RadioStruct, ToggleStruct
 
 class Helper( Context ):
     """Logic related to rendering the Hierarchy window"""
@@ -107,6 +107,102 @@ class Helper( Context ):
 
         # scale
         self.draw_vec3_control( "Scale", _t.scale, 0.0 )
+
+
+    def toggle_group( self, 
+                    label           : str, 
+                    items           : list[ToggleStruct],
+                    current_states  : list[bool], 
+                    start_pos       : imgui.ImVec2 = None 
+        ):
+        _any_changed = False
+
+        imgui.begin_group()
+
+        old_cursor  = imgui.get_cursor_screen_pos()     # restore cursor pos afterwards
+        avail       = imgui.get_content_region_avail()
+        draw_list   = imgui.get_window_draw_list()
+
+        if start_pos is not None:
+            imgui.set_cursor_screen_pos( start_pos )
+        else:
+            start_pos = imgui.get_cursor_screen_pos()
+
+        # sizing
+        padding_x       = 8
+        padding_y       = 6
+        item_spacing    = 2
+        rounding        = 5.0
+
+        # compute item width based on text
+        item_widths = []
+        total_width = 0
+        for item in items:
+            text_width = imgui.calc_text_size( item["icon"] ).x
+            width = padding_x * 2 + text_width
+            item_widths.append( width )
+
+            hide_func = item.get("hide", lambda: False)
+            if hide_func():
+                continue
+
+            total_width += width + item_spacing
+        total_width -= item_spacing  # last one has no trailing space
+
+        text_height = imgui.get_text_line_height()
+        item_height = text_height + padding_y * 2
+
+        group_min = start_pos
+        group_max = imgui.ImVec2( start_pos.x + total_width, start_pos.y + item_height )
+
+        # group background
+        draw_list.add_rect_filled(
+            group_min, group_max,
+            imgui.color_convert_float4_to_u32( imgui.ImVec4( 0.2, 0.2, 0.2, 1.0 ) ),
+            rounding
+        )
+
+        # invisible button
+        imgui.invisible_button( label, (total_width, item_height) )
+        clicked = imgui.is_item_clicked()
+
+        x = start_pos.x
+        #new_index = current_index
+        for idx, item in enumerate( items ):
+            hide_func = item.get("hide", lambda: False)
+            if hide_func():
+                continue
+
+            width = item_widths[idx]
+            item_min = imgui.ImVec2( x, start_pos.y )
+            item_max = imgui.ImVec2( x + width, start_pos.y + item_height )
+
+            if clicked:
+                mx, my = imgui.get_mouse_pos()
+                if mx >= item_min.x and mx <= item_max.x and my >= item_min.y and my <= item_max.y:
+                    current_states[idx] = not current_states[idx]
+                    _any_changed = True
+
+            # active item
+            if current_states[idx]:
+                draw_list.add_rect_filled(
+                    item_min, item_max,
+                    imgui.color_convert_float4_to_u32( imgui.ImVec4( 0.06, 0.53, 0.98, 1.0 ) ), 
+                    rounding
+                )
+
+            color = imgui.ImVec4( 1.0, 1.0, 1.0, 1.0 )
+            text_pos = imgui.ImVec2( x + padding_x, start_pos.y + padding_y )
+            draw_list.add_text( text_pos, imgui.color_convert_float4_to_u32( color ), item["icon"] )
+
+            x += width + item_spacing
+
+        imgui.end_group()
+            
+        # restore cursor position
+        imgui.set_cursor_screen_pos(old_cursor)
+
+        return _any_changed, total_width
 
     def radio_group( self, 
                     label           : str, 

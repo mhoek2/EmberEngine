@@ -34,7 +34,7 @@ import uuid as uid
 
 # Gui modules
 from modules.gui.helper import Helper
-from modules.gui.types import RadioStruct
+from modules.gui.types import RadioStruct, ToggleStruct
 
 from modules.gui.hierarchy import Hierarchy
 from modules.gui.inspector import Inspector
@@ -101,6 +101,26 @@ class UserInterface( Context ):
         self.visibility_icon : list = [
             fa.ICON_FA_EYE_SLASH,    
             fa.ICON_FA_EYE,    
+        ]
+
+
+        self.viewport_overlay_toggles : list[ToggleStruct] = [
+            {
+                "name"  : "Grid",
+                "icon"  : fa.ICON_FA_BORDER_ALL,
+            },
+            {
+                "name"  : "Axis",
+                "icon"  : fa.ICON_FA_COMPASS,
+            },
+            {
+                "name"  : "Wireframe",
+                "icon"  : fa.ICON_FA_GLOBE,
+            },
+            {
+                "name"  : "Colliders",
+                "icon"  : fa.ICON_FA_PERSON_FALLING_BURST,
+            },
         ]
 
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
@@ -395,6 +415,25 @@ class UserInterface( Context ):
             start_pos       = _rect_min
         )
 
+        # viewport overlay toggles
+        _rect_min.x += (group_width + 10.0)
+        _states : list = [
+                self.context.settings.drawGrid,
+                self.context.settings.drawAxis,
+                self.context.settings.drawWireframe,
+                self.context.settings.drawColliders,
+        ]
+        changed, group_width = self.helper.toggle_group( "viewport_overlay_toggles",
+            items           = self.viewport_overlay_toggles,
+            current_states  = _states,
+            start_pos       = _rect_min
+        )
+        if changed: (
+            self.context.settings.drawGrid,
+            self.context.settings.drawAxis,
+            self.context.settings.drawWireframe,
+            self.context.settings.drawColliders,
+        ) = _states
         imgui.end()
 
     class GameObjectTypes:

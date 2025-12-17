@@ -596,7 +596,7 @@ class GameObject( Context, Transform ):
         if not is_visible:
             return
 
-        if self.context.settings.DEBUG_COLLIDER:
+        if self.context.settings.drawColliders:
             # debug draw collision geometry
             #if not self.renderer.game_runtime and self.physic_link is not None:
             _physic = self.physic_link or self.physic

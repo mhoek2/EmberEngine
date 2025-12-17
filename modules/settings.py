@@ -44,17 +44,16 @@ class Settings:
         self.default_procedural_night_color     : list[float]  = [0.3, 0.2, 0.3]
         self.default_procedural_night_brightness : float = 0.05
 
-        # wireframe
-        self.drawWireframe = False
-
-        # grid
-        self.drawGrid       = True
+        # grid parameters
         self.grid_color     = ( 0.83, 0.74, 94.0, 1.0 )
         self.grid_size      = 10.0
         self.grid_spacing   = 0.5
 
-        # axis
+        # viewport overlay toggles
+        self.drawGrid       = True
         self.drawAxis       = True
+        self.drawWireframe  = False
+        self.drawColliders  = False
 
         # scriptable behaivior
         self.SCRIPT_AUTO_IMPORT_MODULES = {
@@ -82,8 +81,6 @@ class Settings:
         }
 
         self.ENGINE_ROTATION = "YXZ"
-
-        self.DEBUG_COLLIDER = True
 
     def is_app_exported( self ):
         """Wheter the appliction as exported using Ember Engine"""

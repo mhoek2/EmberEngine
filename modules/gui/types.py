@@ -7,6 +7,10 @@ class RadioStruct(TypedDict):
     icon    : str
     flag    : int
 
+class ToggleStruct(TypedDict):
+    name    : str
+    icon    : str
+
 class CustomEvent( Context ):
     def __init__(self):
         self._queue : list = []

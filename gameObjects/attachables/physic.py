@@ -313,7 +313,7 @@ class Physic( PhysicLink ):
             self.transform._update_local_from_world()
 
         # debug to visualize collisions in runtime:
-        if self.context.settings.DEBUG_COLLIDER:
+        if self.context.settings.drawColliders:
             _collision = self.gameObject.physic.collision
             local_matrix = _collision.transform.compose_matrix(
                 _collision.transform.local_position,
