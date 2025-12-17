@@ -64,7 +64,7 @@ class Inspector( Context ):
 
         # local space
         if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
-            self.helper.draw_transform_local( _t )
+            self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject.physic_link else 1) ] )
             imgui.tree_pop()
 
         # world space --should b hidden or disabled?
