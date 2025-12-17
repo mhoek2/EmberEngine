@@ -1,0 +1,645 @@
+from typing import TYPE_CHECKING
+
+from modules.context import Context
+from modules.material import Materials
+from modules.images import Images
+from modules.models import Models
+from modules.console import Console
+from modules.scene import SceneManager
+from modules.transform import Transform
+from modules.script import Script
+from modules.engineTypes import EngineTypes
+
+from gameObjects.gameObject import GameObject
+from gameObjects.mesh import Mesh
+from gameObjects.light import Light
+from gameObjects.camera import Camera
+from gameObjects.skybox import Skybox
+
+from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
+
+from imgui_bundle import imgui
+from imgui_bundle import icons_fontawesome_6 as fa
+
+if TYPE_CHECKING:
+    from main import EmberEngine
+
+from pathlib import Path
+import enum
+import uuid as uid
+
+class Inspector( Context ):
+    class RotationMode_(enum.IntEnum):
+        """Modes to visualize rotation angles"""
+        radians = enum.auto()
+        degrees = enum.auto()
+
+    def __init__( self, context : 'EmberEngine' ):
+        super().__init__( context )
+        self.gui = context.gui
+
+        self.rotation_mode = self.RotationMode_.radians
+
+    def _transform( self ) -> None:
+        if not self.gui.selectedObject:
+            return
+
+        gameObject  : GameObject    = self.gui.selectedObject
+        _t          : Transform     = gameObject.transform
+
+        if isinstance( gameObject, Mesh ):
+            imgui.text( f"Mesh" );
+
+        if isinstance( gameObject, Light ):
+            imgui.text( f"Light" );
+
+        # todo:
+        # switch from local to world space editing using viewport gizmo mode?
+
+        # local space
+        if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
+            self.gui._draw_transform_local( _t )
+            imgui.tree_pop()
+
+        # world space --should b hidden or disabled?
+        #if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
+        #    self.gui._draw_transform_world( _t )
+        #    imgui.tree_pop()
+
+    def _material_thumb( self, label, texture_id ) -> None:
+        imgui.text( f"{label}" );
+        imgui.next_column()
+        self.gui.draw_thumb( texture_id, imgui.ImVec2(75.0, 75.0) )
+        imgui.next_column()
+
+    def _material( self ) -> None:
+        if imgui.tree_node( f"{fa.ICON_FA_BRUSH} Material" ):
+
+            if not self.gui.selectedObject:
+                imgui.tree_pop()
+                return
+
+            _models = self.gui.models
+            _images = self.gui.images
+            _materials = self.gui.materials
+
+            gameObject = self.gui.selectedObject
+
+            if not isinstance( gameObject, GameObject ):
+                imgui.tree_pop()
+                return
+
+            # collect material(s)
+            materials = []
+
+            for mesh in _models.model[gameObject.model].meshes:
+                mesh_index = _models.model[gameObject.model].meshes.index(mesh)
+                mesh_gl = _models.model_mesh[gameObject.model][mesh_index]
+      
+                if mesh_gl["material"] >= 0:
+                    materials.append( mesh_gl["material"] )
+
+            # visualize material(s)
+            multi_mat : bool = True if len(materials) > 1 else False
+
+            for material_id in materials:
+                mat : Materials.Material = _materials.getMaterialByIndex( material_id )
+
+                is_open : bool = False
+
+                # use tree node of this mesh has multiple materials
+                if multi_mat:
+                    if imgui.tree_node( f"Material ID: { material_id }" ):
+                        is_open = True
+                else:
+                    imgui.text( f"Material ID: { material_id }" );
+                    imgui.separator()
+                    is_open = True
+
+                if is_open:
+                    imgui.columns( count=2, borders=False )
+                    imgui.set_column_width (0, 70.0 )
+
+                    self._material_thumb( "Albedo",     mat["albedo"]   if 'albedo'     in mat else _images.defaultImage    )
+                    self._material_thumb( "Normal",     mat["normal"]   if 'normal'     in mat else _images.defaultNormal   )
+                    self._material_thumb( "Phyiscal",   mat["phyiscal"] if 'phyiscal'   in mat else _images.defaultRMO      )
+                    self._material_thumb( "Emissive",   mat["emissive"] if 'emissive'   in mat else _images.blackImage      )
+            
+                    imgui.columns( count=1 )
+
+                if multi_mat and is_open:
+                    imgui.tree_pop()
+
+            imgui.tree_pop()
+        return
+
+    def _draw_script_exported_attributes( self, script: Script ):
+        if not script.active:
+            return 
+
+        imgui.dummy( imgui.ImVec2(20, 0) )
+
+        for class_attr_name, class_attr in script.exports.items():
+            # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
+
+            # shuldnt this be at the beginning?
+            if script.instance is None:
+                continue
+
+            # exported attribute contains error, type mismatch?
+            if not class_attr.active:
+                continue
+
+            #_instance_value = getattr(script["instance"], instance_attr_name)
+            _value = class_attr.get()
+            _t = class_attr.type
+            _changed = False
+            _t_engine_type : EngineTypes.Meta = EngineTypes.get_engine_type( _t )
+
+            # FLOAT
+            if _t is float:
+                _changed, new = imgui.drag_float(f"{class_attr_name}:", _value, 0.01)
+
+            # INT
+            elif _t is int:
+                _changed, new = imgui.drag_int(f"{class_attr_name}:", _value, 1)
+
+            # STRING
+            elif _t is str:
+                _changed, new = imgui.input_text(f"{class_attr_name}:", _value, 256)
+
+            # BOOL
+            elif _t is bool:
+                _changed, new = imgui.checkbox(f"{class_attr_name}:", _value)
+
+            # ENGINE TYPE
+            elif _t_engine_type is not None:
+                _uuid               : uid.UUID = None
+
+                obj     : GameObject = self.context.findGameObject(_value)
+                _name   : str = obj.name if obj is not None else "Select"
+
+                imgui.text( f"{_t.__name__}: {class_attr_name}")
+                imgui.same_line(200.0)
+
+                if imgui.button( f"{_name}##{class_attr_name}" ):
+                    imgui.open_popup(f"##{class_attr_name}_select")
+
+                # dnd: receive
+                if imgui.begin_drag_drop_target():
+                    payload = imgui.accept_drag_drop_payload_py_id(self.gui.dnd_payload.Type_.hierarchy)
+                    if payload is not None:
+                        payload_obj : GameObject = self.gui.dnd_payload.get_payload_data()
+                        new = payload_obj.uuid
+                        _changed = True
+
+                    imgui.end_drag_drop_target()
+
+                else:
+                    _changed, new = self.gui.draw_popup_gameObject(
+                        f"##{class_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
+
+            # Unsupported type
+            else:
+                imgui.text(f"{class_attr_name}: <unsupported {_t.__name__}>")
+
+            if _changed:
+                # engine type (uuid)
+                if _t_engine_type is not None:
+                    new_obj : GameObject = self.context.findGameObject( new )
+
+                    if new_obj is None:
+                        self.console.error( "gameObject is invalid.")
+                        return
+
+                    # set the UUID as the experted meta value
+                    class_attr.set( new )
+                        
+                    # get the engine type (Transform, GameObject, etc) and set reference on instance attribute
+                    _ref = new_obj.getAttachable( _t_engine_type._name )
+                    setattr( script.instance, class_attr_name, _ref )
+
+                # primitive types are a COPY
+                else:
+                    class_attr.set( new )
+                    setattr( script.instance, class_attr_name, new )
+
+    def _draw_script( self, script: Script ) -> None:
+        _shift_left = 20.0
+        _region = imgui.get_content_region_avail()
+        _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
+
+        imgui.push_id( f"{script.uuid}" )
+
+        if not imgui.tree_node_ex( f"{fa.ICON_FA_CODE} {script.class_name_f} (Script)##GameObjectScript", imgui.TreeNodeFlags_.default_open ):
+            imgui.pop_id()
+            return
+
+        # actions
+        if not self.renderer.game_runtime: 
+            imgui.same_line()
+
+            if self.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                self.gui.selectedObject.removeScript( script )
+
+            if self.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
+                self.gui.text_editor.open_file( script.path )
+            
+        # draw uuid
+        imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { script.uuid.hex }" );
+
+        active_changed, active_state = imgui.checkbox( "Active", script.active )
+        if active_changed:
+            script.active = active_state
+            self.scene.updateScriptonGameObjects( script.path )
+
+
+        # script contains errors, return
+        if script._error:
+            imgui.text_colored( imgui.ImVec4(1.0, 0.0, 0.0, 0.9), script._error );
+            imgui.dummy( imgui.ImVec2(20, 0) )
+            imgui.tree_pop()
+            imgui.pop_id()
+            return
+
+        draw_list = imgui.get_window_draw_list() 
+        draw_list.channels_split(2)
+        draw_list.channels_set_current(1)
+
+        p_min = imgui.get_cursor_screen_pos()
+        p_min = imgui.ImVec2( (p_min.x-_shift_left), p_min.y)
+        imgui.set_cursor_screen_pos(p_min)
+                
+        imgui.begin_group()
+        imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), str(script.path) );
+        #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+        imgui.end_group()
+
+        _group_height = imgui.get_item_rect_size().y
+
+        # background rect
+        _header_height = 20
+        _bg_color = imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.05))
+        p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _group_height)
+        p_min.y -= 3
+
+        draw_list.channels_set_current(0)
+        draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), _bg_color)
+        #draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
+        draw_list.channels_merge()
+  
+        # exported attributes
+        self._draw_script_exported_attributes(script)
+
+        imgui.dummy( imgui.ImVec2(20, 0) )
+        imgui.tree_pop()
+
+        imgui.pop_id()
+
+    def _scripts( self ):
+        assets = Path( self.settings.assets ).resolve()
+
+        if len(self.gui.selectedObject.scripts) == 0:
+            imgui.text("No scripts attached")
+            return
+
+        for script in self.gui.selectedObject.scripts:
+            self._draw_script( script )
+            imgui.separator()
+
+    def _addAttachable( self ):
+        if self.renderer.game_runtime: 
+            return
+
+        script_path = None
+        attachable_type = None
+
+        _tree_flags =   imgui.TreeNodeFlags_.default_open | \
+                        imgui.TreeNodeFlags_.leaf | \
+                        imgui.TreeNodeFlags_.span_full_width
+
+        if not imgui.tree_node_ex( f"##AddAttachable", _tree_flags ):
+            return
+
+        _region_x = imgui.get_content_region_avail().x
+        button_text = "Add Attachable"
+        button_width = imgui.calc_text_size(button_text).x + imgui.get_style().frame_padding.x * 2
+            
+        offset = (_region_x - button_width ) * 0.5
+        imgui.set_cursor_pos_x(imgui.get_cursor_pos_x() + offset)
+
+        if imgui.button( button_text ):
+            imgui.open_popup("add-attachable-popup")
+
+        # dnd: receive
+        if imgui.begin_drag_drop_target():
+            is_asset = imgui.accept_drag_drop_payload_py_id(self.gui.dnd_payload.Type_.asset)
+            if is_asset is not None:
+                script_path = self.gui.dnd_payload.get_payload_data()
+
+            imgui.end_drag_drop_target()
+
+        imgui.same_line()
+
+        if imgui.begin_popup("add-attachable-popup"):
+
+            # todo:
+            # perhaps there should be a separate thread for this
+            # that either updates periodicly, or tracks changes in assets folder
+            self.context.findScripts()
+
+            # engine attachables
+            attachables : list[EngineTypes.Meta] = EngineTypes.getAttachables()
+
+            for attachable in attachables:
+                imgui.push_id(f"addAttachable_{attachable._name}")
+                _, clicked = imgui.selectable(
+                    f"{attachable._name}", False
+                )
+
+                if clicked:
+                    attachable_type = attachable
+
+                imgui.pop_id()
+
+            imgui.separator()
+
+            # project assets scripts
+            assets = Path( self.settings.assets ).resolve()
+            for i, script in enumerate(self.context.asset_scripts):
+                imgui.push_id(f"add_script_{str(script)}")
+ 
+                name = str(script.relative_to(assets))
+                _, clicked = imgui.selectable(
+                    f"{name}", False
+                )
+
+                if clicked:
+                    script_path = script
+
+                imgui.pop_id()
+
+            imgui.end_popup()
+
+        if script_path:
+            self.gui.selectedObject.addScript( 
+                Script( 
+                    context = self.context,
+                    path    = script_path,
+                    active  = True
+                )   
+            )
+
+        if attachable_type:
+            self.gui.selectedObject.addAttachable( attachable_type._class, attachable_type._class(
+                    self.context, 
+                    self.gui.selectedObject ) 
+            )
+
+        imgui.tree_pop()
+
+    def _light( self ) -> None:
+        if not self.gui.selectedObject:
+            return
+            
+        gameObject = self.gui.selectedObject
+
+        if not isinstance( gameObject, Light ):
+            return
+
+        if imgui.tree_node_ex( f"{fa.ICON_FA_LIGHTBULB} Light", imgui.TreeNodeFlags_.default_open ):
+
+            type_names = [t.name for t in Light.Type_]
+
+            changed, new_light_index = imgui.combo(
+                "Light type",
+                gameObject.light_type,
+                type_names
+            )
+            if changed:
+                gameObject.light_type = Light.Type_(new_light_index)
+
+            changed, gameObject.light_color = imgui.color_edit3(
+                "Light color", gameObject.light_color
+            )
+
+            changed, gameObject.radius = imgui.drag_float(
+                f"Radius", gameObject.radius, 0.1
+            )
+
+            changed, gameObject.intensity = imgui.drag_float(
+                f"Intensity", gameObject.intensity, 0.1
+            )
+
+            imgui.separator()
+            imgui.tree_pop()
+
+    def _camera( self ) -> None:
+        if not self.gui.selectedObject:
+            return
+            
+        gameObject = self.gui.selectedObject
+
+        if not isinstance( gameObject, Camera ):
+            return
+
+        if imgui.tree_node_ex( f"{fa.ICON_FA_CAMERA} Camera properties", imgui.TreeNodeFlags_.default_open ):
+            changed, value = imgui.drag_float(
+                f"Fov", gameObject.fov, 1
+            )
+            if changed:
+                gameObject.fov = value
+
+            changed, value = imgui.drag_float(
+                f"Near", gameObject.near, 1
+            )
+            if changed:
+                gameObject.near = value
+
+            changed, value = imgui.drag_float(
+                f"Far", gameObject.far, 1
+            )
+            if changed:
+                gameObject.far = value
+
+            imgui.separator()
+            imgui.tree_pop()
+
+    def _physicProperties( self, physic_link : PhysicLink ) -> None:
+
+        imgui.push_id("##PhysicTabs")
+        _flags = imgui.TabBarFlags_.none
+
+        if imgui.begin_tab_bar( "PhysicProperties", _flags ):
+            if imgui.begin_tab_item("Inertia##Tab1")[0]:
+                inertia : PhysicLink.Inertia = physic_link.inertia
+
+                _, inertia.mass = imgui.drag_float("Mass", inertia.mass, 1.0)
+                imgui.end_tab_item()
+
+            if imgui.begin_tab_item("Joint##Tab2")[0]:
+                joint : PhysicLink.Joint = physic_link.joint
+
+                # type
+                type_names = [t.name for t in PhysicLink.Joint.Type_]
+
+                changed, new_index = imgui.combo(
+                    "Joint type",
+                    joint.geom_type,
+                    type_names
+                )
+                if changed:
+                    joint.geom_type = PhysicLink.Joint.Type_( new_index )
+
+                imgui.end_tab_item()
+
+            if imgui.begin_tab_item("Collision##Tab4")[0]:
+                collision : PhysicLink.Collision = physic_link.collision
+
+                # type
+                geom_type_names = [t.name for t in PhysicLink.GeometryType_]
+
+                changed, new_index = imgui.combo(
+                    "Geometry type",
+                    collision.geom_type,
+                    geom_type_names
+                )
+                if changed:
+                    collision.geom_type = PhysicLink.GeometryType_( new_index )
+
+                _t : Transform = collision.transform
+                self.gui._draw_transform_local( _t )
+
+                imgui.end_tab_item()
+
+            # End tab bar
+            imgui.end_tab_bar()
+
+        imgui.separator()
+        imgui.pop_id()
+        
+    def _physic( self ) -> None:
+        if not self.gui.selectedObject:
+            return
+            
+        gameObject = self.gui.selectedObject
+        is_base_physic = bool(gameObject.children)
+
+        if Physic not in gameObject.attachables:
+            return
+
+        physic : Physic = gameObject.getAttachable(Physic)
+        is_base_physic = bool(gameObject.children)
+
+        if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
+
+            # no children, meaning its just a single world physic object
+            if not is_base_physic:
+                self._physicProperties( physic )
+
+            else:
+                _, physic.base_mass = imgui.drag_float("Base Mass", physic.base_mass, 1.0)
+
+                # visualize relations
+                if self.context.renderer.game_running and physic.physics_id is not None:
+                    imgui.separator()
+
+                    _num_joints = p.getNumJoints( physic.physics_id )
+                    imgui.text( f"Num Joints: {_num_joints}" )
+
+                    # should match with getJointInfo() below
+                    #for link in physic.physics_children_flat:
+                    #    imgui.text( link.gameObject.name )
+
+                    for i in range(_num_joints):
+                        info = p.getJointInfo( physic.physics_id, i )
+                        _link_index         : int = i
+
+                        _link               : PhysicLink = physic._index_to_link[_link_index]
+                        parent_link_index   : int = info[16]
+                        _link_parent        : PhysicLink = physic._index_to_link[parent_link_index] if parent_link_index >= 0 else physic
+
+                        _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name} | PyBullet link name: {info[12].decode()}"
+                        imgui.text( _info )
+                        imgui.separator()
+
+            imgui.separator()
+            imgui.tree_pop()
+
+    def _physicLink( self ) -> None:
+        # inspiration:
+        # https://tobas-wiki.readthedocs.io/en/latest/create_urdf/
+
+        if not self.gui.selectedObject:
+            return
+            
+        gameObject = self.gui.selectedObject
+
+        if PhysicLink not in gameObject.attachables:
+            return
+
+        physic_link : PhysicLink = gameObject.getAttachable(PhysicLink)
+
+        if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
+
+            # visualize relations
+            if physic_link.runtime_base_physic:
+                _base_footprint : Physic = physic_link.runtime_base_physic
+                _link_index     : int = physic_link.runtime_link_index
+                
+                _link           : PhysicLink = _base_footprint._index_to_link[_link_index]
+                parent_link_index   : int = -1
+                if gameObject.parent and gameObject.parent.physic_link:
+                    parent_link_index = gameObject.parent.physic_link.runtime_link_index
+
+                _link_parent        : PhysicLink = _base_footprint._index_to_link[parent_link_index] if parent_link_index >= 0 else _base_footprint
+
+                _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name}"
+                imgui.text(_info)
+
+            imgui.separator()
+
+            self._physicProperties( physic_link )
+
+            imgui.tree_pop()
+
+    def render( self ) -> None:
+        imgui.begin( "Inspector" )
+  
+        if not self.gui.selectedObject:
+            imgui.end()
+            return
+
+        gameObject = self.gui.selectedObject
+
+        if isinstance( gameObject, GameObject ):
+            # draw uuid
+            imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), f"uuid: { gameObject.uuid.hex }" );
+                
+            active_changed, active_state = imgui.checkbox( "Active", gameObject.active )
+            if active_changed:
+                gameObject.active = active_state
+
+            _, _ = imgui.checkbox( "Active Parent", gameObject.hierachyActive() )
+
+            _, gameObject.name = imgui.input_text("Name##ObjectName", gameObject.name)
+
+            self._transform()
+            imgui.separator()
+
+            self._camera()
+            self._light()
+            self._physic()
+            self._physicLink()
+
+            self._material()
+            imgui.separator()
+
+            self._scripts()
+            imgui.separator()
+
+            self._addAttachable()
+
+        imgui.end()
+        return
