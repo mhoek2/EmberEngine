@@ -22,7 +22,7 @@ from modules.settings import Settings
 from modules.project import ProjectManager
 from modules.scene import SceneManager
 from modules.console import Console
-from modules.userInterface import UserInterface, CustomEvent
+from modules.userInterface import UserInterface
 from modules.jsonHandling import JsonHandler
 from modules.renderer import Renderer
 from modules.camera import Camera as CameraHandler
@@ -36,6 +36,8 @@ from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
 from gameObjects.light import Light
 from gameObjects.skybox import Skybox
+
+from modules.gui.types import CustomEvent
 
 class EmberEngine:
     def __init__( self ) -> None:

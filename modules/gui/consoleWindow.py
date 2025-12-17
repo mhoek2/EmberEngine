@@ -13,7 +13,8 @@ class ConsoleWindow( Context ):
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
-        self.gui = context.gui
+        self.gui        = context.gui
+        self.helper     = context.gui.helper
 
     def render_entry( self, i, entry : Console.Entry ):
         imgui.push_id( f"exception_{i}" )

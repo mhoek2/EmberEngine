@@ -14,7 +14,8 @@ class Hierarchy( Context ):
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
-        self.gui = context.gui
+        self.gui        = context.gui
+        self.helper     = context.gui.helper
 
     def draw_recursive( self, 
         parent          : GameObject = None, 
@@ -97,7 +98,7 @@ class Hierarchy( Context ):
                     #    can_hide = False
                 
                     #if _is_hovered or not obj.visible:
-                    if self.gui.draw_button( 
+                    if self.helper.draw_button( 
                         uid     = f"{self.gui.visibility_icon[int(obj.visible)]}", 
                         region  = _region.x - 5,
                         colors  = self.gui.color_visibility
@@ -105,7 +106,7 @@ class Hierarchy( Context ):
                         obj.visible = not obj.visible
 
                     # remove gameObject
-                    if self.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
+                    if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
                         self.context.removeGameObject( obj )
 
                 if _is_open:

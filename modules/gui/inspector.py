@@ -37,7 +37,8 @@ class Inspector( Context ):
 
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
-        self.gui = context.gui
+        self.gui        = context.gui
+        self.helper     = context.gui.helper
 
         self.rotation_mode = self.RotationMode_.radians
 
@@ -59,18 +60,18 @@ class Inspector( Context ):
 
         # local space
         if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
-            self.gui._draw_transform_local( _t )
+            self.helper.draw_transform_local( _t )
             imgui.tree_pop()
 
         # world space --should b hidden or disabled?
         #if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform world", imgui.TreeNodeFlags_.default_open ):
-        #    self.gui._draw_transform_world( _t )
+        #    self.helper.draw_transform_world( _t )
         #    imgui.tree_pop()
 
     def _material_thumb( self, label, texture_id ) -> None:
         imgui.text( f"{label}" );
         imgui.next_column()
-        self.gui.draw_thumb( texture_id, imgui.ImVec2(75.0, 75.0) )
+        self.helper.draw_thumb( texture_id, imgui.ImVec2(75.0, 75.0) )
         imgui.next_column()
 
     def _material( self ) -> None:
@@ -197,7 +198,7 @@ class Inspector( Context ):
                     imgui.end_drag_drop_target()
 
                 else:
-                    _changed, new = self.gui.draw_popup_gameObject(
+                    _changed, new = self.helper.draw_popup_gameObject(
                         f"##{class_attr_name}_select", filter=lambda obj: isinstance(obj, GameObject ))
 
             # Unsupported type
@@ -240,10 +241,10 @@ class Inspector( Context ):
         if not self.renderer.game_runtime: 
             imgui.same_line()
 
-            if self.gui.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+            if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
                 self.gui.selectedObject.removeScript( script )
 
-            if self.gui.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
+            if self.helper.draw_edit_button( f"{fa.ICON_FA_PEN_TO_SQUARE}", _region.x - 40 ):
                 self.gui.text_editor.open_file( script.path )
             
         # draw uuid
@@ -509,7 +510,7 @@ class Inspector( Context ):
                     collision.geom_type = PhysicLink.GeometryType_( new_index )
 
                 _t : Transform = collision.transform
-                self.gui._draw_transform_local( _t )
+                self.helper.draw_transform_local( _t )
 
                 imgui.end_tab_item()
 

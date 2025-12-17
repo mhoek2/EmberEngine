@@ -18,18 +18,21 @@ from imgui_bundle import icons_fontawesome_6 as fa
 if TYPE_CHECKING:
     from main import EmberEngine
 
+from modules.gui.types import RadioStruct
+
 class ImGuizmo( Context ):
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
-        self.gui = context.gui
+        self.gui        = context.gui
+        self.helper     = context.gui.helper
 
         self.gizmo : imguizmo.im_guizmo = imguizmo.im_guizmo
 
         self.operation      : int   = 0
         self.mode           : int   = 0
 
-        self.mode_types : list[self.gui.RadioStruct] = [
+        self.mode_types : list[RadioStruct] = [
             {
                 "name"  : "Local",
                 "icon"  : fa.ICON_FA_LOCATION_CROSSHAIRS,
@@ -42,7 +45,7 @@ class ImGuizmo( Context ):
             }
         ]
 
-        self.operation_types : list[self.gui.RadioStruct] = [
+        self.operation_types : list[RadioStruct] = [
             {
                 "name"  : "Translate",
                 "icon"  : fa.ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT,

@@ -24,7 +24,8 @@ class SceneSettings( Context ):
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
-        self.gui = context.gui
+        self.gui        = context.gui
+        self.helper     = context.gui.helper
 
         self.test_cubemap_initialized = False
 
@@ -57,7 +58,7 @@ class SceneSettings( Context ):
             imgui.end_drag_drop_target()
 
         else: 
-            changed, _uuid = self.gui.draw_popup_gameObject(
+            changed, _uuid = self.helper.draw_popup_gameObject(
                 "##select_camera", filter=lambda obj: isinstance(obj, Camera ))
 
         if changed:
@@ -92,7 +93,7 @@ class SceneSettings( Context ):
             imgui.end_drag_drop_target()
 
         else: 
-            changed, _uuid = self.gui.draw_popup_gameObject(
+            changed, _uuid = self.helper.draw_popup_gameObject(
                 "##select_sun", filter=lambda obj: isinstance(obj, Light ))
 
         if changed:

@@ -21,7 +21,8 @@ class TextEditor( Context ):
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
-        self.gui = context.gui
+        self.gui        = context.gui
+        self.helper     = context.gui.helper
 
         #with open(__file__, encoding="utf8") as f:
         #    this_file_code = f.read()

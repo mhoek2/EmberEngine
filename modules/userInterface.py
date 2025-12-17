@@ -1,4 +1,4 @@
-from typing import TypedDict, Callable, List, Any
+from typing import TypedDict, Any
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
@@ -33,6 +33,9 @@ import uuid as uid
 
 
 # Gui modules
+from modules.gui.helper import Helper
+from modules.gui.types import RadioStruct
+
 from modules.gui.hierarchy import Hierarchy
 from modules.gui.inspector import Inspector
 from modules.gui.imGuizmo import ImGuizmo
@@ -44,37 +47,7 @@ from modules.gui.sceneSettings import SceneSettings
 
 import pybullet as p
 
-class CustomEvent( Context ):
-    def __init__(self):
-        self._queue : List = []
-
-    def add(self, name: str, data=None):
-        self._queue.append((name, data))
-
-    def has(self, name: str) -> bool:
-        """Return True if queue has given entry, Fales if not"""
-        return any(event[0] == name for event in self._queue)
-
-    def clear(self, name: str = None):
-        """Clear given entry by rebuilding and excluding, no argument will clear entire queue"""
-        if name is None: 
-            self._queue.clear()
-
-        else:
-            self._queue = [e for e in self._queue if e[0] != name]
-
-    def handle(self, name: str, func):
-        """Call the given function if the event exists, then clear it automatically."""
-        if self.has(name):
-            func()
-            self.clear(name)
-
 class UserInterface( Context ):
-
-    class RadioStruct(TypedDict):
-        name    : str
-        icon    : str
-        flag    : int
 
     def __init__( self, context ):
         super().__init__( context )
@@ -87,7 +60,7 @@ class UserInterface( Context ):
 
         self.status_bar_height      : float = 25.0
 
-        self.game_state_modes : list[UserInterface.RadioStruct] = [
+        self.game_state_modes : list[RadioStruct] = [
             {
                 "name"  : "Start",
                 "icon"  : fa.ICON_FA_CIRCLE_PLAY,
@@ -110,22 +83,22 @@ class UserInterface( Context ):
                 for i, op in enumerate(self.game_state_modes)
         }
 
-        self.color_button_trash : List[imgui.ImVec4] = [
+        self.color_button_trash : list[imgui.ImVec4] = [
             imgui.ImVec4(1.0, 0.0, 0.0, 0.6),   # default   
             imgui.ImVec4(1.0, 0.0, 0.0, 1.0)    # hover
         ]
 
-        self.color_button_edit_ide : List[imgui.ImVec4] = [
+        self.color_button_edit_ide : list[imgui.ImVec4] = [
             imgui.ImVec4(0.988, 0.729, 0.012, 0.6),   # default   
             imgui.ImVec4(0.988, 0.729, 0.012, 1.0)    # hover
         ]
 
-        self.color_visibility : List[imgui.ImVec4] = [
+        self.color_visibility : list[imgui.ImVec4] = [
             imgui.ImVec4(1.0, 1.0, 1.0, 0.2),   # default   
             imgui.ImVec4(1.0, 1.0, 1.0, 1.0)    # hover
         ]
 
-        self.visibility_icon : List = [
+        self.visibility_icon : list = [
             fa.ICON_FA_EYE_SLASH,    
             fa.ICON_FA_EYE,    
         ]
@@ -142,8 +115,11 @@ class UserInterface( Context ):
 
         self.scene      : SceneManager = self.context.scene
 
-       # self.file_browser_init()
+        # self.file_browser_init()
         self.load_gui_icons()
+
+        # helpers
+        self.helper : Helper = Helper( self.context )
 
         # user inferface modules
         self.console_window : ConsoleWindow     = ConsoleWindow( self.context )
@@ -394,7 +370,7 @@ class UserInterface( Context ):
         # game state
         _rect_min.y += 10.0
         _rect_min.x += 10.0
-        _game_state_changed, _new_game_state, group_width = self.radio_group( "game_state_mode",
+        _game_state_changed, _new_game_state, group_width = self.helper.radio_group( "game_state_mode",
             items           = self.game_state_modes,
             current_index   = self._game_state_lookup.get( self.context.renderer.game_state, 0 ),
             start_pos       = _rect_min
@@ -405,7 +381,7 @@ class UserInterface( Context ):
 
         # select imguizmo operation
         _rect_min.x += (group_width + 10.0)
-        _, self.guizmo.operation, group_width = self.radio_group( "guizmo_operation",
+        _, self.guizmo.operation, group_width = self.helper.radio_group( "guizmo_operation",
             items           = self.guizmo.operation_types,
             current_index   = self.guizmo.operation,
             start_pos       = _rect_min
@@ -413,7 +389,7 @@ class UserInterface( Context ):
 
         # select imguizmo mode
         _rect_min.x += (group_width + 10.0)
-        _, self.guizmo.mode, group_width = self.radio_group( "guizmo_mode",
+        _, self.guizmo.mode, group_width = self.helper.radio_group( "guizmo_mode",
             items           = self.guizmo.mode_types,
             current_index   = self.guizmo.mode,
             start_pos       = _rect_min
@@ -496,8 +472,6 @@ class UserInterface( Context ):
 
             return UserInterface.GameObjectTypes.registry()[t]
 
-
-
     def draw_settings( self ) -> None:
         imgui.begin( "Settings" )
 
@@ -540,272 +514,6 @@ class UserInterface( Context ):
 
         imgui.end()
         return
-
-    # helper
-    def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None ) -> bool:
-
-        labels = ["X", "Y", "Z"]
-        label_colors = [(0.8, 0.1, 0.15), (0.2, 0.7, 0.2), (0.1, 0.25, 0.8)]
-
-        imgui.push_id( f"{label}_vec3_control" )
-
-        imgui.columns( count=2, borders=False )
-        imgui.set_column_width(0, 70.0)
-
-        imgui.text( label )
-        imgui.next_column()
-
-        #imgui.push_multi_items_width(3, imgui.calc_item_width())
-        width = min(125, max(40, (imgui.get_window_size().x / 3) - ( 20 * 3)))
-
-        imgui.push_style_var(imgui.StyleVar_.item_spacing, (0.0, 0.0))
-
-        changed_any : bool = False
-
-        for i in range( 0, 3 ):
-            imgui.push_style_color(imgui.Col_.button, imgui.ImVec4(label_colors[i][0], label_colors[i][1], label_colors[i][2], 1.0))
-            if imgui.button( labels[i] ):
-                vector[i] = resetValue
-            imgui.pop_style_color(1)
-            imgui.same_line()
-            imgui.push_item_width( width );
-
-            changed, _value = imgui.drag_float(
-                f"##{labels[i]}", vector[i], 0.01
-            )
-            imgui.pop_item_width();
-
-            if changed:
-                vector[i] = _value
-                changed_any = True
-
-            if i < 2:
-                imgui.same_line()
-                imgui.dummy( imgui.ImVec2(5, 5) )
-                imgui.same_line()
-
-        imgui.pop_style_var( 1 )
-
-        imgui.columns( count=1 )
-
-        imgui.pop_id()
-
-        if changed_any and onChange is not None:
-            onChange( vector )
-
-        return changed_any
-
-    # helper
-    def _draw_transform_local( self, _t : Transform ) -> None:
-        # position
-        self.draw_vec3_control( "Position", _t.local_position, 0.0 )
-
-        # rotation
-        match self.inspector.rotation_mode:
-            case self.inspector.RotationMode_.degrees:
-                self.draw_vec3_control(
-                    "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
-                    onChange=lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
-                )
-            case self.inspector.RotationMode_.radians:
-                self.draw_vec3_control("Rotation", _t.local_rotation, 0.0)
-
-        # scale
-        self.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
-
-    # helper
-    def _draw_transform_world( self, _t : Transform ) -> None:
-        # position
-        self.draw_vec3_control( "Position", _t.position, 0.0 )
-
-        # rotation
-        match self.inspector.rotation_mode:
-            case self.inspector.RotationMode_.degrees:
-                self.draw_vec3_control( "Rotation", Transform.vec_to_degrees( _t.rotation ), 0.0,
-                    onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
-                )
-            case self.RotationMode_.radians:
-                self.inspector.draw_vec3_control( "Rotation", _t.rotation, 0.0 )
-
-        # scale
-        self.draw_vec3_control( "Scale", _t.scale, 0.0 )
-
-    # helper
-    def radio_group( self, 
-                     label           : str, 
-                     items           : list[RadioStruct],
-                     current_index   : int, 
-                     start_pos       : imgui.ImVec2 = None 
-            ):
-
-            imgui.begin_group()
-
-            old_cursor  = imgui.get_cursor_screen_pos()     # restore cursor pos afterwards
-            avail       = imgui.get_content_region_avail()
-            draw_list   = imgui.get_window_draw_list()
-
-            if start_pos is not None:
-                imgui.set_cursor_screen_pos( start_pos )
-            else:
-                start_pos = imgui.get_cursor_screen_pos()
-
-            # sizing
-            padding_x       = 8
-            padding_y       = 6
-            item_spacing    = 2
-            rounding        = 5.0
-
-            # compute item width based on text
-            item_widths = []
-            total_width = 0
-            for item in items:
-                text_width = imgui.calc_text_size( item["icon"] ).x
-                width = padding_x * 2 + text_width
-                item_widths.append( width )
-
-                hide_func = item.get("hide", lambda: False)
-                if hide_func():
-                    continue
-
-                total_width += width + item_spacing
-            total_width -= item_spacing  # last one has no trailing space
-
-            text_height = imgui.get_text_line_height()
-            item_height = text_height + padding_y * 2
-
-            group_min = start_pos
-            group_max = imgui.ImVec2( start_pos.x + total_width, start_pos.y + item_height )
-
-            # group background
-            draw_list.add_rect_filled(
-                group_min, group_max,
-                imgui.color_convert_float4_to_u32( imgui.ImVec4( 0.2, 0.2, 0.2, 1.0 ) ),
-                rounding
-            )
-
-            # invisible button
-            imgui.invisible_button( label, (total_width, item_height) )
-            clicked = imgui.is_item_clicked()
-
-            x = start_pos.x
-            new_index = current_index
-            for idx, item in enumerate( items ):
-                hide_func = item.get("hide", lambda: False)
-                if hide_func():
-                    continue
-
-                width = item_widths[idx]
-                item_min = imgui.ImVec2( x, start_pos.y )
-                item_max = imgui.ImVec2( x + width, start_pos.y + item_height )
-
-                if clicked:
-                    mx, my = imgui.get_mouse_pos()
-                    if mx >= item_min.x and mx <= item_max.x and my >= item_min.y and my <= item_max.y:
-                        new_index = idx
-
-                # active item
-                if idx == new_index:
-                    draw_list.add_rect_filled(
-                        item_min, item_max,
-                        imgui.color_convert_float4_to_u32( imgui.ImVec4( 0.06, 0.53, 0.98, 1.0 ) ), 
-                        rounding
-                    )
-
-                color = imgui.ImVec4( 1.0, 1.0, 1.0, 1.0 )
-                text_pos = imgui.ImVec2( x + padding_x, start_pos.y + padding_y )
-                draw_list.add_text( text_pos, imgui.color_convert_float4_to_u32( color ), item["icon"] )
-
-                x += width + item_spacing
-
-            imgui.end_group()
-            
-            # restore cursor position
-            imgui.set_cursor_screen_pos(old_cursor)
-
-            return bool(new_index != current_index), new_index, total_width
-
-    # helper
-    def draw_thumb( self, image : int, size : imgui.ImVec2 ):
-        #glBindTexture( GL_TEXTURE_2D, image )
-        imgui.image( imgui.ImTextureRef(image), size )
-
-    # helper
-    def draw_popup_gameObject( self, uid : str, filter = None ):
-        selected = -1
-        clicked = False
-
-        if imgui.begin_popup( uid ):
-
-            _, clicked = imgui.selectable(
-                f"None##object_-1", clicked
-            )
-
-            if clicked:
-                imgui.end_popup()
-                return True, None
-
-            for i, obj in enumerate(self.context.gameObjects):
-                if filter is not None and not filter(obj) or obj._removed :
-                    continue
-
-                _, clicked = imgui.selectable(
-                    f"{obj.name}##object_{i}", clicked
-                )
-
-                if clicked:
-                    selected = obj.uuid
-                    break;
-
-            imgui.end_popup()
-
-        return clicked, selected
-
-    # helper
-    def draw_button( self, uid : str, region : float = -1.0, colors : List[imgui.ImVec4] = None ) -> bool:
-        called : bool = False
-
-        imgui.same_line( region )
-
-        imgui.push_style_color( imgui.Col_.button, self.context.gui.empty_vec4 )
-        imgui.push_style_color( imgui.Col_.button_hovered, self.context.gui.empty_vec4 )
-        imgui.push_style_color( imgui.Col_.button_active, self.context.gui.empty_vec4 )
-                        
-        if imgui.button(f"{uid}"):
-            called = True
-   
-        imgui.push_style_color( imgui.Col_.text, colors[1 if imgui.is_item_hovered() else 0] )
-
-        imgui.same_line( region + 4 )
-        imgui.text(f"{uid}")
-
-        imgui.pop_style_color(4)
-
-        return called
-
-    # helper
-    def draw_trash_button( self, uid : str, region : float = -1.0 ) -> bool:
-        return self.draw_button( 
-            uid     = uid, 
-            region  = region,
-            colors  = self.context.gui.color_button_trash
-        )
-
-    # helper
-    def draw_edit_button( self, uid : str, region : float = -1.0 ) -> bool:
-        return self.draw_button( 
-            uid     = uid, 
-            region  = region,
-            colors  = self.context.gui.color_button_edit_ide
-        )
-
-    # helper
-    def draw_close_button( self, uid : str, region : float = -1.0 ) -> bool:
-        return self.draw_button( 
-            uid     = uid, 
-            region  = region,
-            colors  = self.context.gui.color_button_trash
-        )
-
     # combo example
     #selected = 0
     #items = self.context.asset_scripts

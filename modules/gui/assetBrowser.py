@@ -21,7 +21,8 @@ class AssetBrowser( Context ):
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
-        self.gui = context.gui
+        self.gui        = context.gui
+        self.helper     = context.gui.helper
 
         self._file_browser_dir = self.get_rootpath()
         self._icon_dim = imgui.ImVec2(75.0, 75.0)  
