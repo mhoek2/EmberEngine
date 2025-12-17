@@ -404,13 +404,7 @@ class SceneManager:
                         "mass": inertia.mass 
                     },
                     "joint": {
-                        "active"        : joint.active,
-                        "name"          : joint.name,
                         "type"          : joint.geom_type,
-                        "parent"        : joint.parent.uuid.hex if joint.parent else None,
-                        "translate"     : joint.transform.local_position,
-                        "rotation"      : joint.transform.local_rotation,
-                        "scale"         : joint.transform.local_scale
                     },
                     "collision": {
                         "type"          : collision.geom_type,
@@ -635,25 +629,7 @@ class SceneManager:
                 if _joint:
                     joint : PhysicLink.Joint = physic_link.joint
 
-                    joint.active = bool(_joint.get( "active", False ))
-                    joint.name = str(_joint.get( "name", "-" ))
                     joint.geom_type = PhysicLink.Joint.Type_( _joint.get( "type", 0 ) )
-
-                    joint.transform.local_position    = tuple(_joint.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
-                    joint.transform.local_rotation    = tuple(_joint.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
-                    joint.transform.local_scale       = tuple(_joint.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
-                    joint.transform._createWorldModelMatrix()
-
-                    _parent_uuid = _joint.get("parent")
-                    if _parent_uuid:
-                        joint.setParent( uid.UUID(hex=_parent_uuid) )
-
-                    # store links in base 
-                    _base : GameObject = gameObject.getParent( filter_physic_base=True )
-                    if _base:
-                        _base_physic : Physic = _base.getAttachable( Physic )
-                        _base_physic.physics_links.append( physic_link )
-                        print(_base.name)
 
                 if _collision:
                     collision : PhysicLink.Collision = physic_link.collision
@@ -663,6 +639,8 @@ class SceneManager:
                     collision.transform.local_position      = tuple(_collision.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+
+                    collision.transform.is_physic_shape = True
                     collision.transform._createWorldModelMatrix()
 
             if "Physic" in obj:

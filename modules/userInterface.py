@@ -1853,13 +1853,6 @@ class UserInterface( Context ):
                 if imgui.begin_tab_item("Joint##Tab2")[0]:
                     joint : PhysicLink.Joint = physic_link.joint
 
-                    active_changed, active_state = imgui.checkbox( "Active", joint.active )
-                    if active_changed:
-                        joint.active = active_state
-
-                    # name
-                    _, joint.name = imgui.input_text("Name##JointName", joint.name)
-
                     # type
                     type_names = [t.name for t in PhysicLink.Joint.Type_]
 
@@ -1870,42 +1863,6 @@ class UserInterface( Context ):
                     )
                     if changed:
                         joint.geom_type = PhysicLink.Joint.Type_( new_index )
-
-                    # begin parent
-                    imgui.push_id( f"physic_join_selector" )
-
-                    changed : bool = False
-                    _uuid   : uid.UUID = None
-
-                    _parent : GameObject = joint.getParent()
-                    _parent_name : str = _parent.name if _parent else "None" 
-
-                    if imgui.button( _parent_name):
-                        imgui.open_popup("##select_parent")
-
-                    # dnd: receive
-                    if imgui.begin_drag_drop_target():
-                        payload = imgui.accept_drag_drop_payload_py_id(self.context.gui.dnd_payload.Type_.hierarchy)
-                        if payload is not None:
-                            payload_obj : GameObject = self.context.gui.dnd_payload.get_payload_data()
-                            _uuid = payload_obj.uuid
-                            changed = True
-
-                        imgui.end_drag_drop_target()
-
-                    else: 
-                        changed, _uuid = self.context.gui.draw_popup_gameObject(
-                            "##select_parent", filter=lambda obj: isinstance(obj, GameObject ))
-
-                    if changed:
-                        joint.setParent( _uuid )
-
-                    imgui.pop_id()
-                    # end parent
-
-                    # transform
-                    _t : Transform = joint.transform
-                    self.context.gui._draw_transform_local( _t )
 
                     imgui.end_tab_item()
 
@@ -1947,15 +1904,7 @@ class UserInterface( Context ):
             physic : Physic = gameObject.getAttachable(Physic)
             is_base_physic = bool(gameObject.children)
 
-            if self.context.renderer.game_running and physic.physics_id is not None:
-                _num_joints = p.getNumJoints( physic.physics_id )
-
-                imgui.separator()
-                imgui.text( f"Runtime: joints:{_num_joints}" )
-                imgui.separator()
-
             if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
-                imgui.text("This is where joints are created")
 
                 # no children, meaning its just a single world physic object
                 if not is_base_physic:
@@ -1964,8 +1913,28 @@ class UserInterface( Context ):
                 else:
                     _, physic.base_mass = imgui.drag_float("Base Mass", physic.base_mass, 1.0)
 
-                    for link in physic.physics_links:
-                        imgui.text( link.gameObject.name )
+                    # visualize relations
+                    if self.context.renderer.game_running and physic.physics_id is not None:
+                        imgui.separator()
+
+                        _num_joints = p.getNumJoints( physic.physics_id )
+                        imgui.text( f"Num Joints: {_num_joints}" )
+
+                        # should match with getJointInfo() below
+                        #for link in physic.physics_children_flat:
+                        #    imgui.text( link.gameObject.name )
+
+                        for i in range(_num_joints):
+                            info = p.getJointInfo( physic.physics_id, i )
+                            _link_index         : int = i
+
+                            _link               : PhysicLink = physic._index_to_link[_link_index]
+                            parent_link_index   : int = info[16]
+                            _link_parent        : PhysicLink = physic._index_to_link[parent_link_index] if parent_link_index >= 0 else physic
+
+                            _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name} | PyBullet link name: {info[12].decode()}"
+                            imgui.text( _info )
+                            imgui.separator()
 
                 imgui.separator()
                 imgui.tree_pop()
@@ -1983,24 +1952,25 @@ class UserInterface( Context ):
                 return
 
             physic_link : PhysicLink = gameObject.getAttachable(PhysicLink)
-  
-            if self.context.renderer.game_running and physic_link.runtime_base_physic:
-                _base           = physic_link.runtime_base_physic.gameObject
-                _link_index   = physic_link.runtime_link_index
-                _link_parent   = physic_link.joint.getParent()  # set by joint 
-                if not _link_parent:
-                    _link_parent = _base
-
-                #_linked_to      = physic_link.runtime_base_physic.physics_links[ _linked_index ]
-
-
-                imgui.separator()
-                imgui.text( f"Physic base: {_base.name}" )
-                imgui.text( f"Joint parent: {_link_parent.name}" )
-                imgui.text( f"Joint index: {_link_index}" )
-                imgui.separator()
 
             if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
+
+                # visualize relations
+                if physic_link.runtime_base_physic:
+                    _base_footprint : Physic = physic_link.runtime_base_physic
+                    _link_index     : int = physic_link.runtime_link_index
+                
+                    _link           : PhysicLink = _base_footprint._index_to_link[_link_index]
+                    parent_link_index   : int = -1
+                    if gameObject.parent and gameObject.parent.physic_link:
+                        parent_link_index = gameObject.parent.physic_link.runtime_link_index
+
+                    _link_parent        : PhysicLink = _base_footprint._index_to_link[parent_link_index] if parent_link_index >= 0 else _base_footprint
+
+                    _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name}"
+                    imgui.text(_info)
+
+                imgui.separator()
 
                 self._physicProperties( physic_link )
 
