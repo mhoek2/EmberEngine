@@ -27,7 +27,7 @@ class Transform:
             local_callback = partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform)
 
         # physic stuff
-        self.is_physic_collider = False
+        self.is_physic_shape = False
 
         # coordination
         # row-major, post-multiply, intrinsic rotation
@@ -309,10 +309,16 @@ class Transform:
         return self.world_model_matrix
 
     def _getParentModelMatrix( self ) -> Matrix44:
-        if self.gameObject.parent is not None:
+        # A physic shape (collision/visual) is relative/local to the gameObject transform
+        # Thefor, return gameObject.transform and not the parent 
+        if self.is_physic_shape:
+            return self.gameObject.transform.world_model_matrix
+
+        # Otherwise, inherit the parent game object's transform
+        elif self.gameObject.parent is not None:
             return self.gameObject.parent.transform.world_model_matrix
-        else:
-            return Matrix44.identity()
+
+        return Matrix44.identity()
 
     def _createWorldModelMatrix( self, includeParent : bool = True ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
@@ -322,14 +328,14 @@ class Transform:
             self._local_scale
         )
 
-        if self.is_physic_collider:
-            self.world_model_matrix = self.gameObject.transform._getModelMatrix() * local_matrix
-
+        # here or _getParentModelMatrix()?
+        #if self.is_physic_shape:
+        #    self.world_model_matrix = self.gameObject.transform._getModelMatrix() * local_matrix
+        #else:
+        if self.gameObject.parent is not None or self.is_physic_shape:
+            self.world_model_matrix = Matrix44(self._getParentModelMatrix() * local_matrix)
         else:
-            if self.gameObject.parent is not None:
-                self.world_model_matrix = Matrix44(self._getParentModelMatrix() * local_matrix)
-            else:
-                self.world_model_matrix = Matrix44(local_matrix)
+            self.world_model_matrix = Matrix44(local_matrix)
 
         return self.world_model_matrix
 

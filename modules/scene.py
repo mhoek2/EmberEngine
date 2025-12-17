@@ -648,7 +648,7 @@ class SceneManager:
                     collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
 
-                    collision.transform.is_physic_collider = True
+                    collision.transform.is_physic_shape = True
                     collision.transform._createWorldModelMatrix()
 
             if "Physic" in obj:
