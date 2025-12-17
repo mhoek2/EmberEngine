@@ -10,6 +10,7 @@ from modules.transform import Transform
 from modules.script import Script
 from modules.engineTypes import EngineTypes
 
+
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
 from gameObjects.light import Light
@@ -18,6 +19,8 @@ from gameObjects.skybox import Skybox
 
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
+
+from modules.gui.types import RotationMode_
 
 from imgui_bundle import imgui
 from imgui_bundle import icons_fontawesome_6 as fa
@@ -32,17 +35,16 @@ import uuid as uid
 import pybullet as p
 
 class Inspector( Context ):
-    class RotationMode_(enum.IntEnum):
-        """Modes to visualize rotation angles"""
-        radians = enum.auto()
-        degrees = enum.auto()
-
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
         self.gui        = context.gui
         self.helper     = context.gui.helper
 
-        self.rotation_mode = self.RotationMode_.radians
+        self.rotation_mode = RotationMode_.radians
+        self.rotation_step : dict = {
+            RotationMode_.radians   :  0.01,
+            RotationMode_.degrees   :  0.250,
+        }
 
     def _transform( self ) -> None:
         if not self.gui.selectedObject:

@@ -12,6 +12,11 @@ from gameObjects.skybox import Skybox
 
 import enum
 
+class RotationMode_(enum.IntEnum):
+    """Modes to visualize rotation angles"""
+    radians = enum.auto()
+    degrees = enum.auto()
+
 class RadioStruct(TypedDict):
     name    : str
     icon    : str

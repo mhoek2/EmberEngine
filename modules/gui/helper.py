@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
-from modules.gui.types import RadioStruct, ToggleStruct
+from modules.gui.types import RadioStruct, ToggleStruct, RotationMode_
 
 class Helper( Context ):
     """Logic related to rendering the Hierarchy window"""
@@ -40,7 +40,7 @@ class Helper( Context ):
     #
     #    imgui.end_combo()
 
-    def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None ) -> bool:
+    def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None, step : float = 0.01 ) -> bool:
 
         labels = ["X", "Y", "Z"]
         label_colors = [(0.8, 0.1, 0.15), (0.2, 0.7, 0.2), (0.1, 0.25, 0.8)]
@@ -69,7 +69,7 @@ class Helper( Context ):
             imgui.push_item_width( width );
 
             changed, _value = imgui.drag_float(
-                f"##{labels[i]}", vector[i], 0.01
+                f"##{labels[i]}", vector[i], step
             )
             imgui.pop_item_width();
 
@@ -99,13 +99,16 @@ class Helper( Context ):
 
         # rotation
         match self.gui.inspector.rotation_mode:
-            case self.gui.inspector.RotationMode_.degrees:
+            case RotationMode_.degrees:
                 self.draw_vec3_control(
                     "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
-                    onChange=lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
+                    step        = self.gui.inspector.rotation_step[RotationMode_.degrees],
+                    onChange    = lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
                 )
-            case self.gui.inspector.RotationMode_.radians:
-                self.draw_vec3_control("Rotation", _t.local_rotation, 0.0)
+            case RotationMode_.radians:
+                self.draw_vec3_control("Rotation", _t.local_rotation, 0.0,
+                    step        = self.gui.inspector.rotation_step[RotationMode_.radians]                       
+                )
 
         # scale
         self.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
@@ -116,12 +119,15 @@ class Helper( Context ):
 
         # rotation
         match self.gui.inspector.rotation_mode:
-            case self.gui.inspector.RotationMode_.degrees:
+            case RotationMode_.degrees:
                 self.draw_vec3_control( "Rotation", Transform.vec_to_degrees( _t.rotation ), 0.0,
-                    onChange = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
+                    step        = self.gui.inspector.rotation_step[RotationMode_.degrees],
+                    onChange    = lambda v: _t.set_rotation( Transform.vec_to_radians( v ) )
                 )
-            case self.RotationMode_.radians:
-                self.draw_vec3_control( "Rotation", _t.rotation, 0.0 )
+            case RotationMode_.radians:
+                self.draw_vec3_control( "Rotation", _t.rotation, 0.0,
+                    step        = self.gui.inspector.rotation_step[RotationMode_.radians]                        
+                )
 
         # scale
         self.draw_vec3_control( "Scale", _t.scale, 0.0 )
