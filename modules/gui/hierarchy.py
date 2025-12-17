@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from modules.context import Context
 
 from gameObjects.gameObject import GameObject
+from modules.gui.types import GameObjectTypes
 
 from imgui_bundle import imgui
 from imgui_bundle import icons_fontawesome_6 as fa
@@ -45,7 +46,7 @@ class Hierarchy( Context ):
             if obj.parent != parent or obj.parent and parent == None:
                 continue
 
-            _t_game_object = self.gui.GameObjectTypes.get_gameobject_type( type(obj) )
+            _t_game_object = GameObjectTypes.get_gameobject_type( type(obj) )
  
             if _t_game_object:
                 imgui.push_id( f"{obj._uuid_gui}" )

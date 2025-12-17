@@ -29,6 +29,8 @@ from pathlib import Path
 import enum
 import uuid as uid
 
+import pybullet as p
+
 class Inspector( Context ):
     class RotationMode_(enum.IntEnum):
         """Modes to visualize rotation angles"""

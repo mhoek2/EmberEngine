@@ -1,4 +1,3 @@
-from typing import TypedDict, Any
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
 
@@ -16,25 +15,13 @@ from modules.script import Script
 from modules.engineTypes import EngineTypes
 
 from gameObjects.gameObject import GameObject
-from gameObjects.mesh import Mesh
-from gameObjects.light import Light
-from gameObjects.camera import Camera
-from gameObjects.skybox import Skybox
-
-from gameObjects.attachables.physic import Physic
-from gameObjects.attachables.physicLink import PhysicLink
 
 from pathlib import Path
-import re
-import enum
-import math
 import uuid as uid
-
-
 
 # Gui modules
 from modules.gui.helper import Helper
-from modules.gui.types import RadioStruct, ToggleStruct
+from modules.gui.types import RadioStruct, ToggleStruct, DragAndDropPayload
 
 from modules.gui.hierarchy import Hierarchy
 from modules.gui.inspector import Inspector
@@ -152,43 +139,12 @@ class UserInterface( Context ):
         self.scene_settings : SceneSettings     = SceneSettings( self.context )
 
         # drag and drop
-        self.dnd_payload    : UserInterface.DragAndDropPayload = UserInterface.DragAndDropPayload()
+        self.dnd_payload    : DragAndDropPayload = DragAndDropPayload()
 
         self.initialized = True
 
     def set_selected_object( self, obj : GameObject = None ):
             self.selectedObject = obj
-
-    class DragAndDropPayload:
-        class Type_(enum.StrEnum):
-            """Explicit source or acceptance types"""
-            hierarchy   = enum.auto()
-            asset       = enum.auto()
-
-        def __init__(self, 
-                     type_id : str = None, 
-                     data_id : int = None,
-                     data : Any = None ):
-            """Wrapper to store additional drag and drop payload data"""
-            self.type_id    = type_id
-            self.data_id    = data_id
-            self.data       = data
-
-        def set_payload( self, type_id : str, data_id : int, data : Any ):
-            self.type_id    = type_id
-            self.data_id    = data_id
-            self.data       = data
-
-            imgui.set_drag_drop_payload_py_id( type=self.type_id, data_id=self.data_id)
-
-        def get_payload_type(self) -> str:
-            return self.type_id
-
-        def get_payload_data_id(self) -> int:
-            return self.data_id
-
-        def get_payload_data(self):
-            return self.data
 
     def load_gui_icons( self ) -> None:
         """Load icons from game assets gui folder"""
@@ -436,138 +392,31 @@ class UserInterface( Context ):
         ) = _states
         imgui.end()
 
-    class GameObjectTypes:
-        """Bind meta data to gameObject types, currently only used for the UserInterface
-        
-        Whenever this finds use in a global scope, move this to: modules.gameObjectTypes.py
-        """
-        _registry = None
-
-        class Meta:
-            """Structure that hold meta data per gameObject type"""
-            def __init__( self, _class : type, _icon : str = "" ):
-                self._name      = _class.__name__
-                self._class     = _class
-                self._icon      = _icon
-
-        @staticmethod
-        def registry():
-            """Singleton registry of the gameObject types (inherting GameObject).
-
-                _registry is stored as a class variable, meaniung:
-
-                - initialized only once per Python process
-                - shared across all imports and all scripts
-
-            :return: Map of gameObject type classes to Meta
-            :rtype: dict
-            """
-            if UserInterface.GameObjectTypes._registry is None:
-                UserInterface.GameObjectTypes._registry = {
-                    Camera: UserInterface.GameObjectTypes.Meta( 
-                        _class  = Camera, 
-                        _icon   = fa.ICON_FA_CAMERA
-                    ),
-                    Mesh: UserInterface.GameObjectTypes.Meta( 
-                        _class  = Mesh, 
-                        _icon   = fa.ICON_FA_CUBE
-                    ),
-                    Light: UserInterface.GameObjectTypes.Meta( 
-                        _class  = Light, 
-                        _icon   = fa.ICON_FA_LIGHTBULB
-                    ),
-
-                    # baseclass
-                    GameObject: UserInterface.GameObjectTypes.Meta( 
-                        _class  = GameObject, 
-                        _icon   = fa.ICON_FA_CIRCLE_DOT
-                    ),
-                }
-
-            return UserInterface.GameObjectTypes._registry
-
-        @staticmethod
-        def is_gameobject_type( t : type ) -> bool:
-            """Check wheter a type is registered as gameObject type
-        
-            :param t: The type of a variable, e.g., type(variable)
-            :type t: type
-            :return: True if t is a registered gameObject type
-            :rtype: bool
-            """
-            return t in UserInterface.GameObjectTypes.registry()
-
-        @staticmethod
-        def get_gameobject_type( t : type ) -> Meta:
-            """Get the gameObject type meta
-
-            :param t: The type of a variable, e.g., type(variable)
-            :type t: type
-            :return: Meta object if t is a registered gameObject type, None if not
-            :rtype: Meta
-            """
-            if not UserInterface.GameObjectTypes.is_gameobject_type( t ):
-                return None
-
-            return UserInterface.GameObjectTypes.registry()[t]
-
     def draw_settings( self ) -> None:
         imgui.begin( "Settings" )
 
-        _, self.settings.drawWireframe = imgui.checkbox( 
-            "Wireframe", self.settings.drawWireframe 
+        #_, self.settings.grid_color = ImGuiHelpers.color_edit3_safe("Grid color", self.settings.grid_color)
+
+        _, self.settings.grid_size = imgui.drag_float(
+            f"Grid size", self.settings.grid_size, 1
         )
 
-        imgui.same_line()
-        _, self.settings.drawGrid = imgui.checkbox( 
-            "Grid", self.settings.drawGrid 
-        )
-
-        imgui.same_line()
-        _, self.settings.drawAxis = imgui.checkbox( 
-            "Axis", self.settings.drawAxis 
-        )
-
-
-        imgui.separator()
-
-        #changed, self.settings.grid_color = ImGuiHelpers.color_edit3_safe("Grid color", self.settings.grid_color)
-
-        changed, self.settings.grid_size = imgui.drag_float(
-                f"Grid size", self.settings.grid_size, 1
-        )
-
-        changed, self.settings.grid_spacing = imgui.drag_float(
-                f"Grid spacing", self.settings.grid_spacing, 0.01
+        _, self.settings.grid_spacing = imgui.drag_float(
+            f"Grid spacing", self.settings.grid_spacing, 0.01
         )
 
         imgui.separator()
 
-        changed, self.context.roughnessOverride = imgui.drag_float(
-                f"Roughness override", self.context.roughnessOverride, 0.01
+        _, self.context.roughnessOverride = imgui.drag_float(
+            f"Roughness override", self.context.roughnessOverride, 0.01
         )
 
-        changed, self.context.metallicOverride = imgui.drag_float(
-                f"Metallic override", self.context.metallicOverride, 0.01
+        _, self.context.metallicOverride = imgui.drag_float(
+            f"Metallic override", self.context.metallicOverride, 0.01
         )
 
         imgui.end()
         return
-    # combo example
-    #selected = 0
-    #items = self.context.asset_scripts
-    #
-    #if imgui.begin_combo("combo", items[selected]):
-    #    for i, item in enumerate(items):
-    #        is_selected = (i == selected)
-    #        if imgui.selectable(item, is_selected)[0]:
-    #            selected = i
-    #        
-    #        # Set the initial focus when opening the combo (scrolling + keyboard navigation focus)                    
-    #        if is_selected:
-    #            imgui.set_item_default_focus()
-    #
-    #    imgui.end_combo()
 
     def render( self ):
         # init

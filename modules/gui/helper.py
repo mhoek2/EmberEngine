@@ -22,6 +22,24 @@ class Helper( Context ):
         self.gui        = context.gui
         self.helper     = self
 
+    #
+    # combo example
+    #
+    #selected = 0
+    #items = self.context.asset_scripts
+    #
+    #if imgui.begin_combo("combo", items[selected]):
+    #    for i, item in enumerate(items):
+    #        is_selected = (i == selected)
+    #        if imgui.selectable(item, is_selected)[0]:
+    #            selected = i
+    #        
+    #        # Set the initial focus when opening the combo (scrolling + keyboard navigation focus)                    
+    #        if is_selected:
+    #            imgui.set_item_default_focus()
+    #
+    #    imgui.end_combo()
+
     def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None ) -> bool:
 
         labels = ["X", "Y", "Z"]
