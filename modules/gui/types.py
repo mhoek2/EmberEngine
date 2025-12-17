@@ -156,3 +156,39 @@ class GameObjectTypes:
             return None
 
         return GameObjectTypes.registry()[t]
+
+class TransformMask:
+    position    :int = 0
+    rotation    :int = 1
+    scale       :int = 2
+
+    _keys = [
+        "position", 
+        "rotation", 
+        "scale"
+    ]
+
+    def __init__( self, values=None ):
+        if values is None:
+            values = [1, 1, 1]
+
+        self._values = list( values[:3] )
+
+    def __getitem__( self, index ):
+        return self._values[index]
+
+    def __setitem__( self, index, value ):
+        self._values[index] = value
+
+    def _resolve_idx( self, key ):
+        if isinstance( key, int ):
+            return key
+
+        elif isinstance( key, str ):
+            return self._keys.index(key)
+
+    def is_visible( self, key ):
+        return self._values[ self._resolve_idx( key ) ] != 0
+
+    def is_enabled( self, key ):
+        return self._values[ self._resolve_idx( key ) ] == 1

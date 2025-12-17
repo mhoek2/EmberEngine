@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from modules.context import Context
 from modules.transform import Transform
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
-from modules.gui.types import RadioStruct, ToggleStruct, RotationMode_
+from modules.gui.types import RadioStruct, ToggleStruct, RotationMode_, TransformMask
 
 class Helper( Context ):
     """Logic related to rendering the Hierarchy window"""
@@ -40,7 +40,7 @@ class Helper( Context ):
     #
     #    imgui.end_combo()
 
-    def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None, step : float = 0.01 ) -> bool:
+    def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None, step : float = 0.01, is_enabled : bool = True ) -> bool:
 
         labels = ["X", "Y", "Z"]
         label_colors = [(0.8, 0.1, 0.15), (0.2, 0.7, 0.2), (0.1, 0.25, 0.8)]
@@ -93,25 +93,36 @@ class Helper( Context ):
 
         return changed_any
 
-    def draw_transform_local( self, _t : Transform ) -> None:
+    def draw_transform_local( self, _t : Transform, mask : list = [1, 1, 1] ) -> None:
+        mask = TransformMask( list(mask) )
+    
         # position
-        self.draw_vec3_control( "Position", _t.local_position, 0.0 )
-
+        if mask.is_visible( TransformMask.position ):
+            self.draw_vec3_control( "Position", _t.local_position, 0.0, 
+                is_enabled = mask.is_enabled( TransformMask.position ) 
+            )
+    
         # rotation
-        match self.gui.inspector.rotation_mode:
-            case RotationMode_.degrees:
-                self.draw_vec3_control(
-                    "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
-                    step        = self.gui.inspector.rotation_step[RotationMode_.degrees],
-                    onChange    = lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
-                )
-            case RotationMode_.radians:
-                self.draw_vec3_control("Rotation", _t.local_rotation, 0.0,
-                    step        = self.gui.inspector.rotation_step[RotationMode_.radians]                       
-                )
-
+        if mask.is_visible( TransformMask.rotation ):
+            match self.gui.inspector.rotation_mode:
+                case RotationMode_.degrees:
+                    self.draw_vec3_control(
+                        "Rotation", Transform.vec_to_degrees( _t.local_rotation ), 0.0,
+                        step        = self.gui.inspector.rotation_step[RotationMode_.degrees],
+                        is_enabled  = mask.is_enabled( TransformMask.rotation ),
+                        onChange    = lambda v: _t.set_local_rotation( Transform.vec_to_radians( v ) )
+                    )
+                case RotationMode_.radians:
+                    self.draw_vec3_control("Rotation", _t.local_rotation, 0.0,
+                        step        = self.gui.inspector.rotation_step[RotationMode_.radians],
+                        is_enabled  = mask.is_enabled( TransformMask.rotation ),
+                    )
+    
         # scale
-        self.draw_vec3_control( "Scale", _t.local_scale, 0.0 )
+        if mask.is_visible( TransformMask.scale ):
+            self.draw_vec3_control( "Scale", _t.local_scale, 0.0,
+                is_enabled  = mask.is_enabled( TransformMask.scale ),                 
+            )
 
     def draw_transform_world( self, _t : Transform ) -> None:
         # position
