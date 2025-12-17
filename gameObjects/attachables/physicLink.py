@@ -135,28 +135,18 @@ class PhysicLink:
 
         def __init__( self, context         : "EmberEngine",
                             gameObject      : "GameObject"):
-            self.context = context
-
+            self.context    = context
             self.gameObject = gameObject
 
-            self.geom_type   : PhysicLink.Joint.Type_ = PhysicLink.Joint.Type_.fixed
+            # joint transform uses the self.gameObject.transform
 
-            self.transform : Transform = Transform(
-                context         = self.context,
-                gameObject      = gameObject,
-                translate       = ( 0.0, 0.0, 0.0 ),
-                rotation        = ( 0.0, 0.0, 0.0 ),
-                scale           = ( 0.0, 0.0, 0.0 ),
-                name            = f"{gameObject.name}_physic_joint",
-                local_callback  = lambda : self.transform._createWorldModelMatrix()
-            )
+            self.geom_type   : PhysicLink.Joint.Type_ = PhysicLink.Joint.Type_.fixed
 
     class Collision:
         def __init__( self, context         : "EmberEngine", 
                             gameObject      : "GameObject"
                     ) -> None:
-            self.context = context
-
+            self.context    = context
             self.gameObject = gameObject
 
             self.transform : Transform = Transform(

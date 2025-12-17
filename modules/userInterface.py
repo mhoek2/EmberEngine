@@ -1853,10 +1853,6 @@ class UserInterface( Context ):
                 if imgui.begin_tab_item("Joint##Tab2")[0]:
                     joint : PhysicLink.Joint = physic_link.joint
 
-                    active_changed, active_state = imgui.checkbox( "Active", joint.active )
-                    if active_changed:
-                        joint.active = active_state
-
                     # type
                     type_names = [t.name for t in PhysicLink.Joint.Type_]
 
@@ -1867,10 +1863,6 @@ class UserInterface( Context ):
                     )
                     if changed:
                         joint.geom_type = PhysicLink.Joint.Type_( new_index )
-
-                    # transform
-                    _t : Transform = joint.transform
-                    self.context.gui._draw_transform_local( _t )
 
                     imgui.end_tab_item()
 

@@ -405,9 +405,6 @@ class SceneManager:
                     },
                     "joint": {
                         "type"          : joint.geom_type,
-                        "translate"     : joint.transform.local_position,
-                        "rotation"      : joint.transform.local_rotation,
-                        "scale"         : joint.transform.local_scale
                     },
                     "collision": {
                         "type"          : collision.geom_type,
@@ -633,11 +630,6 @@ class SceneManager:
                     joint : PhysicLink.Joint = physic_link.joint
 
                     joint.geom_type = PhysicLink.Joint.Type_( _joint.get( "type", 0 ) )
-
-                    joint.transform.local_position    = tuple(_joint.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
-                    joint.transform.local_rotation    = tuple(_joint.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
-                    joint.transform.local_scale       = tuple(_joint.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
-                    joint.transform._createWorldModelMatrix()
 
                 if _collision:
                     collision : PhysicLink.Collision = physic_link.collision
