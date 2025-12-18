@@ -154,16 +154,17 @@ class Hierarchy( Context ):
                     #if isinstance( obj, Camera ):
                     #    can_hide = False
                 
+                    _button_region = 21 * depth
                     #if _is_hovered or not obj.visible:
                     if self.helper.draw_button( 
                         uid     = f"{self.gui.visibility_icon[int(obj.visible)]}", 
-                        region  = _region.x - 5,
+                        region  = _region.x + _button_region + 10,
                         colors  = self.gui.color_visibility
                     ):
                         obj.visible = not obj.visible
 
                     # remove gameObject
-                    if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + 14 ):
+                    if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + _button_region + 30 ):
                         self.context.removeGameObject( obj )
 
                 if _is_open:
@@ -173,7 +174,7 @@ class Hierarchy( Context ):
                         self.draw_recursive( 
                             parent          = obj, 
                             objects         = obj.children, 
-                            depth           = depth + 1,
+                            depth           = depth + 1 ,
                             base_tree_flags = base_tree_flags
                         )
 
