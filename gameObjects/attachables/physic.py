@@ -45,7 +45,7 @@ class Physic( PhysicLink ):
     def find_physic_children( self, obj : "GameObject", _list ):
         for c in obj.children:
             _physic_link = c.getAttachable( PhysicLink )
-            if _physic_link:
+            if _physic_link and c.hierachyActive():
                 _list.append( _physic_link )
 
             self.find_physic_children( c, _list )
