@@ -3,6 +3,9 @@ from typing import TYPE_CHECKING
 from modules.context import Context
 
 from gameObjects.gameObject import GameObject
+from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physic import PhysicLink
+
 from modules.gui.types import GameObjectTypes
 
 from imgui_bundle import imgui
@@ -11,18 +14,68 @@ from imgui_bundle import icons_fontawesome_6 as fa
 if TYPE_CHECKING:
     from main import EmberEngine
 
+from dataclasses import dataclass
+import enum
+
+@dataclass(frozen=True)
+class HierarchyStyle():
+    text        : tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+    lines       : tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+
 class Hierarchy( Context ):
+
+    styles = {
+        Physic: HierarchyStyle(
+            text  = (0.62, 0.50, 0.78, 1.0), 
+            lines = (0.62, 0.50, 0.78, 0.30),
+        ),
+        PhysicLink: HierarchyStyle(
+            text  = (0.72, 0.62, 0.86, 0.95),
+            lines = (0.72, 0.62, 0.86, 0.22),
+        ) 
+    }
+
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
         super().__init__( context )
         self.gui        = context.gui
         self.helper     = context.gui.helper
 
+    def tree_node_parse_style( self, obj : GameObject = None ) -> int:
+        pushed_styles     : int = 0
+
+        if obj.physic:
+            _style = Hierarchy.styles[Physic]
+            imgui.push_style_color( imgui.Col_.text, _style.text )
+            pushed_styles += 1 
+
+        if obj.physic_link:
+            _style = Hierarchy.styles[PhysicLink]
+            imgui.push_style_color( imgui.Col_.text, _style.text )
+            pushed_styles += 1 
+
+        return pushed_styles
+
+    def tree_node_line_style_color( self, obj : GameObject = None ):
+        pushed_styles     : int = 0
+
+        if obj.physic:
+            _style = Hierarchy.styles[Physic]
+            imgui.push_style_color( imgui.Col_.tree_lines, _style.lines )
+            pushed_styles += 1
+
+        if obj.physic_link:
+            _style = Hierarchy.styles[PhysicLink]
+            imgui.push_style_color( imgui.Col_.tree_lines, _style.lines )
+            pushed_styles += 1
+
+        return pushed_styles
+
     def draw_recursive( self, 
         parent          : GameObject = None, 
         objects         : list[GameObject] = [], 
         depth           : int = 0,
-        base_tree_flags : imgui.TreeNodeFlags_ = imgui.TreeNodeFlags_.none
+        base_tree_flags : imgui.TreeNodeFlags_ = imgui.TreeNodeFlags_.none,
         ) -> None:
         """Recursivly render the gameObjects in a treenode
 
@@ -59,10 +112,14 @@ class Hierarchy( Context ):
                 if self.gui.selectedObject == obj:
                     tree_flags |= imgui.TreeNodeFlags_.selected
 
-                icon : str = fa.ICON_FA_CUBE
+                # push alternate style_colors set by parent, and set style_flags for children
+                _pushed_styles = self.tree_node_parse_style( obj )
 
                 _is_open = imgui.tree_node_ex( f"{_t_game_object._icon} {obj.name}", tree_flags )
                 _is_hovered = imgui.is_item_hovered()
+
+                if _pushed_styles:
+                    imgui.pop_style_color( _pushed_styles )
 
                 #if imgui.is_item_clicked(): # and imgui.is_item_toggled_open():
                 if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(0):
@@ -88,7 +145,6 @@ class Hierarchy( Context ):
 
                     imgui.end_drag_drop_target()
 
-
                 # Non-runtime editor GUI
                 if not self.renderer.game_runtime:
                     _region = imgui.get_content_region_avail()
@@ -112,12 +168,17 @@ class Hierarchy( Context ):
 
                 if _is_open:
                     if obj.children:
+                        _pushed_styles = self.tree_node_line_style_color( obj )
+
                         self.draw_recursive( 
-                            obj, 
-                            obj.children, 
-                            depth=depth+1,
-                            base_tree_flags=base_tree_flags
+                            parent          = obj, 
+                            objects         = obj.children, 
+                            depth           = depth + 1,
+                            base_tree_flags = base_tree_flags
                         )
+
+                        if _pushed_styles:
+                            imgui.pop_style_color( _pushed_styles )
 
                     imgui.tree_pop()
 
@@ -150,10 +211,10 @@ class Hierarchy( Context ):
 
         if imgui.tree_node_ex( "Hierarchy", _base_tree_flags ):
             self.draw_recursive( 
-                None, 
-                self.context.gameObjects,
-                depth=0,
-                base_tree_flags=_base_tree_flags
+                parent          = None, 
+                objects         = self.context.gameObjects,
+                depth           = 0,
+                base_tree_flags = _base_tree_flags
             )
             
             imgui.tree_pop()
