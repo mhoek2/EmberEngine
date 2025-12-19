@@ -47,6 +47,26 @@ class MultiBodyLinks:
     inertialFramePositions     : list[Vec3]  = field( default_factory=list )
     inertialFrameOrientations  : list[Quat]  = field( default_factory=list )
 
+    def destroy( self ) -> None:
+        """
+        Unlink all physics child objects from this runtime physics instance.
+
+        This clears internal link/index mappings and removes the runtime physics
+        references
+        """
+        for i, link in enumerate( self.index_to_link ):
+            link.runtime_link_index     = None
+            link.runtime_base_physic    = None
+            link.physics_id             = None
+
+        # reset/clear all lists
+        for name in self.__slots__:
+            value = getattr(self, name)
+            if isinstance(value, list) or isinstance(value, dict):
+                value.clear()
+
+        print("sd")
+
     def find_physic_children( self, obj : "GameObject", _list : list[PhysicLink] ):
         """Build a flat list of valid nested pybullet child gameObjects"""
         for c in obj.children:
@@ -67,26 +87,10 @@ class MultiBodyLinks:
 
         This allows for easy and fast lookups
         """
-        for i, link in enumerate( self.link_to_index ):
+        for i, link in enumerate( self.index_to_link ):
             link.runtime_link_index     = self.link_to_index[link]
             link.runtime_base_physic    = self.base
             link.physics_id             = self.base.physics_id
-
-    def destroy( self ) -> None:
-        """
-        Unlink all physics child objects from this runtime physics instance.
-
-        This clears internal link/index mappings and removes the runtime physics
-        references
-        """
-        self.index_to_link.clear()
-
-        for i, link in enumerate( self.link_to_index ):
-            link.runtime_link_index     = None
-            link.runtime_base_physic    = None
-            link.physics_id             = None
-
-        self.link_to_index.clear()
 
     def add_link(
         self,

@@ -183,6 +183,8 @@ class PhysicLink:
                 name            = f"{gameObject.name}_physic_joint",
                 local_callback  = lambda : self.transform._createWorldModelMatrix()
             )
+            self.transform.is_physic_shape = True
+            self.transform._createWorldModelMatrix()
 
             self._type   : PhysicLink.GeometryType_ = PhysicLink.GeometryType_.box
             self.model = None
