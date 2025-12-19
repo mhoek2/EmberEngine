@@ -2,7 +2,7 @@ gameObjects
 ===========
 
 .. autosummary::
-   :toctree: gameObjects
+   :toctree: a_gameObjects
    :template: module.rst
    :recursive:
 
@@ -12,3 +12,8 @@ gameObjects
    gameObjects.light
    gameObjects.skybox
    gameObjects.camera
+
+.. toctree::
+   :maxdepth: 2
+
+   gameObjects/attachables.rst
