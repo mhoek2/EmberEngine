@@ -58,6 +58,31 @@ class PhysicLink:
 
         geom_type = PhysicLink.pybullet_geom_type(link.collision.geom_type)
 
+        # p.createCollisionShape(...)
+        # shapeType (int) REQUIRED:
+        #   p.GEOM_SPHERE | BOX | CAPSULE | CYLINDER | PLANE | MESH | HEIGHTFIELD
+        #
+        # radius (float, default=0.5)        : SPHERE, CAPSULE, CYLINDER
+        # halfExtents (vec3, default=[1,1,1]): BOX (half-size per axis)
+        # height (float, default=1.0)        : CAPSULE, CYLINDER
+        #
+        # fileName (str)                     : MESH (.obj, convex hull per 'o')
+        # meshScale (vec3, default=[1,1,1])  : MESH
+        # flags (int)                        : MESH (p.GEOM_FORCE_CONCAVE_TRIMESH -> static only)
+        #
+        # planeNormal (vec3, default=[0,0,1]): PLANE
+        #
+        # collisionFramePosition (vec3)      : local offset of shape
+        # collisionFrameOrientation (quat)   : local rotation (x,y,z,w)
+        #
+        # HEIGHTFIELD only:
+        #   vertices (list[vec3]), indices (list[int])
+        #   numHeightfieldRows (int), numHeightfieldColumns (int)
+        #   heightfieldTextureScaling (float)
+        #   replaceHeightfieldIndex (int)
+        #
+        # physicsClientId (int)              : multi-client support
+
         if geom_type == p.GEOM_BOX:
             return p.createCollisionShape(
                 geom_type,
@@ -216,7 +241,7 @@ class PhysicLink:
 
 
         num_joints = p.getNumJoints( self.runtime_base_physic.physics_id )
-        print(f"joints: {num_joints} -- {self.gameObject.name} index: {self.runtime_link_index}")
+        #print(f"joints: {num_joints} -- {self.gameObject.name} index: {self.runtime_link_index}")
         # linkWorldPosition (COM)	    state[0]
         # linkWorldOrientation (COM)	state[1]
         # localInertialFramePosition	state[2]

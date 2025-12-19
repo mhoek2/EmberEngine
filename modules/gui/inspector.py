@@ -554,16 +554,16 @@ class Inspector( Context ):
                     imgui.text( f"Num Joints: {_num_joints}" )
 
                     # should match with getJointInfo() below
-                    #for link in physic.physics_children_flat:
+                    #for link in physic.links.index_to_link:
                     #    imgui.text( link.gameObject.name )
 
                     for i in range(_num_joints):
                         info = p.getJointInfo( physic.physics_id, i )
                         _link_index         : int = i
 
-                        _link               : PhysicLink = physic._index_to_link[_link_index]
+                        _link               : PhysicLink = physic.links.index_to_link[_link_index]
                         parent_link_index   : int = info[16]
-                        _link_parent        : PhysicLink = physic._index_to_link[parent_link_index] if parent_link_index >= 0 else physic
+                        _link_parent        : PhysicLink = physic.links.index_to_link[parent_link_index] if parent_link_index >= 0 else physic
 
                         _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name} | PyBullet link name: {info[12].decode()}"
                         imgui.text( _info )
@@ -593,12 +593,12 @@ class Inspector( Context ):
                 _base_footprint : Physic = physic_link.runtime_base_physic
                 _link_index     : int = physic_link.runtime_link_index
                 
-                _link           : PhysicLink = _base_footprint._index_to_link[_link_index]
+                _link           : PhysicLink = _base_footprint.links.index_to_link[_link_index]
                 parent_link_index   : int = -1
                 if gameObject.parent and gameObject.parent.physic_link:
                     parent_link_index = gameObject.parent.physic_link.runtime_link_index
 
-                _link_parent        : PhysicLink = _base_footprint._index_to_link[parent_link_index] if parent_link_index >= 0 else _base_footprint
+                _link_parent        : PhysicLink = _base_footprint.links.index_to_link[parent_link_index] if parent_link_index >= 0 else _base_footprint
 
                 _info = f"Link[{_link_index}] = {_link.gameObject.name} with Parent: {_link_parent.gameObject.name}"
                 imgui.text(_info)
