@@ -158,11 +158,6 @@ class Models( Context ):
         indices = np.array(mesh.faces).flatten()
         tangents, bitangents = self.compute_tangents_bitangents( v, t, indices )
 
-        print("v.shape:", v.shape)
-        print("n.shape:", n.shape)
-        print("t.shape:", t.shape)
-        print("tangents.shape:", tangents.shape)
-        print("bitangents.shape:", bitangents.shape)
         combined = np.hstack( ( v, n, t, tangents, bitangents ) )  # Shape: (n_vertices, 8)
 
         _mesh["vbo"] = vbo.VBO( combined )

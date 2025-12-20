@@ -522,9 +522,9 @@ class Inspector( Context ):
                     collision.geom_type = PhysicLink.GeometryType_( type_index )
 
                     if collision.geom_type == PhysicLink.GeometryType_.sphere:
-                        _t.scale = [_t.scale[0], _t.scale[0], _t.scale[0]]
+                        _t.scale = [collision.radius, collision.radius, collision.radius]
                 
-                        _t : Transform = collision.transform
+                _t : Transform = collision.transform
                 self.helper.draw_transform_local( _t, 
                     mask=[1, 1, (1 if collision.geom_type == PhysicLink.GeometryType_.box else 0)] 
                 )
@@ -543,6 +543,31 @@ class Inspector( Context ):
                     if _changed_radius or _changed_height:
                         collision.radius = radius
                         collision.height = height
+
+
+
+
+                #Bullet uses either:
+                #lateralFriction (simple model), or
+                #contactStiffness + contactDamping
+                imgui.separator()
+                imgui.text("Contact")
+
+                changed, collision.lateral_friction = imgui.drag_float(
+                    "Lateral Friction", collision.lateral_friction, 0.01, 0.0, 10.0
+                )
+
+                changed, collision.rolling_friction = imgui.drag_float(
+                    "Rolling Friction", collision.rolling_friction, 0.01, 0.0, 10.0
+                )
+
+                changed, collision.stiffness = imgui.drag_float(
+                    "Stiffness", collision.stiffness, 100.0, 0.0, 1e6
+                )
+
+                changed, collision.damping = imgui.drag_float(
+                    "Damping", collision.damping, 10.0, 0.0, 1e5
+                )
 
                 imgui.end_tab_item()
 

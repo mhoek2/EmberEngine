@@ -411,7 +411,15 @@ class SceneManager:
                         "type"          : collision.geom_type,
                         "translate"     : collision.transform.local_position,
                         "rotation"      : collision.transform.local_rotation,
-                        "scale"         : collision.transform.local_scale
+                        "scale"         : collision.transform.local_scale,
+
+                        "lateral_friction"  : collision.lateral_friction,
+                        "rolling_friction"  : collision.rolling_friction,
+                        "spinning_friction" : collision.spinning_friction,
+                        "restitution"       : collision.restitution,
+                        "stiffness"         : collision.stiffness,
+                        "damping"           : collision.damping
+      
                     },
                     "visual": {
                         "translate"     : visual.transform.local_position,
@@ -648,7 +656,15 @@ class SceneManager:
                     collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
 
                     collision.transform.is_physic_shape = True
-                    collision.transform._createWorldModelMatrix()
+                    collision._update_transform()
+                    
+                    # contact
+                    collision.lateral_friction  = float(_collision.get("lateral_friction", 0.8 ) )
+                    collision.rolling_friction  = float(_collision.get("rolling_friction", 0.0 ) )
+                    collision.spinning_friction = float(_collision.get("spinning_friction", 0.0 ) )
+                    collision.restitution       = float(_collision.get("restitution", 0.0 ) )
+                    collision.stiffness         = float(_collision.get("stiffness", -1.0 ) )
+                    collision.damping           = float(_collision.get("damping", -1.0 ) )
 
                 if _visual:
                     visual : PhysicLink.Visual = physic_link.visual
@@ -658,7 +674,7 @@ class SceneManager:
                     visual.transform.local_scale         = tuple(_visual.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
 
                     visual.transform.is_physic_shape = True
-                    visual.transform._createWorldModelMatrix()
+                    visual._update_transform()
 
             if "Physic" in obj:
                 _physic = obj["Physic"]

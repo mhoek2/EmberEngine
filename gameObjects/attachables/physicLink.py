@@ -197,9 +197,13 @@ class PhysicLink:
                 rotation        = ( 0.0, 0.0, 0.0 ),
                 scale           = ( 1.0, 1.0, 1.0 ),
                 name            = f"{gameObject.name}_physic_visual",
-                local_callback  = lambda : self.transform._createWorldModelMatrix()
+                local_callback  = lambda : self._update_transform()
             )
             self.transform.is_physic_shape = True
+            self._update_transform()
+
+        def _update_transform( self ) -> None:
+            self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
     class Collision:
@@ -216,15 +220,26 @@ class PhysicLink:
                 rotation        = ( 0.0, 0.0, 0.0 ),
                 scale           = ( 1.0, 1.0, 1.0 ),
                 name            = f"{gameObject.name}_physic_collision",
-                local_callback  = lambda : self.transform._createWorldModelMatrix()
+                local_callback  = lambda : self._update_transform()
             )
             self.transform.is_physic_shape = True
-            self.transform._createWorldModelMatrix()
+            self._update_transform()
 
             self._type   : PhysicLink.GeometryType_ = PhysicLink.GeometryType_.box
 
 
+            self.lateral_friction      : float = 2.0
+            self.rolling_friction      : float = 0.0
+            self.spinning_friction     : float = 0.0
+            self.restitution           : float = 0.0
+            self.stiffness             : float = -1.0
+            self.damping               : float = -1.0
+
             self.model = None
+
+        def _update_transform( self ) -> None:
+            self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
+            self.transform._createWorldModelMatrix()
 
         def _update_radius_height( self, radius : float = None, height : float = None ) -> None:
             _t : Transform = self.transform

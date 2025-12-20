@@ -65,8 +65,6 @@ class MultiBodyLinks:
             if isinstance(value, list) or isinstance(value, dict):
                 value.clear()
 
-        print("sd")
-
     def find_physic_children( self, obj : "GameObject", _list : list[PhysicLink] ):
         """Build a flat list of valid nested pybullet child gameObjects"""
         for c in obj.children:
@@ -195,6 +193,32 @@ class Physic( PhysicLink ):
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
+    def _apply_dynamics( self, link_index: int, collision ):
+        """Helper to apply changeDynamics and set free-spinning joint if applicable."""
+        kwargs = {
+            "lateralFriction"   : collision.lateral_friction,
+            "rollingFriction"   : collision.rolling_friction,
+            "spinningFriction"  : collision.spinning_friction,
+            "restitution"       : collision.restitution,
+        }
+
+        # soft contacts only if explicitly set
+        if collision.stiffness > 0.0 and collision.damping > 0.0:
+            kwargs["contactStiffness"] = collision.stiffness
+            kwargs["contactDamping"] = collision.damping
+
+        p.changeDynamics( self.physics_id, link_index, **kwargs )
+
+        # when link/joint is not base, ensure it spins freely
+        if link_index >= 0:
+            p.setJointMotorControl2(
+                bodyIndex       = self.physics_id,
+                jointIndex      = link_index,
+                controlMode     = p.VELOCITY_CONTROL,
+                targetVelocity  = 0.0,  # zero = free spinning
+                force           = 0.0   # disables motor torque
+            )
+
     def _initPhysics( self ) -> None:
         """
         Initialize physics for this gameObject, sets position, orientation and mass
@@ -277,6 +301,14 @@ class Physic( PhysicLink ):
         # cache references to physic_id, base and index of the link on the child GameObject
         self.links.cache_on_children()
 
+        # base physic (Physic + nested children) 
+        if is_base_physic:
+            for i, link in enumerate(self.links.index_to_link):
+                self._apply_dynamics( i, link.collision )
+
+        # no children, meaning its just a single world physic object
+        else:
+            self._apply_dynamics( -1, self.collision )
 
     def _deInitPhysics( self) -> None:
         if self.physics_id is None:
