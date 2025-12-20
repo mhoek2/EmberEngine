@@ -206,27 +206,11 @@ class Physic( PhysicLink ):
             return
 
         # base physic properties
+        self.gameObject.transform._createWorldModelMatrix()
+        _, world_rotation_quat, world_position = self.gameObject.transform.world_model_matrix.decompose()
+
         _base_mass               = self.base_mass
         _base_collision_shape    = -1
-        _base_position           = []
-        _base_orientation        = []
-
-        # base physic (Physic + nested children) 
-        if is_base_physic:
-            # construct the link list from nested children
-            self.links.runtime_init()
-
-            self.gameObject.transform._createWorldModelMatrix()
-            _, world_rotation_quat, world_position = self.gameObject.transform.world_model_matrix.decompose()
-
-        # no children, meaning its just a single world physic object
-        else:
-            self.gameObject.transform._createWorldModelMatrix()
-            _, world_rotation_quat, world_position = self.gameObject.transform.world_model_matrix.decompose()
-
-            _base_mass              = self.inertia.mass
-            _base_collision_shape   = PhysicLink.create_collision_shape( self )
-
         _base_position      = world_position
         _base_orientation   = [
             world_rotation_quat[0], 
@@ -234,6 +218,16 @@ class Physic( PhysicLink ):
             world_rotation_quat[2], 
             -world_rotation_quat[3] # handedness
         ]
+
+        # base physic (Physic + nested children) 
+        if is_base_physic:
+            # construct the link list from nested children
+            self.links.runtime_init()
+
+        # no children, meaning its just a single world physic object
+        else:
+            _base_mass              = self.inertia.mass
+            _base_collision_shape   = PhysicLink.create_collision_shape( self )
 
         # -------------------------------------------------------------------------------
         # createMultiBody                    Type                        Description
@@ -319,13 +313,8 @@ class Physic( PhysicLink ):
         )
 
         # Recompute local transform when base physic (Physic + nested children) 
-        if is_base_physic:
-            self.gameObject.transform.world_model_matrix = _model_matrix
-            self.gameObject.transform._update_local_from_world()
-
-        # or is a single world physic object with mass
-        elif self.inertia.mass > 0.0:
-            #self.gameObject.transform.world_model_matrix = _model_matrix * self.collision.transform.local_model_matrix.inverse
+        # or gameObject a single world physic with mass
+        if is_base_physic or self.inertia.mass > 0.0:
             self.gameObject.transform.world_model_matrix = _model_matrix
             self.gameObject.transform._update_local_from_world()
 

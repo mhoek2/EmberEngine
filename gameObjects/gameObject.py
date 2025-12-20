@@ -453,6 +453,32 @@ class GameObject( Context, Transform ):
     #
     # editor state
     #
+    def _save_physic_state( self, physic ):
+        return {
+            "collision": {
+                "translate": list(physic.collision.transform.local_position),
+                "rotation":  list(physic.collision.transform.local_rotation),
+                "scale":     list(physic.collision.transform.local_scale),
+            },
+            "visual": {
+                "translate": list(physic.visual.transform.local_position),
+                "rotation":  list(physic.visual.transform.local_rotation),
+                "scale":     list(physic.visual.transform.local_scale),
+            }
+        }
+
+    def _restore_physic_state( self, physic, state ):
+        collision = state["collision"]
+        visual = state["visual"]
+
+        physic.collision.transform.local_position = collision["translate"]
+        physic.collision.transform.local_rotation = collision["rotation"]
+        physic.collision.transform.local_scale    = collision["scale"]
+
+        physic.visual.transform.local_position    = visual["translate"]
+        physic.visual.transform.local_rotation    = visual["rotation"]
+        physic.visual.transform.local_scale       = visual["scale"]
+
     def _save_state(self):
         """Save a snapshot of the full GameObject state."""
 
@@ -469,18 +495,10 @@ class GameObject( Context, Transform ):
         }
 
         if self.physic:
-            self._state_snapshot["Physic"] = {
-                "translate" : list(self.physic.collision.transform.local_position),
-                "rotation"  : list(self.physic.collision.transform.local_rotation),
-                "scale"     : list(self.physic.collision.transform.local_scale),
-            }
+            self._state_snapshot["Physic"] = self._save_physic_state( self.physic )
 
         if self.physic_link:
-            self._state_snapshot["PhysicLink"] = {
-                "translate" : list(self.physic_link.collision.transform.local_position),
-                "rotation"  : list(self.physic_link.collision.transform.local_rotation),
-                "scale"     : list(self.physic_link.collision.transform.local_scale),
-            }
+            self._state_snapshot["PhysicLink"] = self._save_physic_state( self.physic_link )
 
     def _restore_state(self):
         """Restore the object to the saved initial state."""
@@ -499,16 +517,11 @@ class GameObject( Context, Transform ):
         #self.scripts                    = copy.deepcopy(state["scripts")
 
         if "Physic" in state: 
-            _physic = state["Physic"]
-            self.physic.collision.transform.local_position   = _physic["translate"]
-            self.physic.collision.transform.local_rotation   = _physic["rotation"]
-            self.physic.collision.transform.local_scale      = _physic["scale"]
+            self._restore_physic_state( self.physic, state["Physic"] )
 
         if "PhysicLink" in state: 
-            _physic_link = state["PhysicLink"]
-            self.physic_link.collision.transform.local_position   = _physic_link["translate"]
-            self.physic_link.collision.transform.local_rotation   = _physic_link["rotation"]
-            self.physic_link.collision.transform.local_scale      = _physic_link["scale"]
+            self._restore_physic_state( self.physic_link, state["PhysicLink"] )
+
     #
     # enable and disable
     #
@@ -570,7 +583,6 @@ class GameObject( Context, Transform ):
             if self.physic_link or self.physic:
                 _physic = self.physic_link or self.physic
                 _physic.collision.transform._createWorldModelMatrix()
-                
 
             if self.renderer.game_running and self.physic:
                 self.physic._updatePhysicsBody()

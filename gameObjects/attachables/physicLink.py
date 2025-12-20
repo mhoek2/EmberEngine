@@ -250,7 +250,6 @@ class PhysicLink:
         self.renderer   = context.renderer
 
         self.gameObject = gameObject
-        #self.transform  = self.gameObject.transform
 
         if uuid is None:
             uuid = self.__create_uuid()
@@ -277,9 +276,6 @@ class PhysicLink:
         if not self.runtime_base_physic or self.runtime_base_physic.physics_id is None:
             return False
 
-
-        num_joints = p.getNumJoints( self.runtime_base_physic.physics_id )
-        #print(f"joints: {num_joints} -- {self.gameObject.name} index: {self.runtime_link_index}")
         # linkWorldPosition (COM)	    state[0]
         # linkWorldOrientation (COM)	state[1]
         # localInertialFramePosition	state[2]
