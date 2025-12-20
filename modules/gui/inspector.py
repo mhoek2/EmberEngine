@@ -499,6 +499,14 @@ class Inspector( Context ):
 
                 imgui.end_tab_item()
 
+            if imgui.begin_tab_item("Visual##Tab3")[0]:
+                visual : PhysicLink.Visual = physic_link.visual
+
+                _t : Transform = visual.transform
+                self.helper.draw_transform_local( _t )
+
+                imgui.end_tab_item()
+
             if imgui.begin_tab_item("Collision##Tab4")[0]:
                 collision : PhysicLink.Collision = physic_link.collision
 

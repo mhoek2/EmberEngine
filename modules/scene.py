@@ -398,6 +398,7 @@ class SceneManager:
                 inertia     : PhysicLink.Inertia        = physic_link.inertia
                 joint       : PhysicLink.Joint          = physic_link.joint
                 collision   : PhysicLink.Collision      = physic_link.collision
+                visual      : PhysicLink.Visual         = physic_link.visual
 
                 buffer[ type(physic_link).__name__ ] = {
                     "inertia": {
@@ -411,6 +412,11 @@ class SceneManager:
                         "translate"     : collision.transform.local_position,
                         "rotation"      : collision.transform.local_rotation,
                         "scale"         : collision.transform.local_scale
+                    },
+                    "visual": {
+                        "translate"     : visual.transform.local_position,
+                        "rotation"      : visual.transform.local_rotation,
+                        "scale"         : visual.transform.local_scale
                     }
                 }
 
@@ -621,6 +627,7 @@ class SceneManager:
                 _inertia        = _link.get("inertia")
                 _joint          = _link.get("joint")
                 _collision      = _link.get("collision")
+                _visual         = _link.get("visual")
 
                 if _inertia:
                     inertia : PhysicLink.Inertia = physic_link.inertia
@@ -642,6 +649,16 @@ class SceneManager:
 
                     collision.transform.is_physic_shape = True
                     collision.transform._createWorldModelMatrix()
+
+                if _visual:
+                    visual : PhysicLink.Visual = physic_link.visual
+
+                    visual.transform.local_position      = tuple(_visual.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
+                    visual.transform.local_rotation      = tuple(_visual.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
+                    visual.transform.local_scale         = tuple(_visual.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+
+                    visual.transform.is_physic_shape = True
+                    visual.transform._createWorldModelMatrix()
 
             if "Physic" in obj:
                 _physic = obj["Physic"]

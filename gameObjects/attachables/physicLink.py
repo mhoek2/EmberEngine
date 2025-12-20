@@ -83,6 +83,14 @@ class PhysicLink:
         #
         # physicsClientId (int)              : multi-client support
 
+        pos         = link.collision.transform.local_position
+        rot_quat    = [
+            link.collision.transform._local_rotation_quat[0], 
+            link.collision.transform._local_rotation_quat[1], 
+            link.collision.transform._local_rotation_quat[2], 
+            -link.collision.transform._local_rotation_quat[3] # handedness
+        ]
+
         if geom_type == p.GEOM_BOX:
             return p.createCollisionShape(
                 geom_type,
@@ -90,14 +98,18 @@ class PhysicLink:
                     world_scale[0],
                     world_scale[1],
                     world_scale[2],
-                ]
+                ],
+                collisionFramePosition      = pos,
+                collisionFrameOrientation   = rot_quat,
             )
 
         elif geom_type == p.GEOM_SPHERE:
             # assume uniform scale, take X
             return p.createCollisionShape(
                 geom_type,
-                radius=world_scale[0]
+                radius=world_scale[0],
+                collisionFramePosition      = pos,
+                collisionFrameOrientation   = rot_quat,
             )
 
         elif geom_type == p.GEOM_CYLINDER:
@@ -105,14 +117,18 @@ class PhysicLink:
             return p.createCollisionShape(
                 geom_type,
                 radius=world_scale[0] * 0.5,
-                height=world_scale[2]
+                height=world_scale[2],
+                collisionFramePosition      = pos,
+                collisionFrameOrientation   = rot_quat,
             )
 
         elif geom_type == p.GEOM_MESH:
             return p.createCollisionShape(
                 geom_type,
                 fileName=link.collision.mesh_path,
-                meshScale=list(world_scale)
+                meshScale=list(world_scale),
+                collisionFramePosition      = pos,
+                collisionFrameOrientation   = rot_quat,
             )
 
         else:
@@ -167,6 +183,25 @@ class PhysicLink:
 
             self.geom_type   : PhysicLink.Joint.Type_ = PhysicLink.Joint.Type_.fixed
 
+    class Visual:
+        def __init__( self, context         : "EmberEngine", 
+                            gameObject      : "GameObject"
+                    ) -> None:
+            self.context    = context
+            self.gameObject = gameObject
+
+            self.transform : Transform = Transform(
+                context         = self.context,
+                gameObject      = gameObject,
+                translate       = ( 0.0, 0.0, 0.0 ),
+                rotation        = ( 0.0, 0.0, 0.0 ),
+                scale           = ( 1.0, 1.0, 1.0 ),
+                name            = f"{gameObject.name}_physic_visual",
+                local_callback  = lambda : self.transform._createWorldModelMatrix()
+            )
+            self.transform.is_physic_shape = True
+            self.transform._createWorldModelMatrix()
+
     class Collision:
         def __init__( self, context         : "EmberEngine", 
                             gameObject      : "GameObject"
@@ -180,7 +215,7 @@ class PhysicLink:
                 translate       = ( 0.0, 0.0, 0.0 ),
                 rotation        = ( 0.0, 0.0, 0.0 ),
                 scale           = ( 1.0, 1.0, 1.0 ),
-                name            = f"{gameObject.name}_physic_joint",
+                name            = f"{gameObject.name}_physic_collision",
                 local_callback  = lambda : self.transform._createWorldModelMatrix()
             )
             self.transform.is_physic_shape = True
@@ -215,7 +250,7 @@ class PhysicLink:
         self.renderer   = context.renderer
 
         self.gameObject = gameObject
-        self.transform  = self.gameObject.transform
+        #self.transform  = self.gameObject.transform
 
         if uuid is None:
             uuid = self.__create_uuid()
@@ -226,6 +261,7 @@ class PhysicLink:
         self.inertia        : PhysicLink.Inertia    = PhysicLink.Inertia( context )
         self.joint          : PhysicLink.Joint      = PhysicLink.Joint( context, self.gameObject )
         self.collision      : PhysicLink.Collision  = PhysicLink.Collision( context, self.gameObject )
+        self.visual         : PhysicLink.Visual     = PhysicLink.Visual( context, self.gameObject )
 
         self.runtime_link_index = 0
         self.runtime_base_physic : "Physic" = None
@@ -276,7 +312,7 @@ class PhysicLink:
             )
         )
 
-        # Recompute local transform if parented
+        # Always recompute local transform when parented (PhysicLink)
         self.gameObject.transform.world_model_matrix = _model_matrix
         self.gameObject.transform._update_local_from_world()
 

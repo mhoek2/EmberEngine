@@ -148,6 +148,8 @@ class MultiBodyLinks:
             ##scale, rot_quat, pos = local_matrix.decompose()
             #pos             = gameObject.transform.extract_position(local_matrix)
             #rot_quat        = gameObject.transform.extract_quat(local_matrix)
+
+            # joint/link origin
             pos         = gameObject.transform.local_position
             rot_quat    = [
                 gameObject.transform._local_rotation_quat[0], 
@@ -209,17 +211,18 @@ class Physic( PhysicLink ):
         _base_position           = []
         _base_orientation        = []
 
+        # base physic (Physic + nested children) 
         if is_base_physic:
             # construct the link list from nested children
             self.links.runtime_init()
 
-            self.transform._createWorldModelMatrix()
-            _, world_rotation_quat, world_position = self.transform.world_model_matrix.decompose()
+            self.gameObject.transform._createWorldModelMatrix()
+            _, world_rotation_quat, world_position = self.gameObject.transform.world_model_matrix.decompose()
 
         # no children, meaning its just a single world physic object
         else:
-            self.collision.transform._createWorldModelMatrix()
-            _, world_rotation_quat, world_position = self.collision.transform.world_model_matrix.decompose()
+            self.gameObject.transform._createWorldModelMatrix()
+            _, world_rotation_quat, world_position = self.gameObject.transform.world_model_matrix.decompose()
 
             _base_mass              = self.inertia.mass
             _base_collision_shape   = PhysicLink.create_collision_shape( self )
@@ -296,6 +299,8 @@ class Physic( PhysicLink ):
         if not self.renderer.game_running or self.physics_id is None:
             return False
 
+        is_base_physic = bool(self.gameObject.children)
+
         world_position, world_rotation_quat = p.getBasePositionAndOrientation(self.physics_id)
         # getLinkState
 
@@ -309,24 +314,30 @@ class Physic( PhysicLink ):
                     world_rotation_quat[2], 
                     -world_rotation_quat[3] # ~handedness
                 ]),
-                self.transform.local_scale
+                self.gameObject.transform.local_scale
             )
         )
 
-        self.transform.world_model_matrix = _model_matrix
+        # Recompute local transform when base physic (Physic + nested children) 
+        if is_base_physic:
+            self.gameObject.transform.world_model_matrix = _model_matrix
+            self.gameObject.transform._update_local_from_world()
 
-        if self.base_mass > 0.0 or self.inertia.mass > 0.0:
-            self.transform._update_local_from_world()
+        # or is a single world physic object with mass
+        elif self.inertia.mass > 0.0:
+            #self.gameObject.transform.world_model_matrix = _model_matrix * self.collision.transform.local_model_matrix.inverse
+            self.gameObject.transform.world_model_matrix = _model_matrix
+            self.gameObject.transform._update_local_from_world()
 
-        # debug to visualize collisions in runtime:
-        if self.context.settings.drawColliders:
-            _collision = self.gameObject.physic.collision
-            local_matrix = _collision.transform.compose_matrix(
-                _collision.transform.local_position,
-                _collision.transform._local_rotation_quat,
-                _collision.transform.local_scale
-            )
-            _collision.transform.world_model_matrix = _model_matrix * local_matrix
+            # debug to visualize collisions in runtime:
+            if self.context.settings.drawColliders:
+                _collision = self.collision
+                local_matrix = _collision.transform.compose_matrix(
+                    _collision.transform.local_position,
+                    _collision.transform._local_rotation_quat,
+                    _collision.transform.local_scale
+                )
+                _collision.transform.world_model_matrix = _model_matrix * local_matrix
 
         return True
 
@@ -338,8 +349,8 @@ class Physic( PhysicLink ):
         if self.physics_id is None:
             return
         
-        pos = self.transform.extract_position(self.transform.world_model_matrix)
-        rot = self.transform.extract_quat(self.transform.world_model_matrix)
+        pos = self.gameObject.transform.extract_position(self.gameObject.transform.world_model_matrix)
+        rot = self.gameObject.transform.extract_quat(self.gameObject.transform.world_model_matrix)
 
         p.resetBasePositionAndOrientation( 
             self.physics_id, 

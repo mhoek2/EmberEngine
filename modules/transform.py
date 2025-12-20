@@ -51,6 +51,8 @@ class Transform:
         self._world_rotation_proxy  = self.vectorInterface( self.extract_euler(),       None, name, setter=self.set_rotation )
         self._world_scale_proxy     = self.vectorInterface( self.extract_scale(),       None, name, setter=self.set_scale )
 
+        # read-only - used to cache last local model matrix
+        self.local_model_matrix : Matrix44 = Matrix44.identity() 
 
     @staticmethod
     def vec_to_degrees( v ):
@@ -322,7 +324,7 @@ class Transform:
 
     def _createWorldModelMatrix( self, includeParent : bool = True ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
-        local_matrix = self.compose_matrix(
+        self.local_model_matrix = self.compose_matrix(
             self._local_position,
             self._local_rotation_quat,
             self._local_scale
@@ -330,12 +332,12 @@ class Transform:
 
         # here or _getParentModelMatrix()?
         #if self.is_physic_shape:
-        #    self.world_model_matrix = self.gameObject.transform._getModelMatrix() * local_matrix
+        #    self.world_model_matrix = self.gameObject.transform._getModelMatrix() * self.local_model_matrix
         #else:
         if self.gameObject.parent is not None or self.is_physic_shape:
-            self.world_model_matrix = Matrix44(self._getParentModelMatrix() * local_matrix)
+            self.world_model_matrix = Matrix44(self._getParentModelMatrix() * self.local_model_matrix)
         else:
-            self.world_model_matrix = Matrix44(local_matrix)
+            self.world_model_matrix = Matrix44(self.local_model_matrix)
 
         return self.world_model_matrix
 
