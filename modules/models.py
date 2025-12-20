@@ -48,6 +48,9 @@ class Models( Context ):
         self.default_sphere_path = f"{self.settings.engineAssets}models\\sphere\\model.obj"
         self.default_sphere = self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial )
 
+        self.default_cilinder_path = f"{self.settings.engineAssets}models\\cilinder\\model.obj"
+        self.default_cilinder = self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial )
+
         return
 
     @staticmethod
@@ -131,6 +134,21 @@ class Models( Context ):
         v = np.array( mesh.vertices, dtype='f' )  # Shape: (n_vertices, 3)
         n = np.array( mesh.normals, dtype='f' )    # Shape: (n_vertices, 3)
 
+        if n.shape[0] == 0:
+            n = np.zeros_like(v)  # fallback
+            # compute normals
+            #for face in mesh.faces:
+            #    i0, i1, i2 = face
+            #    p0, p1, p2 = v[i0], v[i1], v[i2]
+            #    face_normal = np.cross(p1 - p0, p2 - p0)
+            #    face_normal /= np.linalg.norm(face_normal)
+            #    n[i0] += face_normal
+            #    n[i1] += face_normal
+            #    n[i2] += face_normal
+
+            # normalize per vertex
+            #n = np.array([x/np.linalg.norm(x) if np.linalg.norm(x)>0 else x for x in n], dtype='f')
+
         if mesh.texture_coords is not None and len(mesh.texture_coords) > 0:
             t = np.array( mesh.texture_coords[0], dtype='f' )  # Shape: (n_vertices, 2)
         else:
@@ -140,6 +158,11 @@ class Models( Context ):
         indices = np.array(mesh.faces).flatten()
         tangents, bitangents = self.compute_tangents_bitangents( v, t, indices )
 
+        print("v.shape:", v.shape)
+        print("n.shape:", n.shape)
+        print("t.shape:", t.shape)
+        print("tangents.shape:", tangents.shape)
+        print("bitangents.shape:", bitangents.shape)
         combined = np.hstack( ( v, n, t, tangents, bitangents ) )  # Shape: (n_vertices, 8)
 
         _mesh["vbo"] = vbo.VBO( combined )

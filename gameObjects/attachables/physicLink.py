@@ -107,7 +107,7 @@ class PhysicLink:
             # assume uniform scale, take X
             return p.createCollisionShape(
                 geom_type,
-                radius=world_scale[0],
+                radius                      = link.collision.radius,
                 collisionFramePosition      = pos,
                 collisionFrameOrientation   = rot_quat,
             )
@@ -116,8 +116,8 @@ class PhysicLink:
             # Bullet cylinder axis = Z
             return p.createCollisionShape(
                 geom_type,
-                radius=world_scale[0] * 0.5,
-                height=world_scale[2],
+                radius                      = link.collision.radius * 0.5,
+                height                      = link.collision.height,
                 collisionFramePosition      = pos,
                 collisionFrameOrientation   = rot_quat,
             )
@@ -222,7 +222,37 @@ class PhysicLink:
             self.transform._createWorldModelMatrix()
 
             self._type   : PhysicLink.GeometryType_ = PhysicLink.GeometryType_.box
+
+
             self.model = None
+
+        def _update_radius_height( self, radius : float = None, height : float = None ) -> None:
+            _t : Transform = self.transform
+
+            radius = radius or self.radius
+            height = height or self.height
+
+            if self._type == PhysicLink.GeometryType_.sphere:
+                _t.scale = [radius, radius, radius]
+
+            elif self._type == PhysicLink.GeometryType_.cilinder:
+                _t.scale = [radius, radius, height]
+
+        @property
+        def radius( self ) -> float:
+            return self.transform.scale[0]
+
+        @radius.setter
+        def radius( self, data ) -> None:
+            self._update_radius_height( radius=data, height=None )
+
+        @property
+        def height( self ) -> float:
+            return self.transform.scale[2]
+
+        @height.setter
+        def height( self, data ) -> None:
+            self._update_radius_height( radius=None, height=data )
 
         @property
         def geom_type( self ):
@@ -239,6 +269,8 @@ class PhysicLink:
                     self.model = self.context.models.default_cube
                 case PhysicLink.GeometryType_.mesh:
                     self.model = self.gameObject.model
+                case PhysicLink.GeometryType_.cilinder:
+                    self.model = self.context.models.default_cilinder
 
     def __init__( self, context         : "EmberEngine",
                         gameObject      : "GameObject",

@@ -502,8 +502,8 @@ class Inspector( Context ):
             if imgui.begin_tab_item("Visual##Tab3")[0]:
                 visual : PhysicLink.Visual = physic_link.visual
 
-                _t : Transform = visual.transform
-                self.helper.draw_transform_local( _t )
+                #_t : Transform = visual.transform
+                #self.helper.draw_transform_local( _t )
 
                 imgui.end_tab_item()
 
@@ -513,16 +513,36 @@ class Inspector( Context ):
                 # type
                 geom_type_names = [t.name for t in PhysicLink.GeometryType_]
 
-                changed, new_index = imgui.combo(
+                _changed_type, type_index = imgui.combo(
                     "Geometry type",
                     collision.geom_type,
                     geom_type_names
                 )
-                if changed:
-                    collision.geom_type = PhysicLink.GeometryType_( new_index )
+                if _changed_type:
+                    collision.geom_type = PhysicLink.GeometryType_( type_index )
 
-                _t : Transform = collision.transform
-                self.helper.draw_transform_local( _t )
+                    if collision.geom_type == PhysicLink.GeometryType_.sphere:
+                        _t.scale = [_t.scale[0], _t.scale[0], _t.scale[0]]
+                
+                        _t : Transform = collision.transform
+                self.helper.draw_transform_local( _t, 
+                    mask=[1, 1, (1 if collision.geom_type == PhysicLink.GeometryType_.box else 0)] 
+                )
+
+                # size based on type
+                if collision.geom_type == PhysicLink.GeometryType_.sphere:
+                    _changed_radius, radius = imgui.drag_float(f"Radius##CollisionShapeSize", collision.radius, 0.01)
+
+                    if _changed_radius:
+                        collision.radius = radius
+
+                if collision.geom_type == PhysicLink.GeometryType_.cilinder:
+                    _changed_radius, radius = imgui.drag_float(f"Radius##CollisionShapeSize", collision.radius, 0.01)
+                    _changed_height, height = imgui.drag_float(f"Height##CollisionShapeSize", collision.height, 0.01)
+
+                    if _changed_radius or _changed_height:
+                        collision.radius = radius
+                        collision.height = height
 
                 imgui.end_tab_item()
 
