@@ -29,6 +29,8 @@ out vec4 out_color;
 
 uniform vec4 u_ViewOrigin;
 uniform int in_renderMode;
+uniform int u_MaterialIndex;
+
 
 #define LIGHT_TYPE_DIRECTIONAL	0
 #define LIGHT_TYPE_SPOT			1
@@ -45,6 +47,16 @@ layout( std140 ) uniform Lights
 {
 	int u_num_lights;
 	Light u_lights[64];
+};
+
+struct Material
+{
+	vec4	data_0;
+};
+
+layout( std140 ) uniform Materials
+{
+	Material u_materials[2096];
 };
 
 vec3 Diffuse_Lambert(in vec3 DiffuseColor)
@@ -92,24 +104,21 @@ vec3 CalcSpecular( in vec3 specular, in float NH, in float NL,
 
 vec3 CalcNormal( in vec3 vertexNormal, in vec2 frag_tex_coord )
 {
-	//return normalize(vertexNormal);
-	//if ( normal_texture_set > -1 ) {
-		//vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
+	Material mat = u_materials[u_MaterialIndex];
+	int hasNormalMap = int( mat.data_0[0] );
+
+	if ( hasNormalMap > 0  ) {
 		vec3 biTangent = 1.0 * cross(vertexNormal, var_Tangent.xyz);
 		vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
-		//n = normalize(n * 2.0 - 1.0);
 
 		n.xy *= 1.0;
 		n.z = sqrt(clamp((0.25 - n.x * n.x) - n.y * n.y, 0.0, 1.0));
 		n = n.x * var_Tangent.rgb + n.y * biTangent + n.z * vertexNormal;
-		//n = n.x * var_Tangent.rgb + n.y * var_BiTangent.rgb + n.z * vertexNormal;
 
 		return normalize(n);
-	/*}
+	}
 	
-	else
-		return normalize(vertexNormal);*/
-
+	return normalize(vertexNormal);
 }
 
 vec3 CalcIBLContribution( in float roughness, in vec3 N, in vec3 E,

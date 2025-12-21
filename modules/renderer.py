@@ -103,7 +103,8 @@ class Renderer:
         self.create_shaders()
 
         # ubo
-        self.ubo_lights = Renderer.LightUBO( self.general, "Lights", 0 )
+        self.ubo_lights             : Renderer.LightUBO = Renderer.LightUBO( self.general, "Lights", 0 )
+        self.ubo_materials          : Renderer.MaterialUBO= Renderer.MaterialUBO( self.general, "Materials", 1 )
 
         # debug
         self.renderMode = 0
@@ -479,6 +480,68 @@ class Renderer:
         self.color              = Shader( self.context, "color" )
         self.resolve            = Shader( self.context, "resolve" )
 
+    class MaterialUBO:
+        MAX_MATERIALS = 2096
+
+        # std140 layout:
+        STRUCT_LAYOUT = struct.Struct( b"4f" )
+
+        class Material(TypedDict):
+            hasNormalMap : int
+
+
+        def __init__(self, 
+                     shader : Shader, 
+                     block_name     : str ="Material", 
+                     binding        : int = 0
+            ):
+            self._dirty : bool = True
+
+            self.data = bytearray()
+            self.binding = binding
+            self.block_index = glGetUniformBlockIndex( shader.program, block_name )
+
+            if self.block_index == GL_INVALID_INDEX:
+                raise RuntimeError( f"Uniform block [{block_name}] not found in shader." )
+
+            glUniformBlockBinding( shader.program, self.block_index, binding )
+
+            self.ubo = glGenBuffers(1)
+            glBindBuffer( GL_UNIFORM_BUFFER, self.ubo )
+
+            # MAX_MATERIALS * 16 bytes
+            total_size = self.MAX_MATERIALS * self.STRUCT_LAYOUT.size
+            glBufferData( GL_UNIFORM_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
+            glBindBuffer( GL_UNIFORM_BUFFER, 0 )
+            glBindBufferBase( GL_UNIFORM_BUFFER, binding, self.ubo )
+
+        def update( self, materials ):
+            num_materials = min(len(materials), self.MAX_MATERIALS)
+
+            self.data = bytearray()
+
+            # u_materials
+            for mat in materials[:num_materials]:
+
+                self.data += self.STRUCT_LAYOUT.pack(
+                    mat["hasNormalMap"], 0.0, 0.0, 0.0
+                )
+
+            # fill empty materials
+            empty_count = self.MAX_MATERIALS - num_materials
+            if empty_count:
+                empty = self.STRUCT_LAYOUT.pack(
+                    0, 0, 0, 0, # vec4(origin.xyz + radius)
+                )
+                self.data += empty * empty_count
+
+            self._dirty = False
+
+        def bind( self ):
+            glBindBuffer(GL_UNIFORM_BUFFER, self.ubo)
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, len(self.data), self.data)
+            glBindBuffer(GL_UNIFORM_BUFFER, 0)
+
     class LightUBO:
         MAX_LIGHTS = 64
 
@@ -499,6 +562,8 @@ class Renderer:
                      block_name     : str ="Lights", 
                      binding        : int = 0
             ):
+            self.data = bytearray()
+
             self.binding = binding
             self.block_index = glGetUniformBlockIndex( shader.program, block_name )
 
@@ -519,10 +584,10 @@ class Renderer:
         def update( self, lights ):
             num_lights = min(len(lights), self.MAX_LIGHTS)
 
-            data = bytearray()
+            self.data = bytearray()
 
             # u_num_lights
-            data += struct.pack("I 3I", num_lights, 0, 0, 0)
+            self.data += struct.pack("I 3I", num_lights, 0, 0, 0)
 
             # u_lights
             for light in lights[:num_lights]:
@@ -530,7 +595,7 @@ class Renderer:
                 cx, cy, cz  = light["color"]
                 rx, ry, rz  = light["rotation"]
 
-                data += self.LIGHT_STRUCT.pack(
+                self.data += self.LIGHT_STRUCT.pack(
                     ox, oy, oz, light["radius"],    # vec4(origin.xyz + radius)
                     cx, cy, cz, int(light["t"]),    # vec4(color.xyz + t(type))
                     rx, ry, rz, light["intensity"], # vec4(rotation.xyz + intensity)
@@ -544,12 +609,13 @@ class Renderer:
                     0, 0, 0, 0,  # vec4(color + type)
                     0, 0, 0, 0  # vec4(rotation + intensiry)
                 )
-                data += empty * empty_count
+                self.data += empty * empty_count
 
+        def bind( self ):
             glBindBuffer(GL_UNIFORM_BUFFER, self.ubo)
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, len(data), data)
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, len(self.data), self.data)
             glBindBuffer(GL_UNIFORM_BUFFER, 0)
-
+    
     def setup_projection_matrix( self, size : Vector2 = None ) -> None:
         """Setup the viewport and projection matrix using Matrix44
 
@@ -682,8 +748,6 @@ class Renderer:
             for _ in range( int(self.deltaTime / (1./240.)) ):
                 p.stepSimulation()
 
-    def bind_light_ubo( self, lights : LightUBO.Light ) -> None:
-        self.ubo_lights.update( lights )
 
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.

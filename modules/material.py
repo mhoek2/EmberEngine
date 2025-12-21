@@ -19,6 +19,7 @@ class Materials( Context ):
         emissive    : int # uint32/uintc
         opacity     : int # uint32/uintc
         phyiscal    : int # uint32/uintc
+        hasNormalMap: int # uint32/uintc
 
     def __init__( self, context ):
         """Material loader for models
@@ -176,6 +177,10 @@ class Materials( Context ):
         else:
             mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
+        
+        normal = mat.get( "normal", self.images.defaultNormal )
+        mat["hasNormalMap"] = int( normal is not self.images.defaultNormal )
+
         return index
 
     def bind( self, index : int ):
@@ -189,8 +194,8 @@ class Materials( Context ):
         else:
             mat = self.materials[self.context.materials.defaultMaterial]
 
-        self.images.bind( mat.get("albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
-        self.images.bind( mat.get("normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )
-        self.images.bind( mat.get("phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhyiscal",    2 )
-        self.images.bind( mat.get("emissive",   self.images.blackImage),    GL_TEXTURE3, "sEmissive",    3 )
-        self.images.bind( mat.get("opacity",    self.images.whiteImage),    GL_TEXTURE4, "sOpacity",     4 )
+        self.images.bind( mat.get( "albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
+        self.images.bind( mat.get( "normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )
+        self.images.bind( mat.get( "phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhyiscal",    2 )
+        self.images.bind( mat.get( "emissive",   self.images.blackImage),    GL_TEXTURE3, "sEmissive",    3 )
+        self.images.bind( mat.get( "opacity",    self.images.whiteImage),    GL_TEXTURE4, "sOpacity",     4 )

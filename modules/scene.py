@@ -745,12 +745,19 @@ class SceneManager:
             else:
                 self.current_scene =  i
                 self.console.note( f"Scene {scene_uid} loaded successfully" )
+
+                self.postLoadScene()
                 return True
 
         # load default scene
         if self.current_scene < 0:
             self.console.error( f"Could not find scene: {scene_uid}" )
+
+            self.postLoadScene()
             return False
+
+    def postLoadScene( self ) -> None:
+        self.context.renderer.ubo_materials._dirty = True
 
     def loadDefaultScene( self ):
         """Load the default scene, meaing the engine empty scene"""

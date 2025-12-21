@@ -343,6 +343,20 @@ class EmberEngine:
                     obj.children
                 )
 
+    def _upload_material_ubo( self ) -> None:
+        if self.renderer.ubo_materials._dirty:
+            materials : list[Renderer.MaterialUBO.Material] = []
+
+            for i, mat in enumerate(self.materials.materials):
+                materials.append( Renderer.MaterialUBO.Material(
+                    hasNormalMap      = mat.get( "hasNormalMap", 0 ),
+                )
+            )
+
+            self.renderer.ubo_materials.update( materials )
+
+        self.renderer.ubo_materials.bind()
+
     def run( self ) -> None:
         """The main loop of the appliction, remains active as long as 'self.renderer.running'
         is True.
@@ -441,7 +455,11 @@ class EmberEngine:
                         t           = obj.light_type
                     ) )
 
-                self.renderer.bind_light_ubo( lights )
+                self.renderer.ubo_lights.update( lights )
+                self.renderer.ubo_lights.bind()
+
+                # materials
+                self._upload_material_ubo()
 
                 if self.renderer.game_start:
                     self.console.clear()

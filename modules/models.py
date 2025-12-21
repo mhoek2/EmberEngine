@@ -248,6 +248,8 @@ class Models( Context ):
 
         # material
         self.materials.bind( mesh["material"] )
+        if "u_MaterialIndex" in self.renderer.shader.uniforms:
+            glUniform1i( self.renderer.shader.uniforms['u_MaterialIndex'], int(mesh["material"]) )
 
         if self.settings.drawWireframe:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
