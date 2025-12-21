@@ -415,6 +415,8 @@ class Inspector( Context ):
 
         if imgui.tree_node_ex( f"{fa.ICON_FA_LIGHTBULB} Light", imgui.TreeNodeFlags_.default_open ):
 
+            any_changed = False
+
             type_names = [t.name for t in Light.Type_]
 
             changed, new_light_index = imgui.combo(
@@ -423,19 +425,23 @@ class Inspector( Context ):
                 type_names
             )
             if changed:
+                any_changed  = True
                 gameObject.light_type = Light.Type_(new_light_index)
 
-            changed, gameObject.light_color = imgui.color_edit3(
-                "Light color", gameObject.light_color
-            )
+            changed, gameObject.light_color = imgui.color_edit3( "Light color", gameObject.light_color )
+            if changed:
+                any_changed  = True
 
-            changed, gameObject.radius = imgui.drag_float(
-                f"Radius", gameObject.radius, 0.1
-            )
+            changed, gameObject.radius = imgui.drag_float( f"Radius", gameObject.radius, 0.1 )
+            if changed:
+                any_changed  = True
 
-            changed, gameObject.intensity = imgui.drag_float(
-                f"Intensity", gameObject.intensity, 0.1
-            )
+            changed, gameObject.intensity = imgui.drag_float( f"Intensity", gameObject.intensity, 0.1 )
+            if changed:
+                any_changed  = True
+
+            if any_changed:
+                gameObject._dirty |= GameObject.DirtyFlag_.light
 
             imgui.separator()
             imgui.tree_pop()

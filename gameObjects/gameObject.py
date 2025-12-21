@@ -41,7 +41,8 @@ class GameObject( Context, Transform ):
         visible_state  = enum.auto() # (= 1 << 0) = 1
         active_state   = enum.auto() # (= 1 << 1) = 2
         transform      = enum.auto() # (= 1 << 2) = 4 
-        all            = visible_state | active_state | transform
+        light          = enum.auto() # (= 1 << 3) = 8
+        all            = visible_state | active_state | transform | light
 
     def __init__( self, context, 
                  uuid           : uid.UUID = None,
