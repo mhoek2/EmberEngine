@@ -246,10 +246,13 @@ class Models( Context ):
         """
         mesh : Models.Mesh = self.model_mesh[model_index][mesh_index]
 
-        # material
-        self.materials.bind( mesh["material"] )
+        # bind material
         if "u_MaterialIndex" in self.renderer.shader.uniforms:
             glUniform1i( self.renderer.shader.uniforms['u_MaterialIndex'], int(mesh["material"]) )
+
+        # directly bind 2D samplers in non-bindless mode:
+        if not self.renderer.BINDLESS_TEXTURES:
+            self.materials.bind( mesh["material"] )
 
         if self.settings.drawWireframe:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)

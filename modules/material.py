@@ -196,6 +196,6 @@ class Materials( Context ):
 
         self.images.bind( mat.get( "albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
         self.images.bind( mat.get( "normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )
-        self.images.bind( mat.get( "phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhyiscal",    2 )
+        self.images.bind( mat.get( "phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhysical",    2 )
         self.images.bind( mat.get( "emissive",   self.images.blackImage),    GL_TEXTURE3, "sEmissive",    3 )
         self.images.bind( mat.get( "opacity",    self.images.whiteImage),    GL_TEXTURE4, "sOpacity",     4 )

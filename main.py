@@ -349,7 +349,15 @@ class EmberEngine:
 
             for i, mat in enumerate(self.materials.materials):
                 materials.append( Renderer.MaterialUBO.Material(
-                    hasNormalMap      = mat.get( "hasNormalMap", 0 ),
+                    # bindless
+                    albedo          = self.images.texture_to_bindless[ mat.get( "albedo",     self.images.defaultImage)     ],       
+                    normal          = self.images.texture_to_bindless[ mat.get( "normal",     self.images.defaultNormal)    ],       
+                    phyiscal        = self.images.texture_to_bindless[ mat.get( "phyiscal",   self.images.defaultRMO)       ],       
+                    emissive        = self.images.texture_to_bindless[ mat.get( "emissive",   self.images.blackImage)       ],       
+                    opacity         = self.images.texture_to_bindless[ mat.get( "opacity",    self.images.whiteImage)       ],
+                        
+                    # both bindless and non-bindless paths
+                    hasNormalMap    = mat.get( "hasNormalMap", 0 ),
                 )
             )
 

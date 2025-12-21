@@ -47,6 +47,9 @@ class Renderer:
         self.settings   : Settings = context.settings
         self.project    : ProjectManager = context.project
 
+        # renderer configuration
+        self.BINDLESS_TEXTURES : bool = False # should be based on OpenGL version and extension support!
+
         # window
         self.display_size : imgui.ImVec2 = imgui.ImVec2( 1500, 1000 )
         self.viewport_size : imgui.ImVec2 = imgui.ImVec2( 600, 800 )
@@ -103,8 +106,12 @@ class Renderer:
         self.create_shaders()
 
         # ubo
-        self.ubo_lights             : Renderer.LightUBO = Renderer.LightUBO( self.general, "Lights", 0 )
-        self.ubo_materials          : Renderer.MaterialUBO= Renderer.MaterialUBO( self.general, "Materials", 1 )
+        self.ubo_lights             : Renderer.LightUBO     = Renderer.LightUBO( self.general, "Lights", 0 )
+
+        if self.BINDLESS_TEXTURES:
+            self.ubo_materials      : Renderer.MaterialUBOBindless  = Renderer.MaterialUBOBindless( binding=1 )
+        else:
+            self.ubo_materials      : Renderer.MaterialUBO  = Renderer.MaterialUBO( self.general, "Materials", 1 )
 
         # debug
         self.renderMode = 0
@@ -229,9 +236,21 @@ class Renderer:
         if err != GL_NO_ERROR:
             print(  f"OpenGL Error: {err}" )
 
+    @staticmethod
+    def print_opengl_version() -> None:
+        version = glGetString(GL_VERSION)
+        renderer = glGetString(GL_RENDERER)
+        vendor   = glGetString(GL_VENDOR)
+        glsl_ver = glGetString(GL_SHADING_LANGUAGE_VERSION)
+
+        print("OpenGL Version:", version.decode())
+        print("Renderer:", renderer.decode())
+        print("Vendor:", vendor.decode())
+        print("GLSL Version:", glsl_ver.decode())
+
     def get_window_title(self) -> str:
         return self.project.meta.get("name") if self.settings.is_exported else self.settings.application_name
-    
+
     def create_instance( self ) -> None:
         """Create the window and instance with openGL"""
         pygame.init()
@@ -262,6 +281,8 @@ class Renderer:
         if self.settings.msaaEnabled:
             glEnable( GL_MULTISAMPLE )
      
+        Renderer.print_opengl_version()
+
     def shutdown( self ) -> None:
         """Quit the application"""
         self.render_backend.shutdown()
@@ -480,15 +501,75 @@ class Renderer:
         self.color              = Shader( self.context, "color" )
         self.resolve            = Shader( self.context, "resolve" )
 
+    class MaterialUBOBindless:
+        MAX_MATERIALS = 2096
+        # std430 layout: 5 uint64_t, 1 int, 1 uint padding = 48 bytes per material
+        STRUCT_LAYOUT = struct.Struct("QQQQQiI")
+
+        class Material(TypedDict):
+            albedo          : int
+            normal          : int
+            phyiscal        : int
+            emissive        : int
+            opacity         : int
+            hasNormalMap    : int
+
+        def __init__(self, binding: int = 1):
+            self._dirty = True
+
+            self.binding = binding
+            self.data = bytearray()
+
+            self.ubo = glGenBuffers(1)
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo )
+
+            total_size = self.MAX_MATERIALS * self.STRUCT_LAYOUT.size
+            glBufferData( GL_SHADER_STORAGE_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
+            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, self.binding, self.ubo )
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, 0 )
+
+        def update(self, materials: list[dict]):
+            num_materials = min(len(materials), self.MAX_MATERIALS)
+            self.data = bytearray()
+
+            # u_materials
+            for mat in materials[:num_materials]:
+                self.data += self.STRUCT_LAYOUT.pack(
+                    mat["albedo"],
+                    mat["normal"],
+                    mat["phyiscal"],
+                    mat["emissive"],
+                    mat["opacity"],
+                    mat.get("hasNormalMap", 0),
+                    0  # padding
+                )
+
+            # fill empty materials
+            empty_count = self.MAX_MATERIALS - num_materials
+            if empty_count:
+                empty = self.STRUCT_LAYOUT.pack( 0, 0, 0, 0, 0, 0, 0 )
+                self.data += empty * empty_count
+
+            self._dirty = False
+
+        def bind(self):
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo )
+            glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, len(self.data), self.data )
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, 0 )
+
     class MaterialUBO:
         MAX_MATERIALS = 2096
 
-        # std140 layout:
+        # std140 layout: 1 vec4 = 16 bytes per material
         STRUCT_LAYOUT = struct.Struct( b"4f" )
 
         class Material(TypedDict):
-            hasNormalMap : int
-
+            albedo          : int   # skipped in non-bindless
+            normal          : int   # skipped in non-bindless
+            phyiscal        : int   # skipped in non-bindless
+            emissive        : int   # skipped in non-bindless
+            opacity         : int   # skipped in non-bindless
+            hasNormalMap    : int
 
         def __init__(self, 
                      shader : Shader, 
@@ -538,9 +619,9 @@ class Renderer:
             self._dirty = False
 
         def bind( self ):
-            glBindBuffer(GL_UNIFORM_BUFFER, self.ubo)
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, len(self.data), self.data)
-            glBindBuffer(GL_UNIFORM_BUFFER, 0)
+            glBindBuffer( GL_UNIFORM_BUFFER, self.ubo )
+            glBufferSubData( GL_UNIFORM_BUFFER, 0, len(self.data), self.data )
+            glBindBuffer( GL_UNIFORM_BUFFER, 0 )
 
     class LightUBO:
         MAX_LIGHTS = 64
