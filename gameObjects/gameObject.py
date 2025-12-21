@@ -608,49 +608,59 @@ class GameObject( Context, Transform ):
         if not is_visible:
             return
 
-        if self.context.settings.drawColliders:
-            # debug draw collision geometry
-            #if not self.renderer.game_runtime and self.physic_link is not None:
-            _physic = self.physic_link or self.physic
-
-            # dont visualize
-            if self.physic and self.children:
-                _physic = None
-
-            if _physic is not None:
-                _current_shader = self.renderer.shader
-
-                self.renderer.use_shader( self.renderer.color )
-
-                _color = ( 0.83, 0.34, 0.0, 1.0 )
-                glUniform4f( self.renderer.shader.uniforms['uColor'],  _color[0],  _color[1], _color[2], 0.7 )
-
-                glEnable(GL_DEPTH_TEST)
-                glEnable(GL_BLEND)
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-                glLineWidth(5)
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-
-                _collision_model = _physic.collision.model or self.context.models.default_cube
-
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-
-                self.models.draw(
-                    _collision_model,
-                    _physic.collision.transform._getModelMatrix()
-                )
-
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-                glLineWidth(1)
-
-                if _current_shader:
-                    self.renderer.use_shader( _current_shader )
-
-                    glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-                    glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-
         # render the model geometry
         if self.model != -1 and is_visible:
             self.models.draw( self.model, self.transform._getModelMatrix() ) 
+
+        if not self.context.settings.drawColliders:
+            return
+
+        # debug draw collision geometry
+        #if not self.renderer.game_runtime and self.physic_link is not None:
+        _physic = self.physic_link or self.physic
+
+        # dont visualize
+        if self.physic and self.children:
+            _physic = None
+
+        if _physic is not None:
+            _current_shader = self.renderer.shader
+
+            self.renderer.use_shader( self.renderer.color )
+
+            _color = (1.0, 0.55, 0.0, 0.25)
+            glUniform4f( self.renderer.shader.uniforms['uColor'],  _color[0],  _color[1], _color[2], _color[3] )
+
+            #glDisable(GL_DEPTH_TEST)
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+            glDepthMask(GL_FALSE)
+            glEnable(GL_POLYGON_OFFSET_FILL)
+            glPolygonOffset(-1.0, -1.0)
+
+            glLineWidth(3)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
+            _collision_model = _physic.collision.model or self.context.models.default_cube
+
+            glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+            glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
+
+            self.models.draw(
+                _collision_model,
+                _physic.collision.transform._getModelMatrix()
+            )
+            glDisable(GL_POLYGON_OFFSET_FILL)
+            glDepthMask(GL_TRUE)    # re-enable depth writes
+            glDisable(GL_BLEND)
+            #glEnable(GL_DEPTH_TEST)
+
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            glLineWidth(1)
+
+            if _current_shader:
+                self.renderer.use_shader( _current_shader )
+
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
