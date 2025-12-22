@@ -407,3 +407,34 @@ class Helper( Context ):
             region  = region,
             colors  = self.gui.color_button_trash
         )
+
+    def draw_framed_text( self, fmt : str ) -> None:
+        _shift_left = 0.0
+        _region = imgui.get_content_region_avail()
+        _region = imgui.ImVec2(_region.x + _shift_left, _region.y)
+
+        draw_list = imgui.get_window_draw_list() 
+        draw_list.channels_split(2)
+        draw_list.channels_set_current(1)
+
+        p_min = imgui.get_cursor_screen_pos()
+        p_min = imgui.ImVec2( (p_min.x-_shift_left), p_min.y)
+        imgui.set_cursor_screen_pos(p_min)
+                
+        imgui.begin_group()
+        imgui.text_colored( imgui.ImVec4(1.0, 1.0, 1.0, 0.6), fmt );
+        #imgui.c( label="File##ScriptName", flags=imgui.INPUT_TEXT_READ_ONLY, value=name)
+        imgui.end_group()
+
+        _group_height = imgui.get_item_rect_size().y
+
+        # background rect
+        _header_height = 20
+        _bg_color = imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.05))
+        p_max = imgui.ImVec2( p_min.x + _region.x, p_min.y + _group_height)
+        p_min.y -= 3
+
+        draw_list.channels_set_current(0)
+        draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), _bg_color)
+        #draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
+        draw_list.channels_merge()

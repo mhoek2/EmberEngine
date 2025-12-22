@@ -112,6 +112,14 @@ class UserInterface( Context ):
 
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
 
+    def _node_sep( self ) -> None:
+        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+        imgui.separator()
+        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+
+    def _node_header_pad( self ) -> None:
+        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+
     def initialize_context( self ) -> None:
         if self.initialized:
             return

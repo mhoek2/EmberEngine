@@ -33,8 +33,8 @@ class SceneSettings( Context ):
         self.test_cubemap_update = True
 
     def _camera_selector( self ) -> None:
-        imgui.text("camera")
-        imgui.same_line(100.0)
+        imgui.text("Scene Camera")
+        imgui.same_line(150.0)
 
         changed : bool = False
         _uuid   : uid.UUID = None
@@ -65,7 +65,6 @@ class SceneSettings( Context ):
             self.scene.setCamera( _uuid )
 
         imgui.pop_id()
-        imgui.separator()
 
     def _sun_selector( self ) -> None:
         imgui.text("sun")
@@ -100,9 +99,8 @@ class SceneSettings( Context ):
             self.scene.setSun( _uuid )
         
         imgui.pop_id()
-        imgui.separator()
 
-    def _skybox_preview( self, scene : SceneManager.Scene ) -> None:
+    def _procedural_skybox_preview( self, scene : SceneManager.Scene ) -> None:
         """Preview skybox sides
             
         This logic needs to be refactored, its basicly implemented as concept
@@ -138,7 +136,10 @@ class SceneSettings( Context ):
             if not self.test_cubemap_initialized:
                 self.test_cubemap_initialized = True
 
-        if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Skybox preview", 0 ):
+        self.gui._node_sep()
+        if imgui.tree_node_ex( f"{fa.ICON_FA_LAYER_GROUP} Skybox preview", 0 ):
+            self.gui._node_header_pad()
+
             if self.test_cubemap is not None:
                 for i in range(6):
                     glBindTexture( GL_TEXTURE_2D, self.test_cubemap[i] )
@@ -155,89 +156,105 @@ class SceneSettings( Context ):
             imgui.tree_pop()
 
     def _sky_settings( self, scene : SceneManager.Scene ) -> None:
-        type_names = [t.name for t in Skybox.Type_]
+        self.gui._node_sep()
+        if imgui.tree_node_ex( f"{fa.ICON_FA_CLOUD_MOON} Environment", imgui.TreeNodeFlags_.default_open ):
+            self.gui._node_header_pad()
 
-        changed, new_index = imgui.combo(
-            "Sky type",
-            scene["sky_type"],
-            type_names
-        )
-        if changed:
-            scene["sky_type"] = Skybox.Type_( new_index )
+            self._sun_selector()
 
-            # update, regular skybox cubemaps probably allocates a new cubemap still ..
-            self.context.loadDefaultEnvironment()
+            self.gui._node_sep()
 
- 
-        # ambient
-        changed, scene["ambient_color"] = imgui.color_edit3(
-            "Ambient color", scene["ambient_color"]
-        )
+            type_names = [t.name for t in Skybox.Type_]
 
-        imgui.separator()
+            changed, new_index = imgui.combo(
+                "Sky type",
+                scene["sky_type"],
+                type_names
+            )
+            if changed:
+                scene["sky_type"] = Skybox.Type_( new_index )
 
-        # procedural settings
-        if scene["sky_type"] == Skybox.Type_.procedural:
-            if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Procedural Skybox", imgui.TreeNodeFlags_.default_open ):
-                _, self.context.skybox.realtime = imgui.checkbox( f"Realtime", self.context.skybox.realtime )
-                imgui.set_item_tooltip("Realtime OR generated cubemap (rebuilt when sky changes)")
+                # update, regular skybox cubemaps probably allocates a new cubemap still ..
+                self.context.loadDefaultEnvironment()
 
-                any_changed = False
+            # ambient
+            changed, ambient = imgui.color_edit3(
+                "Ambient color", scene["ambient_color"]
+            )
+            if changed:
+                scene["ambient_color"] = ambient
+
+            # procedural settings
+            if scene["sky_type"] == Skybox.Type_.procedural:
+
+                self.gui._node_sep()
+                if imgui.tree_node_ex( f"{fa.ICON_FA_PALETTE} Procedural Skybox", imgui.TreeNodeFlags_.default_open ):
+                    self.gui._node_header_pad()
+
+                    _, self.context.skybox.realtime = imgui.checkbox( f"Realtime", self.context.skybox.realtime )
+                    imgui.set_item_tooltip("Realtime OR generated cubemap (rebuilt when sky changes)")
+
+                    any_changed = False
                    
-                changed, scene["procedural_sky_color"] = imgui.color_edit3(
-                    "Sky color", scene["procedural_sky_color"]
-                )
-                if changed:
-                    any_changed = True
+                    changed, scene["procedural_sky_color"] = imgui.color_edit3(
+                        "Sky color", scene["procedural_sky_color"]
+                    )
+                    if changed:
+                        any_changed = True
 
-                changed, scene["procedural_horizon_color"] = imgui.color_edit3(
-                    "Horizon color", scene["procedural_horizon_color"]
-                )
-                if changed:
-                    any_changed = True
+                    changed, scene["procedural_horizon_color"] = imgui.color_edit3(
+                        "Horizon color", scene["procedural_horizon_color"]
+                    )
+                    if changed:
+                        any_changed = True
 
-                changed, scene["procedural_ground_color"] = imgui.color_edit3(
-                    "Ground color", scene["procedural_ground_color"]
-                )
-                if changed:
-                    any_changed = True
+                    changed, scene["procedural_ground_color"] = imgui.color_edit3(
+                        "Ground color", scene["procedural_ground_color"]
+                    )
+                    if changed:
+                        any_changed = True
 
-                changed, scene["procedural_sunset_color"] = imgui.color_edit3(
-                    "Sunset color", scene["procedural_sunset_color"]
-                )
-                if changed:
-                    any_changed = True
+                    changed, scene["procedural_sunset_color"] = imgui.color_edit3(
+                        "Sunset color", scene["procedural_sunset_color"]
+                    )
+                    if changed:
+                        any_changed = True
 
-                changed, scene["procedural_night_brightness"] = imgui.drag_float(
-                    f"Night intensity", scene["procedural_night_brightness"], 0.01
-                )
-                if changed:
-                    any_changed = True
+                    changed, scene["procedural_night_brightness"] = imgui.drag_float(
+                        f"Night intensity", scene["procedural_night_brightness"], 0.01
+                    )
+                    if changed:
+                        any_changed = True
 
-                changed, scene["procedural_night_color"] = imgui.color_edit3(
-                    "Night color", scene["procedural_night_color"]
-                )
-                if changed:
-                    any_changed = True
+                    changed, scene["procedural_night_color"] = imgui.color_edit3(
+                        "Night color", scene["procedural_night_color"]
+                    )
+                    if changed:
+                        any_changed = True
 
-                # update skybox (cubemap)
-                if any_changed:
-                    self.context.skybox.procedural_cubemap_update = True
+                    # update skybox (cubemap)
+                    if any_changed:
+                        self.context.skybox.procedural_cubemap_update = True
 
-                imgui.tree_pop()
+                    imgui.tree_pop()
 
+                self._procedural_skybox_preview( scene )
+            
+            imgui.tree_pop()
 
-        # skybox IBL debug
-        self._skybox_preview( scene )
+    def _general_settings( self, scene : SceneManager.Scene ) -> None:
+        if imgui.tree_node_ex( f"{fa.ICON_FA_SLIDERS} General", imgui.TreeNodeFlags_.default_open ):
+            self.gui._node_header_pad()
+            
+            self._camera_selector()
 
-        imgui.separator()
+            imgui.tree_pop()
 
     def render( self ) -> None:
         imgui.begin( "Scene" )
         _scene = self.scene.getCurrentScene()
 
-        self._camera_selector()
-        self._sun_selector()
+        self._general_settings( _scene )
         self._sky_settings( _scene )
 
         imgui.end()

@@ -48,7 +48,7 @@ class Renderer:
         self.project    : ProjectManager = context.project
 
         # renderer configuration
-        self.BINDLESS_TEXTURES : bool = False # should be based on OpenGL version and extension support!
+        self.BINDLESS_TEXTURES : bool = True # should be based on OpenGL version and extension support!
 
         # window
         self.display_size : imgui.ImVec2 = imgui.ImVec2( 1500, 1000 )

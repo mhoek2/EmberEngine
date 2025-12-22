@@ -3,7 +3,7 @@
 //#version 330 core
 
 // toggle between bindless textures from SSBO or direct 2D samplers
-//#define BINDLESS_TEXTURES
+#define BINDLESS_TEXTURES
 
 #ifdef BINDLESS_TEXTURES
 #extension GL_ARB_bindless_texture : enable
