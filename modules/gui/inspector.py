@@ -55,7 +55,7 @@ class Inspector( Context ):
 
         # local space
         if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject.physic_link else 1) ] )
 
@@ -78,10 +78,10 @@ class Inspector( Context ):
         if not isinstance( gameObject, GameObject ):
             return
 
-        self.gui._node_sep()
+        self.helper._node_sep()
 
         if imgui.tree_node( f"{fa.ICON_FA_BRUSH} Material" ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             _models = self.gui.models
             _images = self.gui.images
@@ -128,17 +128,17 @@ class Inspector( Context ):
                 if multi_mat and is_open:
                     imgui.tree_pop()
 
-            self.gui._node_sep()
+            self.helper._node_sep()
             imgui.tree_pop()
 
     def _draw_script_exported_attributes( self, script: Script ):
         if not script.active or not script.exports:
             return 
 
-        self.gui._node_header_pad()  
+        self.helper._node_header_pad()  
 
         if imgui.tree_node_ex( f"Exports##ScriptExports", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()  
+            self.helper._node_header_pad()  
 
             for class_attr_name, class_attr in script.exports.items():
                 # at this point, the effective value 'default' or '.get()' has already been initialized (from class or scene)
@@ -307,7 +307,7 @@ class Inspector( Context ):
             return
 
         for script in self.gui.selectedObject.scripts:
-            self.gui._node_sep()
+            self.helper._node_sep()
             self._draw_script( script )
 
     def _addAttachable( self ):
@@ -407,10 +407,10 @@ class Inspector( Context ):
         if not isinstance( gameObject, Light ):
             return
 
-        self.gui._node_sep()
+        self.helper._node_sep()
 
         if imgui.tree_node_ex( f"{fa.ICON_FA_LIGHTBULB} Light", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             any_changed = False
 
@@ -448,10 +448,10 @@ class Inspector( Context ):
         if not isinstance( gameObject, Camera ):
             return
 
-        self.gui._node_sep()
+        self.helper._node_sep()
 
         if imgui.tree_node_ex( f"{fa.ICON_FA_CAMERA} Camera properties", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             changed, value = imgui.drag_float(
                 f"Fov", gameObject.fov, 1
@@ -480,12 +480,14 @@ class Inspector( Context ):
 
         if imgui.begin_tab_bar( "PhysicProperties", _flags ):
             if imgui.begin_tab_item("Inertia##Tab1")[0]:
+                imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 inertia : PhysicLink.Inertia = physic_link.inertia
 
                 _, inertia.mass = imgui.drag_float("Mass", inertia.mass, 1.0)
                 imgui.end_tab_item()
 
             if imgui.begin_tab_item("Joint##Tab2")[0]:
+                imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 joint : PhysicLink.Joint = physic_link.joint
 
                 # type
@@ -502,6 +504,7 @@ class Inspector( Context ):
                 imgui.end_tab_item()
 
             if imgui.begin_tab_item("Visual##Tab3")[0]:
+                imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 visual : PhysicLink.Visual = physic_link.visual
 
                 #_t : Transform = visual.transform
@@ -510,6 +513,7 @@ class Inspector( Context ):
                 imgui.end_tab_item()
 
             if imgui.begin_tab_item("Collision##Tab4")[0]:
+                imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 collision : PhysicLink.Collision = physic_link.collision
 
                 # type
@@ -541,7 +545,7 @@ class Inspector( Context ):
                         collision.radius = radius
                         collision.height = height
 
-                imgui.separator()
+                self.helper._node_sep()
 
                 _t : Transform = collision.transform
                 self.helper.draw_transform_local( _t, 
@@ -551,24 +555,28 @@ class Inspector( Context ):
                 #Bullet uses either:
                 #lateralFriction (simple model), or
                 #contactStiffness + contactDamping
-                imgui.separator()
-                imgui.text("Contact")
+                self.helper._node_sep()
 
-                changed, collision.lateral_friction = imgui.drag_float(
-                    "Lateral Friction", collision.lateral_friction, 0.01, 0.0, 10.0
-                )
+                if imgui.tree_node_ex( f"Contact##PhysicContact", imgui.TreeNodeFlags_.default_open ):
+                    self.helper._node_header_pad()  
 
-                changed, collision.rolling_friction = imgui.drag_float(
-                    "Rolling Friction", collision.rolling_friction, 0.01, 0.0, 10.0
-                )
+                    changed, collision.lateral_friction = imgui.drag_float(
+                        "Lateral Friction", collision.lateral_friction, 0.01, 0.0, 10.0
+                    )
 
-                changed, collision.stiffness = imgui.drag_float(
-                    "Stiffness", collision.stiffness, 100.0, 0.0, 1e6
-                )
+                    changed, collision.rolling_friction = imgui.drag_float(
+                        "Rolling Friction", collision.rolling_friction, 0.01, 0.0, 10.0
+                    )
 
-                changed, collision.damping = imgui.drag_float(
-                    "Damping", collision.damping, 10.0, 0.0, 1e5
-                )
+                    changed, collision.stiffness = imgui.drag_float(
+                        "Stiffness", collision.stiffness, 100.0, 0.0, 1e6
+                    )
+
+                    changed, collision.damping = imgui.drag_float(
+                        "Damping", collision.damping, 10.0, 0.0, 1e5
+                    )
+
+                    imgui.tree_pop()
 
                 imgui.end_tab_item()
 
@@ -587,10 +595,10 @@ class Inspector( Context ):
         physic : Physic = gameObject.getAttachable(Physic)
         is_base_physic = bool(gameObject.children)
 
-        self.gui._node_sep()
+        self.helper._node_sep()
 
         if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             # no children, meaning its just a single world physic object
             if not is_base_physic:
@@ -635,10 +643,10 @@ class Inspector( Context ):
 
         physic_link : PhysicLink = gameObject.getAttachable(PhysicLink)
 
-        self.gui._node_sep()
+        self.helper._node_sep()
 
         if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             # visualize relations
             if physic_link.runtime_base_physic:
@@ -721,6 +729,8 @@ class Inspector( Context ):
             self._physicLink()
             self._material()
             self._scripts()
+
+            self.helper._node_sep()
 
             self._addAttachable()
 

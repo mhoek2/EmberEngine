@@ -1,6 +1,3 @@
-from OpenGL.GL import *  # pylint: disable=W0614
-from OpenGL.GLU import *
-
 from imgui_bundle import imgui
 from imgui_bundle import icons_fontawesome_6 as fa
 
@@ -21,7 +18,7 @@ import uuid as uid
 
 # Gui modules
 from modules.gui.helper import Helper
-from modules.gui.types import RadioStruct, ToggleStruct, DragAndDropPayload
+from modules.gui.types import DragAndDropPayload
 
 from modules.gui.hierarchy import Hierarchy
 from modules.gui.inspector import Inspector
@@ -31,6 +28,7 @@ from modules.gui.assetBrowser import AssetBrowser
 from modules.gui.textEditor import TextEditor
 from modules.gui.project import Project
 from modules.gui.sceneSettings import SceneSettings
+from modules.gui.viewport import Viewport
 
 import pybullet as p
 
@@ -46,29 +44,6 @@ class UserInterface( Context ):
         self.selectedObject         : GameObject = None
 
         self.status_bar_height      : float = 25.0
-
-        self.game_state_modes : list[RadioStruct] = [
-            {
-                "name"  : "Start",
-                "icon"  : fa.ICON_FA_CIRCLE_PLAY,
-                "flag"  : self.context.renderer.GameState_.running,
-            },
-            {
-                "name"  : "Pause",
-                "icon"  : fa.ICON_FA_CIRCLE_PAUSE,
-                "flag"  : self.context.renderer.GameState_.paused,
-                "hide"  : lambda: not self.context.renderer.game_runtime
-            },
-            {
-                "name"  : "Stop",
-                "icon"  : fa.ICON_FA_CIRCLE_STOP,
-                "flag"  : self.context.renderer.GameState_.none,
-            }
-        ]
-        self._game_state_lookup = {
-            op["flag"]  : i
-                for i, op in enumerate(self.game_state_modes)
-        }
 
         self.color_button_trash : list[imgui.ImVec4] = [
             imgui.ImVec4(1.0, 0.0, 0.0, 0.6),   # default   
@@ -90,35 +65,7 @@ class UserInterface( Context ):
             fa.ICON_FA_EYE,    
         ]
 
-
-        self.viewport_overlay_toggles : list[ToggleStruct] = [
-            {
-                "name"  : "Grid",
-                "icon"  : fa.ICON_FA_BORDER_ALL,
-            },
-            {
-                "name"  : "Axis",
-                "icon"  : fa.ICON_FA_COMPASS,
-            },
-            {
-                "name"  : "Wireframe",
-                "icon"  : fa.ICON_FA_GLOBE,
-            },
-            {
-                "name"  : "Colliders",
-                "icon"  : fa.ICON_FA_PERSON_FALLING_BURST,
-            },
-        ]
-
         self.empty_vec4 = imgui.ImVec4(0.0, 0.0, 0.0, 0.0)
-
-    def _node_sep( self ) -> None:
-        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
-        imgui.separator()
-        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
-
-    def _node_header_pad( self ) -> None:
-        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
 
     def initialize_context( self ) -> None:
         if self.initialized:
@@ -145,6 +92,7 @@ class UserInterface( Context ):
         self.hierarchy      : Hierarchy         = Hierarchy( self.context )
         self.guizmo         : ImGuizmo          = ImGuizmo( self.context )
         self.scene_settings : SceneSettings     = SceneSettings( self.context )
+        self.viewport       : Viewport          = Viewport( self.context )
 
         # drag and drop
         self.dnd_payload    : DragAndDropPayload = DragAndDropPayload()
@@ -152,7 +100,7 @@ class UserInterface( Context ):
         self.initialized = True
 
     def set_selected_object( self, obj : GameObject = None ):
-            self.selectedObject = obj
+        self.selectedObject = obj
 
     def load_gui_icons( self ) -> None:
         """Load icons from game assets gui folder"""
@@ -292,114 +240,6 @@ class UserInterface( Context ):
                 imgui.end_menu_bar()
             imgui.end()
 
-    def draw_exported_viewport( self ) -> None:
-        window_size = imgui.get_io().display_size 
-
-        glBindTexture(GL_TEXTURE_2D, self.renderer.main_fbo["output"])
-
-        imgui.set_next_window_pos( imgui.ImVec2(0, 0) )
-        imgui.set_next_window_size( imgui.ImVec2(window_size.x, window_size.y) )
-
-        flags = (
-            imgui.WindowFlags_.no_title_bar
-            | imgui.WindowFlags_.no_resize
-            | imgui.WindowFlags_.no_move
-            | imgui.WindowFlags_.no_scrollbar
-        )
-
-        imgui.begin("ExportedViewport", None, flags)
-
-        image       = imgui.ImTextureRef(self.renderer.main_fbo["output"])
-        image_uv0   = imgui.ImVec2( 0, 1 )
-        image_uv1   = imgui.ImVec2( 1, 0 )
-        imgui.image( image, window_size, image_uv0, image_uv1 )
-
-        imgui.end()
-
-    def draw_viewport( self ) -> None:
-        imgui.set_next_window_size( imgui.ImVec2(915, 640), imgui.Cond_.first_use_ever )
-
-        imgui.begin( "Viewport" )
-
-        # select render mode
-        imgui.push_item_width( 150.0 );
-        clicked, self.renderer.renderMode = imgui.combo(
-            "##renderMode", self.renderer.renderMode, self.renderer.renderModes
-        )
-        imgui.pop_item_width();
-
-        # window resizing
-        window_size : imgui.ImVec2 = imgui.get_window_size()
-        bias_y = 58
-
-        if window_size != imgui.ImVec2(self.renderer.viewport_size.x, self.renderer.viewport_size.y):
-            self.renderer.viewport_size = imgui.ImVec2( int(window_size.x), int(window_size.y) ) - imgui.ImVec2(0, bias_y)
-
-            self.renderer.setup_projection_matrix( 
-                size = self.renderer.viewport_size
-            )
-
-        glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["output"] )
-
-        image       = imgui.ImTextureRef(self.renderer.main_fbo["output"])
-        image_size  = imgui.ImVec2(self.renderer.viewport_size.x, (self.renderer.viewport_size.y - bias_y));
-        image_uv0   = imgui.ImVec2( 0, 1 )
-        image_uv1   = imgui.ImVec2( 1, 0 )
-        imgui.image( image, image_size, image_uv0, image_uv1 )
-
-        # ImGuizmo
-        _rect_min = imgui.get_item_rect_min()
-        self.guizmo.render( _rect_min, image_size )
-
-        # game state
-        _rect_min.y += 10.0
-        _rect_min.x += 10.0
-        _game_state_changed, _new_game_state, group_width = self.helper.radio_group( "game_state_mode",
-            items           = self.game_state_modes,
-            current_index   = self._game_state_lookup.get( self.context.renderer.game_state, 0 ),
-            start_pos       = _rect_min
-        )
-
-        if _game_state_changed:
-            self.context.renderer.game_state = self.game_state_modes[_new_game_state]["flag"]
-
-        # select imguizmo operation
-        _rect_min.x += (group_width + 10.0)
-        _, self.guizmo.operation, group_width = self.helper.radio_group( "guizmo_operation",
-            items           = self.guizmo.operation_types,
-            current_index   = self.guizmo.operation,
-            start_pos       = _rect_min
-        )
-
-        # select imguizmo mode
-        _rect_min.x += (group_width + 10.0)
-        _, self.guizmo.mode, group_width = self.helper.radio_group( "guizmo_mode",
-            items           = self.guizmo.mode_types,
-            current_index   = self.guizmo.mode,
-            start_pos       = _rect_min
-        )
-
-        # viewport overlay toggles
-        _rect_min.x += (group_width + 10.0)
-        _states : list = [
-                self.context.settings.drawGrid,
-                self.context.settings.drawAxis,
-                self.context.settings.drawWireframe,
-                self.context.settings.drawColliders,
-        ]
-        changed, group_width = self.helper.toggle_group( "viewport_overlay_toggles",
-            items           = self.viewport_overlay_toggles,
-            current_states  = _states,
-            start_pos       = _rect_min
-        )
-        if changed: (
-            self.context.settings.drawGrid,
-            self.context.settings.drawAxis,
-            self.context.settings.drawWireframe,
-            self.context.settings.drawColliders,
-        ) = _states
-        imgui.end()
-
     def draw_settings( self ) -> None:
         imgui.begin( "Settings" )
 
@@ -435,7 +275,7 @@ class UserInterface( Context ):
 
         # exported apps draw directly
         if self.settings.is_exported:
-            self.draw_exported_viewport()
+            self.viewport.render_exported()
 
         # draw engine GUI
         else:
@@ -445,7 +285,7 @@ class UserInterface( Context ):
             self.draw_status_bar()
 
             # windows
-            self.draw_viewport()
+            self.viewport.render()
             self.asset_browser.render()
             self.hierarchy.render()
             self.draw_settings()

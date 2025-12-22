@@ -40,6 +40,14 @@ class Helper( Context ):
     #
     #    imgui.end_combo()
 
+    def _node_sep( self ) -> None:
+        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+        imgui.separator()
+        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+
+    def _node_header_pad( self ) -> None:
+        imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+
     def draw_vec3_control( self, label, vector, resetValue = 0.0, onChange = None, step : float = 0.01, is_enabled : bool = True ) -> bool:
 
         labels = ["X", "Y", "Z"]
@@ -142,7 +150,6 @@ class Helper( Context ):
 
         # scale
         self.draw_vec3_control( "Scale", _t.scale, 0.0 )
-
 
     def toggle_group( self, 
                     label           : str, 

@@ -136,9 +136,9 @@ class SceneSettings( Context ):
             if not self.test_cubemap_initialized:
                 self.test_cubemap_initialized = True
 
-        self.gui._node_sep()
+        self.helper._node_sep()
         if imgui.tree_node_ex( f"{fa.ICON_FA_LAYER_GROUP} Skybox preview", 0 ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             if self.test_cubemap is not None:
                 for i in range(6):
@@ -156,13 +156,13 @@ class SceneSettings( Context ):
             imgui.tree_pop()
 
     def _sky_settings( self, scene : SceneManager.Scene ) -> None:
-        self.gui._node_sep()
+        self.helper._node_sep()
         if imgui.tree_node_ex( f"{fa.ICON_FA_CLOUD_MOON} Environment", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
 
             self._sun_selector()
 
-            self.gui._node_sep()
+            self.helper._node_sep()
 
             type_names = [t.name for t in Skybox.Type_]
 
@@ -187,9 +187,9 @@ class SceneSettings( Context ):
             # procedural settings
             if scene["sky_type"] == Skybox.Type_.procedural:
 
-                self.gui._node_sep()
+                self.helper._node_sep()
                 if imgui.tree_node_ex( f"{fa.ICON_FA_PALETTE} Procedural Skybox", imgui.TreeNodeFlags_.default_open ):
-                    self.gui._node_header_pad()
+                    self.helper._node_header_pad()
 
                     _, self.context.skybox.realtime = imgui.checkbox( f"Realtime", self.context.skybox.realtime )
                     imgui.set_item_tooltip("Realtime OR generated cubemap (rebuilt when sky changes)")
@@ -244,7 +244,7 @@ class SceneSettings( Context ):
 
     def _general_settings( self, scene : SceneManager.Scene ) -> None:
         if imgui.tree_node_ex( f"{fa.ICON_FA_SLIDERS} General", imgui.TreeNodeFlags_.default_open ):
-            self.gui._node_header_pad()
+            self.helper._node_header_pad()
             
             self._camera_selector()
 
