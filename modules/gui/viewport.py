@@ -81,7 +81,6 @@ class Viewport( Context ):
         imgui.push_style_var(imgui.StyleVar_.frame_rounding, 5.0)
         imgui.push_style_var(imgui.StyleVar_.frame_border_size, 0.0)
 
-        # combo
         imgui.push_style_color(imgui.Col_.frame_bg,        (0.2, 0.2, 0.2, 1.0))
         imgui.push_style_color(imgui.Col_.frame_bg_hovered,(0.2, 0.2, 0.2, 1.0))
         imgui.push_style_color(imgui.Col_.frame_bg_active, (0.3, 0.3, 0.3, 1.0))

@@ -300,12 +300,6 @@ class Inspector( Context ):
         imgui.pop_id()
 
     def _scripts( self ):
-        assets = Path( self.settings.assets ).resolve()
-
-        if len(self.gui.selectedObject.scripts) == 0:
-            imgui.text("No scripts attached")
-            return
-
         for script in self.gui.selectedObject.scripts:
             self.helper._node_sep()
             self._draw_script( script )
