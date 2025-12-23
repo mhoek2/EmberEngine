@@ -8,7 +8,7 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Dict, TypedDict
 
 from modules.context import Context
 
@@ -96,7 +96,7 @@ class GameObject( Context, Transform ):
         self.material       : int = material
 
         self.parent         : GameObject = None
-        self.children       : list[GameObject] = []
+        self.children       : Dict[uid.UUID, GameObject] = {}
 
         self._active            : bool = True
         self._hierarchy_active  : bool = True
@@ -147,7 +147,7 @@ class GameObject( Context, Transform ):
         if not self._dirty:
             self._dirty = flag
 
-            for c in self.children:
+            for c in self.children.values():
                 c._mark_dirty( flag )
 
     def addAttachable( self, t : type, object ):
@@ -352,11 +352,11 @@ class GameObject( Context, Transform ):
 
         # remove from current parent
         if self.parent is not None:
-            self.parent.children.remove(self)
+            self.parent.children.pop(self.uuid, None)
 
         # add to new parent
         if parent is not None:
-            parent.children.append(self)
+            parent.children[self.uuid] = self
 
         self.parent = parent
 

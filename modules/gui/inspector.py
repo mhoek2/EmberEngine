@@ -177,7 +177,7 @@ class Inspector( Context ):
                 elif _t_engine_type is not None:
                     _uuid               : uid.UUID = None
 
-                    obj     : GameObject = self.context.findGameObject(_value)
+                    obj     : GameObject = self.context.world.findGameObject(_value)
                     _name   : str = obj.name if obj is not None else "Select"
 
                     imgui.text( f"{class_attr_name} ({_t.__name__})")
@@ -208,7 +208,7 @@ class Inspector( Context ):
                 if _changed:
                     # engine type (uuid)
                     if _t_engine_type is not None:
-                        new_obj : GameObject = self.context.findGameObject( new )
+                        new_obj : GameObject = self.context.world.findGameObject( new )
 
                         if new_obj is None:
                             self.console.error( "gameObject is invalid.")

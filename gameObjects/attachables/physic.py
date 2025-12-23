@@ -67,7 +67,7 @@ class MultiBodyLinks:
 
     def find_physic_children( self, obj : "GameObject", _list : list[PhysicLink] ):
         """Build a flat list of valid nested pybullet child gameObjects"""
-        for c in obj.children:
+        for c in obj.children.values():
             link = c.getAttachable( PhysicLink )
             if link and c.hierachyActive():
                 _list.append( link )

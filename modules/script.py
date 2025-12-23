@@ -221,7 +221,7 @@ class Script:
             if isinstance( exported.default, uid.UUID ):
                 _t_engine_type : EngineTypes.Meta = EngineTypes.get_engine_type( exported.type )
 
-                obj : "GameObject" = self.context.findGameObject( exported.default )
+                obj : "GameObject" = self.context.world.findGameObject( exported.default )
 
                 if obj is None or _t_engine_type is None:
                     print( "failed to export.." )

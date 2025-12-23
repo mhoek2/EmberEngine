@@ -142,7 +142,7 @@ class SceneManager:
         _scene = scene_id if scene_id >= 0 else self.current_scene
         _editor_camera = None
 
-        obj = self.context.findGameObject( uuid )
+        obj = self.context.world.findGameObject( uuid )
 
         if obj is None:
             self.scenes[_scene]["sun"] = None
@@ -222,7 +222,7 @@ class SceneManager:
 
         _scene = scene_id if scene_id >= 0 else self.current_scene
 
-        obj = self.context.findGameObject( uuid )
+        obj = self.context.world.findGameObject( uuid )
 
         if obj is None:
             self.scenes[_scene]["sun"] = None
@@ -328,7 +328,7 @@ class SceneManager:
 
     def saveGameObjectRecursive( self, 
         parent          : "GameObject" = None,
-        objects         : List["GameObject"] = [],
+        objects         : Dict[uid.UUID, "GameObject"] = [],
         _gameObjects    : List["SceneManager._GameObject"] = [] 
     ):
         """Recursivly iterate over gameObject and its children"""
@@ -338,7 +338,7 @@ class SceneManager:
         _scene_camera = self.getCamera()
         _scene_sun = self.getSun()
 
-        for obj in objects:
+        for obj in objects.values():
             if obj._removed:
                 continue
 
@@ -486,7 +486,7 @@ class SceneManager:
 
         self.saveGameObjectRecursive( 
             None,
-            self.context.gameObjects, 
+            self.context.world.gameObjects, 
             _gameObjects
         )
 
@@ -531,7 +531,7 @@ class SceneManager:
         self.setCamera( None )
         self.setSun( None )
         self.context.gui.set_selected_object()
-        self.context.gameObjects.clear()
+        self.context.world.destroyAllGameObjects()
         self.current_scene = -1
 
         self.console.note( f"Clear current scene in editor" )
@@ -542,7 +542,7 @@ class SceneManager:
         :param path: The path to a .py script file
         :type path: Path
         """
-        for obj in self.context.gameObjects:
+        for obj in self.context.world.gameObjects.values():
             for script in obj.scripts:
                 if path != script.path:
                     continue
@@ -564,7 +564,7 @@ class SceneManager:
             # replace ternary with; .get(key, default)
             model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
 
-            index = self.context.addGameObject( eval(obj["instance"])( self.context,
+            gameObject = self.context.world.addGameObject( eval(obj["instance"])( self.context,
                     uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
                     name        = obj["name"]               if "name"       in obj else "Unknown",
                     model_file  = model,
@@ -590,9 +590,6 @@ class SceneManager:
 
             if model:
                 self.console.log( f"Load model: {model.relative_to(self.settings.rootdir)}" )
-
-            # reference added gameObject
-            gameObject = self.context.gameObjects[index]
 
             # todo:
             # implement scene settings, so a camera or sun can be assigned

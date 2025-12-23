@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Dict, Optional, Union
 
 #import site
 #print(site.getsitepackages())
@@ -30,6 +30,7 @@ from modules.cubemap import Cubemap
 from modules.images import Images
 from modules.models import Models
 from modules.material import Materials
+from modules.world import World
 
 from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera
@@ -38,6 +39,8 @@ from gameObjects.light import Light
 from gameObjects.skybox import Skybox
 
 from modules.gui.types import CustomEvent
+
+import uuid as uid
 
 class EmberEngine:
     def __init__( self ) -> None:
@@ -61,19 +64,18 @@ class EmberEngine:
         self.renderer   : Renderer          = Renderer( self )
         self.gui        : UserInterface     = UserInterface( self )
  
-        self.gameObjects : List[GameObject] = []
-
         self.images     : Images            = Images( self )
         self.materials  : Materials         = Materials( self )
         self.models     : Models            = Models( self )
         self.cubemaps   : Cubemap           = Cubemap( self )
         self.skybox     : Skybox            = Skybox( self )
 
+        self.world      : World             = World( self )
+
         self.roughnessOverride = -1.0
         self.metallicOverride = -1.0
 
         self.scene.getScene( self.settings.default_scene )
-
         self.scene.getScenes()
         if not self.scene.loadScene( self.project.meta["default_scene"]):
             self.scene.loadDefaultScene()
@@ -123,107 +125,6 @@ class EmberEngine:
 
         elif _scene["sky_type"] == Skybox.Type_.procedural:
             self.environment_map = self.skybox.create_procedural_cubemap( _scene )
-
-    ##
-    ## Need to move this to dedicated class
-    ##
-    def addEmptyGameObject( self ):
-        return self.addGameObject( Mesh( self,
-            name        = "Empty GameObject",
-            material    = self.materials.defaultMaterial,
-            translate   = [ 0, 0, 0 ],
-            scale       = [ 1, 1, 1 ],
-            rotation    = [ 0.0, 0.0, 0.0 ]
-        ) )
-
-    def addDefaultCube( self ):
-        return self.addGameObject( Mesh( self,
-            name        = "Default cube",
-            model_file  = self.models.default_cube_path,
-            material    = self.materials.defaultMaterial,
-            translate   = [ 0, 1, 0 ],
-            scale       = [ 1, 1, 1 ],
-            rotation    = [ 0.0, 0.0, 0.0 ]
-        ) )
-
-    def addDefaultCamera( self ):
-        return self.addGameObject( Camera( self,
-                        name        = "Camera",
-                        model_file  = f"{self.settings.engineAssets}models\\camera\\model.fbx",
-                        material    = self.materials.defaultMaterial,
-                        translate   = [ 0, 5, -10 ],
-                        scale       = [ 1, 1, 1 ],
-                        rotation    = [ -0.4, 0.0, 0.0 ],
-                        scripts     = [ Path(f"{self.settings.assets}\\camera.py") ]
-                    ) )
-
-    def addDefaultLight( self ) -> None:
-        return self.addGameObject( Light( self,
-                        name        = "light",
-                        model_file  = self.models.default_sphere_path,
-                        translate   = [1, -1, 1],
-                        scale       = [ 0.5, 0.5, 0.5 ],
-                        rotation    = [ 0.0, 0.0, 80.0 ]
-                    ) )
-
-    def addGameObject( self, obj : GameObject ) -> int:
-        index = len( self.gameObjects )
-
-        self.gameObjects.append( obj )
-
-        return index
-
-    def removeGameObject( self, obj : GameObject ):
-        try:
-            # we cant directly remove and rebuild the gameObject array.
-            # so mark it removed, and do not store it on save.
-            #self.gameObjects.remove( object )
-            obj._removed = True
-            obj._visible = False
-            obj._active = False
-            obj._mark_dirty()
-
-            if isinstance( obj, Camera ) and obj is self.scene.getCamera():
-                self.scene.setCamera( None )
-
-            if isinstance( obj, Light ) and obj is self.scene.getSun():
-                self.scene.setSun( None )
-
-            reparent_children = list(obj.children) # prevent mutation during iteration
-            for child in reparent_children:
-                child.setParent( obj.parent )
-
-        except Exception as e:
-            print( e )
-            exc_type, exc_value, exc_tb = sys.exc_info()
-            self.console.error( e, traceback.format_tb(exc_tb) )
-
-
-    def findGameObject( self, identifier : Optional[Union[uid.UUID, int, str]] = None ) -> GameObject:
-        """Try to find a gameObject by its uuid
-        
-        :param identifier: This is a identifier of a gameObject that is looked for, datatype int : _uuid_gui, uid.UUID : uuid or str : name
-        :type identifier: Optional[Union[uid.UUID, int, str]
-        :return: A GameObject object or None
-        :rtype: GameObject | None
-        """
-        if identifier is None:
-            return None
-
-        for obj in self.gameObjects:
-            if isinstance(identifier, int) and obj._uuid_gui == identifier:
-                return obj
-
-            if isinstance(identifier, str) and obj.name == identifier:
-                return obj
-
-            if isinstance(identifier, uid.UUID) and obj.uuid == identifier:
-                return obj
-
-        return None
-    ##
-    ## end
-    ##
 
     def draw_grid( self ):
         """Draw the horizontal grid to the framebuffer"""
@@ -312,12 +213,12 @@ class EmberEngine:
 
     def renderGameObjectsRecursive(self, 
         parent : GameObject = None,
-        objects : List[GameObject] = []
+        objects : Dict[uid.UUID, GameObject] = {}
     ):
         if not objects:
             return
 
-        for obj in objects:
+        for obj in objects.values():
             if obj.parent != parent or obj.parent and parent == None:
                 continue
 
@@ -447,7 +348,7 @@ class EmberEngine:
                 #]
                 lights : list[Renderer.LightUBO.Light] = []
 
-                for obj in self.gameObjects:
+                for obj in self.world.gameObjects.values():
                     if not obj.hierachyActive() or not isinstance(obj, Light) or obj is _sun:
                         continue
 
@@ -475,16 +376,16 @@ class EmberEngine:
                 # trigger update function in registered gameObjects
                 self.renderGameObjectsRecursive( 
                     None, 
-                    self.gameObjects
+                    self.world.gameObjects
                 )
 
                 # cleanup _removed objects
-                #for obj in filter(lambda x: x._removed == True, self.gameObjects):
+                #for obj in filter(lambda x: x._removed == True, self.world.gameObjects):
                 #    if obj.children:
                 #        print("Cannot remove: obj has children")
                 #        continue
                 #
-                #    self.gameObjects.remove( obj )
+                #    self.world.gameObjects.remove( obj )
 
                 if self.renderer.game_start:
                     self.renderer.game_start = False

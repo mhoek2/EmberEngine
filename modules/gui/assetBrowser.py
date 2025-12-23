@@ -31,7 +31,7 @@ class AssetBrowser( Context ):
         # model
         if path.suffix in self.settings.MODEL_EXTENSION:
             game_object_name = path.name.replace(path.suffix, "")
-            self.context.addGameObject( 
+            self.context.world.addGameObject( 
                     Mesh( self.context,
                     name        = game_object_name,
                     model_file  = str( path ),

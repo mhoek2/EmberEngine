@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 from modules.context import Context
 
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass
 import enum
+
+import uuid as uid
 
 @dataclass(frozen=True)
 class HierarchyStyle():
@@ -73,7 +75,7 @@ class Hierarchy( Context ):
 
     def draw_recursive( self, 
         parent          : GameObject = None, 
-        objects         : list[GameObject] = [], 
+        objects         : Dict[uid.UUID, GameObject] = [], 
         depth           : int = 0,
         base_tree_flags : imgui.TreeNodeFlags_ = imgui.TreeNodeFlags_.none,
         ) -> None:
@@ -92,7 +94,8 @@ class Hierarchy( Context ):
         if not objects:
             return
 
-        for n, obj in enumerate( objects ):
+        for obj in objects.values():
+
             if obj is None or obj._removed:
                 continue
 
@@ -165,7 +168,7 @@ class Hierarchy( Context ):
 
                     # remove gameObject
                     if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x + _button_region + 30 ):
-                        self.context.removeGameObject( obj )
+                        self.context.world.removeGameObject( obj )
 
                 if _is_open:
                     if obj.children:
@@ -189,22 +192,22 @@ class Hierarchy( Context ):
         imgui.begin( "Hierarchy" )
 
         if imgui.button( "Cube" ):
-            self.context.addDefaultCube()
+            self.context.world.addDefaultCube()
 
         imgui.same_line()
 
         if imgui.button( "Light" ):
-            self.context.addDefaultLight()
+            self.context.world.addDefaultLight()
 
         imgui.same_line()
 
         if imgui.button( "Empty" ):
-            self.context.addEmptyGameObject()
+            self.context.world.addEmptyGameObject()
 
         imgui.same_line()
 
         if imgui.button( "Camera" ):
-            self.context.addDefaultCamera()
+            self.context.world.addDefaultCamera()
 
         _base_tree_flags =  imgui.TreeNodeFlags_.default_open | \
                             imgui.TreeNodeFlags_.draw_lines_full | \
@@ -213,7 +216,7 @@ class Hierarchy( Context ):
         if imgui.tree_node_ex( "Hierarchy", _base_tree_flags ):
             self.draw_recursive( 
                 parent          = None, 
-                objects         = self.context.gameObjects,
+                objects         = self.context.world.gameObjects,
                 depth           = 0,
                 base_tree_flags = _base_tree_flags
             )

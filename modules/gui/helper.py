@@ -357,16 +357,16 @@ class Helper( Context ):
                 imgui.end_popup()
                 return True, None
 
-            for i, obj in enumerate(self.context.gameObjects):
+            for uuid, obj in self.context.world.gameObjects.items():
                 if filter is not None and not filter(obj) or obj._removed :
                     continue
 
                 _, clicked = imgui.selectable(
-                    f"{obj.name}##object_{i}", clicked
+                    f"{obj.name}##object_{uuid.hex}", clicked
                 )
 
                 if clicked:
-                    selected = obj.uuid
+                    selected = uuid
                     break;
 
             imgui.end_popup()
