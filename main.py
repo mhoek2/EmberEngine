@@ -41,6 +41,9 @@ from modules.gui.types import CustomEvent
 
 import uuid as uid
 
+from queue import Queue
+from threading import Thread
+
 class EmberEngine:
     def __init__( self ) -> None:
         """The main context of 'EmberEngine', 
@@ -48,6 +51,9 @@ class EmberEngine:
         renderer, console, image loaders, materials, scene manager, pygame events"""
         self.settings   : Settings = Settings()
         
+        self.model_load_queue = Queue()     # requests
+        self.model_ready_queue = Queue()    # finished CPU data
+
         self.asset_scripts : List[Path] = []
         self.findScripts()
         
@@ -80,6 +86,11 @@ class EmberEngine:
             self.scene.loadDefaultScene()
 
         self.loadDefaultEnvironment()
+
+        Thread(
+            target = self.model_loader_thread, 
+            daemon = True
+        ).start()
  
     def sanitize_filename( self, string : str ):
         """Sanitize a string for use of a filename, 
@@ -265,6 +276,19 @@ class EmberEngine:
 
         self.renderer.ubo_materials.bind()
 
+    def model_loader_thread( self ):
+        while self.renderer.running:
+            index, load = self.model_load_queue.get()
+
+            try:
+                cpu_meshes  = self.models.loadModelCPU( index, load.path, load.material )
+                self.model_ready_queue.put( ( index, cpu_meshes ) )
+
+            except Exception as e:
+                print(f"Model load failed: {load.path}", e)
+
+            self.model_load_queue.task_done()
+
     def run( self ) -> None:
         """The main loop of the appliction, remains active as long as 'self.renderer.running'
         is True.
@@ -276,6 +300,15 @@ class EmberEngine:
                 self.renderer.begin_frame()
 
                 _scene = self.scene.getCurrentScene()
+
+                #
+                # lazy model loading
+                #
+                while not self.model_ready_queue.empty():
+                    index, cpu_meshes  = self.model_ready_queue.get()
+
+                    self.models.loadModelGPU( index, cpu_meshes )
+                    self.models.model_loading.pop( index )
 
                 #
                 # skybox
