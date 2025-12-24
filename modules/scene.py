@@ -9,7 +9,7 @@ import uuid as uid
 
 from modules.console import Console
 from modules.settings import Settings
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 from modules.script import Script
 from gameObjects.scriptBehaivior import ScriptBehaivior
 

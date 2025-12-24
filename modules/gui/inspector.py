@@ -6,7 +6,7 @@ from modules.images import Images
 from modules.models import Models
 from modules.console import Console
 from modules.scene import SceneManager
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 from modules.script import Script
 from modules.engineTypes import EngineTypes
 

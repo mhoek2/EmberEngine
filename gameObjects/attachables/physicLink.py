@@ -5,7 +5,7 @@ from pyrr import Quaternion
 
 from modules.settings import Settings
 from modules.engineTypes import EngineTypes
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

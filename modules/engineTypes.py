@@ -25,7 +25,7 @@ class EngineTypes:
         if EngineTypes._registry is None:
             # initialize the registry
             from gameObjects.gameObject import GameObject
-            from modules.transform import Transform
+            from gameObjects.attachables.transform import Transform
             from gameObjects.attachables.light import Light
             from gameObjects.attachables.physic import Physic
             from gameObjects.attachables.physicLink import PhysicLink

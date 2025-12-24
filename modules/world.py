@@ -14,7 +14,7 @@ from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
 from gameObjects.skybox import Skybox
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink

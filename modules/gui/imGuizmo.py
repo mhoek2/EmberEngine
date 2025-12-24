@@ -4,7 +4,7 @@ from OpenGL.GLU import *
 from typing import TYPE_CHECKING
 
 from modules.context import Context
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 
 from gameObjects.gameObject import GameObject
 

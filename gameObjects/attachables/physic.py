@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
-    from modules.transform import Transform
+    from gameObjects.attachables.transform import Transform
 
 import inspect
 import traceback

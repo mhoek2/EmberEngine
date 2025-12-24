@@ -16,7 +16,7 @@ from modules.cubemap import Cubemap
 from modules.material import Materials
 from modules.images import Images
 from modules.models import Models
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 from modules.script import Script
 
 from gameObjects.scriptBehaivior import ScriptBehaivior
