@@ -10,8 +10,8 @@ from modules.transform import Transform
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import EmberEngine
+    from modules.models import Model
     from gameObjects.gameObject import GameObject
-    
     from gameObjects.attachables.physic import Physic
 
 import inspect
@@ -235,7 +235,7 @@ class PhysicLink:
             self.stiffness             : float = -1.0
             self.damping               : float = -1.0
 
-            self.model = None
+            self.model : "Model" = None
 
         def _update_transform( self ) -> None:
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )

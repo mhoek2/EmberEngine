@@ -15,7 +15,7 @@ from modules.context import Context
 from modules.cubemap import Cubemap
 from modules.material import Materials
 from modules.images import Images
-from modules.models import Models
+from modules.models import Models, Model
 from modules.transform import Transform
 from modules.script import Script
 
@@ -76,6 +76,11 @@ class GameObject( Context, Transform ):
         :type scripts: list[scripts]
         """
         super().__init__( context )
+        self.materials      : Materials = context.materials
+        self.images         : Images = context.images
+        self.cubemaps       : Cubemap = context.cubemaps
+        self.models         : Models = context.models
+
 
         if uuid is None:
             uuid = self.__create_uuid()
@@ -86,12 +91,8 @@ class GameObject( Context, Transform ):
         self.name           : str = name
 
         # list of references to attachables eg: Transform
-        self.attachables      : dict = {}
+        self.attachables    : dict = {}
 
-        self.materials      : Materials = context.materials
-        self.images         : Images = context.images
-        self.cubemaps       : Cubemap = context.cubemaps
-        self.models         : Models = context.models
         self.scripts        : list[Script] = []
         self.material       : int = material
 
@@ -103,8 +104,10 @@ class GameObject( Context, Transform ):
 
         self._visible           : bool = True
         self._hierarchy_visible : bool = True
-
-        self.transform = self.addAttachable( Transform, Transform(
+        
+        # transform
+        self.transform : Transform = None
+        self.addAttachable( Transform, Transform(
             context     = self.context,
             gameObject  = self,
             translate   = translate,
@@ -113,19 +116,23 @@ class GameObject( Context, Transform ):
             name        = name
         ) )
 
+        # physic
         self.physic : Physic = None  # reserved for physic attachment
         self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
-        self.model          : int = -1
-        self.model_file     = Path(model_file) if model_file else False
+        self.model          : Model = None
+        self.model_file     : Path = Path(model_file) if model_file else False
+
+        if self.model_file:
+            self.addAttachable( Model, Model(
+                index   = self.models.loadOrFind( self.model_file, self.material  ) 
+            ) )
 
         self._dirty         : GameObject.DirtyFlag_ = GameObject.DirtyFlag_.all
         self._removed       : bool = False
 
         self.onStart()
-
-
 
         # dynamic scripts
         for script in scripts:
@@ -165,13 +172,21 @@ class GameObject( Context, Transform ):
 
         self.attachables[t] = object
 
-        # special case for physics (for now)
-        # use reserved self.physic_link attribute as reference, dont want to do per frame lookups.
-        if t is PhysicLink:
-            self.physic_link = self.attachables[t] 
+        if t is Transform:
+            self.transform = self.attachables[t] 
+            self.context.world.transforms[self.uuid] = self.attachables[t] 
+
+        if t is Model:
+            self.model = self.attachables[t] 
+            self.context.world.models[self.uuid] = self.attachables[t] 
 
         if t is Physic:
-            self.physic = self.attachables[t] 
+            self.physic = self.attachables[t]
+            self.context.world.physics[self.uuid] = self.attachables[t] 
+
+        if t is PhysicLink:
+            self.physic_link = self.attachables[t]
+            self.context.world.physic_links[self.uuid] = self.attachables[t] 
 
         return self.attachables[t] 
 
@@ -609,13 +624,9 @@ class GameObject( Context, Transform ):
         if not is_visible:
             return
 
-        # render the model geometry
-        if self.model != -1 and is_visible:
-            self.models.draw( self.model, self.transform._getModelMatrix() ) 
+        self.models.draw( self.model, self.transform._getModelMatrix() ) 
 
-        if not self.context.settings.drawColliders:
-            return
-
+    def onRenderColliders( self ) -> None:
         # debug draw collision geometry
         #if not self.renderer.game_runtime and self.physic_link is not None:
         _physic = self.physic_link or self.physic

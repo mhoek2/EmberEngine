@@ -15,11 +15,14 @@ from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
 from gameObjects.light import Light
 from gameObjects.skybox import Skybox
+from modules.transform import Transform
 
 if TYPE_CHECKING:
     from main import EmberEngine
-    from modules.models import Models
+    from modules.models import Models, Model
     from modules.material import Materials
+    from gameObjects.attachables.physic import Physic
+    from gameObjects.attachables.physicLink import PhysicLink
 
 import traceback
 
@@ -36,7 +39,13 @@ class World( Context ):
         self.materials  : "Materials" = context.materials
         self.models     : "Models" = context.models
 
-        self.gameObjects: Dict[uid.UUID, GameObject] = {}
+        self.gameObjects    : Dict[uid.UUID, GameObject] = {}
+        self.transforms     : Dict[uid.UUID, Transform] = {}
+        self.models         : Dict[uid.UUID, "Model"] = {}
+        self.material       : Dict[uid.UUID, int] = {}
+        self.physics        : Dict[uid.UUID, Physic] = {}
+        self.physic_links   : Dict[uid.UUID, PhysicLink] = {}
+        self.lights         : Dict[uid.UUID, Light] = {}
 
     def destroyAllGameObjects( self ) -> None:
         self.gameObjects.clear()

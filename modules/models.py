@@ -14,6 +14,11 @@ from impasse.constants import MaterialPropertyKey, ProcessingStep
 import numpy as np
 
 from modules.settings import Settings
+from dataclasses import dataclass, field
+
+@dataclass(slots=True)
+class Model:
+    index : int = field( default_factory=int )
 
 class Models( Context ):
     class Mesh(TypedDict):
@@ -42,14 +47,21 @@ class Models( Context ):
 
         self._num_models = 0
 
+        # default models
         self.default_cube_path = f"{self.settings.engineAssets}models\\cube\\model.obj"
-        self.default_cube = self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial )
+        self.default_cube : Model = Model( 
+            index=self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial 
+        ) )
 
         self.default_sphere_path = f"{self.settings.engineAssets}models\\sphere\\model.obj"
-        self.default_sphere = self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial )
+        self.default_sphere : Model = Model( 
+            index=self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial
+        ) )
 
         self.default_cilinder_path = f"{self.settings.engineAssets}models\\cilinder\\model.obj"
-        self.default_cilinder = self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial )
+        self.default_cilinder : Model = Model( 
+            index=self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial 
+        ) )
 
         return
 
@@ -223,6 +235,9 @@ class Models( Context ):
         """
         index = self._num_models
 
+        if not file:
+            return
+
         if not file.is_file():
             raise ValueError( f"Invalid model path!{str(file)}" )
 
@@ -291,7 +306,7 @@ class Models( Context ):
         for child in node.children:
             self.draw_node( child, model_index, global_transform )
 
-    def draw( self, model_index : int, model_matrix : Matrix44 ) -> None:
+    def draw( self, model : Model, model_matrix : Matrix44 ) -> None:
         """Begin drawing a model by index
 
         :param model_index: The index of a loaded model
@@ -299,7 +314,7 @@ class Models( Context ):
         :param model_matrix: The transformation model matrix, used along with view and projection matrices
         :type model_matrix: matrix44
         """
-        self.draw_node( self.model[model_index].root_node, model_index, model_matrix )
+        self.draw_node( self.model[model.index].root_node, model.index, model_matrix )
 
         #for mesh in self.model[index].meshes:
         #    mesh_index = self.model[index].meshes.index(mesh)

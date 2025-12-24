@@ -371,7 +371,7 @@ class SceneManager:
                 "children"      : []
             }
 
-            if obj.model != -1:
+            if obj.model:
                 buffer["model_file"] = str(obj.model_file.relative_to( self.settings.rootdir ))
 
             # GameObject Types

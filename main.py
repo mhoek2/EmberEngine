@@ -211,7 +211,7 @@ class EmberEngine:
 
         glLineWidth(1.0)
 
-    def renderGameObjectsRecursive(self, 
+    def prepareGameObjectsRecursive(self, 
         parent : GameObject = None,
         objects : Dict[uid.UUID, GameObject] = {}
     ):
@@ -239,7 +239,7 @@ class EmberEngine:
 
             # render children if any
             if obj.children:
-                self.renderGameObjectsRecursive( 
+                self.prepareGameObjectsRecursive( 
                     obj, 
                     obj.children
                 )
@@ -374,10 +374,27 @@ class EmberEngine:
                     self.console.clear()
 
                 # trigger update function in registered gameObjects
-                self.renderGameObjectsRecursive( 
+                self.prepareGameObjectsRecursive( 
                     None, 
                     self.world.gameObjects
                 )
+
+                # render meshes
+                for uuid in self.world.models.keys():
+                    obj : GameObject = self.world.gameObjects[uuid]
+
+                    if isinstance(obj, Camera) and self.renderer.game_runtime:
+                        continue
+
+                    obj.onRender()
+
+                # editor visualizers
+                if self.settings.drawColliders:
+                    for uuid in self.world.physics.keys():
+                        self.world.gameObjects[uuid].onRenderColliders()
+
+                    for uuid in self.world.physic_links.keys():
+                        self.world.gameObjects[uuid].onRenderColliders()
 
                 # cleanup _removed objects
                 #for obj in filter(lambda x: x._removed == True, self.world.gameObjects):

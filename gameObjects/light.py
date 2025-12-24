@@ -34,9 +34,6 @@ class Light( GameObject ):
         """Executes whenever the object is added to scene"""
         super().onStart()
 
-        if self.model_file:
-            self.model = self.models.loadOrFind( self.model_file, self.material )
-
     def onUpdate( self ) -> None:
         """Executes every frame, issuing draw commands"""
 
@@ -45,4 +42,4 @@ class Light( GameObject ):
 
         super().onUpdate()
 
-        super().onRender() 
+        #super().onRender() 
