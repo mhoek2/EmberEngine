@@ -12,6 +12,6 @@ class Model:
     context         : "EmberEngine" = field( default=None )
     gameObject      : "GameObject"  = field( default=None )
 
-    handle  : int   = field( default=None )
+    handle  : int   = field( default=-1 )
     path    : Path  = field( default_factory=Path )
    

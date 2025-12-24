@@ -510,6 +510,7 @@ class Inspector( Context ):
             if imgui.begin_tab_item("Collision##Tab4")[0]:
                 imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 collision : PhysicLink.Collision = physic_link.collision
+                _t : Transform = collision.transform
 
                 # type
                 geom_type_names = [t.name for t in PhysicLink.GeometryType_]
@@ -542,7 +543,6 @@ class Inspector( Context ):
 
                 self.helper._node_sep()
 
-                _t : Transform = collision.transform
                 self.helper.draw_transform_local( _t, 
                     mask=[1, 1, (1 if collision.geom_type == PhysicLink.GeometryType_.box else 0)] 
                 )

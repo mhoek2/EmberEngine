@@ -50,18 +50,21 @@ class Models( Context ):
         # default models
         self.default_cube_path = f"{self.settings.engineAssets}models\\cube\\model.obj"
         self.default_cube : Model = Model( 
-            handle=self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial 
-        ) )
+            handle  = self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial ),
+            path    = Path(self.default_cube_path)
+        )
 
         self.default_sphere_path = f"{self.settings.engineAssets}models\\sphere\\model.obj"
         self.default_sphere : Model = Model( 
-            handle=self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial
-        ) )
+            handle  = self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial ),
+            path    = Path(self.default_sphere_path)
+        )
 
         self.default_cilinder_path = f"{self.settings.engineAssets}models\\cilinder\\model.obj"
         self.default_cilinder : Model = Model( 
-            handle=self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial 
-        ) )
+            handle  = self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial ),
+            path    = Path(self.default_cilinder_path)
+        )
 
         return
 
@@ -314,7 +317,7 @@ class Models( Context ):
         :param model_matrix: The transformation model matrix, used along with view and projection matrices
         :type model_matrix: matrix44
         """
-        if not model.handle:
+        if model.handle == -1:
             return
 
         self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix )
