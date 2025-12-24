@@ -11,8 +11,3 @@ class Mesh( GameObject ):
         """Executes every frame, issuing draw commands"""
         super().onUpdate()
 
-        #if not self.hierachyActive():
-        #    return
-        #
-        #super().onRender()
-

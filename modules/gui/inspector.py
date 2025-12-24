@@ -13,12 +13,12 @@ from modules.engineTypes import EngineTypes
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
-from gameObjects.light import Light
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
+from gameObjects.attachables.light import Light
 
 from modules.gui.types import GameObjectTypes, RotationMode_
 
@@ -396,9 +396,10 @@ class Inspector( Context ):
         imgui.tree_pop()
 
     def _light( self ) -> None:
-        gameObject  : GameObject    = self.gui.selectedObject
+        gameObject  : GameObject = self.gui.selectedObject
+        _light      : Light = gameObject.light
 
-        if not isinstance( gameObject, Light ):
+        if not gameObject.light:
             return
 
         self.helper._node_sep()
@@ -412,22 +413,22 @@ class Inspector( Context ):
 
             changed, new_light_index = imgui.combo(
                 "Light type",
-                gameObject.light_type,
+                _light.light_type,
                 type_names
             )
             if changed:
                 any_changed  = True
-                gameObject.light_type = Light.Type_(new_light_index)
+                _light.light_type = Light.Type_(new_light_index)
 
-            changed, gameObject.light_color = imgui.color_edit3( "Light color", gameObject.light_color )
+            changed, _light.light_color = imgui.color_edit3( "Light color", _light.light_color )
             if changed:
                 any_changed  = True
 
-            changed, gameObject.radius = imgui.drag_float( f"Radius", gameObject.radius, 0.1 )
+            changed, _light.radius = imgui.drag_float( f"Radius", _light.radius, 0.1 )
             if changed:
                 any_changed  = True
 
-            changed, gameObject.intensity = imgui.drag_float( f"Intensity", gameObject.intensity, 0.1 )
+            changed, _light.intensity = imgui.drag_float( f"Intensity", _light.intensity, 0.1 )
             if changed:
                 any_changed  = True
 

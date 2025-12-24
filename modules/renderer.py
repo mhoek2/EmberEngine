@@ -636,7 +636,7 @@ class Renderer:
             color       : list[float]
             radius      : int
             intensity   : float
-            t           : int # Light(GameObject).Type_
+            t           : int # gameObjects.attachables.Light.Type_
 
         def __init__(self, 
                      shader : Shader, 

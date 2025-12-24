@@ -8,7 +8,6 @@ from modules.scene import SceneManager
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
-from gameObjects.light import Light
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
@@ -93,7 +92,7 @@ class SceneSettings( Context ):
 
         else: 
             changed, _uuid = self.helper.draw_popup_gameObject(
-                "##select_sun", filter=lambda obj: isinstance(obj, Light ))
+                "##select_sun", filter=lambda obj: isinstance(obj, GameObject ))
 
         if changed:
             self.scene.setSun( _uuid )

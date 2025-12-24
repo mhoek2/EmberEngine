@@ -175,7 +175,7 @@
                         "value": -1.0,
                         "boost": 30.0,
                         "manipulate": {
-                            "uuid": "259294da29e84da38f41af3c3e7f9052"
+                            "uuid": "eb6c62b81b4140cf8ea252f5b4697759"
                         }
                     }
                 }
@@ -319,7 +319,7 @@
             "uuid": "f4a5e507e0f34e8485a44bc15e71ba89",
             "name": "sun",
             "active": true,
-            "instance": "Light",
+            "instance": "Mesh",
             "visible": true,
             "material": -1,
             "translate": [
@@ -349,25 +349,26 @@
                     }
                 }
             ],
-            "instance_data": {
+            "instance_data": {},
+            "children": [],
+            "model_file": "engineAssets\\models\\sphere\\model.obj",
+            "Light": {
                 "light_type": 0,
                 "light_color": [
                     0.9411764740943909,
-                    0.8928692936897278,
-                    0.5305651426315308
+                    0.8901960849761963,
+                    0.529411792755127
                 ],
-                "radius": 12.899999618530273,
+                "radius": 12.0,
                 "intensity": 2.5,
                 "is_sun": true
-            },
-            "children": [],
-            "model_file": "engineAssets\\models\\sphere\\model.obj"
+            }
         },
         {
             "uuid": "e10f64a99fff4380b94ffd3731ac9c73",
             "name": "light",
             "active": true,
-            "instance": "Light",
+            "instance": "Mesh",
             "visible": true,
             "material": -1,
             "translate": [
@@ -386,19 +387,20 @@
                 0.5
             ],
             "scripts": [],
-            "instance_data": {
+            "instance_data": {},
+            "children": [],
+            "model_file": "engineAssets\\models\\sphere\\model.obj",
+            "Light": {
                 "light_type": 2,
                 "light_color": [
                     0.0,
-                    0.7352945804595947,
+                    0.7333333492279053,
                     1.0
                 ],
-                "radius": 4.099999904632568,
+                "radius": 4.0,
                 "intensity": 0.8999999761581421,
                 "is_sun": false
-            },
-            "children": [],
-            "model_file": "engineAssets\\models\\sphere\\model.obj"
+            }
         }
     ]
 }

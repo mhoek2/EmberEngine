@@ -26,14 +26,16 @@ class EngineTypes:
             # initialize the registry
             from gameObjects.gameObject import GameObject
             from modules.transform import Transform
+            from gameObjects.attachables.light import Light
             from gameObjects.attachables.physic import Physic
             from gameObjects.attachables.physicLink import PhysicLink
 
             EngineTypes._registry = {
-                Transform   : EngineTypes.Meta( Transform,    False ),
-                GameObject  : EngineTypes.Meta( GameObject,   False ),
-                Physic      : EngineTypes.Meta( Physic,       True ),
-                PhysicLink  : EngineTypes.Meta( PhysicLink,   True ),
+                Transform   : EngineTypes.Meta( Transform,    attachable=False ),
+                GameObject  : EngineTypes.Meta( GameObject,   attachable=False ),
+                Light       : EngineTypes.Meta( Light,        attachable=True ),
+                Physic      : EngineTypes.Meta( Physic,       attachable=True ),
+                PhysicLink  : EngineTypes.Meta( PhysicLink,   attachable=True ),
             }
 
         return EngineTypes._registry

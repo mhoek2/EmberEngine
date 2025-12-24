@@ -1,6 +1,10 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict, Any, List, Dict
 
+if TYPE_CHECKING:
+    from main import EmberEngine
+    from gameObjects.gameObject import GameObject
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.arrays import vbo
@@ -18,6 +22,9 @@ from dataclasses import dataclass, field
 
 @dataclass(slots=True)
 class Model:
+    context         : "EmberEngine" = field( default=None )
+    gameObject      : "GameObject"  = field( default=None )
+
     index : int = field( default_factory=int )
 
 class Models( Context ):

@@ -15,12 +15,12 @@ from gameObjects.scriptBehaivior import ScriptBehaivior
 
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
+from gameObjects.attachables.light import Light
 
 if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
     from gameObjects.camera import Camera
-    from gameObjects.light import Light
     from gameObjects.skybox import Skybox
 
 import traceback
@@ -188,15 +188,13 @@ class SceneManager:
         :return: The current scene sun, False if this fails
         :rtype: Camera or bool
         """
-        from gameObjects.light import Light
-
         try:
-            _scene_light = self.scenes[self.current_scene]["sun"]
+            obj : GameObject = self.scenes[self.current_scene]["sun"]
 
-            if not isinstance( _scene_light, Light ):
+            if not obj or not obj.light:
                 raise IndexError("invalid sun")
 
-            return _scene_light
+            return obj
 
         except Exception as e:
             #print( e )
@@ -218,19 +216,20 @@ class SceneManager:
         return False
 
     def setSun( self, uuid : uid.UUID, scene_id = -1):
-        from gameObjects.light import Light
-
         _scene = scene_id if scene_id >= 0 else self.current_scene
 
         obj = self.context.world.findGameObject( uuid )
 
-        if obj is None:
+        # here for now
+        self.context.skybox.procedural_cubemap_update = True
+
+        if not obj or not obj.light:
             self.scenes[_scene]["sun"] = None
+            return
 
         # set scene sun
-        elif obj and isinstance(obj, Light):
-            obj.is_sun = True
-            self.scenes[_scene]["sun"] = obj
+        obj.is_sun = True
+        self.scenes[_scene]["sun"] = obj
 
     def newScene( self, name : str ):
         """Creates a new scene based on the engines default empty scene
@@ -333,7 +332,6 @@ class SceneManager:
     ):
         """Recursivly iterate over gameObject and its children"""
         from gameObjects.camera import Camera
-        from gameObjects.light import Light
 
         _scene_camera = self.getCamera()
         _scene_sun = self.getSun()
@@ -383,17 +381,7 @@ class SceneManager:
                 if _scene_camera:
                     buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
                
-
-            elif isinstance( obj, Light ):   
-                buffer["instance_data"]["light_type"]   = obj.light_type
-                buffer["instance_data"]["light_color"]  = list(obj.light_color)
-                buffer["instance_data"]["radius"]       = obj.radius
-                buffer["instance_data"]["intensity"]    = obj.intensity
-
-
-                if _scene_sun:
-                    buffer["instance_data"]["is_sun"] = True if obj.uuid == _scene_sun.uuid else False
-               
+  
             def physicLink( buffer, physic_link ):
                 inertia     : PhysicLink.Inertia        = physic_link.inertia
                 joint       : PhysicLink.Joint          = physic_link.joint
@@ -440,6 +428,16 @@ class SceneManager:
             # if self.physic_link, but explicitly use the designed method for this
             if physic_link:
                 physicLink( buffer, physic_link )
+
+            light : Light = obj.getAttachable(Light)
+            if light:
+                buffer["Light"] = {
+                    "light_type"   : light.light_type,
+                    "light_color"  : list(light.light_color),
+                    "radius"       : light.radius,
+                    "intensity"    : light.intensity,
+                    "is_sun"       : True if (_scene_sun and obj.uuid == _scene_sun.uuid) else False
+                }
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -557,12 +555,15 @@ class SceneManager:
     ):
         from gameObjects.mesh import Mesh
         from gameObjects.camera import Camera
-        from gameObjects.light import Light
 
         for obj in objects:
             # todo:
             # replace ternary with; .get(key, default)
             model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
+
+            # temporary
+            if obj["instance"] == "Light":
+                obj["instance"] = "Mesh"
 
             gameObject = self.context.world.addGameObject( eval(obj["instance"])( self.context,
                     uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
@@ -605,17 +606,6 @@ class SceneManager:
                     if _instance_data.get("is_default_camera", False):
                         self.setCamera( gameObject.uuid, scene_id = scene_id )
 
-            elif isinstance( gameObject, Light ):
-                if _instance_data:
-                    if "light_type"    in _instance_data: gameObject.light_type   = _instance_data.get("light_type")
-                    if "light_color"   in _instance_data: gameObject.light_color  = list(_instance_data.get("light_color"))
-                    if "radius"        in _instance_data: gameObject.radius       = _instance_data.get("radius")
-                    if "intensity"     in _instance_data: gameObject.intensity    = _instance_data.get("intensity")
-               
-                    # set this is current scene sun
-                    if _instance_data.get("is_sun", False):
-                        self.setSun( gameObject.uuid, scene_id = scene_id )
-
             if "active" in obj:
                 gameObject.active = obj["active"]
 
@@ -628,6 +618,23 @@ class SceneManager:
             #
             # attachables
             #
+            if "Light" in obj:
+                _light = obj["Light"]
+                light_kwargs = {}
+
+                if "light_type"     in _light : light_kwargs["light_type"]  = _light["light_type"]
+                if "light_color"    in _light : light_kwargs["light_color"] = list(_light["light_color"])
+                if "radius"         in _light : light_kwargs["radius"]      = _light["radius"]
+                if "intensity"      in _light : light_kwargs["intensity"]   = _light["intensity"]
+
+                gameObject.addAttachable( Light, Light( 
+                    self.context, gameObject, **light_kwargs 
+                ) )
+
+                # set this is current scene sun
+                if _light.get("is_sun", False):
+                    self.setSun( gameObject.uuid, scene_id = scene_id )
+
             def physicLink( _link : dict, physic_link : PhysicLink | Physic ):
                 _inertia        = _link.get("inertia")
                 _joint          = _link.get("joint")
@@ -676,7 +683,7 @@ class SceneManager:
             if "Physic" in obj:
                 _physic = obj["Physic"]
 
-                gameObject.physic : Physic = gameObject.addAttachable( Physic, Physic( self.context, gameObject ) )
+                gameObject.addAttachable( Physic, Physic( self.context, gameObject ) )
                 gameObject.physic.base_mass = _physic.get("base_mass", -1.0)
 
                 physicLink( _physic, gameObject.physic )
@@ -684,7 +691,7 @@ class SceneManager:
             if "PhysicLink" in obj:
                 _physic_link    = obj["PhysicLink"]
 
-                gameObject.physic_link : PhysicLink = gameObject.addAttachable( PhysicLink, PhysicLink( self.context, gameObject ) )
+                gameObject.addAttachable( PhysicLink, PhysicLink( self.context, gameObject ) )
                 physicLink( _physic_link, gameObject.physic_link )
 
             if "children" in obj:

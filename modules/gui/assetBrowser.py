@@ -4,7 +4,6 @@ from modules.context import Context
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
-from gameObjects.light import Light
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 

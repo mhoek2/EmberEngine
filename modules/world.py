@@ -13,16 +13,17 @@ from modules.script import Script
 from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
-from gameObjects.light import Light
 from gameObjects.skybox import Skybox
 from modules.transform import Transform
+
+from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
+from gameObjects.attachables.light import Light
 
 if TYPE_CHECKING:
     from main import EmberEngine
     from modules.models import Models, Model
     from modules.material import Materials
-    from gameObjects.attachables.physic import Physic
-    from gameObjects.attachables.physicLink import PhysicLink
 
 import traceback
 
@@ -41,14 +42,20 @@ class World( Context ):
 
         self.gameObjects    : Dict[uid.UUID, GameObject] = {}
         self.transforms     : Dict[uid.UUID, Transform] = {}
+        self.lights         : Dict[uid.UUID, Light] = {}
         self.models         : Dict[uid.UUID, "Model"] = {}
         self.material       : Dict[uid.UUID, int] = {}
         self.physics        : Dict[uid.UUID, Physic] = {}
         self.physic_links   : Dict[uid.UUID, PhysicLink] = {}
-        self.lights         : Dict[uid.UUID, Light] = {}
 
     def destroyAllGameObjects( self ) -> None:
         self.gameObjects.clear()
+        self.transforms.clear()
+        self.lights.clear()
+        self.models.clear()
+        self.material.clear()
+        self.physics.clear()
+        self.physic_links.clear()
 
     def addGameObject( self, obj : GameObject ) -> int:
         self.gameObjects[obj.uuid] = obj
@@ -89,13 +96,15 @@ class World( Context ):
                     ) )
 
     def addDefaultLight( self ) -> None:
-        return self.addGameObject( Light( self.context,
+        gameObject : GameObject = self.addGameObject( Mesh( self.context,
                         name        = "light",
-                        model_file  = self.models.default_sphere_path,
-                        translate   = [1, -1, 1],
+                        model_file  = self.context.models.default_sphere_path,
+                        translate   = [ 0.0, 1.0, 0.0 ],
                         scale       = [ 0.5, 0.5, 0.5 ],
                         rotation    = [ 0.0, 0.0, 80.0 ]
                     ) )
+
+        gameObject.addAttachable( Light, Light( self.context, gameObject ) )
 
     def removeGameObject( self, obj : GameObject ):
         try:
@@ -109,8 +118,9 @@ class World( Context ):
 
             if isinstance( obj, Camera ) and obj is self.scene.getCamera():
                 self.scene.setCamera( None )
-
-            if isinstance( obj, Light ) and obj is self.scene.getSun():
+                
+            light : Light = obj.getAttachable(Light)
+            if light is self.scene.getSun():
                 self.scene.setSun( None )
 
             reparent_children = list(obj.children) # prevent mutation during iteration

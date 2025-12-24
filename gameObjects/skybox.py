@@ -297,7 +297,7 @@ class Skybox( Context ):
             _sun_active = _sun_active and _sun.hierachyVisible()
 
         light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
-        light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
+        light_color = _sun.light.light_color        if _sun_active else self.settings.default_ambient_color
 
         _sky_color      = scene["procedural_sky_color"]
         _horizon_color  = scene["procedural_horizon_color"]

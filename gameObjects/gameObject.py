@@ -23,6 +23,7 @@ from gameObjects.scriptBehaivior import ScriptBehaivior
 
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
+from gameObjects.attachables.light import Light
 
 import inspect
 import importlib
@@ -89,22 +90,26 @@ class GameObject( Context, Transform ):
         self._uuid_gui      : int = int(str(self.uuid.int)[0:8])
 
         self.name           : str = name
-
-        # list of references to attachables eg: Transform
-        self.attachables    : dict = {}
-
         self.scripts        : list[Script] = []
         self.material       : int = material
-
         self.parent         : GameObject = None
         self.children       : Dict[uid.UUID, GameObject] = {}
 
+        # states
         self._active            : bool = True
         self._hierarchy_active  : bool = True
 
         self._visible           : bool = True
         self._hierarchy_visible : bool = True
+
+        self._dirty         : GameObject.DirtyFlag_ = GameObject.DirtyFlag_.all
+        self._removed       : bool = False   
         
+        #
+        # attachables
+        #
+        self.attachables    : dict = {}
+
         # transform
         self.transform : Transform = None
         self.addAttachable( Transform, Transform(
@@ -126,11 +131,13 @@ class GameObject( Context, Transform ):
 
         if self.model_file:
             self.addAttachable( Model, Model(
-                index   = self.models.loadOrFind( self.model_file, self.material  ) 
+                context     = self.context,
+                gameObject  = self,
+                index       = self.models.loadOrFind( self.model_file, self.material  ) 
             ) )
 
-        self._dirty         : GameObject.DirtyFlag_ = GameObject.DirtyFlag_.all
-        self._removed       : bool = False
+        # light
+        self.light : Light = None
 
         self.onStart()
 
@@ -176,6 +183,10 @@ class GameObject( Context, Transform ):
             self.transform = self.attachables[t] 
             self.context.world.transforms[self.uuid] = self.attachables[t] 
 
+        if t is Light:
+            self.light = self.attachables[t] 
+            self.context.world.lights[self.uuid] = self.attachables[t] 
+
         if t is Model:
             self.model = self.attachables[t] 
             self.context.world.models[self.uuid] = self.attachables[t] 
@@ -205,6 +216,8 @@ class GameObject( Context, Transform ):
 
         match attachable:
             case "Transform"    : _ref = self.attachables.get( Transform )
+            case "Light"        : _ref = self.attachables.get( Light )
+            case "Model"        : _ref = self.attachables.get( Model )
             case "PhysicLink"   : _ref = self.attachables.get( PhysicLink )
             case "Physic"       : _ref = self.attachables.get( Physic )
             case "GameObject"   : _ref = self
@@ -604,6 +617,9 @@ class GameObject( Context, Transform ):
                 self.physic._updatePhysicsBody()
 
         if self._dirty:
+            if self.scene.isSun( self.uuid ):
+                self.context.skybox.procedural_cubemap_update = True
+
             self._dirty = GameObject.DirtyFlag_.none
 
         else:

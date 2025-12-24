@@ -35,7 +35,6 @@ from modules.world import World
 from gameObjects.gameObject import GameObject
 from gameObjects.camera import Camera
 from gameObjects.mesh import Mesh
-from gameObjects.light import Light
 from gameObjects.skybox import Skybox
 
 from modules.gui.types import CustomEvent
@@ -325,7 +324,7 @@ class EmberEngine:
                     _sun_active = _sun_active and _sun.hierachyVisible()
 
                 light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
-                light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
+                light_color = _sun.light.light_color        if _sun_active else self.settings.default_ambient_color
 
                 glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], light_color[0], light_color[1], light_color[2], 1.0 )
@@ -334,22 +333,12 @@ class EmberEngine:
                 glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
                 glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
                 
-                #
                 # lights
-                #
-                #lights: list[Renderer.LightUBO.Light] = [
-                #    Renderer.LightUBO.Light(
-                #        origin  = obj.transform.position,
-                #        color   = obj.light_color,
-                #        radius  = obj.radius,
-                #    )
-                #    # per-frame, slow
-                #    for obj in filter(lambda x: x.hierachyActive() and isinstance(x, Light) and x is not _sun, self.gameObjects)
-                #]
                 lights : list[Renderer.LightUBO.Light] = []
+                for uuid in self.world.lights.keys():
+                    obj : GameObject = self.world.gameObjects[uuid]
 
-                for obj in self.world.gameObjects.values():
-                    if not obj.hierachyActive() or not isinstance(obj, Light) or obj is _sun:
+                    if not obj.hierachyActive() or obj is _sun:
                         continue
 
                     if not self.renderer.game_runtime and not obj.hierachyVisible():
@@ -358,10 +347,12 @@ class EmberEngine:
                     lights.append( Renderer.LightUBO.Light(
                         origin      = obj.transform.position,
                         rotation    = obj.transform.rotation,
-                        color       = obj.light_color,
-                        radius      = obj.radius,
-                        intensity   = obj.intensity,
-                        t           = obj.light_type
+
+
+                        color       = obj.light.light_color,
+                        radius      = obj.light.radius,
+                        intensity   = obj.light.intensity,
+                        t           = obj.light.light_type
                     ) )
 
                 self.renderer.ubo_lights.update( lights )

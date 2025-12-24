@@ -6,7 +6,6 @@ from imgui_bundle import icons_fontawesome_6 as fa
 
 from gameObjects.gameObject import GameObject
 from gameObjects.mesh import Mesh
-from gameObjects.light import Light
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
@@ -117,10 +116,6 @@ class GameObjectTypes:
                 Mesh: GameObjectTypes.Meta( 
                     _class  = Mesh, 
                     _icon   = fa.ICON_FA_CUBE
-                ),
-                Light: GameObjectTypes.Meta( 
-                    _class  = Light, 
-                    _icon   = fa.ICON_FA_LIGHTBULB
                 ),
 
                 # baseclass
