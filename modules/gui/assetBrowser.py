@@ -40,8 +40,8 @@ class AssetBrowser( Context ):
 
             gameObject.addAttachable( Model, Model( 
                 self.context, gameObject,
-                handle      = self.context.models.loadOrFind( str( path ), -1 ),
-                path        = str( path )
+                handle      = self.context.models.loadOrFind( Path( path ), -1 ),
+                path        = Path( path )
             ) )
 
         # scene

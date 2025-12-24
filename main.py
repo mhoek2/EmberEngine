@@ -50,9 +50,6 @@ class EmberEngine:
         initializes required modules like:
         renderer, console, image loaders, materials, scene manager, pygame events"""
         self.settings   : Settings = Settings()
-        
-        self.model_load_queue = Queue()     # requests
-        self.model_ready_queue = Queue()    # finished CPU data
 
         self.asset_scripts : List[Path] = []
         self.findScripts()
@@ -88,7 +85,7 @@ class EmberEngine:
         self.loadDefaultEnvironment()
 
         Thread(
-            target = self.model_loader_thread, 
+            target = self.models.model_loader_thread, 
             daemon = True
         ).start()
  
@@ -276,19 +273,6 @@ class EmberEngine:
 
         self.renderer.ubo_materials.bind()
 
-    def model_loader_thread( self ):
-        while self.renderer.running:
-            index, load = self.model_load_queue.get()
-
-            try:
-                cpu_meshes  = self.models.loadModelCPU( index, load.path, load.material )
-                self.model_ready_queue.put( ( index, cpu_meshes ) )
-
-            except Exception as e:
-                print(f"Model load failed: {load.path}", e)
-
-            self.model_load_queue.task_done()
-
     def run( self ) -> None:
         """The main loop of the appliction, remains active as long as 'self.renderer.running'
         is True.
@@ -302,13 +286,9 @@ class EmberEngine:
                 _scene = self.scene.getCurrentScene()
 
                 #
-                # lazy model loading
+                # lazy model loading, flush loaded models set ready from thread
                 #
-                while not self.model_ready_queue.empty():
-                    index, cpu_meshes  = self.model_ready_queue.get()
-
-                    self.models.loadModelGPU( index, cpu_meshes )
-                    self.models.model_loading.pop( index )
+                self.models.model_loader_thread_flush()
 
                 #
                 # skybox

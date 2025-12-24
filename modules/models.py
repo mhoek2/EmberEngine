@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict, Any, List, Dict
 
@@ -21,6 +22,10 @@ import numpy as np
 
 from modules.settings import Settings
 from dataclasses import dataclass, field
+
+from queue import Queue
+from threading import Thread
+import traceback
 
 class Models( Context ):
     @dataclass(slots=True)
@@ -82,7 +87,8 @@ class Models( Context ):
             path    = Path(self.default_cilinder_path)
         )
 
-        return
+        self.model_load_queue = Queue()
+        self.model_ready_queue = Queue()
 
     @staticmethod
     def normalize( vectors ):
@@ -160,6 +166,8 @@ class Models( Context ):
             t = np.zeros((len(v), 2), dtype=np.float32)
 
         indices = np.asarray(mesh.faces, dtype=np.uint32).ravel()
+        #indices  = np.array(mesh.faces, dtype=np.uint32).flatten()
+        #indices  = np.array(mesh.faces).flatten()
 
         tangents, bitangents = self.compute_tangents_bitangents(v, t, indices)
 
@@ -177,7 +185,7 @@ class Models( Context ):
             mesh        = mesh
         )
 
-    def prepare_gl_buffers( self, cpu: CPUMeshData ) -> Mesh:
+    def create_mesh_and_gl_buffers( self, cpu: CPUMeshData ) -> Mesh:
         """Prepare and store mesh in a vertex buffer, along with meta data like 
         size or material id
 
@@ -192,12 +200,11 @@ class Models( Context ):
         """
         _mesh : Models.Mesh = Models.Mesh()
 
-  
-        _mesh["vbo"] = vbo.VBO( cpu.combined )
-        _mesh["vbo_size"] = cpu.combined.itemsize
-        _mesh["vbo_shape"] = cpu.combined.shape[1]
+        _mesh["vbo"]        = vbo.VBO( cpu.combined )
+        _mesh["vbo_size"]   = cpu.combined.itemsize
+        _mesh["vbo_shape"]  = cpu.combined.shape[1]
 
-        _mesh["vao"] = glGenVertexArrays(1)
+        _mesh["vao"]        = glGenVertexArrays(1)
         glBindVertexArray(_mesh["vao"])
 
         _mesh["vbo"].bind()
@@ -207,7 +214,6 @@ class Models( Context ):
         # Fill the buffer for vertex positions
         _mesh["indices"] = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh["indices"])
-        #indices  = np.array(mesh.faces, dtype=np.uint32).flatten()
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, cpu.indices, GL_STATIC_DRAW)
         _mesh["num_indices"] = len(cpu.mesh.faces) * 3
 
@@ -246,21 +252,47 @@ class Models( Context ):
 
         return _mesh
 
-    def loadModelCPU( self, index : int, path : Path, material : int = -1 ) -> bool:
+    def prepare_on_CPU( self, index : int, path : Path, material : int = -1 ) -> None:
         self.model[index] = imp.load( str(path), processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
 
-        cpu_meshes = [
+        cpu_meshes : list[Models.CPUMeshData] = [
             self.prepare_mesh_cpu( mesh, path, material )
                 for mesh_idx, mesh in enumerate( self.model[index].meshes )
         ]
 
         return cpu_meshes
 
-    def loadModelGPU( self, index : int, cpu_meshes: list[CPUMeshData] ) -> bool:
+    def upload_to_GPU( self, index : int, cpu_meshes: list[CPUMeshData] ) -> bool:
         for mesh_idx, cpu in enumerate(cpu_meshes):
-            self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers( cpu )
+            self.model_mesh[index][mesh_idx] = self.create_mesh_and_gl_buffers( cpu )
 
-        return True
+        cpu_meshes.clear()
+
+    def model_loader_thread( self ):
+        while self.renderer.running:
+            index, load = self.model_load_queue.get()
+
+            try:
+                cpu_meshes : Models.CPUMeshData = self.prepare_on_CPU( index, load.path, load.material )
+                self.model_ready_queue.put( ( index, cpu_meshes ) )
+
+            except Exception as e:
+                _path = str(load.path.relative_to( self.settings.rootdir ) )
+                _msg = f"Model failed to load: {_path}"
+                exc_type, exc_value, exc_tb = sys.exc_info()
+
+                self.console.error( _msg )
+                self.console.error( e, traceback.format_tb(exc_tb) )
+                print( _msg )
+
+            self.model_load_queue.task_done()
+
+    def model_loader_thread_flush( self ) -> None:
+        while not self.model_ready_queue.empty():
+            index, cpu_meshes = self.model_ready_queue.get()
+
+            self.upload_to_GPU( index, cpu_meshes )
+            self.model_loading.pop( index )
 
     def loadOrFind( self, path : Path, material : int = -1, lazy_load : bool = True ) -> int:
         """Load or find an model, implement find later
@@ -280,24 +312,26 @@ class Models( Context ):
         if not path.is_file():
             raise ValueError( f"Invalid model path!{str(path)}" )
 
+        # try to locate existing model
         if path in self.model_map:
             return self.model_map[path]
 
+        self.model_map[path] = index
+
         # lazy load
         if lazy_load:
-            self.context.model_load_queue.put( ( index, Models.Load(
+            self.model_load_queue.put( ( index, Models.Load(
                 path        = path,
                 material    = material
             ) ) )
             self.model_loading[index] = True
             self.model[index] = None
 
-        # wait tis frame for load to complete
+        # wait tis frame for load to complete 
+        # (default engine models, eg: cube, sphere and cilinder )
         else:
-            cpu_meshes = self.loadModelCPU( index, path, material )
-            self.loadModelGPU( index, cpu_meshes )
-
-        self.model_map[path] = index
+            cpu_meshes = self.prepare_on_CPU( index, path, material )
+            self.upload_to_GPU( index, cpu_meshes )
 
         self._num_models += 1
         return index
@@ -367,6 +401,8 @@ class Models( Context ):
         :param model_matrix: The transformation model matrix, used along with view and projection matrices
         :type model_matrix: matrix44
         """
+
+        # this is still bad
         if model.handle == -1 or self.model[model.handle] is None or model.handle in self.model_loading:
             return
 
