@@ -9,7 +9,6 @@ gameObjects
    gameObjects.scriptBehaivior
    gameObjects.gameObject
    gameObjects.mesh
-   gameObjects.light
    gameObjects.skybox
    gameObjects.camera
 

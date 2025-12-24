@@ -11,7 +11,6 @@ Modules
    modules.engineTypes
    modules.userInterface
    modules.script
-   modules.transform
    modules.console
    modules.models
    modules.project
