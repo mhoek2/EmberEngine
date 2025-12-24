@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict, Any, List, Dict
 
+from gameObjects.attachables.model import Model
+
 if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
@@ -19,13 +21,6 @@ import numpy as np
 
 from modules.settings import Settings
 from dataclasses import dataclass, field
-
-@dataclass(slots=True)
-class Model:
-    context         : "EmberEngine" = field( default=None )
-    gameObject      : "GameObject"  = field( default=None )
-
-    index : int = field( default_factory=int )
 
 class Models( Context ):
     class Mesh(TypedDict):
@@ -48,26 +43,24 @@ class Models( Context ):
 
         self.materials  : Materials = context.materials
         
-        self.model = [i for i in range(300)]
-        #self.model_mesh = [{} for i in range(300)]
-        self.model_mesh: List[List[Models.Mesh]] = [{} for _ in range(300)]
-
         self._num_models = 0
+        self.model = [i for i in range(300)]
+        self.model_mesh: List[List[Models.Mesh]] = [{} for _ in range(300)]
 
         # default models
         self.default_cube_path = f"{self.settings.engineAssets}models\\cube\\model.obj"
         self.default_cube : Model = Model( 
-            index=self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial 
+            handle=self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial 
         ) )
 
         self.default_sphere_path = f"{self.settings.engineAssets}models\\sphere\\model.obj"
         self.default_sphere : Model = Model( 
-            index=self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial
+            handle=self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial
         ) )
 
         self.default_cilinder_path = f"{self.settings.engineAssets}models\\cilinder\\model.obj"
         self.default_cilinder : Model = Model( 
-            index=self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial 
+            handle=self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial 
         ) )
 
         return
@@ -321,7 +314,10 @@ class Models( Context ):
         :param model_matrix: The transformation model matrix, used along with view and projection matrices
         :type model_matrix: matrix44
         """
-        self.draw_node( self.model[model.index].root_node, model.index, model_matrix )
+        if not model.handle:
+            return
+
+        self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix )
 
         #for mesh in self.model[index].meshes:
         #    mesh_index = self.model[index].meshes.index(mesh)

@@ -67,6 +67,3 @@ class Camera( GameObject ):
     def onUpdate( self ) -> None:
         """Executes every frame, issuing draw commands"""
         super().onUpdate()
-
-        if not self.renderer.game_runtime:
-            self.models.draw( self.model, self.transform._getModelMatrix() )   

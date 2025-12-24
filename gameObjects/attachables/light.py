@@ -1,27 +1,13 @@
-import os, sys, enum
+import enum
 
-from pyrr import Quaternion, Matrix44
-
-from modules.settings import Settings
 from modules.engineTypes import EngineTypes
-from gameObjects.attachables.physicLink import PhysicLink
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
-    from modules.transform import Transform
-
-import inspect
-import traceback
-import uuid as uid
-
-import pybullet as p
 
 from dataclasses import dataclass, field
-
-Vec3 = tuple[float, float, float]
-Quat = tuple[float, float, float, float]
 
 @dataclass(slots=True)
 class Light:

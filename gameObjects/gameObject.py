@@ -15,7 +15,7 @@ from modules.context import Context
 from modules.cubemap import Cubemap
 from modules.material import Materials
 from modules.images import Images
-from modules.models import Models, Model
+from modules.models import Models
 from modules.transform import Transform
 from modules.script import Script
 
@@ -24,6 +24,7 @@ from gameObjects.scriptBehaivior import ScriptBehaivior
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
+from gameObjects.attachables.model import Model
 
 import inspect
 import importlib
@@ -48,7 +49,6 @@ class GameObject( Context, Transform ):
     def __init__( self, context, 
                  uuid           : uid.UUID = None,
                  name           : str = "GameObject",
-                 model_file     : bool = False,
                  material       : int = -1,
                  translate      : list = [ 0.0, 0.0, 0.0 ], 
                  rotation       : list = [ 0.0, 0.0, 0.0 ], 
@@ -63,8 +63,6 @@ class GameObject( Context, Transform ):
         :type uuid: str
         :param name: The name that is stored with the gameObject
         :type name: str
-        :param model_file: The file path to a model file
-        :type model_file: Path | bool
         :param material: The index in the material buffer as override, -1 is default
         :type material: int
         :param translate: The position of the object, using getter and setter
@@ -126,15 +124,7 @@ class GameObject( Context, Transform ):
         self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
-        self.model          : Model = None
-        self.model_file     : Path = Path(model_file) if model_file else False
-
-        if self.model_file:
-            self.addAttachable( Model, Model(
-                context     = self.context,
-                gameObject  = self,
-                index       = self.models.loadOrFind( self.model_file, self.material  ) 
-            ) )
+        self.model : Model = None
 
         # light
         self.light : Light = None

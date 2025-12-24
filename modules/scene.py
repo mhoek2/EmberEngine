@@ -16,6 +16,7 @@ from gameObjects.scriptBehaivior import ScriptBehaivior
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
+from gameObjects.attachables.model import Model
 
 if TYPE_CHECKING:
     from main import EmberEngine
@@ -49,7 +50,6 @@ class SceneManager:
         instance    : str
         visible     : bool
         name        : str
-        model_file  : str
         material    : int
         translate   : List[float]
         rotation    : List[float]
@@ -369,9 +369,6 @@ class SceneManager:
                 "children"      : []
             }
 
-            if obj.model:
-                buffer["model_file"] = str(obj.model_file.relative_to( self.settings.rootdir ))
-
             # GameObject Types
             if _scene_camera and isinstance( obj, Camera ):
                 buffer["instance_data"]["fov"]  = obj.fov
@@ -437,6 +434,12 @@ class SceneManager:
                     "radius"       : light.radius,
                     "intensity"    : light.intensity,
                     "is_sun"       : True if (_scene_sun and obj.uuid == _scene_sun.uuid) else False
+                }
+
+            model : Model = obj.getAttachable(Model)
+            if model and model.handle:
+                buffer["Model"] = {
+                    "path"         : str(model.path.relative_to( self.settings.rootdir )),
                 }
 
             if obj.children:
@@ -558,17 +561,10 @@ class SceneManager:
 
         for obj in objects:
             # todo:
-            # replace ternary with; .get(key, default)
-            model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
-
             # temporary
-            if obj["instance"] == "Light":
-                obj["instance"] = "Mesh"
-
             gameObject = self.context.world.addGameObject( eval(obj["instance"])( self.context,
                     uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
                     name        = obj["name"]               if "name"       in obj else "Unknown",
-                    model_file  = model,
                     material    = obj["material"]           if "material"   in obj else -1,
                     translate   = obj["translate"]          if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
                     scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
@@ -588,9 +584,6 @@ class SceneManager:
                     ]
                 )
             )
-
-            if model:
-                self.console.log( f"Load model: {model.relative_to(self.settings.rootdir)}" )
 
             # todo:
             # implement scene settings, so a camera or sun can be assigned
@@ -618,6 +611,16 @@ class SceneManager:
             #
             # attachables
             #
+            if "Model" in obj:
+                _model = obj["Model"]
+
+                _path = (self.settings.rootdir / _model["path"]).resolve()
+                gameObject.addAttachable( Model, Model( 
+                    self.context, gameObject,
+                    handle      = self.context.models.loadOrFind( _path, gameObject.material ),
+                    path        = _path
+                ) )
+
             if "Light" in obj:
                 _light = obj["Light"]
                 light_kwargs = {}

@@ -19,10 +19,11 @@ from modules.transform import Transform
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
+from gameObjects.attachables.model import Model
 
 if TYPE_CHECKING:
     from main import EmberEngine
-    from modules.models import Models, Model
+    from modules.models import Models
     from modules.material import Materials
 
 import traceback
@@ -37,8 +38,6 @@ class World( Context ):
         :type context: EmberEngine
         """
         super().__init__( context )
-        self.materials  : "Materials" = context.materials
-        self.models     : "Models" = context.models
 
         self.gameObjects    : Dict[uid.UUID, GameObject] = {}
         self.transforms     : Dict[uid.UUID, Transform] = {}
@@ -47,6 +46,8 @@ class World( Context ):
         self.material       : Dict[uid.UUID, int] = {}
         self.physics        : Dict[uid.UUID, Physic] = {}
         self.physic_links   : Dict[uid.UUID, PhysicLink] = {}
+
+        self.trash          : List[uid.UUID] = []
 
     def destroyAllGameObjects( self ) -> None:
         self.gameObjects.clear()
@@ -64,47 +65,61 @@ class World( Context ):
     def addEmptyGameObject( self ):
         return self.addGameObject( Mesh( self.context,
             name        = "Empty GameObject",
-            material    = self.materials.defaultMaterial,
+            material    = self.context.materials.defaultMaterial,
             translate   = [ 0, 0, 0 ],
             scale       = [ 1, 1, 1 ],
             rotation    = [ 0.0, 0.0, 0.0 ]
         ) )
 
     def addDefaultCube( self ):
-        return self.addGameObject( Mesh( self.context,
+        gameObject : GameObject = self.addGameObject( Mesh( self.context,
             name        = "Default cube",
-            model_file  = self.models.default_cube_path,
-            material    = self.materials.defaultMaterial,
+            material    = self.context.materials.defaultMaterial,
             translate   = [ 0, 1, 0 ],
             scale       = [ 1, 1, 1 ],
             rotation    = [ 0.0, 0.0, 0.0 ]
         ) )
 
+        gameObject.addAttachable( Model, Model( 
+            self.context, gameObject,
+            handle      = self.context.models.loadOrFind( Path( self.context.models.default_cube_path ), gameObject.material ),
+            path        = Path( self.context.models.default_cube_path )
+        ) )
+
     def addDefaultCamera( self ):
-        return self.addGameObject( Camera( self.context,
-                        name        = "Camera",
-                        model_file  = f"{self.settings.engineAssets}models\\camera\\model.fbx",
-                        material    = self.materials.defaultMaterial,
-                        translate   = [ 0, 5, -10 ],
-                        scale       = [ 1, 1, 1 ],
-                        rotation    = [ -0.4, 0.0, 0.0 ],
-                        scripts     = [ Script( 
-                                context = self.context,
-                                path    = Path(f"{self.settings.assets}\\camera.py"),
-                                active  = True
-                        ) ]
-                    ) )
+        gameObject : GameObject = self.addGameObject( Camera( self.context,
+            name        = "Camera",
+            material    = self.context.materials.defaultMaterial,
+            translate   = [ 0, 5, -10 ],
+            scale       = [ 1, 1, 1 ],
+            rotation    = [ -0.4, 0.0, 0.0 ],
+            scripts     = [ Script( 
+                    context = self.context,
+                    path    = Path(f"{self.settings.assets}\\camera.py"),
+                    active  = True
+            ) ]
+        ) )
+
+        gameObject.addAttachable( Model, Model( 
+            self.context, gameObject,
+            handle      = self.context.models.loadOrFind( Path( f"{self.settings.engineAssets}models\\camera\\model.fbx" ), gameObject.material ),
+            path        = Path( f"{self.settings.engineAssets}models\\camera\\model.fbx" )
+        ) )
 
     def addDefaultLight( self ) -> None:
         gameObject : GameObject = self.addGameObject( Mesh( self.context,
-                        name        = "light",
-                        model_file  = self.context.models.default_sphere_path,
-                        translate   = [ 0.0, 1.0, 0.0 ],
-                        scale       = [ 0.5, 0.5, 0.5 ],
-                        rotation    = [ 0.0, 0.0, 80.0 ]
-                    ) )
+            name        = "light",
+            material    = self.context.materials.defaultMaterial,
+            translate   = [ 0.0, 1.0, 0.0 ],
+            scale       = [ 0.5, 0.5, 0.5 ],
+            rotation    = [ 0.0, 0.0, 80.0 ]
+        ) )
 
         gameObject.addAttachable( Light, Light( self.context, gameObject ) )
+        gameObject.addAttachable( Model, Model( self.context, gameObject,
+            handle      = self.context.models.loadOrFind( Path( self.context.models.default_sphere_path ), gameObject.material ),
+            path        = Path( self.context.models.default_sphere_path )
+        ) )
 
     def removeGameObject( self, obj : GameObject ):
         try:
@@ -126,6 +141,9 @@ class World( Context ):
             reparent_children = list(obj.children) # prevent mutation during iteration
             for child in reparent_children:
                 child.setParent( obj.parent )
+
+            # not implemented
+            self.trash.append( obj.uuid )
 
         except Exception as e:
             print( e )

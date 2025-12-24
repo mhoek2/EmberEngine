@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from modules.context import Context
 
 from gameObjects.gameObject import GameObject
+from gameObjects.attachables.model import Model
 from gameObjects.mesh import Mesh
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
@@ -30,13 +31,17 @@ class AssetBrowser( Context ):
         # model
         if path.suffix in self.settings.MODEL_EXTENSION:
             game_object_name = path.name.replace(path.suffix, "")
-            self.context.world.addGameObject( 
-                    Mesh( self.context,
-                    name        = game_object_name,
-                    model_file  = str( path ),
-                    translate   = [ 0, 0, 0 ],
-                    scale       = [ 1, 1, 1 ],
-                    rotation    = [ 0.0, 0.0, 0.0 ]
+            gameObject : GameObject = self.context.world.addGameObject( Mesh( self.context,
+                name        = game_object_name,
+                translate   = [ 0, 0, 0 ],
+                scale       = [ 1, 1, 1 ],
+                rotation    = [ 0.0, 0.0, 0.0 ]
+            ) )
+
+            gameObject.addAttachable( Model, Model( 
+                self.context, gameObject,
+                handle      = self.context.models.loadOrFind( str( path ), -1 ),
+                path        = str( path )
             ) )
 
         # scene
