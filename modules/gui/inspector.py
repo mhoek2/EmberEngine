@@ -90,9 +90,12 @@ class Inspector( Context ):
             # collect material(s)
             materials = []
 
-            for mesh in _models.model[gameObject.model].meshes:
-                mesh_index = _models.model[gameObject.model].meshes.index(mesh)
-                mesh_gl = _models.model_mesh[gameObject.model][mesh_index]
+            if gameObject.model.handle == -1:
+                return
+
+            for mesh in _models.model[gameObject.model.handle].meshes:
+                mesh_index = _models.model[gameObject.model.handle].meshes.index(mesh)
+                mesh_gl = _models.model_mesh[gameObject.model.handle][mesh_index]
       
                 if mesh_gl["material"] >= 0:
                     materials.append( mesh_gl["material"] )
@@ -437,6 +440,22 @@ class Inspector( Context ):
 
             imgui.tree_pop()
 
+    def _model( self ) -> None:
+        gameObject  : GameObject = self.gui.selectedObject
+        _model      : Light = gameObject.model
+
+        if not gameObject.model:
+            return
+
+        self.helper._node_sep()
+
+        if imgui.tree_node_ex( f"{fa.ICON_FA_LIGHTBULB} Model", imgui.TreeNodeFlags_.default_open ):
+            self.helper._node_header_pad()
+
+            self.helper.draw_framed_text( str(_model.path.relative_to( self.settings.rootdir )) )
+
+            imgui.tree_pop()
+
     def _camera( self ) -> None:  
         gameObject  : GameObject    = self.gui.selectedObject
 
@@ -719,6 +738,7 @@ class Inspector( Context ):
 
             self._transform()
             self._camera()
+            self._model()
             self._light()
             self._physic()
             self._physicLink()
