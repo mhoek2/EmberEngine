@@ -41,13 +41,16 @@ from modules.gui.types import CustomEvent
 
 import uuid as uid
 
+from queue import Queue
+from threading import Thread
+
 class EmberEngine:
     def __init__( self ) -> None:
         """The main context of 'EmberEngine', 
         initializes required modules like:
         renderer, console, image loaders, materials, scene manager, pygame events"""
         self.settings   : Settings = Settings()
-        
+
         self.asset_scripts : List[Path] = []
         self.findScripts()
         
@@ -80,6 +83,11 @@ class EmberEngine:
             self.scene.loadDefaultScene()
 
         self.loadDefaultEnvironment()
+
+        Thread(
+            target = self.models.model_loader_thread, 
+            daemon = True
+        ).start()
  
     def sanitize_filename( self, string : str ):
         """Sanitize a string for use of a filename, 
@@ -278,6 +286,11 @@ class EmberEngine:
                 _scene = self.scene.getCurrentScene()
 
                 #
+                # lazy model loading, flush loaded models set ready from thread
+                #
+                self.models.model_loader_thread_flush()
+
+                #
                 # skybox
                 #
                 self.skybox.draw( _scene )
@@ -370,7 +383,7 @@ class EmberEngine:
                     self.world.gameObjects
                 )
 
-                # render meshes
+                # collect render meshes
                 for uuid in self.world.models.keys():
                     obj : GameObject = self.world.gameObjects[uuid]
 

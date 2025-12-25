@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict, Any, List, Dict
 
@@ -22,7 +23,25 @@ import numpy as np
 from modules.settings import Settings
 from dataclasses import dataclass, field
 
+from queue import Queue
+from threading import Thread
+import traceback
+
 class Models( Context ):
+    @dataclass(slots=True)
+    class CPUMeshData:
+        combined    : np.ndarray      # interleaved vertex data
+        indices     : np.ndarray       # uint32
+        num_indices : int
+        material    : int
+        path        : Path
+        mesh        : Any
+
+    @dataclass(slots=True)
+    class Load:
+        path        : Path
+        material    : int
+
     class Mesh(TypedDict):
         vao             : int
         vbo             : vbo.VBO
@@ -46,27 +65,30 @@ class Models( Context ):
         self._num_models = 0
         self.model = [i for i in range(300)]
         self.model_mesh: List[List[Models.Mesh]] = [{} for _ in range(300)]
+        self.model_map : Dict[Path, int] = {}
+        self.model_loading : Dict[int, bool] = {}
 
         # default models
         self.default_cube_path = f"{self.settings.engineAssets}models\\cube\\model.obj"
         self.default_cube : Model = Model( 
-            handle  = self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial ),
+            handle  = self.loadOrFind( Path(self.default_cube_path), self.context.materials.defaultMaterial, lazy_load=False ),
             path    = Path(self.default_cube_path)
         )
 
         self.default_sphere_path = f"{self.settings.engineAssets}models\\sphere\\model.obj"
         self.default_sphere : Model = Model( 
-            handle  = self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial ),
+            handle  = self.loadOrFind( Path(self.default_sphere_path), self.context.materials.defaultMaterial, lazy_load=False ),
             path    = Path(self.default_sphere_path)
         )
 
         self.default_cilinder_path = f"{self.settings.engineAssets}models\\cilinder\\model.obj"
         self.default_cilinder : Model = Model( 
-            handle  = self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial ),
+            handle  = self.loadOrFind( Path(self.default_cilinder_path), self.context.materials.defaultMaterial, lazy_load=False ),
             path    = Path(self.default_cilinder_path)
         )
 
-        return
+        self.model_load_queue = Queue()
+        self.model_ready_queue = Queue()
 
     @staticmethod
     def normalize( vectors ):
@@ -131,7 +153,39 @@ class Models( Context ):
 
         return tangents, bitangents
 
-    def prepare_gl_buffers( self, mesh, path : Path, material : int = -1 ) -> Mesh:
+    def prepare_mesh_cpu( self, mesh, path: Path, material: int ) -> CPUMeshData:
+        v = np.asarray(mesh.vertices, dtype=np.float32)
+        n = np.asarray(mesh.normals, dtype=np.float32)
+
+        if n.shape[0] == 0:
+            n = np.zeros_like(v)
+
+        if mesh.texture_coords and len(mesh.texture_coords) > 0:
+            t = np.asarray(mesh.texture_coords[0], dtype=np.float32)
+        else:
+            t = np.zeros((len(v), 2), dtype=np.float32)
+
+        indices = np.asarray(mesh.faces, dtype=np.uint32).ravel()
+        #indices  = np.array(mesh.faces, dtype=np.uint32).flatten()
+        #indices  = np.array(mesh.faces).flatten()
+
+        tangents, bitangents = self.compute_tangents_bitangents(v, t, indices)
+
+        combined = np.hstack((v, n, t, tangents, bitangents)).astype(np.float32, copy=False)
+
+        if material == -1:
+            material = self.materials.loadOrFind( mesh.material, path )
+
+        return Models.CPUMeshData(
+            combined    = combined,
+            indices     = indices,
+            num_indices = len(indices),
+            material    = material,
+            path        = path,
+            mesh        = mesh
+        )
+
+    def create_mesh_and_gl_buffers( self, cpu: CPUMeshData ) -> Mesh:
         """Prepare and store mesh in a vertex buffer, along with meta data like 
         size or material id
 
@@ -146,40 +200,11 @@ class Models( Context ):
         """
         _mesh : Models.Mesh = Models.Mesh()
 
-        v = np.array( mesh.vertices, dtype='f' )  # Shape: (n_vertices, 3)
-        n = np.array( mesh.normals, dtype='f' )    # Shape: (n_vertices, 3)
+        _mesh["vbo"]        = vbo.VBO( cpu.combined )
+        _mesh["vbo_size"]   = cpu.combined.itemsize
+        _mesh["vbo_shape"]  = cpu.combined.shape[1]
 
-        if n.shape[0] == 0:
-            n = np.zeros_like(v)  # fallback
-            # compute normals
-            #for face in mesh.faces:
-            #    i0, i1, i2 = face
-            #    p0, p1, p2 = v[i0], v[i1], v[i2]
-            #    face_normal = np.cross(p1 - p0, p2 - p0)
-            #    face_normal /= np.linalg.norm(face_normal)
-            #    n[i0] += face_normal
-            #    n[i1] += face_normal
-            #    n[i2] += face_normal
-
-            # normalize per vertex
-            #n = np.array([x/np.linalg.norm(x) if np.linalg.norm(x)>0 else x for x in n], dtype='f')
-
-        if mesh.texture_coords is not None and len(mesh.texture_coords) > 0:
-            t = np.array( mesh.texture_coords[0], dtype='f' )  # Shape: (n_vertices, 2)
-        else:
-            t = np.zeros( ( len(v), 2 ), dtype='f' )
-
-        # create tangents
-        indices = np.array(mesh.faces).flatten()
-        tangents, bitangents = self.compute_tangents_bitangents( v, t, indices )
-
-        combined = np.hstack( ( v, n, t, tangents, bitangents ) )  # Shape: (n_vertices, 8)
-
-        _mesh["vbo"] = vbo.VBO( combined )
-        _mesh["vbo_size"] = combined.itemsize
-        _mesh["vbo_shape"] = combined.shape[1]
-
-        _mesh["vao"] = glGenVertexArrays(1)
+        _mesh["vao"]        = glGenVertexArrays(1)
         glBindVertexArray(_mesh["vao"])
 
         _mesh["vbo"].bind()
@@ -189,9 +214,8 @@ class Models( Context ):
         # Fill the buffer for vertex positions
         _mesh["indices"] = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh["indices"])
-        indices  = np.array(mesh.faces, dtype=np.uint32).flatten()
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
-        _mesh["num_indices"] = len(mesh.faces) * 3
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, cpu.indices, GL_STATIC_DRAW)
+        _mesh["num_indices"] = len(cpu.mesh.faces) * 3
 
         # Vertex Positions
         glEnableVertexAttribArray(0)
@@ -221,74 +245,104 @@ class Models( Context ):
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
         # material
-        if material == -1:
-            _mesh["material"] = self.materials.loadOrFind( mesh.material, path )
-        else:
-            _mesh["material"] = material
+        #if material == -1:
+        #    _mesh["material"] = self.materials.loadOrFind( mesh.material, cpu.path.parent )
+        #else:
+        _mesh["material"] = cpu.material
 
         return _mesh
 
-    def loadOrFind( self, file : Path, material : int = -1 ) -> int:
+    def prepare_on_CPU( self, index : int, path : Path, material : int = -1 ) -> None:
+        self.model[index] = imp.load( str(path), processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
+
+        cpu_meshes : list[Models.CPUMeshData] = [
+            self.prepare_mesh_cpu( mesh, path, material )
+                for mesh_idx, mesh in enumerate( self.model[index].meshes )
+        ]
+
+        return cpu_meshes
+
+    def upload_to_GPU( self, index : int, cpu_meshes: list[CPUMeshData] ) -> bool:
+        for mesh_idx, cpu in enumerate(cpu_meshes):
+            self.model_mesh[index][mesh_idx] = self.create_mesh_and_gl_buffers( cpu )
+
+        cpu_meshes.clear()
+
+    def model_loader_thread( self ):
+        while self.renderer.running:
+            index, load = self.model_load_queue.get()
+
+            try:
+                cpu_meshes : Models.CPUMeshData = self.prepare_on_CPU( index, load.path, load.material )
+                self.model_ready_queue.put( ( index, cpu_meshes ) )
+
+            except Exception as e:
+                _path = str(load.path.relative_to( self.settings.rootdir ) )
+                _msg = f"Model failed to load: {_path}"
+                exc_type, exc_value, exc_tb = sys.exc_info()
+
+                self.console.error( _msg )
+                self.console.error( e, traceback.format_tb(exc_tb) )
+                print( _msg )
+
+            self.model_load_queue.task_done()
+
+    def model_loader_thread_flush( self ) -> None:
+        while not self.model_ready_queue.empty():
+            index, cpu_meshes = self.model_ready_queue.get()
+
+            self.upload_to_GPU( index, cpu_meshes )
+            self.model_loading.pop( index )
+
+    def loadOrFind( self, path : Path, material : int = -1, lazy_load : bool = True ) -> int:
         """Load or find an model, implement find later
 
-        :param file: The path to the model file
-        :type file: Path
+        :param path: The path to the model file
+        :type path: Path
         :param material: Could contain a material override if not -1
         :type material: int
+        :param lazy: Lazy load models using threading
+        :type lazy: bool
         """
         index = self._num_models
 
-        if not file:
+        if not path:
             return
 
-        if not file.is_file():
-            raise ValueError( f"Invalid model path!{str(file)}" )
+        if not path.is_file():
+            raise ValueError( f"Invalid model path!{str(path)}" )
 
-        self.model[index] = imp.load( str(file), processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
-        
-        for mesh_idx, mesh in enumerate( self.model[index].meshes ):
-            self.model_mesh[index][mesh_idx] = self.prepare_gl_buffers( mesh, file.parent, material=material )
+        # try to locate existing model
+        if path in self.model_map:
+            return self.model_map[path]
+
+        self.model_map[path] = index
+
+        # lazy load
+        if lazy_load:
+            self.model_load_queue.put( ( index, Models.Load(
+                path        = path,
+                material    = material
+            ) ) )
+            self.model_loading[index] = True
+            self.model[index] = None
+
+        # wait tis frame for load to complete 
+        # (default engine models, eg: cube, sphere and cilinder )
+        else:
+            cpu_meshes = self.prepare_on_CPU( index, path, material )
+            self.upload_to_GPU( index, cpu_meshes )
 
         self._num_models += 1
         return index
 
-    def render( self, model_index : int , mesh_index : int , model_matrix : Matrix44 ):
-        """Render the mesh from a node
+    def _collect( self, model_index, mesh_index, world_matrix ):
+        self.renderer.addDrawItem( model_index, mesh_index, world_matrix )
 
-        :param model_index: The index of a loaded model
-        :type model_index: int
-        :param mesh_index:  The index of a mesh within that model
-        :type mesh_index: int
-        :param model_matrix: The transformation model matrix, used along with view and projection matrices
-        :type model_matrix: matrix44
-        """
-        mesh : Models.Mesh = self.model_mesh[model_index][mesh_index]
+    def _draw_instantly( self, model_index, mesh_index, world_matrix ):
+        self.renderer.submitDrawItem( model_index, mesh_index, world_matrix )
 
-        # bind material
-        if "u_MaterialIndex" in self.renderer.shader.uniforms:
-            glUniform1i( self.renderer.shader.uniforms['u_MaterialIndex'], int(mesh["material"]) )
-
-        # directly bind 2D samplers in non-bindless mode:
-        if not self.renderer.BINDLESS_TEXTURES:
-            self.materials.bind( mesh["material"] )
-
-        if self.settings.drawWireframe:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-
-        glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
-
-        # Bind VAO that stores all attribute and buffer state
-        assert glIsVertexArray(mesh["vao"])
-        glBindVertexArray(mesh["vao"])
-
-        glDrawElements(GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT, None)
-
-        if self.settings.drawWireframe:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-
-        glBindVertexArray(0)
-
-    def draw_node( self, node, model_index : int, model_matrix : Matrix44 ):
+    def draw_node( self, node, model_index : int, model_matrix : Matrix44, dispatch ):
         """Recursivly process nodes (parent and child nodes)
 
         :param node: A node of model
@@ -299,30 +353,33 @@ class Models( Context ):
         :type model_matrix: matrix44
         """
         # apply transformation matrices recursivly
-        global_transform = model_matrix * Matrix44(node.transformation).transpose()
+        world_matrix = model_matrix * Matrix44(node.transformation).transpose()
 
         for mesh in node.meshes:
             mesh_index = self.model[model_index].meshes.index(mesh)
-            self.render( model_index, mesh_index, global_transform )
+
+            dispatch( model_index, mesh_index, world_matrix )
 
         # process child nodes
         for child in node.children:
-            self.draw_node( child, model_index, global_transform )
+            self.draw_node( child, model_index, world_matrix, dispatch )
 
-    def draw( self, model : Model, model_matrix : Matrix44 ) -> None:
-        """Begin drawing a model by index
+    def draw( self, model : Model, model_matrix : Matrix44, instant : bool = False ) -> None:
+        """Begin drawing a model
 
-        :param model_index: The index of a loaded model
-        :type model_index: int
+        :param model: The model object
+        :type model: Model
         :param model_matrix: The transformation model matrix, used along with view and projection matrices
         :type model_matrix: matrix44
+        :param instant:  either collect the drawcalls and submit them in renderer.end_frame() or render now/nstantly
+        :type instant: bool
         """
-        if model.handle == -1:
+        # this is still bad
+        if model.handle == -1 or self.model[model.handle] is None or model.handle in self.model_loading:
             return
 
-        self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix )
+        # either collect the drawcalls and submit them in renderer.end_frame()
+        # or render now/nstantly
+        dispatch = self._collect if not instant else self._draw_instantly
 
-        #for mesh in self.model[index].meshes:
-        #    mesh_index = self.model[index].meshes.index(mesh)
-        #
-        #    self.render( index, mesh_index, model_matrix )
+        self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix, dispatch )
