@@ -906,6 +906,12 @@ class Renderer:
         ImGui in will draw the 3D viewport.
         otherwise render_fbo() will directly render to the swapchain"""
 
+        if self.game_start:
+            self.game_start = False
+
+        if self.game_stop:
+            self.game_stop = False
+
         # submit collected draw items to the GPU
         for item in self.draw_list:
             self.submitDrawItem( item.model_index, item.mesh_index, item.matrix )

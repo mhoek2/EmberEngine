@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict, Any, List, Dict
+from typing import TYPE_CHECKING, TypedDict, Any, List, Dict, Callable
 
 from gameObjects.attachables.model import Model
 
@@ -30,6 +30,19 @@ import traceback
 class Models( Context ):
     @dataclass(slots=True)
     class CPUMeshData:
+        """
+        CPU-side representation of a mesh.
+
+        Stores interleaved vertex data, indices, and metadata required
+        for uploading the mesh to the GPU.
+
+        :param combined: Interleaved vertex attributes (pos, normal, uv, tangent, bitangent)
+        :param indices: Triangle index buffer (uint32)
+        :param num_indices: Total number of indices
+        :param material: Material ID assigned to the mesh
+        :param path: Source model path
+        :param mesh: Original imported mesh reference
+        """
         combined    : np.ndarray      # interleaved vertex data
         indices     : np.ndarray       # uint32
         num_indices : int
@@ -39,6 +52,15 @@ class Models( Context ):
 
     @dataclass(slots=True)
     class Load:
+        """
+        Model load request descriptor.
+
+        Contains the source path and optional material override.
+
+
+        :param path: Path to the model file
+        :param material: Optional material override (-1 = auto)
+        """
         path        : Path
         material    : int
 
@@ -154,6 +176,20 @@ class Models( Context ):
         return tangents, bitangents
 
     def prepare_mesh_cpu( self, mesh, path: Path, material: int ) -> CPUMeshData:
+        """
+        Convert a mesh into an CPUMeshData CPU-side format.
+
+        Generates missing attributes if needed and computes tangents
+        and bitangents for normal mapping.
+
+        :param mesh: Imported mesh object
+        :param path: Source model path
+        :type path: Path
+        :param material: Material ID override (-1 = auto)
+        :type material: int
+        :return: CPU-side mesh data
+        :rtype: CPUMeshData
+        """
         v = np.asarray(mesh.vertices, dtype=np.float32)
         n = np.asarray(mesh.normals, dtype=np.float32)
 
@@ -186,16 +222,13 @@ class Models( Context ):
         )
 
     def create_mesh_and_gl_buffers( self, cpu: CPUMeshData ) -> Mesh:
-        """Prepare and store mesh in a vertex buffer, along with meta data like 
-        size or material id
+        """
+        Upload CPU mesh data to the GPU and create OpenGL buffers.
 
-        :param mesh: The mesh loaded from Impasse
-        :type mesh:
-        :param path: The path of the folder the model is stored in, used to lookup textures
-        :type path: Path
-        :param material: Could contain a material override if not -1
-        :type material: int
-        :return: The meta data for this mesh, containing uid where VBO is stored along with size, shape, material id
+            Sets up VBO, VAO, index buffer, and vertex attribute layout.
+
+        :param cpu: CPU-side mesh data
+        :return: GPU mesh handle
         :rtype: Mesh
         """
         _mesh : Models.Mesh = Models.Mesh()
@@ -253,6 +286,20 @@ class Models( Context ):
         return _mesh
 
     def prepare_on_CPU( self, index : int, path : Path, material : int = -1 ) -> None:
+        """
+        Load a model from disk and prepare all meshes on the CPU.
+
+        Returns a list of CPU-ready mesh data objects.
+
+        :param index: Internal model index
+        :type index: int
+        :param path: Path to the model file
+        :type path: Path
+        :param material: Material ID override (-1 = auto)
+        :type material: int
+        :return: List of prepared CPU meshes
+        :rtype: list[CPUMeshData]
+        """
         self.model[index] = imp.load( str(path), processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
 
         cpu_meshes : list[Models.CPUMeshData] = [
@@ -263,12 +310,28 @@ class Models( Context ):
         return cpu_meshes
 
     def upload_to_GPU( self, index : int, cpu_meshes: list[CPUMeshData] ) -> bool:
+        """
+        Upload CPU-prepared meshes to the GPU. Then free the list
+
+        :param index: Internal model index
+        :type index: int
+        :param cpu_meshes: List of CPU mesh data objects
+        :type cpu_meshes: list[CPUMeshData]
+        :return: True if upload succeeded
+        :rtype: bool
+        """
         for mesh_idx, cpu in enumerate(cpu_meshes):
             self.model_mesh[index][mesh_idx] = self.create_mesh_and_gl_buffers( cpu )
 
         cpu_meshes.clear()
 
     def model_loader_thread( self ):
+        """
+        Worker thread for model loading and CPU pre-processing.
+
+        Pulls load requests from the queue, assimp loads and prepares models (tangents).
+        Then outputs prepared meshes to the ready queue.
+        """
         while self.renderer.running:
             index, load = self.model_load_queue.get()
 
@@ -288,6 +351,7 @@ class Models( Context ):
             self.model_load_queue.task_done()
 
     def model_loader_thread_flush( self ) -> None:
+        """Receives ready CPU prepared meshes from work thread and uploads them to the GPU."""
         while not self.model_ready_queue.empty():
             index, cpu_meshes = self.model_ready_queue.get()
 
@@ -336,13 +400,13 @@ class Models( Context ):
         self._num_models += 1
         return index
 
-    def _collect( self, model_index, mesh_index, world_matrix ):
+    def _draw_collect( self, model_index, mesh_index, world_matrix ):
         self.renderer.addDrawItem( model_index, mesh_index, world_matrix )
 
     def _draw_instantly( self, model_index, mesh_index, world_matrix ):
         self.renderer.submitDrawItem( model_index, mesh_index, world_matrix )
 
-    def draw_node( self, node, model_index : int, model_matrix : Matrix44, dispatch ):
+    def draw_node( self, node, model_index : int, model_matrix : Matrix44, dispatch : Callable ):
         """Recursivly process nodes (parent and child nodes)
 
         :param node: A node of model
@@ -351,6 +415,8 @@ class Models( Context ):
         :type model_index: int
         :param model_matrix: The transformation model matrix, used along with view and projection matrices
         :type model_matrix: matrix44
+        :param dispatch: Reference to what function to dispatch (collect or immidiate rendering)
+        :type dispatch: Callable
         """
         # apply transformation matrices recursivly
         world_matrix = model_matrix * Matrix44(node.transformation).transpose()
@@ -380,6 +446,6 @@ class Models( Context ):
 
         # either collect the drawcalls and submit them in renderer.end_frame()
         # or render now/nstantly
-        dispatch = self._collect if not instant else self._draw_instantly
+        dispatch = self._draw_collect if not instant else self._draw_instantly
 
         self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix, dispatch )

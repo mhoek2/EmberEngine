@@ -142,7 +142,7 @@ class SceneManager:
         _scene = scene_id if scene_id >= 0 else self.current_scene
         _editor_camera = None
 
-        obj = self.context.world.findGameObject( uuid )
+        obj : "GameObject" = self.context.world.findGameObject( uuid )
 
         if obj is None:
             self.scenes[_scene]["sun"] = None
@@ -182,14 +182,14 @@ class SceneManager:
             #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
 
-    def getSun( self ):
+    def getSun( self ) -> "GameObject":
         """Get the current sun
 
         :return: The current scene sun, False if this fails
-        :rtype: Camera or bool
+        :rtype: GameObject or bool
         """
         try:
-            obj : GameObject = self.scenes[self.current_scene]["sun"]
+            obj : "GameObject" = self.scenes[self.current_scene]["sun"]
 
             if not obj or not obj.light:
                 raise IndexError("invalid sun")
@@ -208,7 +208,7 @@ class SceneManager:
         :return: True if the it is the sun, False if not
         :rtype: Camera or bool
         """
-        _sun = self.getSun()
+        _sun : "GameObject" = self.getSun()
 
         if _sun and _sun.uuid == uuid:
             return True
@@ -218,7 +218,7 @@ class SceneManager:
     def setSun( self, uuid : uid.UUID, scene_id = -1):
         _scene = scene_id if scene_id >= 0 else self.current_scene
 
-        obj = self.context.world.findGameObject( uuid )
+        obj : "GameObject" = self.context.world.findGameObject( uuid )
 
         # here for now
         self.context.skybox.procedural_cubemap_update = True
@@ -437,7 +437,7 @@ class SceneManager:
                 }
 
             model : Model = obj.getAttachable(Model)
-            if model and model.handle:
+            if model and model.handle != -1:
                 buffer["Model"] = {
                     "path"         : str(model.path.relative_to( self.settings.rootdir )),
                 }

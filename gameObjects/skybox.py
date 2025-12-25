@@ -11,6 +11,7 @@ from modules.context import Context
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from modules.scene import SceneManager
+    from gameObjects.gameObject import GameObject
 
 import numpy as np
 import enum
@@ -290,7 +291,7 @@ class Skybox( Context ):
 
         self.__set_mvp( view, projection )
 
-        _sun = self.scene.getSun()
+        _sun : "GameObject" = self.scene.getSun()
         _sun_active = _sun and _sun.hierachyActive()
 
         if not self.renderer.game_runtime:

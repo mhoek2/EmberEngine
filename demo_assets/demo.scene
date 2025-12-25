@@ -63,7 +63,9 @@
                 "is_default_camera": true
             },
             "children": [],
-            "model_file": "engineAssets\\models\\camera\\model.fbx"
+            "Model": {
+                "path": "engineAssets\\models\\camera\\model.fbx"
+            }
         },
         {
             "uuid": "8c710ae819134ed59c1976bbcdfecf19",
@@ -90,7 +92,6 @@
             "scripts": [],
             "instance_data": {},
             "children": [],
-            "model_file": "engineAssets\\models\\cube\\model.obj",
             "type": {
                 "base_mass": -1.0
             },
@@ -142,6 +143,9 @@
                         1.0
                     ]
                 }
+            },
+            "Model": {
+                "path": "engineAssets\\models\\cube\\model.obj"
             }
         },
         {
@@ -182,7 +186,6 @@
             ],
             "instance_data": {},
             "children": [],
-            "model_file": "engineAssets\\models\\cube\\model.obj",
             "type": {
                 "base_mass": -1.0
             },
@@ -234,6 +237,9 @@
                         1.0
                     ]
                 }
+            },
+            "Model": {
+                "path": "engineAssets\\models\\cube\\model.obj"
             }
         },
         {
@@ -261,7 +267,6 @@
             "scripts": [],
             "instance_data": {},
             "children": [],
-            "model_file": "engineAssets\\models\\cube\\model.obj",
             "type": {
                 "base_mass": -1.0
             },
@@ -313,6 +318,9 @@
                         1.0
                     ]
                 }
+            },
+            "Model": {
+                "path": "engineAssets\\models\\cube\\model.obj"
             }
         },
         {
@@ -351,7 +359,6 @@
             ],
             "instance_data": {},
             "children": [],
-            "model_file": "engineAssets\\models\\sphere\\model.obj",
             "Light": {
                 "light_type": 0,
                 "light_color": [
@@ -362,6 +369,9 @@
                 "radius": 12.0,
                 "intensity": 2.5,
                 "is_sun": true
+            },
+            "Model": {
+                "path": "engineAssets\\models\\sphere\\model.obj"
             }
         },
         {
@@ -389,7 +399,6 @@
             "scripts": [],
             "instance_data": {},
             "children": [],
-            "model_file": "engineAssets\\models\\sphere\\model.obj",
             "Light": {
                 "light_type": 2,
                 "light_color": [
@@ -400,6 +409,9 @@
                 "radius": 4.0,
                 "intensity": 0.8999999761581421,
                 "is_sun": false
+            },
+            "Model": {
+                "path": "engineAssets\\models\\sphere\\model.obj"
             }
         }
     ]

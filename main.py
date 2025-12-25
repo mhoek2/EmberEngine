@@ -222,6 +222,24 @@ class EmberEngine:
         parent : GameObject = None,
         objects : Dict[uid.UUID, GameObject] = {}
     ):
+        """
+        Recursively prepare and update GameObjects in a parent–child nested hierarchy.
+
+        This method traverses the GameObject tree starting from the given parent
+
+            Depending on the application state, it handles:
+            - Enabling objects when the game starts
+            - Disabling objects when the game stops
+            - Running per-frame update logic
+            - Processing child GameObjects recursively
+
+        :param parent: The parent GameObject whose children are processed.
+                       Use None to start traversal from root-level objects.
+        :type parent: GameObject or None
+        :param objects: A mapping of GameObject UUIDs to GameObject instances
+                        representing the current level of the hierarchy.
+        :type objects: Dict[uuid.UUID, GameObject]
+        """
         if not objects:
             return
 
@@ -252,6 +270,7 @@ class EmberEngine:
                 )
 
     def _upload_material_ubo( self ) -> None:
+        """Build a UBO of materials and upload to GPU, rebuild when material list is marked dirty"""
         if self.renderer.ubo_materials._dirty:
             materials : list[Renderer.MaterialUBO.Material] = []
 
@@ -273,10 +292,41 @@ class EmberEngine:
 
         self.renderer.ubo_materials.bind()
 
-    def run( self ) -> None:
+    def _upload_lights_ubo( self, sun : GameObject ) -> None:
+        """Build a UBO of lights, rebuilds every frame (currently)
+        
+        :param sun: The sun GameObject, light is excluded from UBO
+        :type sun: GameObject
+        """
+        lights : list[Renderer.LightUBO.Light] = []
+
+        for uuid in self.world.lights.keys():
+            obj : GameObject = self.world.gameObjects[uuid]
+
+            if not obj.hierachyActive() or obj is sun:
+                continue
+
+            if not self.renderer.game_runtime and not obj.hierachyVisible():
+                continue
+
+            lights.append( Renderer.LightUBO.Light(
+                origin      = obj.transform.position,
+                rotation    = obj.transform.rotation,
+
+
+                color       = obj.light.light_color,
+                radius      = obj.light.radius,
+                intensity   = obj.light.intensity,
+                t           = obj.light.light_type
+            ) )
+
+        self.renderer.ubo_lights.update( lights )
+        self.renderer.ubo_lights.bind()
+
+    def run( self ) -> None: 
         """The main loop of the appliction, remains active as long as 'self.renderer.running'
         is True.
-        This handles key, mouse, start, update events and drawing GUI andgameObject"""
+        This handles key, mouse, start, update events and drawing GUI and gameObjects"""
         while self.renderer.running:
             self.renderer.event_handler()
 
@@ -330,7 +380,7 @@ class EmberEngine:
                 #
 
                 # sun direction/position and color
-                _sun = self.scene.getSun()
+                _sun : GameObject = self.scene.getSun()
                 _sun_active = _sun and _sun.hierachyActive()
 
                 if not self.renderer.game_runtime:
@@ -347,29 +397,7 @@ class EmberEngine:
                 glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
                 
                 # lights
-                lights : list[Renderer.LightUBO.Light] = []
-                for uuid in self.world.lights.keys():
-                    obj : GameObject = self.world.gameObjects[uuid]
-
-                    if not obj.hierachyActive() or obj is _sun:
-                        continue
-
-                    if not self.renderer.game_runtime and not obj.hierachyVisible():
-                        continue
-
-                    lights.append( Renderer.LightUBO.Light(
-                        origin      = obj.transform.position,
-                        rotation    = obj.transform.rotation,
-
-
-                        color       = obj.light.light_color,
-                        radius      = obj.light.radius,
-                        intensity   = obj.light.intensity,
-                        t           = obj.light.light_type
-                    ) )
-
-                self.renderer.ubo_lights.update( lights )
-                self.renderer.ubo_lights.bind()
+                self._upload_lights_ubo( _sun )
 
                 # materials
                 self._upload_material_ubo()
@@ -377,13 +405,14 @@ class EmberEngine:
                 if self.renderer.game_start:
                     self.console.clear()
 
-                # trigger update function in registered gameObjects
+                # triggers update systems in the registered gameObjects
+                # handles onEnable, onDisable, onStart, onUpdate and _dirty flags
                 self.prepareGameObjectsRecursive( 
                     None, 
                     self.world.gameObjects
                 )
 
-                # collect render meshes
+                # collect render meshes (draw list)
                 for uuid in self.world.models.keys():
                     obj : GameObject = self.world.gameObjects[uuid]
 
@@ -392,7 +421,7 @@ class EmberEngine:
 
                     obj.onRender()
 
-                # editor visualizers
+                # editor visualizers, eg: colliders (instant drawing)
                 if self.settings.drawColliders:
                     for uuid in self.world.physics.keys():
                         self.world.gameObjects[uuid].onRenderColliders()
@@ -407,12 +436,6 @@ class EmberEngine:
                 #        continue
                 #
                 #    self.world.gameObjects.remove( obj )
-
-                if self.renderer.game_start:
-                    self.renderer.game_start = False
-
-                if self.renderer.game_stop:
-                    self.renderer.game_stop = False
 
                 self.renderer.end_frame()
 
