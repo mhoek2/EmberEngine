@@ -27,6 +27,9 @@ import pybullet as p
 
 if TYPE_CHECKING:
     from main import EmberEngine
+    from modules.models import Models
+
+from dataclasses import dataclass, field
 
 class Renderer:
     class GameState_(enum.IntEnum):
@@ -34,6 +37,12 @@ class Renderer:
         none        = 0             # (= 0)
         running     = enum.auto()   # (= 1)
         paused      = enum.auto()   # (= 2)
+
+    @dataclass(slots=True)
+    class DrawItem:
+        model_index : int       = field( default_factory=int )
+        mesh_index  : int       = field( default_factory=int )
+        matrix      : Matrix44  = field( default_factory=Matrix44 )
 
     """The rendering backend"""
     def __init__( self, context ):
@@ -175,6 +184,9 @@ class Renderer:
 
         # physics
         self._initPhysics()
+
+        # draw list
+        self.draw_list : list[Renderer.DrawItem] = []
 
     @property
     def game_state( self ) -> GameState_:
@@ -829,6 +841,44 @@ class Renderer:
             for _ in range( int(self.deltaTime / (1./240.)) ):
                 p.stepSimulation()
 
+    def submitDrawItem( self, model_index : int , mesh_index : int , model_matrix : Matrix44 ):
+        """Render the mesh from a node
+
+        :param model_index: The index of a loaded model
+        :type model_index: int
+        :param mesh_index:  The index of a mesh within that model
+        :type mesh_index: int
+        :param model_matrix: The transformation model matrix, used along with view and projection matrices
+        :type model_matrix: matrix44
+        """
+        mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+
+        # bind material
+        if "u_MaterialIndex" in self.shader.uniforms:
+            glUniform1i( self.shader.uniforms['u_MaterialIndex'], int(mesh["material"]) )
+
+        # directly bind 2D samplers in non-bindless mode:
+        if not self.BINDLESS_TEXTURES:
+            self.materials.bind( mesh["material"] )
+
+        if self.settings.drawWireframe:
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+
+        glUniformMatrix4fv( self.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
+
+        # Bind VAO that stores all attribute and buffer state
+        assert glIsVertexArray(mesh["vao"])
+        glBindVertexArray(mesh["vao"])
+
+        glDrawElements( GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT, None )
+
+        if self.settings.drawWireframe:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+        glBindVertexArray(0)
+
+    def addDrawItem( self, model_index : int, mesh_index : int, matrix : Matrix44 ):
+        self.draw_list.append( Renderer.DrawItem( model_index, mesh_index, matrix ) )
 
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
@@ -855,6 +905,11 @@ class Renderer:
         """End for each frame, clear GL states, resolve MSAA if enabled, draw ImGui.
         ImGui in will draw the 3D viewport.
         otherwise render_fbo() will directly render to the swapchain"""
+
+        # submit collected draw items to the GPU
+        for item in self.draw_list:
+            self.submitDrawItem( item.model_index, item.mesh_index, item.matrix )
+
         glUseProgram( 0 )
         glFlush()
 
@@ -880,6 +935,8 @@ class Renderer:
         self.render_backend.render( imgui.get_draw_data() )
 
         self.check_opengl_error()
+
+        self.draw_list.clear()
 
         # upload to swapchain image
         pygame.display.flip()

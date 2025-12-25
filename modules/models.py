@@ -336,43 +336,13 @@ class Models( Context ):
         self._num_models += 1
         return index
 
-    def render( self, model_index : int , mesh_index : int , model_matrix : Matrix44 ):
-        """Render the mesh from a node
+    def _collect( self, model_index, mesh_index, world_matrix ):
+        self.renderer.addDrawItem( model_index, mesh_index, world_matrix )
 
-        :param model_index: The index of a loaded model
-        :type model_index: int
-        :param mesh_index:  The index of a mesh within that model
-        :type mesh_index: int
-        :param model_matrix: The transformation model matrix, used along with view and projection matrices
-        :type model_matrix: matrix44
-        """
-        mesh : Models.Mesh = self.model_mesh[model_index][mesh_index]
+    def _draw_instantly( self, model_index, mesh_index, world_matrix ):
+        self.renderer.submitDrawItem( model_index, mesh_index, world_matrix )
 
-        # bind material
-        if "u_MaterialIndex" in self.renderer.shader.uniforms:
-            glUniform1i( self.renderer.shader.uniforms['u_MaterialIndex'], int(mesh["material"]) )
-
-        # directly bind 2D samplers in non-bindless mode:
-        if not self.renderer.BINDLESS_TEXTURES:
-            self.materials.bind( mesh["material"] )
-
-        if self.settings.drawWireframe:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-
-        glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
-
-        # Bind VAO that stores all attribute and buffer state
-        assert glIsVertexArray(mesh["vao"])
-        glBindVertexArray(mesh["vao"])
-
-        glDrawElements(GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT, None)
-
-        if self.settings.drawWireframe:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-
-        glBindVertexArray(0)
-
-    def draw_node( self, node, model_index : int, model_matrix : Matrix44 ):
+    def draw_node( self, node, model_index : int, model_matrix : Matrix44, dispatch ):
         """Recursivly process nodes (parent and child nodes)
 
         :param node: A node of model
@@ -383,32 +353,33 @@ class Models( Context ):
         :type model_matrix: matrix44
         """
         # apply transformation matrices recursivly
-        global_transform = model_matrix * Matrix44(node.transformation).transpose()
+        world_matrix = model_matrix * Matrix44(node.transformation).transpose()
 
         for mesh in node.meshes:
             mesh_index = self.model[model_index].meshes.index(mesh)
-            self.render( model_index, mesh_index, global_transform )
+
+            dispatch( model_index, mesh_index, world_matrix )
 
         # process child nodes
         for child in node.children:
-            self.draw_node( child, model_index, global_transform )
+            self.draw_node( child, model_index, world_matrix, dispatch )
 
-    def draw( self, model : Model, model_matrix : Matrix44 ) -> None:
-        """Begin drawing a model by index
+    def draw( self, model : Model, model_matrix : Matrix44, instant : bool = False ) -> None:
+        """Begin drawing a model
 
-        :param model_index: The index of a loaded model
-        :type model_index: int
+        :param model: The model object
+        :type model: Model
         :param model_matrix: The transformation model matrix, used along with view and projection matrices
         :type model_matrix: matrix44
+        :param instant:  either collect the drawcalls and submit them in renderer.end_frame() or render now/nstantly
+        :type instant: bool
         """
-
         # this is still bad
         if model.handle == -1 or self.model[model.handle] is None or model.handle in self.model_loading:
             return
 
-        self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix )
+        # either collect the drawcalls and submit them in renderer.end_frame()
+        # or render now/nstantly
+        dispatch = self._collect if not instant else self._draw_instantly
 
-        #for mesh in self.model[index].meshes:
-        #    mesh_index = self.model[index].meshes.index(mesh)
-        #
-        #    self.render( index, mesh_index, model_matrix )
+        self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix, dispatch )

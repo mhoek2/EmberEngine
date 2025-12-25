@@ -662,13 +662,12 @@ class GameObject( Context, Transform ):
 
             _collision_model = _physic.collision.model or self.context.models.default_cube
 
-            glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-            glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-
             self.models.draw(
                 _collision_model,
-                _physic.collision.transform._getModelMatrix()
+                _physic.collision.transform._getModelMatrix(),
+                True
             )
+
             glDisable(GL_POLYGON_OFFSET_FILL)
             glDepthMask(GL_TRUE)    # re-enable depth writes
             glDisable(GL_BLEND)
@@ -679,6 +678,3 @@ class GameObject( Context, Transform ):
 
             if _current_shader:
                 self.renderer.use_shader( _current_shader )
-
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )

@@ -383,7 +383,7 @@ class EmberEngine:
                     self.world.gameObjects
                 )
 
-                # render meshes
+                # collect render meshes
                 for uuid in self.world.models.keys():
                     obj : GameObject = self.world.gameObjects[uuid]
 
