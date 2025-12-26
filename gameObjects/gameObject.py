@@ -8,8 +8,7 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from pyrr import Quaternion
-from typing import TYPE_CHECKING, TypedDict, List
+from typing import TYPE_CHECKING, Dict, TypedDict
 
 from modules.context import Context
 
@@ -17,10 +16,15 @@ from modules.cubemap import Cubemap
 from modules.material import Materials
 from modules.images import Images
 from modules.models import Models
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 from modules.script import Script
 
 from gameObjects.scriptBehaivior import ScriptBehaivior
+
+from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
+from gameObjects.attachables.light import Light
+from gameObjects.attachables.model import Model
 
 import inspect
 import importlib
@@ -39,17 +43,16 @@ class GameObject( Context, Transform ):
         visible_state  = enum.auto() # (= 1 << 0) = 1
         active_state   = enum.auto() # (= 1 << 1) = 2
         transform      = enum.auto() # (= 1 << 2) = 4 
-        all            = visible_state | active_state | transform
+        light          = enum.auto() # (= 1 << 3) = 8
+        all            = visible_state | active_state | transform | light
 
     def __init__( self, context, 
                  uuid           : uid.UUID = None,
                  name           : str = "GameObject",
-                 model_file     : bool = False,
                  material       : int = -1,
                  translate      : list = [ 0.0, 0.0, 0.0 ], 
                  rotation       : list = [ 0.0, 0.0, 0.0 ], 
                  scale          : list = [ 1.0, 1.0, 1.0 ],
-                 mass           : int = -1.0,
                  scripts        : list[Script] = []
                  ) -> None:
         """Base class for gameObjects 
@@ -60,22 +63,23 @@ class GameObject( Context, Transform ):
         :type uuid: str
         :param name: The name that is stored with the gameObject
         :type name: str
-        :param model_file: The file path to a model file
-        :type model_file: Path | bool
         :param material: The index in the material buffer as override, -1 is default
         :type material: int
         :param translate: The position of the object, using getter and setter
-        :type translate: List
+        :type translate: list
         :param rotation: The rotation of the object, using getter and setter
-        :type rotation: List
+        :type rotation: list
         :param scale: The scale of the object
         :type scale: Vector3
-        :param mass: The mass of the object, -1.0 is noy physics?
-        :type mass: float
         :param scripts: A list containing Paths to dynamic scripts
-        :type scripts: List[scripts]
+        :type scripts: list[scripts]
         """
         super().__init__( context )
+        self.materials      : Materials = context.materials
+        self.images         : Images = context.images
+        self.cubemaps       : Cubemap = context.cubemaps
+        self.models         : Models = context.models
+
 
         if uuid is None:
             uuid = self.__create_uuid()
@@ -84,41 +88,46 @@ class GameObject( Context, Transform ):
         self._uuid_gui      : int = int(str(self.uuid.int)[0:8])
 
         self.name           : str = name
-        self.materials      : Materials = context.materials
-        self.images         : Images = context.images
-        self.cubemaps       : Cubemap = context.cubemaps
-        self.models         : Models = context.models
         self.scripts        : list[Script] = []
         self.material       : int = material
-        
         self.parent         : GameObject = None
-        self.children       : List[GameObject] = []
+        self.children       : Dict[uid.UUID, GameObject] = {}
 
+        # states
         self._active            : bool = True
         self._hierarchy_active  : bool = True
 
         self._visible           : bool = True
         self._hierarchy_visible : bool = True
 
-        self.transform      : Transform = Transform(
+        self._dirty         : GameObject.DirtyFlag_ = GameObject.DirtyFlag_.all
+        self._removed       : bool = False   
+        
+        #
+        # attachables
+        #
+        self.attachables    : dict = {}
+
+        # transform
+        self.transform : Transform = None
+        self.addAttachable( Transform, Transform(
             context     = self.context,
             gameObject  = self,
             translate   = translate,
             rotation    = rotation,
             scale       = scale,
             name        = name
-        )
+        ) )
+
+        # physic
+        self.physic : Physic = None  # reserved for physic attachment
+        self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
-        self.model          : int = -1
-        self.model_file     = Path(model_file) if model_file else False
+        self.model : Model = None
 
-        # physics
-        self.physics_id     : int = None
-        self.mass           : float = mass
-
-        self._dirty         : GameObject.DirtyFlag_ = GameObject.DirtyFlag_.all
-        self._removed       : bool = False
+        # light
+        self.light : Light = None
 
         self.onStart()
 
@@ -142,21 +151,65 @@ class GameObject( Context, Transform ):
         if not self._dirty:
             self._dirty = flag
 
-            for c in self.children:
+            for c in self.children.values():
                 c._mark_dirty( flag )
 
-    def get_component( self, component: str = "" ):
-        """Retrieve a reference to a component of this GameObject.
+    def addAttachable( self, t : type, object ):
+        """Add a attachable object to this gameObject
+        
+        :param t: The type of the attachable
+        :type t: type
+        :param object: The instance of the attachable
+        :type object: Any or None
+        :return: A reference to the added attachable
+        :rtype: Any or None
+        """
+        if t in self.attachables:
+            self.console.warn( f"{self.name} already has attachable: {t.__name__}")
 
-        :param component: Name of the engine type (component) to retrieve.
-        :type component: str
-        :return: The requested component reference, or None if the name is not recognized.
+        self.attachables[t] = object
+
+        if t is Transform:
+            self.transform = self.attachables[t] 
+            self.context.world.transforms[self.uuid] = self.attachables[t] 
+
+        if t is Light:
+            self.light = self.attachables[t] 
+            self.context.world.lights[self.uuid] = self.attachables[t] 
+
+        if t is Model:
+            self.model = self.attachables[t] 
+            self.context.world.models[self.uuid] = self.attachables[t] 
+
+        if t is Physic:
+            self.physic = self.attachables[t]
+            self.context.world.physics[self.uuid] = self.attachables[t] 
+
+        if t is PhysicLink:
+            self.physic_link = self.attachables[t]
+            self.context.world.physic_links[self.uuid] = self.attachables[t] 
+
+        return self.attachables[t] 
+
+    def getAttachable( self, attachable: str = "" ):
+        """Retrieve a reference to a attachable of this GameObject.
+
+        :param attachable: Name of the engine type (attachable) to retrieve.
+        :type attachable: str
+        :return: The requested attachable reference, or None if the name is not recognized.
         :rtype: Any or None
         """
         _ref = None
 
-        match component:
-            case "Transform"    : _ref = self.transform
+        if isinstance(attachable, type):
+            attachable = attachable.__name__
+
+        match attachable:
+            case "Transform"    : _ref = self.attachables.get( Transform )
+            case "Light"        : _ref = self.attachables.get( Light )
+            case "Model"        : _ref = self.attachables.get( Model )
+            case "PhysicLink"   : _ref = self.attachables.get( PhysicLink )
+            case "Physic"       : _ref = self.attachables.get( Physic )
             case "GameObject"   : _ref = self
 
         return _ref
@@ -317,11 +370,11 @@ class GameObject( Context, Transform ):
 
         # remove from current parent
         if self.parent is not None:
-            self.parent.children.remove(self)
+            self.parent.children.pop(self.uuid, None)
 
         # add to new parent
         if parent is not None:
-            parent.children.append(self)
+            parent.children[self.uuid] = self
 
         self.parent = parent
 
@@ -330,6 +383,13 @@ class GameObject( Context, Transform ):
             self.transform._update_local_from_world()
 
         self._mark_dirty( GameObject.DirtyFlag_.all  )
+
+    def getParent( self, filter_physic_base : bool = False ) -> "GameObject":
+        if self.parent and filter_physic_base:
+            if not self.parent.getAttachable( Physic ):
+                return self.parent.getParent( filter_physic_base )
+        
+        return self.parent
 
     #
     # scripting
@@ -412,6 +472,32 @@ class GameObject( Context, Transform ):
     #
     # editor state
     #
+    def _save_physic_state( self, physic ):
+        return {
+            "collision": {
+                "translate": list(physic.collision.transform.local_position),
+                "rotation":  list(physic.collision.transform.local_rotation),
+                "scale":     list(physic.collision.transform.local_scale),
+            },
+            "visual": {
+                "translate": list(physic.visual.transform.local_position),
+                "rotation":  list(physic.visual.transform.local_rotation),
+                "scale":     list(physic.visual.transform.local_scale),
+            }
+        }
+
+    def _restore_physic_state( self, physic, state ):
+        collision = state["collision"]
+        visual = state["visual"]
+
+        physic.collision.transform.local_position = collision["translate"]
+        physic.collision.transform.local_rotation = collision["rotation"]
+        physic.collision.transform.local_scale    = collision["scale"]
+
+        physic.visual.transform.local_position    = visual["translate"]
+        physic.visual.transform.local_rotation    = visual["rotation"]
+        physic.visual.transform.local_scale       = visual["scale"]
+
     def _save_state(self):
         """Save a snapshot of the full GameObject state."""
 
@@ -426,6 +512,12 @@ class GameObject( Context, Transform ):
             "parent"  : self.parent,
             #"scripts"   : copy.deepcopy(self.scripts),
         }
+
+        if self.physic:
+            self._state_snapshot["Physic"] = self._save_physic_state( self.physic )
+
+        if self.physic_link:
+            self._state_snapshot["PhysicLink"] = self._save_physic_state( self.physic_link )
 
     def _restore_state(self):
         """Restore the object to the saved initial state."""
@@ -443,90 +535,11 @@ class GameObject( Context, Transform ):
         self.parent                     = state["parent"]
         #self.scripts                    = copy.deepcopy(state["scripts")
 
-    #
-    # physics
-    #
-    def _initPhysics( self ) -> None:
-        """
-        Initialize physics for this gameObject, sets position, orientation and mass
-        https://github.com/bulletphysics/bullet3/blob/master/docs/pybullet_quickstartguide.pdf
-        """
-        self.transform._createWorldModelMatrix()
+        if "Physic" in state: 
+            self._restore_physic_state( self.physic, state["Physic"] )
 
-        if self.physics_id or self.mass < 0.0:
-            return
-
-        _, world_rotation_quat, world_position = self.transform.world_model_matrix.decompose()
-
-        collision_shape = p.createCollisionShape(
-            p.GEOM_BOX, 
-            halfExtents = self.transform.local_scale
-        )
-
-        self.physics_id = p.createMultiBody(
-            baseMass                = self.mass, 
-            baseCollisionShapeIndex = collision_shape, 
-            basePosition            = world_position,
-            baseOrientation         = [
-                world_rotation_quat[0], 
-                world_rotation_quat[1], 
-                world_rotation_quat[2], 
-                -world_rotation_quat[3] # handedness
-            ] 
-        )
-
-    def _deInitPhysics( self) -> None:
-        if self.physics_id is None or self.mass < 0.0:
-            return
-
-        p.removeBody( self.physics_id )
-        self.physics_id = None
-
-    def _runPhysics( self ) -> bool:
-        """Run phyisics engine on this gameObject updating position and orientation"""
-        if not self.renderer.game_running or self.physics_id is None or self.mass < 0.0:
-            return False
-
-        world_position, world_rotation_quat = p.getBasePositionAndOrientation(self.physics_id)
-
-        self.transform.world_model_matrix = self.compose_matrix(
-            world_position,
-            Quaternion([
-                world_rotation_quat[0], 
-                world_rotation_quat[1], 
-                world_rotation_quat[2], 
-                -world_rotation_quat[3] # ~handedness
-            ]),
-            self.transform.local_scale
-        )
-
-        if self.mass > 0.0:
-            self.transform._update_local_from_world()
-
-        return True
-
-    def _updatePhysicsBody(self):
-        """
-        Physics engine requires are update call 
-        whenever translation or rotation has changed externally (gui or script)
-        """
-        if self.physics_id is None or self.mass < 0.0:
-            return
-        
-        pos = self.transform.extract_position(self.transform.world_model_matrix)
-        rot = self.transform.extract_quat(self.transform.world_model_matrix)
-
-        p.resetBasePositionAndOrientation( 
-            self.physics_id, 
-            pos, 
-            #rot.xyzw
-            [
-                rot[0],
-                rot[1], 
-                rot[2], 
-                -rot[3] # ~handedness
-            ] 
-        )
+        if "PhysicLink" in state: 
+            self._restore_physic_state( self.physic_link, state["PhysicLink"] )
 
     #
     # enable and disable
@@ -548,7 +561,8 @@ class GameObject( Context, Transform ):
         if _on_start:
             self.onStartScripts();
 
-        self._initPhysics()
+        if self.physic:
+            self.physic._initPhysics()
 
     def onDisable( self, _on_stop=False ) -> None:
         self.onDisableScripts();
@@ -558,7 +572,8 @@ class GameObject( Context, Transform ):
             self._restore_state()
             #deinit scripts?
 
-        self._deInitPhysics()
+        if self.physic:
+            self.physic._deInitPhysics()
 
     #
     # start and update
@@ -584,10 +599,17 @@ class GameObject( Context, Transform ):
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
-            if self.renderer.game_running:
-                self._updatePhysicsBody()
+            if self.physic_link or self.physic:
+                _physic = self.physic_link or self.physic
+                _physic.collision.transform._createWorldModelMatrix()
+
+            if self.renderer.game_running and self.physic:
+                self.physic._updatePhysicsBody()
 
         if self._dirty:
+            if self.scene.isSun( self.uuid ):
+                self.context.skybox.procedural_cubemap_update = True
+
             self._dirty = GameObject.DirtyFlag_.none
 
         else:
@@ -596,5 +618,56 @@ class GameObject( Context, Transform ):
                 return 
 
             # Run physics and update non-kinematic local transforms
-            self._runPhysics()
+            if self.physic:
+                self.physic._runPhysics()
 
+            elif self.physic_link:
+                self.physic_link._runPhysics()
+
+    def onRender( self ) -> None:
+        is_visible : bool = True if self.renderer.game_runtime else self.hierachyVisible()
+        
+        if not is_visible:
+            return
+
+        self.models.draw( self.model, self.transform._getModelMatrix() ) 
+
+    def onRenderColliders( self ) -> None:
+        # debug draw collision geometry
+        #if not self.renderer.game_runtime and self.physic_link is not None:
+        _physic = self.physic_link or self.physic
+
+        # dont visualize
+        if self.physic and self.children:
+            _physic = None
+
+        if _physic is not None:
+            _color = (1.0, 0.55, 0.0, 0.25)
+            glUniform4f( self.renderer.shader.uniforms['uColor'],  _color[0],  _color[1], _color[2], _color[3] )
+
+            #glDisable(GL_DEPTH_TEST)
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+            glDepthMask(GL_FALSE)
+            glEnable(GL_POLYGON_OFFSET_FILL)
+            glPolygonOffset(-1.0, -1.0)
+
+            glLineWidth(3)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
+            _collision_model = _physic.collision.model or self.context.models.default_cube
+
+            self.models.draw(
+                _collision_model,
+                _physic.collision.transform._getModelMatrix(),
+                True
+            )
+
+            glDisable(GL_POLYGON_OFFSET_FILL)
+            glDepthMask(GL_TRUE)    # re-enable depth writes
+            glDisable(GL_BLEND)
+            #glEnable(GL_DEPTH_TEST)
+
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            glLineWidth(1)

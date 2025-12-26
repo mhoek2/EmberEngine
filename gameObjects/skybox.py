@@ -11,6 +11,7 @@ from modules.context import Context
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from modules.scene import SceneManager
+    from gameObjects.gameObject import GameObject
 
 import numpy as np
 import enum
@@ -290,14 +291,14 @@ class Skybox( Context ):
 
         self.__set_mvp( view, projection )
 
-        _sun = self.scene.getSun()
+        _sun : "GameObject" = self.scene.getSun()
         _sun_active = _sun and _sun.hierachyActive()
 
         if not self.renderer.game_runtime:
             _sun_active = _sun_active and _sun.hierachyVisible()
 
         light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
-        light_color = _sun.light_color              if _sun_active else self.settings.default_ambient_color
+        light_color = _sun.light.light_color        if _sun_active else self.settings.default_ambient_color
 
         _sky_color      = scene["procedural_sky_color"]
         _horizon_color  = scene["procedural_horizon_color"]

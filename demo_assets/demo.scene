@@ -1,9 +1,9 @@
 {
     "name": "demo",
     "ambient_color": [
-        0.6940599679946899,
-        0.806686282157898,
-        0.813725471496582
+        0.28431373834609985,
+        0.28431373834609985,
+        0.28431373834609985
     ],
     "sky_type": 0,
     "procedural_sky_color": [
@@ -39,24 +39,22 @@
             "active": true,
             "instance": "Camera",
             "visible": true,
-            "model_file": "engineAssets\\models\\camera\\model.fbx",
             "material": 0,
             "translate": [
-                0.19500000000000012,
-                1.309999942779541,
-                17.3799991607666
+                -5.345694553682279e-09,
+                1.5325469970703125,
+                8.954544067382812
             ],
             "rotation": [
-                -7.022673523461637e-32,
-                -3.2100000381469727,
-                0.0
+                0.0,
+                3.140000104904175,
+                -3.4881117025136567e-09
             ],
             "scale": [
-                1,
-                1,
-                1
+                1.0,
+                1.0000001192092896,
+                1.0000001192092896
             ],
-            "mass": -1.0,
             "scripts": [],
             "instance_data": {
                 "fov": 45.0,
@@ -64,47 +62,10 @@
                 "far": 1000.0,
                 "is_default_camera": true
             },
-            "children": []
-        },
-        {
-            "uuid": "3e86963931bf413cb3e375050ffccd9b",
-            "name": "Camera2",
-            "active": true,
-            "instance": "Camera",
-            "visible": true,
-            "model_file": "engineAssets\\models\\camera\\model.fbx",
-            "material": 0,
-            "translate": [
-                0,
-                5,
-                -22.510000228881836
-            ],
-            "rotation": [
-                -0.4,
-                0.0,
-                0.0
-            ],
-            "scale": [
-                1,
-                1,
-                1
-            ],
-            "mass": -1.0,
-            "scripts": [
-                {
-                    "uuid": "8d679a87cb094baf9f37432242c01ce3",
-                    "file": "assets\\camera.py",
-                    "active": true,
-                    "exports": {}
-                }
-            ],
-            "instance_data": {
-                "fov": 90.0,
-                "near": 0.1,
-                "far": 1000.0,
-                "is_default_camera": false
-            },
-            "children": []
+            "children": [],
+            "Model": {
+                "path": "engineAssets\\models\\camera\\model.fbx"
+            }
         },
         {
             "uuid": "8c710ae819134ed59c1976bbcdfecf19",
@@ -112,7 +73,6 @@
             "active": true,
             "instance": "Mesh",
             "visible": true,
-            "model_file": "engineAssets\\models\\cube\\model.obj",
             "material": 0,
             "translate": [
                 0,
@@ -129,10 +89,64 @@
                 0.10000000149011612,
                 5.0
             ],
-            "mass": 0.0,
             "scripts": [],
             "instance_data": {},
-            "children": []
+            "children": [],
+            "type": {
+                "base_mass": -1.0
+            },
+            "Physic": {
+                "inertia": {
+                    "mass": 0.0
+                },
+                "joint": {
+                    "type": 0
+                },
+                "collision": {
+                    "type": 1,
+                    "translate": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "lateral_friction": 2.0,
+                    "rolling_friction": 0.0,
+                    "spinning_friction": 0.0,
+                    "restitution": 0.0,
+                    "stiffness": -1.0,
+                    "damping": -1.0
+                },
+                "visual": {
+                    "translate": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            },
+            "Model": {
+                "path": "engineAssets\\models\\cube\\model.obj"
+            }
         },
         {
             "uuid": "67f17a54827c420e87abfcd0bde8b923",
@@ -140,7 +154,6 @@
             "active": true,
             "instance": "Mesh",
             "visible": true,
-            "model_file": "engineAssets\\models\\cube\\model.obj",
             "material": 0,
             "translate": [
                 0,
@@ -157,147 +170,37 @@
                 1,
                 1
             ],
-            "mass": 1.0,
             "scripts": [
                 {
                     "uuid": "932482c64ca94cac80ae62beed8d16a3",
                     "file": "assets\\script.py",
                     "active": true,
                     "exports": {
-                        "value": 1.0,
+                        "value": -1.0,
                         "boost": 30.0,
                         "manipulate": {
-                            "uuid": "259294da29e84da38f41af3c3e7f9052"
+                            "uuid": "eb6c62b81b4140cf8ea252f5b4697759"
                         }
                     }
                 }
             ],
             "instance_data": {},
-            "children": []
-        },
-        {
-            "uuid": "773164ed516d41dca7b76006ca5369e5",
-            "name": "paren cubet",
-            "active": true,
-            "instance": "Mesh",
-            "visible": true,
-            "model_file": "engineAssets\\models\\cube\\model.obj",
-            "material": 0,
-            "translate": [
-                0,
-                -1.4900000095367432,
-                -2.0
-            ],
-            "rotation": [
-                0.0,
-                -0.05000000074505806,
-                0.0
-            ],
-            "scale": [
-                1.0,
-                1,
-                1
-            ],
-            "mass": -1.0,
-            "scripts": [],
-            "instance_data": {},
-            "children": [
-                {
-                    "uuid": "b33b5874abdb4a479ce626e1b6c657dd",
-                    "name": "child cube",
-                    "active": true,
-                    "instance": "Mesh",
-                    "visible": true,
-                    "model_file": "engineAssets\\models\\cube\\model.obj",
-                    "material": 0,
+            "children": [],
+            "type": {
+                "base_mass": -1.0
+            },
+            "Physic": {
+                "inertia": {
+                    "mass": 1.0
+                },
+                "joint": {
+                    "type": 0
+                },
+                "collision": {
+                    "type": 1,
                     "translate": [
-                        0,
-                        2.0,
-                        0
-                    ],
-                    "rotation": [
-                        -0.03995198156340035,
-                        0.0009600719879701107,
-                        -0.12099863868097294
-                    ],
-                    "scale": [
-                        5.000000000000001,
-                        0.10000000149011612,
-                        5.000000000000135
-                    ],
-                    "mass": 0.0,
-                    "scripts": [],
-                    "instance_data": {},
-                    "children": []
-                }
-            ]
-        },
-        {
-            "uuid": "d0c62727a7094e05ab8ecf95bfe55254",
-            "name": "Default cube",
-            "active": true,
-            "instance": "Mesh",
-            "visible": true,
-            "model_file": "engineAssets\\models\\cube\\model.obj",
-            "material": 0,
-            "translate": [
-                0,
-                30.0,
-                0
-            ],
-            "rotation": [
-                0.4699999988079071,
-                -0.9100000262260437,
-                -1.2300000190734863
-            ],
-            "scale": [
-                0.20000000298023224,
-                0.20000000298023224,
-                0.20000000298023224
-            ],
-            "mass": 1.0,
-            "scripts": [],
-            "instance_data": {},
-            "children": []
-        },
-        {
-            "uuid": "accc8892903148b185dd0b8359c6a55d",
-            "name": "Default cube",
-            "active": true,
-            "instance": "Mesh",
-            "visible": true,
-            "model_file": "engineAssets\\models\\cube\\model.obj",
-            "material": 0,
-            "translate": [
-                0,
-                -0.23999999463558197,
-                0
-            ],
-            "rotation": [
-                0.0,
-                0.0,
-                0.0
-            ],
-            "scale": [
-                1.0,
-                1.0,
-                1.0
-            ],
-            "mass": 0.0,
-            "scripts": [],
-            "instance_data": {},
-            "children": [
-                {
-                    "uuid": "a347c5572ed247ba909763bc0ee5f196",
-                    "name": "testcube",
-                    "active": true,
-                    "instance": "Mesh",
-                    "visible": true,
-                    "model_file": "engineAssets\\models\\cube\\model.obj",
-                    "material": 0,
-                    "translate": [
-                        -2.0,
-                        20.0,
+                        0.0,
+                        0.0,
                         0.0
                     ],
                     "rotation": [
@@ -306,128 +209,38 @@
                         0.0
                     ],
                     "scale": [
-                        0.20000000298023224,
-                        0.20000000298023224,
-                        0.20000000298023224
-                    ],
-                    "mass": 1.0,
-                    "scripts": [],
-                    "instance_data": {},
-                    "children": []
-                },
-                {
-                    "uuid": "d14b1df85d7b4589815a800b509f9f95",
-                    "name": "Default cube",
-                    "active": true,
-                    "instance": "Mesh",
-                    "visible": true,
-                    "model_file": "engineAssets\\models\\cube\\model.obj",
-                    "material": 0,
-                    "translate": [
-                        -1.0,
-                        20.0,
-                        0
-                    ],
-                    "rotation": [
-                        2.119999885559082,
-                        0.0,
-                        -0.7099999785423279
-                    ],
-                    "scale": [
-                        0.20000000298023224,
-                        0.20000000298023224,
-                        0.20000000298023224
-                    ],
-                    "mass": 1.0,
-                    "scripts": [],
-                    "instance_data": {},
-                    "children": []
-                },
-                {
-                    "uuid": "71ec769d41a74fa59633a35da0a5b293",
-                    "name": "Default cube",
-                    "active": true,
-                    "instance": "Mesh",
-                    "visible": true,
-                    "model_file": "engineAssets\\models\\cube\\model.obj",
-                    "material": 0,
-                    "translate": [
-                        0.0,
-                        20.0,
-                        0
-                    ],
-                    "rotation": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        0.20000000298023224,
-                        0.20000000298023224,
-                        0.20000000298023224
-                    ],
-                    "mass": 1.0,
-                    "scripts": [],
-                    "instance_data": {},
-                    "children": []
-                },
-                {
-                    "uuid": "76d90d5147e04fc095f6eb23a8eeec6d",
-                    "name": "Default cube",
-                    "active": true,
-                    "instance": "Mesh",
-                    "visible": true,
-                    "model_file": "engineAssets\\models\\cube\\model.obj",
-                    "material": 0,
-                    "translate": [
                         1.0,
-                        20.0,
-                        0
+                        1.0,
+                        1.0
                     ],
-                    "rotation": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "scale": [
-                        0.20000000298023224,
-                        1,
-                        0.20000000298023224
-                    ],
-                    "mass": 1.0,
-                    "scripts": [],
-                    "instance_data": {},
-                    "children": []
+                    "lateral_friction": 2.0,
+                    "rolling_friction": 0.0,
+                    "spinning_friction": 0.0,
+                    "restitution": 0.0,
+                    "stiffness": -1.0,
+                    "damping": -1.0
                 },
-                {
-                    "uuid": "9f3ec3d6748947a3a94c74c7590da2c1",
-                    "name": "Default cube",
-                    "active": true,
-                    "instance": "Mesh",
-                    "visible": true,
-                    "model_file": "engineAssets\\models\\cube\\model.obj",
-                    "material": 0,
+                "visual": {
                     "translate": [
-                        2.0,
-                        20.0,
-                        -0.07999999821186066
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "rotation": [
                         0.0,
-                        1.2699999809265137,
+                        0.0,
                         0.0
                     ],
                     "scale": [
-                        0.20000000298023224,
-                        0.20000000298023224,
-                        1
-                    ],
-                    "mass": 1.0,
-                    "scripts": [],
-                    "instance_data": {},
-                    "children": []
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
                 }
-            ]
+            },
+            "Model": {
+                "path": "engineAssets\\models\\cube\\model.obj"
+            }
         },
         {
             "uuid": "259294da29e84da38f41af3c3e7f9052",
@@ -435,7 +248,6 @@
             "active": true,
             "instance": "Mesh",
             "visible": true,
-            "model_file": "engineAssets\\models\\cube\\model.obj",
             "material": 0,
             "translate": [
                 -2.9238739013671875,
@@ -452,23 +264,76 @@
                 0.21000003814697266,
                 0.21000003814697266
             ],
-            "mass": 1.0,
             "scripts": [],
             "instance_data": {},
-            "children": []
+            "children": [],
+            "type": {
+                "base_mass": -1.0
+            },
+            "Physic": {
+                "inertia": {
+                    "mass": 1.0
+                },
+                "joint": {
+                    "type": 0
+                },
+                "collision": {
+                    "type": 1,
+                    "translate": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "lateral_friction": 2.0,
+                    "rolling_friction": 0.0,
+                    "spinning_friction": 0.0,
+                    "restitution": 0.0,
+                    "stiffness": -1.0,
+                    "damping": -1.0
+                },
+                "visual": {
+                    "translate": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "rotation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            },
+            "Model": {
+                "path": "engineAssets\\models\\cube\\model.obj"
+            }
         },
         {
             "uuid": "f4a5e507e0f34e8485a44bc15e71ba89",
             "name": "sun",
             "active": true,
-            "instance": "Light",
+            "instance": "Mesh",
             "visible": true,
-            "model_file": "engineAssets\\models\\sphere\\model.obj",
             "material": -1,
             "translate": [
-                12.928414344787598,
-                9.982970237731934,
-                -23.965118408203125
+                7.03597354888916,
+                3.396017074584961,
+                -25.031463623046875
             ],
             "rotation": [
                 0.0,
@@ -480,40 +345,46 @@
                 0.500000011025542,
                 0.5
             ],
-            "mass": -1.0,
             "scripts": [
                 {
                     "uuid": "34c8a845c77948b6a5f48eb8aafec957",
                     "file": "assets\\sun.py",
                     "active": true,
-                    "exports": {}
+                    "exports": {
+                        "test": null,
+                        "test7": "",
+                        "test3": 10.25
+                    }
                 }
             ],
-            "instance_data": {
+            "instance_data": {},
+            "children": [],
+            "Light": {
                 "light_type": 0,
                 "light_color": [
                     0.9411764740943909,
-                    0.8928692936897278,
-                    0.5305651426315308
+                    0.8901960849761963,
+                    0.529411792755127
                 ],
-                "radius": 12.899999618530273,
+                "radius": 12.0,
                 "intensity": 2.5,
                 "is_sun": true
             },
-            "children": []
+            "Model": {
+                "path": "engineAssets\\models\\sphere\\model.obj"
+            }
         },
         {
             "uuid": "e10f64a99fff4380b94ffd3731ac9c73",
             "name": "light",
             "active": true,
-            "instance": "Light",
+            "instance": "Mesh",
             "visible": true,
-            "model_file": "engineAssets\\models\\sphere\\model.obj",
             "material": -1,
             "translate": [
-                -3.3344075679779053,
-                1.227050542831421,
-                0.8837890625
+                -2.021282196044922,
+                1.3465572595596313,
+                2.2071902751922607
             ],
             "rotation": [
                 0.0,
@@ -525,20 +396,23 @@
                 0.500000011025542,
                 0.5
             ],
-            "mass": -1.0,
             "scripts": [],
-            "instance_data": {
+            "instance_data": {},
+            "children": [],
+            "Light": {
                 "light_type": 2,
                 "light_color": [
                     0.0,
-                    0.7352945804595947,
+                    0.7333333492279053,
                     1.0
                 ],
-                "radius": 4.099999904632568,
+                "radius": 4.0,
                 "intensity": 0.8999999761581421,
                 "is_sun": false
             },
-            "children": []
+            "Model": {
+                "path": "engineAssets\\models\\sphere\\model.obj"
+            }
         }
     ]
 }

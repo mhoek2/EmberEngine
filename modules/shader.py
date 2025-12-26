@@ -17,13 +17,15 @@ if TYPE_CHECKING:
     from main import EmberEngine
 
 class Shader:
-    def __init__( self, context, uid : str ):
+    def __init__( self, context, uid : str, templated : bool = False ):
         """Load and parse GLSL shaders from .vert and .frag files
         
         :param context: This is the main context of the application
         :type context: EmberEngine
         :param uid: The unique idenifier of the shader being initialized
         :type uid: str
+        :param templated: The version and defines will be set programmatically
+        :type templated: bool
         """
         self.context    : 'EmberEngine' = context
         self.settings   : Settings = context.settings
@@ -33,6 +35,7 @@ class Shader:
         vert_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.vert").getContent())
         frag_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.frag").getContent())
 
+        self.templated = templated
         self.program = self.load_program( vert_shader, frag_shader )
         
         self.uniforms = {}
@@ -70,6 +73,24 @@ class Shader:
             if _keyword not in self.uniforms:
                 self.uniforms[_keyword] = False
 
+    def inject_version_and_defines( self, src : str ):
+        version_330 = "#version 330 core"
+        version_460 = "#version 460 core"
+        version = version_330
+        defines : list[str] = []
+
+        if self.context.renderer.BINDLESS_TEXTURES:
+            version = version_460
+            defines.append("#define BINDLESS_TEXTURES")
+
+        if self.context.renderer.INDIRECT:
+            version = version_460
+            defines.append("#define INDIRECT")
+
+        define_block = "\n".join(defines)
+
+        return f"{version}\n{define_block}\n{src}"
+
     def load_program( self, in_vert : str, in_frag : str ) -> int:
         """Build and create the shader program from .vert and .frag shader
         
@@ -80,6 +101,11 @@ class Shader:
         :return: The index to a valid shader program in GPU memory
         :rtype: int
         """
+
+        if self.templated:
+            in_vert = self.inject_version_and_defines( in_vert )
+            in_frag = self.inject_version_and_defines( in_frag )
+
         vert = self.load_shader( GL_VERTEX_SHADER, in_vert )
         if vert == 0:
             return 0

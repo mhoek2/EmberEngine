@@ -1,6 +1,8 @@
-#version 330 core
+// version added programmicly
 
+#ifndef INDIRECT
 uniform mat4 uMMatrix;
+#endif
 uniform mat4 uVMatrix;
 uniform mat4 uPMatrix;
 
@@ -12,6 +14,9 @@ uniform vec4 in_ambientcolor;
 
 uniform float in_roughnessOverride;
 uniform float in_metallicOverride;
+#ifndef INDIRECT
+	uniform int u_MaterialIndex;
+#endif
 
 layout(location = 0) in vec3 aVertex;
 layout(location = 1) in vec2 aTexCoord;    
@@ -31,12 +36,34 @@ out vec4 var_ViewDir;
   
 out vec4 var_LightColor;
 out vec4 var_AmbientColor;
+out int var_material_index;
+
+#ifdef INDIRECT
+	struct DrawBlock
+	{
+		mat4 model;        // 64 bytes
+		int  material;     // 4 bytes
+		int  pad0;
+		int  pad1;
+		int  pad2;
+	};
+
+	layout(std430, binding = 0) buffer DrawBuffer
+	{
+		DrawBlock draw[];
+	};
+#endif
 
 void main(){
     vTexCoord = aTexCoord;
 
 	vec3 position = aVertex;
 	vec3 normal = normalize(aNormal);
+
+#ifdef INDIRECT
+	DrawBlock d = draw[gl_DrawID];
+	mat4 uMMatrix = d.model;
+#endif
 
     gl_Position = (uPMatrix * uVMatrix * uMMatrix) * vec4(position, 1.0);
 
@@ -46,10 +73,7 @@ void main(){
 	vec3 tangent	= normalize(mat3(uMMatrix) * aTangent);
 	vec3 bitangent	= normalize(mat3(uMMatrix) * aBiTangent);
 
-	//vec3 L	= in_lightdir.xyz * 2.0 - vec3(1.0);
-	//L		= ( uMMatrix * vec4( L, 0.0 ) ).xyz;
 	vec3 L = normalize(in_lightdir.xyz);
-	//L		= normalize( ( L * 0.5 ) + vec3( 0.5 ) );
 
 	vec3 viewDir = u_ViewOrigin.xyz - position;
 
@@ -65,4 +89,9 @@ void main(){
 	var_roughnessOverride = in_roughnessOverride;
 	var_metallicOverride = in_metallicOverride;
 
+#ifdef INDIRECT
+	var_material_index = int(d.material);
+#else
+	var_material_index = u_MaterialIndex;
+#endif
 }

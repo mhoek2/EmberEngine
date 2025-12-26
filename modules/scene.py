@@ -9,15 +9,19 @@ import uuid as uid
 
 from modules.console import Console
 from modules.settings import Settings
-from modules.transform import Transform
+from gameObjects.attachables.transform import Transform
 from modules.script import Script
 from gameObjects.scriptBehaivior import ScriptBehaivior
+
+from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicLink import PhysicLink
+from gameObjects.attachables.light import Light
+from gameObjects.attachables.model import Model
 
 if TYPE_CHECKING:
     from main import EmberEngine
     from gameObjects.gameObject import GameObject
     from gameObjects.camera import Camera
-    from gameObjects.light import Light
     from gameObjects.skybox import Skybox
 
 import traceback
@@ -46,7 +50,6 @@ class SceneManager:
         instance    : str
         visible     : bool
         name        : str
-        model_file  : str
         material    : int
         translate   : List[float]
         rotation    : List[float]
@@ -139,7 +142,7 @@ class SceneManager:
         _scene = scene_id if scene_id >= 0 else self.current_scene
         _editor_camera = None
 
-        obj = self.context.findGameObject( uuid )
+        obj : "GameObject" = self.context.world.findGameObject( uuid )
 
         if obj is None:
             self.scenes[_scene]["sun"] = None
@@ -179,21 +182,19 @@ class SceneManager:
             #self.console.error( e, traceback.format_tb(exc_tb) )
             return False
 
-    def getSun( self ):
+    def getSun( self ) -> "GameObject":
         """Get the current sun
 
         :return: The current scene sun, False if this fails
-        :rtype: Camera or bool
+        :rtype: GameObject or bool
         """
-        from gameObjects.light import Light
-
         try:
-            _scene_light = self.scenes[self.current_scene]["sun"]
+            obj : "GameObject" = self.scenes[self.current_scene]["sun"]
 
-            if not isinstance( _scene_light, Light ):
+            if not obj or not obj.light:
                 raise IndexError("invalid sun")
 
-            return _scene_light
+            return obj
 
         except Exception as e:
             #print( e )
@@ -207,7 +208,7 @@ class SceneManager:
         :return: True if the it is the sun, False if not
         :rtype: Camera or bool
         """
-        _sun = self.getSun()
+        _sun : "GameObject" = self.getSun()
 
         if _sun and _sun.uuid == uuid:
             return True
@@ -215,19 +216,20 @@ class SceneManager:
         return False
 
     def setSun( self, uuid : uid.UUID, scene_id = -1):
-        from gameObjects.light import Light
-
         _scene = scene_id if scene_id >= 0 else self.current_scene
 
-        obj = self.context.findGameObject( uuid )
+        obj : "GameObject" = self.context.world.findGameObject( uuid )
 
-        if obj is None:
+        # here for now
+        self.context.skybox.procedural_cubemap_update = True
+
+        if not obj or not obj.light:
             self.scenes[_scene]["sun"] = None
+            return
 
         # set scene sun
-        elif obj and isinstance(obj, Light):
-            obj.is_sun = True
-            self.scenes[_scene]["sun"] = obj
+        obj.is_sun = True
+        self.scenes[_scene]["sun"] = obj
 
     def newScene( self, name : str ):
         """Creates a new scene based on the engines default empty scene
@@ -325,17 +327,16 @@ class SceneManager:
 
     def saveGameObjectRecursive( self, 
         parent          : "GameObject" = None,
-        objects         : List["GameObject"] = [],
+        objects         : Dict[uid.UUID, "GameObject"] = [],
         _gameObjects    : List["SceneManager._GameObject"] = [] 
     ):
         """Recursivly iterate over gameObject and its children"""
         from gameObjects.camera import Camera
-        from gameObjects.light import Light
 
         _scene_camera = self.getCamera()
         _scene_sun = self.getSun()
 
-        for obj in objects:
+        for obj in objects.values():
             if obj._removed:
                 continue
 
@@ -348,12 +349,10 @@ class SceneManager:
                 "active"        : obj.active,
                 "instance"      : type(obj).__name__,
                 "visible"       : obj.visible,
-                "model_file"    : str(obj.model_file.relative_to(self.settings.rootdir)),
                 "material"      : obj.material,
                 "translate"     : obj.transform.local_position,
                 "rotation"      : obj.transform.local_rotation,
                 "scale"         : obj.transform.local_scale,
-                "mass"          : obj.mass,
                 "scripts": [
                     {
                         "uuid"          : x.uuid.hex,
@@ -370,6 +369,7 @@ class SceneManager:
                 "children"      : []
             }
 
+            # GameObject Types
             if _scene_camera and isinstance( obj, Camera ):
                 buffer["instance_data"]["fov"]  = obj.fov
                 buffer["instance_data"]["near"] = obj.near
@@ -378,17 +378,69 @@ class SceneManager:
                 if _scene_camera:
                     buffer["instance_data"]["is_default_camera"] = True if obj.uuid == _scene_camera.uuid else False
                
+  
+            def physicLink( buffer, physic_link ):
+                inertia     : PhysicLink.Inertia        = physic_link.inertia
+                joint       : PhysicLink.Joint          = physic_link.joint
+                collision   : PhysicLink.Collision      = physic_link.collision
+                visual      : PhysicLink.Visual         = physic_link.visual
 
-            elif isinstance( obj, Light ):   
-                buffer["instance_data"]["light_type"]   = obj.light_type
-                buffer["instance_data"]["light_color"]  = list(obj.light_color)
-                buffer["instance_data"]["radius"]       = obj.radius
-                buffer["instance_data"]["intensity"]    = obj.intensity
+                buffer[ type(physic_link).__name__ ] = {
+                    "inertia": {
+                        "mass": inertia.mass 
+                    },
+                    "joint": {
+                        "type"          : joint.geom_type,
+                    },
+                    "collision": {
+                        "type"          : collision.geom_type,
+                        "translate"     : collision.transform.local_position,
+                        "rotation"      : collision.transform.local_rotation,
+                        "scale"         : collision.transform.local_scale,
 
+                        "lateral_friction"  : collision.lateral_friction,
+                        "rolling_friction"  : collision.rolling_friction,
+                        "spinning_friction" : collision.spinning_friction,
+                        "restitution"       : collision.restitution,
+                        "stiffness"         : collision.stiffness,
+                        "damping"           : collision.damping
+      
+                    },
+                    "visual": {
+                        "translate"     : visual.transform.local_position,
+                        "rotation"      : visual.transform.local_rotation,
+                        "scale"         : visual.transform.local_scale
+                    }
+                }
 
-                if _scene_sun:
-                    buffer["instance_data"]["is_sun"] = True if obj.uuid == _scene_sun.uuid else False
-               
+            # gameObject attachables
+            physic : Physic = obj.getAttachable(Physic)
+            if physic:
+                buffer[ type(Physic).__name__ ] = { 
+                    "base_mass"     : float(physic.base_mass)
+                }
+                physicLink( buffer, physic )
+
+            physic_link : PhysicLink = obj.getAttachable(PhysicLink)
+            # if self.physic_link, but explicitly use the designed method for this
+            if physic_link:
+                physicLink( buffer, physic_link )
+
+            light : Light = obj.getAttachable(Light)
+            if light:
+                buffer["Light"] = {
+                    "light_type"   : light.light_type,
+                    "light_color"  : list(light.light_color),
+                    "radius"       : light.radius,
+                    "intensity"    : light.intensity,
+                    "is_sun"       : True if (_scene_sun and obj.uuid == _scene_sun.uuid) else False
+                }
+
+            model : Model = obj.getAttachable(Model)
+            if model and model.handle != -1:
+                buffer["Model"] = {
+                    "path"         : str(model.path.relative_to( self.settings.rootdir )),
+                }
 
             if obj.children:
                 self.saveGameObjectRecursive( 
@@ -435,7 +487,7 @@ class SceneManager:
 
         self.saveGameObjectRecursive( 
             None,
-            self.context.gameObjects, 
+            self.context.world.gameObjects, 
             _gameObjects
         )
 
@@ -480,7 +532,7 @@ class SceneManager:
         self.setCamera( None )
         self.setSun( None )
         self.context.gui.set_selected_object()
-        self.context.gameObjects.clear()
+        self.context.world.destroyAllGameObjects()
         self.current_scene = -1
 
         self.console.note( f"Clear current scene in editor" )
@@ -491,7 +543,7 @@ class SceneManager:
         :param path: The path to a .py script file
         :type path: Path
         """
-        for obj in self.context.gameObjects:
+        for obj in self.context.world.gameObjects.values():
             for script in obj.scripts:
                 if path != script.path:
                     continue
@@ -506,22 +558,17 @@ class SceneManager:
     ):
         from gameObjects.mesh import Mesh
         from gameObjects.camera import Camera
-        from gameObjects.light import Light
 
         for obj in objects:
             # todo:
-            # replace ternary with; .get(key, default)
-            model = (self.settings.rootdir / obj["model_file"]).resolve() if "model_file" in obj else False
-
-            index = self.context.addGameObject( eval(obj["instance"])( self.context,
+            # temporary
+            gameObject = self.context.world.addGameObject( eval(obj["instance"])( self.context,
                     uuid        = uid.UUID(hex=obj["uuid"]) if "uuid"       in obj else None, 
                     name        = obj["name"]               if "name"       in obj else "Unknown",
-                    model_file  = model,
                     material    = obj["material"]           if "material"   in obj else -1,
                     translate   = obj["translate"]          if "translate"  in obj else [ 0.0, 0.0, 0.0 ],
                     scale       = obj["scale"]              if "scale"      in obj else [ 0.0, 0.0, 0.0 ],
                     rotation    = obj["rotation"]           if "rotation"   in obj else [ 0.0, 0.0, 0.0 ],
-                    mass        = obj["mass"]               if "mass"       in obj else -1.0,
                     scripts     = [
                         Script(
                             context     = self.context,
@@ -538,12 +585,6 @@ class SceneManager:
                 )
             )
 
-            if model:
-                self.console.log( f"Load model: {model.relative_to(self.settings.rootdir)}" )
-
-            # reference added gameObject
-            gameObject = self.context.gameObjects[index]
-
             # todo:
             # implement scene settings, so a camera or sun can be assigned
             _instance_data = obj.get("instance_data", {})
@@ -558,17 +599,6 @@ class SceneManager:
                     if _instance_data.get("is_default_camera", False):
                         self.setCamera( gameObject.uuid, scene_id = scene_id )
 
-            elif isinstance( gameObject, Light ):
-                if _instance_data:
-                    if "light_type"    in _instance_data: gameObject.light_type   = _instance_data.get("light_type")
-                    if "light_color"   in _instance_data: gameObject.light_color  = list(_instance_data.get("light_color"))
-                    if "radius"        in _instance_data: gameObject.radius       = _instance_data.get("radius")
-                    if "intensity"     in _instance_data: gameObject.intensity    = _instance_data.get("intensity")
-               
-                    # set this is current scene sun
-                    if _instance_data.get("is_sun", False):
-                        self.setSun( gameObject.uuid, scene_id = scene_id )
-
             if "active" in obj:
                 gameObject.active = obj["active"]
 
@@ -578,12 +608,102 @@ class SceneManager:
             if parent:
                 gameObject.setParent( parent, update=False )
 
+            #
+            # attachables
+            #
+            if "Model" in obj:
+                _model = obj["Model"]
+
+                _path = (self.settings.rootdir / _model["path"]).resolve()
+                gameObject.addAttachable( Model, Model( 
+                    self.context, gameObject,
+                    handle      = self.context.models.loadOrFind( _path, gameObject.material ),
+                    path        = _path
+                ) )
+
+            if "Light" in obj:
+                _light = obj["Light"]
+                light_kwargs = {}
+
+                if "light_type"     in _light : light_kwargs["light_type"]  = _light["light_type"]
+                if "light_color"    in _light : light_kwargs["light_color"] = list(_light["light_color"])
+                if "radius"         in _light : light_kwargs["radius"]      = _light["radius"]
+                if "intensity"      in _light : light_kwargs["intensity"]   = _light["intensity"]
+
+                gameObject.addAttachable( Light, Light( 
+                    self.context, gameObject, **light_kwargs 
+                ) )
+
+                # set this is current scene sun
+                if _light.get("is_sun", False):
+                    self.setSun( gameObject.uuid, scene_id = scene_id )
+
+            def physicLink( _link : dict, physic_link : PhysicLink | Physic ):
+                _inertia        = _link.get("inertia")
+                _joint          = _link.get("joint")
+                _collision      = _link.get("collision")
+                _visual         = _link.get("visual")
+
+                if _inertia:
+                    inertia : PhysicLink.Inertia = physic_link.inertia
+                    inertia.mass = float(_inertia["mass"])
+
+                if _joint:
+                    joint : PhysicLink.Joint = physic_link.joint
+
+                    joint.geom_type = PhysicLink.Joint.Type_( _joint.get( "type", 0 ) )
+
+                if _collision:
+                    collision : PhysicLink.Collision = physic_link.collision
+
+                    collision.geom_type    = PhysicLink.GeometryType_( _collision.get( "type", 0 ) )
+
+                    collision.transform.local_position      = tuple(_collision.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
+                    collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
+                    collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+
+                    collision.transform.is_physic_shape = True
+                    collision._update_transform()
+                    
+                    # contact
+                    collision.lateral_friction  = float(_collision.get("lateral_friction", 0.8 ) )
+                    collision.rolling_friction  = float(_collision.get("rolling_friction", 0.0 ) )
+                    collision.spinning_friction = float(_collision.get("spinning_friction", 0.0 ) )
+                    collision.restitution       = float(_collision.get("restitution", 0.0 ) )
+                    collision.stiffness         = float(_collision.get("stiffness", -1.0 ) )
+                    collision.damping           = float(_collision.get("damping", -1.0 ) )
+
+                if _visual:
+                    visual : PhysicLink.Visual = physic_link.visual
+
+                    visual.transform.local_position      = tuple(_visual.get( "translate", ( 0.0, 0.0, 0.0 ) ) )
+                    visual.transform.local_rotation      = tuple(_visual.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
+                    visual.transform.local_scale         = tuple(_visual.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
+
+                    visual.transform.is_physic_shape = True
+                    visual._update_transform()
+
+            if "Physic" in obj:
+                _physic = obj["Physic"]
+
+                gameObject.addAttachable( Physic, Physic( self.context, gameObject ) )
+                gameObject.physic.base_mass = _physic.get("base_mass", -1.0)
+
+                physicLink( _physic, gameObject.physic )
+
+            if "PhysicLink" in obj:
+                _physic_link    = obj["PhysicLink"]
+
+                gameObject.addAttachable( PhysicLink, PhysicLink( self.context, gameObject ) )
+                physicLink( _physic_link, gameObject.physic_link )
+
             if "children" in obj:
                 self.loadGameObjectsRecursive( 
                     gameObject, 
                     obj["children"], 
                     scene_id=scene_id
                 )
+
         pass
 
 
@@ -632,12 +752,19 @@ class SceneManager:
             else:
                 self.current_scene =  i
                 self.console.note( f"Scene {scene_uid} loaded successfully" )
+
+                self.postLoadScene()
                 return True
 
         # load default scene
         if self.current_scene < 0:
             self.console.error( f"Could not find scene: {scene_uid}" )
+
+            self.postLoadScene()
             return False
+
+    def postLoadScene( self ) -> None:
+        self.context.renderer.ubo_materials._dirty = True
 
     def loadDefaultScene( self ):
         """Load the default scene, meaing the engine empty scene"""

@@ -4,6 +4,7 @@ from typing import List
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GL.ARB.bindless_texture import *
 
 from modules.imageLoader import load_image_pygame as load_image, create_rmo_map
 from modules.context import Context
@@ -21,11 +22,27 @@ class Images( Context ):
         self.images = []
         self.images_paths : List[str] = []
 
+        # bindless texture mapping
+        #self.bindless_handles: List[int] = []
+        self.texture_to_bindless : dict = {}
+
         self.defaultImage   = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default.jpg") )
         self.defaultRMO     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default_rmo.png") )
         self.defaultNormal  = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default_normal.png") )
         self.whiteImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}whiteimage.jpg") )
         self.blackImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}blackimage.jpg") )
+
+    def make_bindless( self, texture_id ):
+        """Create a bindless handle for a texture an map it"""
+        handle = 0
+
+        if self.context.renderer.BINDLESS_TEXTURES:
+            handle = glGetTextureHandleARB(texture_id)
+            glMakeTextureHandleResidentARB(handle)
+            #self.bindless_handles.append( handle )
+
+        self.texture_to_bindless[texture_id] = handle
+        return handle
 
     def loadOrFindPhysicalMap( self, roughness_path : Path, metallic_path : Path, ao_path : Path ):
         """Load/Create/Combine a physical RMO texture.
@@ -49,6 +66,7 @@ class Images( Context ):
         self.images_paths.append( f"rmomap_placeholder_{texture_id}" )
         self.images.append( texture_id )
 
+        handle = self.make_bindless( texture_id )
         return texture_id
 
     def loadOrFindFullPath( self, path : Path, flip_x: bool = False, flip_y: bool = True ):
@@ -74,6 +92,7 @@ class Images( Context ):
         self.images_paths.append( str(path) )
         self.images.append( texture_id )
 
+        handle = self.make_bindless( texture_id )
         return texture_id
 
     def bind( self, texture_id, texture_index, shader_uniform : str, shader_index : int ):

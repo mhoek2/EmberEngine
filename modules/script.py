@@ -221,15 +221,15 @@ class Script:
             if isinstance( exported.default, uid.UUID ):
                 _t_engine_type : EngineTypes.Meta = EngineTypes.get_engine_type( exported.type )
 
-                obj : "GameObject" = self.context.findGameObject( exported.default )
+                obj : "GameObject" = self.context.world.findGameObject( exported.default )
 
                 if obj is None or _t_engine_type is None:
                     print( "failed to export.." )
                     setattr( self.instance, name, exported.default  )
                     continue
 
-                # get the component and set reference on instance attribute
-                _ref = obj.get_component( _t_engine_type._name )
+                # get the attachable and set reference on instance attribute
+                _ref = obj.getAttachable( _t_engine_type._name )
                 setattr( self.instance, name, _ref )
 
             # primitive types are a COPY

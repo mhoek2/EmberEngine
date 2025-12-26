@@ -17,18 +17,25 @@ class Transform:
                  translate      = [ 0.0, 0.0, 0.0 ], 
                  rotation       = [ 0.0, 0.0, 0.0 ], 
                  scale          = [ 1.0, 1.0, 1.0 ],
-                 name           : str = ""
+                 name           : str = "",
+                 local_callback = None
                  ) -> None :
         self.settings = context.settings
         self.gameObject = gameObject
+
+        if local_callback is None:
+            local_callback = partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform)
+
+        # physic stuff
+        self.is_physic_shape = False
 
         # coordination
         # row-major, post-multiply, intrinsic rotation
         # R = Rx * Ry * Rz
         # tbh, so much has changed, I lost track ..
-        self._local_position        = self.vectorInterface( translate,  partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
-        self._local_rotation        = self.vectorInterface( rotation,   partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
-        self._local_scale           = self.vectorInterface( scale,      partial(gameObject._mark_dirty, gameObject.DirtyFlag_.transform), name )
+        self._local_position        = self.vectorInterface( translate,  local_callback, name )
+        self._local_rotation        = self.vectorInterface( rotation,   local_callback, name )
+        self._local_scale           = self.vectorInterface( scale,      local_callback, name )
         self._local_rotation_quat   : Quaternion = Quaternion(self.euler_to_quat(self._local_rotation))
         self.world_model_matrix     : Matrix44 = self._createWorldModelMatrix()
 
@@ -107,6 +114,15 @@ class Transform:
 
         def __eq__( self, other ):
             return list(self) == list(other)
+
+        def __mul__(self, other):
+            if isinstance(other, (int, float)):
+                return list([v * other for v in self])
+
+            elif isinstance(other, (list, tuple, Transform.vectorInterface)):
+                return list([a * b for a, b in zip(self, other)])
+
+            return NotImplemented
 
     #
     # LOCAL (master)
@@ -209,7 +225,7 @@ class Transform:
     def rotation( self, data ):
         world_quat = self.euler_to_quat( data )
 
-        quat : Quaternion = Quaternion([0,0,0,0])
+        quat : Quaternion = Quaternion()
 
         if self.gameObject.parent is not None:
             parent_world_quat = self.extract_quat(self._getParentModelMatrix())
@@ -292,23 +308,33 @@ class Transform:
         return self.world_model_matrix
 
     def _getParentModelMatrix( self ) -> Matrix44:
-        if self.gameObject.parent is not None:
+        # A physic shape (collision/visual) is relative/local to the gameObject transform
+        # Thefor, return gameObject.transform and not the parent 
+        if self.is_physic_shape:
+            return self.gameObject.transform.world_model_matrix
+
+        # Otherwise, inherit the parent game object's transform
+        elif self.gameObject.parent is not None:
             return self.gameObject.parent.transform.world_model_matrix
-        else:
-            return Matrix44.identity()
+
+        return Matrix44.identity()
 
     def _createWorldModelMatrix( self, includeParent : bool = True ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
-        local_matrix = self.compose_matrix(
+        _local_model_matrix = self.compose_matrix(
             self._local_position,
             self._local_rotation_quat,
             self._local_scale
         )
 
-        if self.gameObject.parent is not None:
-            self.world_model_matrix = Matrix44(self._getParentModelMatrix() * local_matrix)
+        # here or _getParentModelMatrix()?
+        #if self.is_physic_shape:
+        #    self.world_model_matrix = self.gameObject.transform._getModelMatrix() * local_model_matrix
+        #else:
+        if self.gameObject.parent is not None or self.is_physic_shape:
+            self.world_model_matrix = Matrix44(self._getParentModelMatrix() * _local_model_matrix)
         else:
-            self.world_model_matrix = Matrix44(local_matrix)
+            self.world_model_matrix = Matrix44(_local_model_matrix)
 
         return self.world_model_matrix
 
@@ -435,18 +461,25 @@ class Transform:
         R = np.array([list(mat[i])[:3] for i in range(3)], dtype=float)
 
         # Remove scale
-        sx = np.linalg.norm(R[0])
-        sy = np.linalg.norm(R[1])
-        sz = np.linalg.norm(R[2])
+        sx = max(np.linalg.norm(R[0]), 1e-8)
+        sy = max(np.linalg.norm(R[1]), 1e-8)
+        sz = max(np.linalg.norm(R[2]), 1e-8)
         R[0] /= sx
         R[1] /= sy
         R[2] /= sz
 
         # Re-orthogonalize (Gram-Schmidt)
         R[0] = R[0] / np.linalg.norm(R[0])
-        R[1] = R[1] - np.dot(R[1], R[0]) * R[0]
-        R[1] /= np.linalg.norm(R[1])
+
+        n = np.linalg.norm(R[1])
+        if n < 1e-8:
+            R[1] = np.array([0, 1, 0], dtype=float)
+        else:
+            R[1] /= n
+
         R[2] = np.cross(R[0], R[1])
+        if np.linalg.norm(R[2]) < 1e-8:
+            R[2] = np.array([0, 0, 1], dtype=float)
 
         return Quaternion.from_matrix(R)
 
@@ -464,4 +497,9 @@ class Transform:
         x = Vector3(list(mat[0])[:3]).length
         y = Vector3(list(mat[1])[:3]).length
         z = Vector3(list(mat[2])[:3]).length
+
+        #x = Vector3(mat.column(0)[:3]).length
+        #y = Vector3(mat.column(1)[:3]).length
+        #z = Vector3(mat.column(2)[:3]).length
+
         return Vector3([x, y, z])

@@ -19,6 +19,7 @@ class Materials( Context ):
         emissive    : int # uint32/uintc
         opacity     : int # uint32/uintc
         phyiscal    : int # uint32/uintc
+        hasNormalMap: int # uint32/uintc
 
     def __init__( self, context ):
         """Material loader for models
@@ -32,6 +33,8 @@ class Materials( Context ):
 
         self.materials : List[Materials.Material] = [{} for i in range(300)]
         self._num_materials : int = 0;
+
+        self.defaultMaterial = self.buildMaterial()
 
     @staticmethod
     def add_ao_suffix( filename ):
@@ -103,7 +106,7 @@ class Materials( Context ):
         if index < self._num_materials:
             return self.materials[index]
         
-        return self.materials[self.context.defaultMaterial]
+        return self.materials[self.context.materials.defaultMaterial]
 
     def loadOrFind( self, material : ImpasseMaterial, path : Path ) -> int:
         """Create a material by parsing model material info and loading textures
@@ -174,6 +177,10 @@ class Materials( Context ):
         else:
             mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
+        
+        normal = mat.get( "normal", self.images.defaultNormal )
+        mat["hasNormalMap"] = int( normal is not self.images.defaultNormal )
+
         return index
 
     def bind( self, index : int ):
@@ -185,10 +192,10 @@ class Materials( Context ):
         if index < self._num_materials:
             mat = self.materials[index]
         else:
-            mat = self.materials[self.context.defaultMaterial]
+            mat = self.materials[self.context.materials.defaultMaterial]
 
-        self.images.bind( mat.get("albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
-        self.images.bind( mat.get("normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )
-        self.images.bind( mat.get("phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhyiscal",    2 )
-        self.images.bind( mat.get("emissive",   self.images.blackImage),    GL_TEXTURE3, "sEmissive",    3 )
-        self.images.bind( mat.get("opacity",    self.images.whiteImage),    GL_TEXTURE4, "sOpacity",     4 )
+        self.images.bind( mat.get( "albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
+        self.images.bind( mat.get( "normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )
+        self.images.bind( mat.get( "phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhysical",    2 )
+        self.images.bind( mat.get( "emissive",   self.images.blackImage),    GL_TEXTURE3, "sEmissive",    3 )
+        self.images.bind( mat.get( "opacity",    self.images.whiteImage),    GL_TEXTURE4, "sOpacity",     4 )

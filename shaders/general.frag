@@ -1,14 +1,15 @@
-#version 330 core
+// version added programmicly
+
+#ifdef BINDLESS_TEXTURES
+#extension GL_ARB_bindless_texture : enable
+#extension GL_NV_uniform_buffer_std430_layout : enable
+#extension GL_NV_gpu_shader5 : enable
+#endif
 
 precision highp float;
 
 #define PI 3.1415926535897932384626433832795
 
-uniform sampler2D sTexture;
-uniform sampler2D sNormal;
-uniform sampler2D sPhyiscal;
-uniform sampler2D sEmissive;
-uniform sampler2D sOpacity;
 uniform samplerCube sEnvironment;
 uniform sampler2D sBRDF;
 
@@ -24,6 +25,8 @@ in vec4 var_ViewDir;
 
 in vec4 var_LightColor;
 in vec4 var_AmbientColor;
+
+in int var_material_index;
 
 out vec4 out_color;
 
@@ -46,6 +49,78 @@ layout( std140 ) uniform Lights
 	int u_num_lights;
 	Light u_lights[64];
 };
+
+#ifdef BINDLESS_TEXTURES
+	struct Material
+	{
+		uint64_t sTexture;
+		uint64_t sNormal;
+		uint64_t sPhysical;
+		uint64_t sEmissive;
+		uint64_t sOpacity;
+		int      hasNormalMap;
+		uint     padding;      // pad to 16 bytes alignment (std430 rules)
+	};
+
+	layout( std430, binding=1 ) buffer Materials
+	{
+		Material u_materials[2096];
+	};
+
+	vec4 SampleAlbedo( Material mat, vec2 uv ) {
+		sampler2D s = sampler2D( mat.sTexture );
+		return texture( s, uv );
+	}
+	vec4 SampleNormal( Material mat, vec2 uv ) {
+		sampler2D s = sampler2D( mat.sNormal );
+		return texture( s, uv );
+	}
+	vec4 SamplePhysical( Material mat, vec2 uv ) {
+		sampler2D s = sampler2D( mat.sPhysical );
+		return texture( s, uv );
+	}
+	vec4 SampleEmissive( Material mat, vec2 uv ) {
+		sampler2D s = sampler2D( mat.sEmissive );
+		return texture( s, uv );
+	}
+	vec4 SampleOpacity( Material mat, vec2 uv ) {
+		sampler2D s = sampler2D( mat.sOpacity );
+		return texture( s, uv );
+	}
+#else
+	uniform sampler2D sTexture;
+	uniform sampler2D sNormal;
+	uniform sampler2D sPhysical;
+	uniform sampler2D sEmissive;
+	uniform sampler2D sOpacity;
+
+	struct Material
+	{
+		vec4	data_0;
+	};
+	layout( std140 ) uniform Materials
+	{
+		Material u_materials[2096];
+	};
+
+	vec4 SampleAlbedo( Material mat, vec2 uv ) {
+		return texture(sTexture, uv);
+	}
+	vec4 SampleNormal( Material mat, vec2 uv ) {
+		return texture(sNormal, uv);
+	}
+	vec4 SamplePhysical( Material mat, vec2 uv ) {
+		return texture(sPhysical, uv);
+	}
+	vec4 SampleEmissive( Material mat, vec2 uv ) {
+		return texture(sEmissive, uv);
+	}
+	vec4 SampleOpacity( Material mat, vec2 uv ) {
+		return texture(sOpacity, uv);
+	}
+#endif
+
+
 
 vec3 Diffuse_Lambert(in vec3 DiffuseColor)
 {
@@ -90,26 +165,25 @@ vec3 CalcSpecular( in vec3 specular, in float NH, in float NL,
 	return D * F * V;
 }
 
-vec3 CalcNormal( in vec3 vertexNormal, in vec2 frag_tex_coord )
+vec3 CalcNormal( in Material mat, in vec3 vertexNormal, in vec2 frag_tex_coord )
 {
-	//return normalize(vertexNormal);
-	//if ( normal_texture_set > -1 ) {
-		//vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
+#ifdef BINDLESS_TEXTURES
+	int hasNormalMap = mat.hasNormalMap;
+#else
+	int hasNormalMap = int( mat.data_0[0] );
+#endif
+	if ( hasNormalMap > 0  ) {
 		vec3 biTangent = 1.0 * cross(vertexNormal, var_Tangent.xyz);
-		vec3 n = texture(sNormal, frag_tex_coord).rgb - vec3(0.5);
-		//n = normalize(n * 2.0 - 1.0);
+		vec3 n = SampleNormal(mat, frag_tex_coord).rgb - vec3(0.5);
 
 		n.xy *= 1.0;
 		n.z = sqrt(clamp((0.25 - n.x * n.x) - n.y * n.y, 0.0, 1.0));
 		n = n.x * var_Tangent.rgb + n.y * biTangent + n.z * vertexNormal;
-		//n = n.x * var_Tangent.rgb + n.y * var_BiTangent.rgb + n.z * vertexNormal;
 
 		return normalize(n);
-	/*}
+	}
 	
-	else
-		return normalize(vertexNormal);*/
-
+	return normalize(vertexNormal);
 }
 
 vec3 CalcIBLContribution( in float roughness, in vec3 N, in vec3 E,
@@ -202,13 +276,16 @@ vec3 CalcDynamicLightContribution(
 	return outColor;
 }
 
-void main(){
+void main()
+{
+	Material mat = u_materials[0];
+
 	vec4 diffuse;
 	float attenuation;
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E;
 
-	vec4 base = texture2D(sTexture, vTexCoord);
+	vec4 base = SampleAlbedo(mat, vTexCoord);
 	vec4 env = texture(sEnvironment, vec3(1.0, 0.0, 1.0) );
 
 	viewDir = var_ViewDir.xyz;
@@ -223,7 +300,7 @@ void main(){
 	diffuse = base;
 	attenuation = 1.0;
 
-	N = CalcNormal( var_Normal.xyz, vTexCoord );	
+	N = CalcNormal( mat, var_Normal.xyz, vTexCoord );	
 
 	lightColor *= PI;
 
@@ -239,7 +316,7 @@ void main(){
 	const vec4 specularScale = vec4( 1.0, 1.0, 1.0, 0.5 );
 
 	// metallic roughness workflow
-	vec4 ORMS = texture( sPhyiscal, vTexCoord ).brga;
+	vec4 ORMS = SamplePhysical( mat, vTexCoord ).brga;
 	ORMS.xyzw *= specularScale.zwxy;
 	specular.rgb = mix(vec3(0.08) * ORMS.w, diffuse.rgb, ORMS.z);
 	diffuse.rgb *= vec3(1.0 - ORMS.z);
@@ -269,7 +346,7 @@ void main(){
 	float VH = clamp( dot( E, H ), 0.0, 1.0 );
 	Fs = CalcSpecular( specular.rgb, NH, NL, NE, LH, VH, roughness );
 
-	vec3 emissiveColor = texture( sEmissive, vTexCoord ).rgb;
+	vec3 emissiveColor = SampleEmissive( mat, vTexCoord ).rgb;
 
 	vec3 reflectance = Fd + Fs;
 
@@ -283,7 +360,7 @@ void main(){
 
 	out_color.a = diffuse.a;
 
-	float opacity = texture( sOpacity, vTexCoord ).r;
+	float opacity = SampleOpacity( mat, vTexCoord ).r;
 	out_color.a *= opacity;
 
 	if ( in_renderMode > 0 )
