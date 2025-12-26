@@ -137,127 +137,7 @@ class EmberEngine:
         elif _scene["sky_type"] == Skybox.Type_.procedural:
             self.environment_map = self.skybox.create_procedural_cubemap( _scene )
 
-    def draw_grid( self ):
-        """Draw the horizontal grid to the framebuffer"""
-        if not self.settings.drawGrid or not self.renderer.editor_grid_vao:
-            return
-
-        self.renderer.use_shader( self.renderer.color )
-
-        glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-        glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-        glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix )
-
-        # color
-        grid_color = self.settings.grid_color
-        glUniform4f( self.renderer.shader.uniforms['uColor'],  grid_color[0],  grid_color[1], grid_color[2], 1.0 )
-           
-        glBindVertexArray( self.renderer.editor_grid_vao )
-        glDrawArrays( GL_LINES, 0, self.renderer.editor_grid_lines )
-        glBindVertexArray( 0 )
-
-        #size = self.settings.grid_size
-        #spacing = self.settings.grid_spacing
-        #
-        ## Draw the grid lines on the XZ plane
-        #for i in np.arange(-size, size + spacing, spacing):
-        #    # Draw lines parallel to Z axis
-        #    glBegin(GL_LINES)
-        #    glVertex3f(i, 0, -size)
-        #    glVertex3f(i, 0, size)
-        #    glEnd()
-        #
-        #    # Draw lines parallel to X axis
-        #    glBegin(GL_LINES)
-        #    glVertex3f(-size, 0, i)
-        #    glVertex3f(size, 0, i)
-        #    glEnd()
-
-    def draw_axis( self, width : float = 3.0 ):
-        """Draw axis lines. width and length can be adjust, also if axis is centered or half-axis"""
-        if not self.settings.drawAxis or not self.renderer.editor_axis_vao:
-            return
-        
-        depth_test_enabled  = glIsEnabled( GL_DEPTH_TEST )
-        depth_write_mask    = glGetBooleanv( GL_DEPTH_WRITEMASK )
-
-        glDisable( GL_DEPTH_TEST )
-        glDepthMask( GL_FALSE )
-
-        self.renderer.use_shader( self.renderer.color )
-        glLineWidth( width )
-        
-        glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-        glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-        glUniformMatrix4fv(self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix)
-
-        glBindVertexArray( self.renderer.editor_axis_vao )
-
-        # X axis – red
-        glUniform4f( self.renderer.shader.uniforms['uColor'], 1, 0, 0, 1 )
-        glDrawArrays( GL_LINES, 0, 2 )
-
-        # Y axis – green
-        glUniform4f( self.renderer.shader.uniforms['uColor'], 0, 1, 0, 1 )
-        glDrawArrays(GL_LINES, 2, 2)
-
-        # Z axis – blue
-        glUniform4f( self.renderer.shader.uniforms['uColor'], 0, 0, 1, 1 )
-        glDrawArrays( GL_LINES, 4, 2 )
-
-        glBindVertexArray( 0 )
-        glLineWidth( 1.0 )
-
-        if depth_test_enabled:
-            glEnable( GL_DEPTH_TEST )
-
-        glDepthMask( depth_write_mask )
-
-        #glLineWidth(width)
-        #
-        #self.renderer.use_shader(self.renderer.color)
-        #
-        ## bind projection matrix
-        #glUniformMatrix4fv(self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection)
-        #
-        ## viewmatrix
-        #glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
-        #
-        ## modelamtrix identrity
-        #glUniformMatrix4fv(self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix)
-        #
-        #
-        #if centered:
-        #    start = -length
-        #    end   = +length
-        #else:
-        #    start = 0.0
-        #    end   = length
-        #
-        ## X axis : red
-        #glUniform4f(self.renderer.shader.uniforms['uColor'], 1.0, 0.0, 0.0, 1.0)
-        #glBegin(GL_LINES)
-        #glVertex3f(start, 0.0,   0.0)
-        #glVertex3f(end,   0.0,   0.0)
-        #glEnd()
-        #
-        ## Y axis : green
-        #glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 1.0, 0.0, 1.0)
-        #glBegin(GL_LINES)
-        #glVertex3f(0.0, start,   0.0)
-        #glVertex3f(0.0, end,     0.0)
-        #glEnd()
-        #
-        ## Z axis : blue
-        #glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 0.0, 1.0, 1.0)
-        #glBegin(GL_LINES)
-        #glVertex3f(0.0,   0.0, start)
-        #glVertex3f(0.0,   0.0, end)
-        #glEnd()
-        #
-        #glLineWidth(1.0)
-
-    def prepareGameObjectsRecursive(self, 
+    def prepare_gameObjects(self, 
         parent : GameObject = None,
         objects : Dict[uid.UUID, GameObject] = {}
     ):
@@ -303,10 +183,7 @@ class EmberEngine:
 
             # render children if any
             if obj.children:
-                self.prepareGameObjectsRecursive( 
-                    obj, 
-                    obj.children
-                )
+                self.prepare_gameObjects( obj, obj.children )
 
     def _upload_material_ubo( self ) -> None:
         """Build a UBO of materials and upload to GPU, rebuild when material list is marked dirty"""
@@ -388,30 +265,26 @@ class EmberEngine:
                 # general
                 #
                 self.renderer.use_shader( self.renderer.general )
+                # bind the projection and view  matrix beginning (until shader switch)
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
 
-                # environment
+                # static textures
                 self.cubemaps.bind( self.environment_map, GL_TEXTURE5, "sEnvironment", 5 )
-
-                # brdf lut
                 self.images.bind( self.cubemaps.brdf_lut, GL_TEXTURE6, "sBRDF", 6 )
 
+                # editor uniforms
                 glUniform1i( self.renderer.shader.uniforms['in_renderMode'], self.renderer.renderMode )
-
-                # projection matrix can be bound at start
-                # bind projection matrix
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-                
-                # viewmatrix
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-                
-                # camera
-                glUniform4f( self.renderer.shader.uniforms['u_ViewOrigin'], self.camera.camera_pos[0], self.camera.camera_pos[1], self.camera.camera_pos[2], 0.0 )
+                glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
+                glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
 
                 #
                 # setup scene
                 #
+                # camera origin
+                glUniform4f( self.renderer.shader.uniforms['u_ViewOrigin'], self.camera.camera_pos[0], self.camera.camera_pos[1], self.camera.camera_pos[2], 0.0 )
 
-                # sun direction/position and color
+                # sun direction, position and color
                 _sun : GameObject = self.scene.getSun()
                 _sun_active = _sun and _sun.hierachyActive()
 
@@ -425,9 +298,6 @@ class EmberEngine:
                 glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], light_color[0], light_color[1], light_color[2], 1.0 )
                 glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )
 
-                glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
-                glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
-                
                 # lights
                 self._upload_lights_ubo( _sun )
 
@@ -439,12 +309,9 @@ class EmberEngine:
 
                 # triggers update systems in the registered gameObjects
                 # handles onEnable, onDisable, onStart, onUpdate and _dirty flags
-                self.prepareGameObjectsRecursive( 
-                    None, 
-                    self.world.gameObjects
-                )
+                self.prepare_gameObjects( None, self.world.gameObjects )
 
-                # collect render meshes (build the draw list)
+                # collect active model meshes (build the draw list)
                 for uuid in self.world.models.keys():
                     obj : GameObject = self.world.gameObjects[uuid]
 
@@ -459,8 +326,8 @@ class EmberEngine:
                 # dispatch editor visuals
                 # eg: grid, axis, colliders (instant drawing, not indirect)
                 if not app.settings.is_exported and not app.renderer.game_runtime:
-                    self.draw_grid()
-                    self.draw_axis( 2.0 )
+                    self.renderer.draw_grid()
+                    self.renderer.draw_axis( 2.0 )
 
                 if self.settings.drawColliders:
                     self.renderer.use_shader( self.renderer.color )

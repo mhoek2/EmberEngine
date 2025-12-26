@@ -855,7 +855,130 @@ class Renderer:
             length      = 100.0,
             centered    = False
         )
+    
+    def draw_grid( self ):
+        """Draw the horizontal grid to the framebuffer"""
+        if not self.settings.drawGrid or not self.editor_grid_vao:
+            return
 
+        self.use_shader( self.color )
+
+        glUniformMatrix4fv( self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection )
+        glUniformMatrix4fv( self.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.view )
+        glUniformMatrix4fv( self.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.identity_matrix )
+
+        # color
+        grid_color = self.settings.grid_color
+        glUniform4f( self.shader.uniforms['uColor'],  grid_color[0],  grid_color[1], grid_color[2], 1.0 )
+           
+        glBindVertexArray( self.editor_grid_vao )
+        glDrawArrays( GL_LINES, 0, self.editor_grid_lines )
+        glBindVertexArray( 0 )
+
+        # deprecated (26-12-2025)
+        # switched to VAO
+        #size = self.settings.grid_size
+        #spacing = self.settings.grid_spacing
+        #
+        ## Draw the grid lines on the XZ plane
+        #for i in np.arange(-size, size + spacing, spacing):
+        #    # Draw lines parallel to Z axis
+        #    glBegin(GL_LINES)
+        #    glVertex3f(i, 0, -size)
+        #    glVertex3f(i, 0, size)
+        #    glEnd()
+        #
+        #    # Draw lines parallel to X axis
+        #    glBegin(GL_LINES)
+        #    glVertex3f(-size, 0, i)
+        #    glVertex3f(size, 0, i)
+        #    glEnd()
+
+    def draw_axis( self, width : float = 3.0 ):
+        """Draw axis lines. width and length can be adjust, also if axis is centered or half-axis"""
+        if not self.settings.drawAxis or not self.editor_axis_vao:
+            return
+        
+        depth_test_enabled  = glIsEnabled( GL_DEPTH_TEST )
+        depth_write_mask    = glGetBooleanv( GL_DEPTH_WRITEMASK )
+
+        glDisable( GL_DEPTH_TEST )
+        glDepthMask( GL_FALSE )
+
+        self.use_shader( self.color )
+        glLineWidth( width )
+        
+        glUniformMatrix4fv( self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection )
+        glUniformMatrix4fv( self.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.view )
+        glUniformMatrix4fv( self.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.identity_matrix)
+
+        glBindVertexArray( self.editor_axis_vao )
+
+        # X axis – red
+        glUniform4f( self.shader.uniforms['uColor'], 1, 0, 0, 1 )
+        glDrawArrays( GL_LINES, 0, 2 )
+
+        # Y axis – green
+        glUniform4f( self.shader.uniforms['uColor'], 0, 1, 0, 1 )
+        glDrawArrays(GL_LINES, 2, 2)
+
+        # Z axis – blue
+        glUniform4f( self.shader.uniforms['uColor'], 0, 0, 1, 1 )
+        glDrawArrays( GL_LINES, 4, 2 )
+
+        glBindVertexArray( 0 )
+        glLineWidth( 1.0 )
+
+        if depth_test_enabled:
+            glEnable( GL_DEPTH_TEST )
+
+        glDepthMask( depth_write_mask )
+
+        # deprecated (26-12-2025)
+        # switched to VAO
+        #glLineWidth(width)
+        #
+        #self.use_shader(self.color)
+        #
+        ## bind projection matrix
+        #glUniformMatrix4fv(self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection)
+        #
+        ## viewmatrix
+        #glUniformMatrix4fv(self.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.view)
+        #
+        ## modelamtrix identrity
+        #glUniformMatrix4fv(self.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.identity_matrix)
+        #
+        #
+        #if centered:
+        #    start = -length
+        #    end   = +length
+        #else:
+        #    start = 0.0
+        #    end   = length
+        #
+        ## X axis : red
+        #glUniform4f(self.shader.uniforms['uColor'], 1.0, 0.0, 0.0, 1.0)
+        #glBegin(GL_LINES)
+        #glVertex3f(start, 0.0,   0.0)
+        #glVertex3f(end,   0.0,   0.0)
+        #glEnd()
+        #
+        ## Y axis : green
+        #glUniform4f(self.shader.uniforms['uColor'], 0.0, 1.0, 0.0, 1.0)
+        #glBegin(GL_LINES)
+        #glVertex3f(0.0, start,   0.0)
+        #glVertex3f(0.0, end,     0.0)
+        #glEnd()
+        #
+        ## Z axis : blue
+        #glUniform4f(self.shader.uniforms['uColor'], 0.0, 0.0, 1.0, 1.0)
+        #glBegin(GL_LINES)
+        #glVertex3f(0.0,   0.0, start)
+        #glVertex3f(0.0,   0.0, end)
+        #glEnd()
+        #
+        #glLineWidth(1.0)
     #
     # projection
     #

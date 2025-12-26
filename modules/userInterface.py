@@ -245,15 +245,17 @@ class UserInterface( Context ):
 
         #_, self.settings.grid_color = ImGuiHelpers.color_edit3_safe("Grid color", self.settings.grid_color)
 
-        _, self.settings.grid_size = imgui.drag_float(
-            f"Grid size", self.settings.grid_size, 1
-        )
-
-        _, self.settings.grid_spacing = imgui.drag_float(
-            f"Grid spacing", self.settings.grid_spacing, 0.01
-        )
-
-        imgui.separator()
+        # deprecated (26-12-2025)
+        # need to rebuild vao, however this was mostly for debugging purposes
+        #_, self.settings.grid_size = imgui.drag_float(
+        #    f"Grid size", self.settings.grid_size, 1
+        #)
+        #
+        #_, self.settings.grid_spacing = imgui.drag_float(
+        #    f"Grid spacing", self.settings.grid_spacing, 0.01
+        #)
+        #
+        #imgui.separator()
 
         _, self.context.roughnessOverride = imgui.drag_float(
             f"Roughness override", self.context.roughnessOverride, 0.01

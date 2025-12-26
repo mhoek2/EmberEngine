@@ -78,20 +78,22 @@ class Inspector( Context ):
         if not isinstance( gameObject, GameObject ):
             return
 
+        # no model/mesh, no material
+        if not gameObject.model or gameObject.model.handle == -1:
+            return
+
         self.helper._node_sep()
 
         if imgui.tree_node( f"{fa.ICON_FA_BRUSH} Material" ):
             self.helper._node_header_pad()
 
+            # references.. should drop this?
             _models = self.gui.models
             _images = self.gui.images
             _materials = self.gui.materials
 
             # collect material(s)
             materials = []
-
-            if gameObject.model.handle == -1:
-                return
 
             for mesh in _models.model[gameObject.model.handle].meshes:
                 mesh_index = _models.model[gameObject.model.handle].meshes.index(mesh)
