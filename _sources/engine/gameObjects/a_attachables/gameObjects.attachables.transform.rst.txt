@@ -1,0 +1,9 @@
+﻿gameObjects.attachables.transform
+=================================
+
+
+.. automodule:: gameObjects.attachables.transform
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

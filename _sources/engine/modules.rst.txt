@@ -2,7 +2,7 @@ Modules
 =======
 
 .. autosummary::
-   :toctree: modules
+   :toctree: a_modules
    :template: module.rst
    :recursive:
 
@@ -11,7 +11,6 @@ Modules
    modules.engineTypes
    modules.userInterface
    modules.script
-   modules.transform
    modules.console
    modules.models
    modules.project
@@ -24,3 +23,8 @@ Modules
    modules.images
    modules.jsonHandling
    modules.material
+
+.. toctree::
+   :maxdepth: 2
+
+   modules/gui.rst

@@ -1,0 +1,9 @@
+﻿gameObjects.attachables.model
+=============================
+
+
+.. automodule:: gameObjects.attachables.model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

@@ -1,0 +1,9 @@
+﻿gameObjects.attachables.light
+=============================
+
+
+.. automodule:: gameObjects.attachables.light
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

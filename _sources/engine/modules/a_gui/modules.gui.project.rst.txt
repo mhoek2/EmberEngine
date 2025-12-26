@@ -1,0 +1,9 @@
+﻿modules.gui.project
+===================
+
+
+.. automodule:: modules.gui.project
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

@@ -1,0 +1,9 @@
+﻿modules.gui.consoleWindow
+=========================
+
+
+.. automodule:: modules.gui.consoleWindow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
