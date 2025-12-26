@@ -74,6 +74,10 @@ class EmberEngine:
 
         self.world      : World             = World( self )
 
+        self.renderer.create_shaders()
+        self.renderer.create_buffers()
+        self.renderer.create_editor_vaos()
+
         self.roughnessOverride = -1.0
         self.metallicOverride = -1.0
 
@@ -135,88 +139,123 @@ class EmberEngine:
 
     def draw_grid( self ):
         """Draw the horizontal grid to the framebuffer"""
-        if not self.settings.drawGrid:
+        if not self.settings.drawGrid or not self.renderer.editor_grid_vao:
             return
 
         self.renderer.use_shader( self.renderer.color )
-        # bind projection matrix
+
         glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-
-        # viewmatrix
         glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-
-        # modelamtrix identrity
-        glUniformMatrix4fv(self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix)
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix )
 
         # color
         grid_color = self.settings.grid_color
         glUniform4f( self.renderer.shader.uniforms['uColor'],  grid_color[0],  grid_color[1], grid_color[2], 1.0 )
-                
-        size = self.settings.grid_size
-        spacing = self.settings.grid_spacing
+           
+        glBindVertexArray( self.renderer.editor_grid_vao )
+        glDrawArrays( GL_LINES, 0, self.renderer.editor_grid_lines )
+        glBindVertexArray( 0 )
 
-        # Draw the grid lines on the XZ plane
-        for i in np.arange(-size, size + spacing, spacing):
-            # Draw lines parallel to Z axis
-            glBegin(GL_LINES)
-            glVertex3f(i, 0, -size)
-            glVertex3f(i, 0, size)
-            glEnd()
+        #size = self.settings.grid_size
+        #spacing = self.settings.grid_spacing
+        #
+        ## Draw the grid lines on the XZ plane
+        #for i in np.arange(-size, size + spacing, spacing):
+        #    # Draw lines parallel to Z axis
+        #    glBegin(GL_LINES)
+        #    glVertex3f(i, 0, -size)
+        #    glVertex3f(i, 0, size)
+        #    glEnd()
+        #
+        #    # Draw lines parallel to X axis
+        #    glBegin(GL_LINES)
+        #    glVertex3f(-size, 0, i)
+        #    glVertex3f(size, 0, i)
+        #    glEnd()
 
-            # Draw lines parallel to X axis
-            glBegin(GL_LINES)
-            glVertex3f(-size, 0, i)
-            glVertex3f(size, 0, i)
-            glEnd()
-
-    def draw_axis( self, length : float = 1.0, width : float = 3.0, centered : bool = False ):
+    def draw_axis( self, width : float = 3.0 ):
         """Draw axis lines. width and length can be adjust, also if axis is centered or half-axis"""
-        if not self.settings.drawAxis:
+        if not self.settings.drawAxis or not self.renderer.editor_axis_vao:
             return
         
-        glLineWidth(width)
+        depth_test_enabled  = glIsEnabled( GL_DEPTH_TEST )
+        depth_write_mask    = glGetBooleanv( GL_DEPTH_WRITEMASK )
 
-        self.renderer.use_shader(self.renderer.color)
+        glDisable( GL_DEPTH_TEST )
+        glDepthMask( GL_FALSE )
 
-        # bind projection matrix
-        glUniformMatrix4fv(self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection)
+        self.renderer.use_shader( self.renderer.color )
+        glLineWidth( width )
         
-        # viewmatrix
-        glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
-
-        # modelamtrix identrity
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
+        glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
         glUniformMatrix4fv(self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix)
 
+        glBindVertexArray( self.renderer.editor_axis_vao )
 
-        if centered:
-            start = -length
-            end   = +length
-        else:
-            start = 0.0
-            end   = length
+        # X axis – red
+        glUniform4f( self.renderer.shader.uniforms['uColor'], 1, 0, 0, 1 )
+        glDrawArrays( GL_LINES, 0, 2 )
 
-        # X axis : red
-        glUniform4f(self.renderer.shader.uniforms['uColor'], 1.0, 0.0, 0.0, 1.0)
-        glBegin(GL_LINES)
-        glVertex3f(start, 0.0,   0.0)
-        glVertex3f(end,   0.0,   0.0)
-        glEnd()
+        # Y axis – green
+        glUniform4f( self.renderer.shader.uniforms['uColor'], 0, 1, 0, 1 )
+        glDrawArrays(GL_LINES, 2, 2)
 
-        # Y axis : green
-        glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 1.0, 0.0, 1.0)
-        glBegin(GL_LINES)
-        glVertex3f(0.0, start,   0.0)
-        glVertex3f(0.0, end,     0.0)
-        glEnd()
+        # Z axis – blue
+        glUniform4f( self.renderer.shader.uniforms['uColor'], 0, 0, 1, 1 )
+        glDrawArrays( GL_LINES, 4, 2 )
 
-        # Z axis : blue
-        glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 0.0, 1.0, 1.0)
-        glBegin(GL_LINES)
-        glVertex3f(0.0,   0.0, start)
-        glVertex3f(0.0,   0.0, end)
-        glEnd()
+        glBindVertexArray( 0 )
+        glLineWidth( 1.0 )
 
-        glLineWidth(1.0)
+        if depth_test_enabled:
+            glEnable( GL_DEPTH_TEST )
+
+        glDepthMask( depth_write_mask )
+
+        #glLineWidth(width)
+        #
+        #self.renderer.use_shader(self.renderer.color)
+        #
+        ## bind projection matrix
+        #glUniformMatrix4fv(self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection)
+        #
+        ## viewmatrix
+        #glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
+        #
+        ## modelamtrix identrity
+        #glUniformMatrix4fv(self.renderer.shader.uniforms['uMMatrix'], 1, GL_FALSE, self.renderer.identity_matrix)
+        #
+        #
+        #if centered:
+        #    start = -length
+        #    end   = +length
+        #else:
+        #    start = 0.0
+        #    end   = length
+        #
+        ## X axis : red
+        #glUniform4f(self.renderer.shader.uniforms['uColor'], 1.0, 0.0, 0.0, 1.0)
+        #glBegin(GL_LINES)
+        #glVertex3f(start, 0.0,   0.0)
+        #glVertex3f(end,   0.0,   0.0)
+        #glEnd()
+        #
+        ## Y axis : green
+        #glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 1.0, 0.0, 1.0)
+        #glBegin(GL_LINES)
+        #glVertex3f(0.0, start,   0.0)
+        #glVertex3f(0.0, end,     0.0)
+        #glEnd()
+        #
+        ## Z axis : blue
+        #glUniform4f(self.renderer.shader.uniforms['uColor'], 0.0, 0.0, 1.0, 1.0)
+        #glBegin(GL_LINES)
+        #glVertex3f(0.0,   0.0, start)
+        #glVertex3f(0.0,   0.0, end)
+        #glEnd()
+        #
+        #glLineWidth(1.0)
 
     def prepareGameObjectsRecursive(self, 
         parent : GameObject = None,
@@ -346,13 +385,6 @@ class EmberEngine:
                 self.skybox.draw( _scene )
 
                 #
-                # editor viewport
-                #
-                if not app.settings.is_exported and not app.renderer.game_runtime:
-                    self.draw_grid()
-                    self.draw_axis(100.0, centered=True)
-
-                #
                 # general
                 #
                 self.renderer.use_shader( self.renderer.general )
@@ -412,7 +444,7 @@ class EmberEngine:
                     self.world.gameObjects
                 )
 
-                # collect render meshes (draw list)
+                # collect render meshes (build the draw list)
                 for uuid in self.world.models.keys():
                     obj : GameObject = self.world.gameObjects[uuid]
 
@@ -421,15 +453,33 @@ class EmberEngine:
 
                     obj.onRender()
 
-                # editor visualizers, eg: colliders (instant drawing)
+                # dispatch world draw calls
+                self.renderer.dispatch_drawcalls()
+
+                # dispatch editor visuals
+                # eg: grid, axis, colliders (instant drawing, not indirect)
+                if not app.settings.is_exported and not app.renderer.game_runtime:
+                    self.draw_grid()
+                    self.draw_axis( 2.0 )
+
                 if self.settings.drawColliders:
+                    self.renderer.use_shader( self.renderer.color )
+
+                    # bind projection matrix
+                    glUniformMatrix4fv(self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection)
+        
+                    # viewmatrix
+                    glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
+
                     for uuid in self.world.physics.keys():
                         self.world.gameObjects[uuid].onRenderColliders()
 
                     for uuid in self.world.physic_links.keys():
                         self.world.gameObjects[uuid].onRenderColliders()
 
+                #
                 # cleanup _removed objects
+                #
                 #for obj in filter(lambda x: x._removed == True, self.world.gameObjects):
                 #    if obj.children:
                 #        print("Cannot remove: obj has children")

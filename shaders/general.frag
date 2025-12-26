@@ -1,9 +1,4 @@
-#version 460 core
-// need to switch this before loading..
-//#version 330 core
-
-// toggle between bindless textures from SSBO or direct 2D samplers
-#define BINDLESS_TEXTURES
+// version added programmicly
 
 #ifdef BINDLESS_TEXTURES
 #extension GL_ARB_bindless_texture : enable
@@ -31,12 +26,12 @@ in vec4 var_ViewDir;
 in vec4 var_LightColor;
 in vec4 var_AmbientColor;
 
+in int var_material_index;
+
 out vec4 out_color;
 
 uniform vec4 u_ViewOrigin;
 uniform int in_renderMode;
-uniform int u_MaterialIndex;
-
 
 #define LIGHT_TYPE_DIRECTIONAL	0
 #define LIGHT_TYPE_SPOT			1
@@ -283,7 +278,7 @@ vec3 CalcDynamicLightContribution(
 
 void main()
 {
-	Material mat = u_materials[u_MaterialIndex];
+	Material mat = u_materials[0];
 
 	vec4 diffuse;
 	float attenuation;

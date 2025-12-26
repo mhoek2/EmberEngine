@@ -642,10 +642,6 @@ class GameObject( Context, Transform ):
             _physic = None
 
         if _physic is not None:
-            _current_shader = self.renderer.shader
-
-            self.renderer.use_shader( self.renderer.color )
-
             _color = (1.0, 0.55, 0.0, 0.25)
             glUniform4f( self.renderer.shader.uniforms['uColor'],  _color[0],  _color[1], _color[2], _color[3] )
 
@@ -675,6 +671,3 @@ class GameObject( Context, Transform ):
 
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
             glLineWidth(1)
-
-            if _current_shader:
-                self.renderer.use_shader( _current_shader )

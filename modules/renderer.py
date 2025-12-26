@@ -13,6 +13,8 @@ from imgui_bundle import icons_fontawesome_6 as fa
 
 from OpenGL.GL import *  # pylint: disable=W0614
 from OpenGL.GLU import *
+from OpenGL.GL.ARB.bindless_texture import *
+
 import struct
 
 import numpy as np
@@ -30,6 +32,28 @@ if TYPE_CHECKING:
     from modules.models import Models
 
 from dataclasses import dataclass, field
+
+
+import ctypes
+from collections import defaultdict
+
+class DrawElementsIndirectCommand(ctypes.Structure):
+    _fields_ = [
+        ("count",         ctypes.c_uint),
+        ("instanceCount", ctypes.c_uint),
+        ("firstIndex",    ctypes.c_uint),
+        ("baseVertex",    ctypes.c_uint),
+        ("baseInstance",  ctypes.c_uint),
+    ]
+
+class DrawBlock(ctypes.Structure):
+    _fields_ = [
+        ("model",     ctypes.c_float * 16),
+        ("material",  ctypes.c_int),
+        ("pad0",      ctypes.c_int),
+        ("pad1",      ctypes.c_int),
+        ("pad2",      ctypes.c_int),
+    ]
 
 class Renderer:
     class GameState_(enum.IntEnum):
@@ -55,9 +79,6 @@ class Renderer:
         self.camera     : Camera = context.camera
         self.settings   : Settings = context.settings
         self.project    : ProjectManager = context.project
-
-        # renderer configuration
-        self.BINDLESS_TEXTURES : bool = True # should be based on OpenGL version and extension support!
 
         # window
         self.display_size : imgui.ImVec2 = imgui.ImVec2( 1500, 1000 )
@@ -112,17 +133,11 @@ class Renderer:
 
         # shaders
         self.shader : Shader = None
-        self.create_shaders()
 
-        # ubo
-        self.ubo_lights             : Renderer.LightUBO     = Renderer.LightUBO( self.general, "Lights", 0 )
+        # editor
+        self.editor_grid_vao = None
+        self.editor_axis_vao = None
 
-        if self.BINDLESS_TEXTURES:
-            self.ubo_materials      : Renderer.MaterialUBOBindless  = Renderer.MaterialUBOBindless( binding=1 )
-        else:
-            self.ubo_materials      : Renderer.MaterialUBO  = Renderer.MaterialUBO( self.general, "Materials", 1 )
-
-        # debug
         self.renderMode = 0
         self.renderModes : str = [
 	        "Final Image", 
@@ -187,6 +202,18 @@ class Renderer:
 
         # draw list
         self.draw_list : list[Renderer.DrawItem] = []
+
+    def create_buffers(self):
+        self.ubo_lights             : Renderer.LightUBO     = Renderer.LightUBO( self.general, "Lights", 0 )
+
+        if self.INDIRECT:
+            self.draw_ssbo = glGenBuffers(1)
+            self.indirect_buffer = glGenBuffers(1)
+
+        if self.BINDLESS_TEXTURES:
+            self.ubo_materials      : Renderer.MaterialUBOBindless  = Renderer.MaterialUBOBindless( binding=1 )
+        else:
+            self.ubo_materials      : Renderer.MaterialUBO  = Renderer.MaterialUBO( self.general, "Materials", 1 )
 
     @property
     def game_state( self ) -> GameState_:
@@ -260,6 +287,8 @@ class Renderer:
         print("Vendor:", vendor.decode())
         print("GLSL Version:", glsl_ver.decode())
 
+        return version.decode(), renderer.decode(), vendor.decode(), glsl_ver.decode()
+
     def get_window_title(self) -> str:
         return self.project.meta.get("name") if self.settings.is_exported else self.settings.application_name
 
@@ -267,11 +296,14 @@ class Renderer:
         """Create the window and instance with openGL"""
         pygame.init()
         pygame.display.set_caption( self.get_window_title() )
+   
+        # Request this OpenGL version
+        request_gl_version = (4, 6)
 
-        gl_version = (3, 3)
-        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, gl_version[0])
-        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, gl_version[1])
-        #pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
+        pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, request_gl_version[0])
+        pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, request_gl_version[1])
+        pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
+        pygame.display.gl_set_attribute(pygame.GL_CONTEXT_FORWARD_COMPATIBLE_FLAG, 1)
 
         if self.settings.msaaEnabled:
             pygame.display.gl_set_attribute(pygame.GL_MULTISAMPLEBUFFERS, 1)
@@ -283,8 +315,27 @@ class Renderer:
         # this is a bit of a hack to get windowed fullscreen?
         self.display_size -= imgui.ImVec2( 0.0, 80.0 );
 
-        self.screen = pygame.display.set_mode( self.display_size, RESIZABLE | DOUBLEBUF | OPENGL )
+        self.screen = pygame.display.set_mode( 
+            size        = self.display_size, 
+            flags       = RESIZABLE | DOUBLEBUF | OPENGL,
+            vsync       = 0
+           )
+
+        # Retrieve the OpenGL version used? (doubts)
+        gl_version, renderer, vendor, glsl_version = Renderer.print_opengl_version()
+        major, minor = map(int, gl_version.split('.')[0:2])
+
+        supports_gl_460 = (major, minor) >= (4, 6)
+
+        # renderer configuration
+        self.BINDLESS_TEXTURES  : bool = supports_gl_460 
+        self.INDIRECT           : bool = supports_gl_460  
         
+        if supports_gl_460:
+            print( "Using glMultiDrawElementsIndirect" )
+        else:
+            print(" OpenGL 4.6.0 is not supported, fallback to non-bindless and non-indirect")
+
         # frozen-exported set fullscreen here ..
         #if self.settings.is_exported:
             #self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
@@ -293,7 +344,7 @@ class Renderer:
         if self.settings.msaaEnabled:
             glEnable( GL_MULTISAMPLE )
      
-        Renderer.print_opengl_version()
+        
 
     def shutdown( self ) -> None:
         """Quit the application"""
@@ -495,6 +546,9 @@ class Renderer:
 
         glBindVertexArray(0)
 
+    #
+    # shader
+    #
     def use_shader( self, shader : Shader ) -> None:
         """Bind a shader program to the command buffer
 
@@ -506,13 +560,17 @@ class Renderer:
 
     def create_shaders( self ) -> None:
         """Create the GLSL shaders used for the editor and general pipeline"""
-        self.general            = Shader( self.context, "general" )
+        self.general            = Shader( self.context, "general", templated = True )
         self.skybox             = Shader( self.context, "skybox" )
         self.skybox_proc        = Shader( self.context, "skybox_proc" )
         self.gamma              = Shader( self.context, "gamma" )
         self.color              = Shader( self.context, "color" )
         self.resolve            = Shader( self.context, "resolve" )
 
+
+    #
+    # UBO / SSBO
+    #
     class MaterialUBOBindless:
         MAX_MATERIALS = 2096
         # std430 layout: 5 uint64_t, 1 int, 1 uint padding = 48 bytes per material
@@ -709,6 +767,98 @@ class Renderer:
             glBufferSubData(GL_UNIFORM_BUFFER, 0, len(self.data), self.data)
             glBindBuffer(GL_UNIFORM_BUFFER, 0)
     
+    #
+    # editor visuals
+    #
+    def create_grid_vbo( self, size, spacing ):
+        lines = []
+        for i in np.arange(-size, size + spacing, spacing):
+            # lines along Z
+            lines.append([i, 0, -size])
+            lines.append([i, 0, size])
+            # lines along X
+            lines.append([-size, 0, i])
+            lines.append([size, 0, i])
+        lines = np.array(lines, dtype=np.float32)
+    
+        # create VAO and VBO
+        vao = glGenVertexArrays(1)
+        glBindVertexArray(vao)
+    
+        vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, lines.nbytes, lines, GL_STATIC_DRAW)
+    
+        # position attribute
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
+    
+        glBindVertexArray(0)
+
+        return vao, len(lines)
+
+    def create_axis_vbo( self, length: float = 1.0, centered: bool = False ):
+        if centered:
+            start = -length
+            end   =  length
+        else:
+            start = 0.0
+            end   = length
+
+        vertices = np.array([
+            # X axis
+            start, 0.0,   0.0,
+            end,   0.0,   0.0,
+
+            # Y axis
+            0.0,   start, 0.0,
+            0.0,   end,   0.0,
+
+            # Z axis
+            0.0,   0.0,   start,
+            0.0,   0.0,   end,
+        ], dtype=np.float32)
+
+        vao = glGenVertexArrays(1)
+        glBindVertexArray(vao)
+
+        vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            vertices.nbytes,
+            vertices,
+            GL_STATIC_DRAW
+        )
+
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(
+            0,              # location
+            3,              # vec3
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            None
+        )
+
+        glBindVertexArray(0)
+
+        return vao
+
+    def create_editor_vaos( self ) -> None:
+        self.editor_grid_vao, self.editor_grid_lines = self.create_grid_vbo( 
+            size    = self.settings.grid_size, 
+            spacing = self.settings.grid_spacing 
+        )
+
+        self.editor_axis_vao = self.create_axis_vbo(
+            length      = 100.0,
+            centered    = False
+        )
+
+    #
+    # projection
+    #
     def setup_projection_matrix( self, size : Vector2 = None ) -> None:
         """Setup the viewport and projection matrix using Matrix44
 
@@ -737,7 +887,10 @@ class Renderer:
         else:
             self.ImGuiInput = True
             pygame.mouse.set_visible( True )
-
+            
+    #
+    # events
+    #
     def editor_viewport_event_handler( self, event ):
         if self.game_runtime:
             return
@@ -823,6 +976,9 @@ class Renderer:
         if not self.ImGuiInput and not mouse_moving:
             pygame.mouse.set_pos( self.screen_center )
 
+    #
+    # physics
+    #
     def _initPhysics( self ):
         """Initialize the pybullter physics engine and set gravity"""
         self.physics_client = p.connect(p.DIRECT)
@@ -841,6 +997,15 @@ class Renderer:
             for _ in range( int(self.deltaTime / (1./240.)) ):
                 p.stepSimulation()
 
+    #
+    # draw list
+    #
+    def addDrawItem( self, model_index : int, mesh_index : int, matrix : Matrix44 ):
+        self.draw_list.append( Renderer.DrawItem( model_index, mesh_index, matrix ) )
+
+    #
+    # non-indirect
+    #
     def submitDrawItem( self, model_index : int , mesh_index : int , model_matrix : Matrix44 ):
         """Render the mesh from a node
 
@@ -859,7 +1024,7 @@ class Renderer:
 
         # directly bind 2D samplers in non-bindless mode:
         if not self.BINDLESS_TEXTURES:
-            self.materials.bind( mesh["material"] )
+            self.context.materials.bind( mesh["material"] )
 
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
@@ -875,11 +1040,101 @@ class Renderer:
         if self.settings.drawWireframe:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
-        glBindVertexArray(0)
+    #
+    # indirect
+    #
+    def upload_model_matrices( self, matrices ):
+        data = np.asarray( matrices, dtype=np.float32 )
 
-    def addDrawItem( self, model_index : int, mesh_index : int, matrix : Matrix44 ):
-        self.draw_list.append( Renderer.DrawItem( model_index, mesh_index, matrix ) )
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.draw_ssbo )
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER,
+            data.nbytes,
+            data,
+            GL_DYNAMIC_DRAW
+        )
 
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo )
+
+    def upload_draw_data( self, batch, mesh ):
+        draw_data = (DrawBlock * len(batch))()
+
+        for i, item in enumerate(batch):
+            mat = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+            draw_data[i].model[:] = mat
+            draw_data[i].material = int(mesh["material"])
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.draw_ssbo)
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER,
+            ctypes.sizeof(draw_data),
+            draw_data,
+            GL_DYNAMIC_DRAW
+        )
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo)
+
+    def build_indirect_commands( self, mesh, batch, base_instance ):
+        commands = []
+
+        for i, item in enumerate(batch):
+            cmd = DrawElementsIndirectCommand(
+                count         = mesh["num_indices"],
+                instanceCount = 1,
+                #firstIndex    = mesh["first_index"],
+                #baseVertex    = mesh["base_vertex"],
+                firstIndex    = 0,
+                baseVertex    = 0,
+                baseInstance  = base_instance + i
+            )
+            commands.append(cmd)
+
+        return commands
+
+    def upload_indirect_buffer(self, commands):
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer)
+        glBufferData(
+            GL_DRAW_INDIRECT_BUFFER,
+            ctypes.sizeof(DrawElementsIndirectCommand) * len(commands),
+            (DrawElementsIndirectCommand * len(commands))(*commands),
+            GL_DYNAMIC_DRAW
+        )
+
+    def submitIndirectBatches( self, batches ) -> None:
+        if self.settings.drawWireframe:
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+
+        for (model_index, mesh_index), batch in batches.items():
+            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+
+            # directly bind 2D samplers in non-bindless mode:
+            if not self.BINDLESS_TEXTURES:
+                self.context.materials.bind( mesh["material"] )
+
+            # build draw data SSBO eg; modelmatrix and other related draw (material)
+            self.upload_draw_data( batch, mesh )
+
+            # build indirect buffer commands
+            commands = self.build_indirect_commands( mesh, batch, 0 )
+            self.upload_indirect_buffer( commands )
+
+            # Bind VAO that stores all attribute and buffer state
+            glBindVertexArray( mesh["vao"] )
+
+            glMultiDrawElementsIndirect(
+                GL_TRIANGLES,
+                GL_UNSIGNED_INT,
+                None,
+                len(commands),
+                0
+            )
+
+        if self.settings.drawWireframe:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+    #
+    # begin/end frame
+    #
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
         Bind framebuffer (FBO), view matrix, frame&delta time"""
@@ -901,6 +1156,30 @@ class Renderer:
         # physics
         self._runPhysics()
 
+    def dispatch_drawcalls( self ) -> None:
+        """"
+        Dispatch draw calls using the generated item in the draw list
+        
+            Depending on the OpenGL version:
+            This will either batch meshed and render indirect, 
+            or create individual draw calls for each item. 
+
+        """
+        # batch draws
+        if self.INDIRECT:
+            batches = defaultdict(list)
+            for item in self.draw_list:
+                batches[(item.model_index, item.mesh_index)].append(item)
+
+            self.submitIndirectBatches( batches )
+
+        # create individual draw calls for each item in the draw list
+        else:
+            for item in self.draw_list:
+                self.submitDrawItem( item.model_index, item.mesh_index, item.matrix )
+
+        glBindVertexArray(0)
+
     def end_frame( self ) -> None:
         """End for each frame, clear GL states, resolve MSAA if enabled, draw ImGui.
         ImGui in will draw the 3D viewport.
@@ -911,10 +1190,6 @@ class Renderer:
 
         if self.game_stop:
             self.game_stop = False
-
-        # submit collected draw items to the GPU
-        for item in self.draw_list:
-            self.submitDrawItem( item.model_index, item.mesh_index, item.matrix )
 
         glUseProgram( 0 )
         glFlush()
