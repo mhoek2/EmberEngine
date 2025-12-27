@@ -24,12 +24,15 @@ from modules.settings import Settings
 from modules.project import ProjectManager
 from modules.shader import Shader
 from modules.camera import Camera
+from modules.scene import SceneManager
 
 import pybullet as p
 
 if TYPE_CHECKING:
     from main import EmberEngine
     from modules.models import Models
+
+    from gameObjects.gameObject import GameObject
 
 from dataclasses import dataclass, field
 
@@ -766,7 +769,61 @@ class Renderer:
             glBindBuffer(GL_UNIFORM_BUFFER, self.ubo)
             glBufferSubData(GL_UNIFORM_BUFFER, 0, len(self.data), self.data)
             glBindBuffer(GL_UNIFORM_BUFFER, 0)
-    
+   
+    def _upload_material_ubo( self ) -> None:
+        """Build a UBO of materials and upload to GPU, rebuild when material list is marked dirty"""
+        if self.ubo_materials._dirty:
+            materials : list[Renderer.MaterialUBO.Material] = []
+
+            for i, mat in enumerate(self.context.materials.materials):
+                materials.append( Renderer.MaterialUBO.Material(
+                    # bindless
+                    albedo          = self.context.images.texture_to_bindless[ mat.get( "albedo",     self.context.images.defaultImage)     ],       
+                    normal          = self.context.images.texture_to_bindless[ mat.get( "normal",     self.context.images.defaultNormal)    ],       
+                    phyiscal        = self.context.images.texture_to_bindless[ mat.get( "phyiscal",   self.context.images.defaultRMO)       ],       
+                    emissive        = self.context.images.texture_to_bindless[ mat.get( "emissive",   self.context.images.blackImage)       ],       
+                    opacity         = self.context.images.texture_to_bindless[ mat.get( "opacity",    self.context.images.whiteImage)       ],
+                        
+                    # both bindless and non-bindless paths
+                    hasNormalMap    = mat.get( "hasNormalMap", 0 ),
+                )
+            )
+
+            self.ubo_materials.update( materials )
+
+        self.ubo_materials.bind()
+
+    def _upload_lights_ubo( self, sun : "GameObject" ) -> None:
+        """Build a UBO of lights, rebuilds every frame (currently)
+        
+        :param sun: The sun GameObject, light is excluded from UBO
+        :type sun: GameObject
+        """
+        lights : list[Renderer.LightUBO.Light] = []
+
+        for uuid in self.context.world.lights.keys():
+            obj : "GameObject" = self.context.world.gameObjects[uuid]
+
+            if not obj.hierachyActive() or obj is sun:
+                continue
+
+            if not self.game_runtime and not obj.hierachyVisible():
+                continue
+
+            lights.append( Renderer.LightUBO.Light(
+                origin      = obj.transform.position,
+                rotation    = obj.transform.rotation,
+
+
+                color       = obj.light.light_color,
+                radius      = obj.light.radius,
+                intensity   = obj.light.intensity,
+                t           = obj.light.light_type
+            ) )
+
+        self.ubo_lights.update( lights )
+        self.ubo_lights.bind()    
+
     #
     # editor visuals
     #
@@ -1127,7 +1184,7 @@ class Renderer:
         self.draw_list.append( Renderer.DrawItem( model_index, mesh_index, matrix ) )
 
     #
-    # non-indirect
+    # non-indirect (simple)
     #
     def submitDrawItem( self, model_index : int , mesh_index : int , model_matrix : Matrix44 ):
         """Render the mesh from a node
@@ -1149,9 +1206,6 @@ class Renderer:
         if not self.BINDLESS_TEXTURES:
             self.context.materials.bind( mesh["material"] )
 
-        if self.settings.drawWireframe:
-            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
-
         glUniformMatrix4fv( self.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
 
         # Bind VAO that stores all attribute and buffer state
@@ -1159,10 +1213,7 @@ class Renderer:
         glBindVertexArray(mesh["vao"])
 
         glDrawElements( GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT, None )
-
-        if self.settings.drawWireframe:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-
+    
     #
     # indirect
     #
@@ -1201,37 +1252,6 @@ class Renderer:
 
         glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo )
 
-    #def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
-    #    commands = []
-    #    draw_offset = 0
-    #    draw_ranges : dict[(int, int), (int, int)] = {}
-    #
-    #    for (model_index, mesh_index), batch in batches.items():
-    #        mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
-    #        start_offset = len(commands)
-    #
-    #        for i in range(len(batch)):
-    #            commands.append(DrawElementsIndirectCommand(
-    #                count         = mesh["num_indices"],
-    #                instanceCount = 1,
-    #                firstIndex    = 0,
-    #                baseVertex    = 0,
-    #                baseInstance  = draw_offset + i
-    #            ))
-    #
-    #        draw_ranges[(model_index, mesh_index)] = (start_offset, len(batch))
-    #        draw_offset += len(batch)
-    #
-    #    glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer )
-    #    glBufferData(
-    #        GL_DRAW_INDIRECT_BUFFER,
-    #        ctypes.sizeof(DrawElementsIndirectCommand) * len(commands),
-    #        (DrawElementsIndirectCommand * len(commands))(*commands),
-    #        GL_DYNAMIC_DRAW
-    #    )
-    #
-    #    return draw_ranges
-
     def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
         commands = (DrawElementsIndirectCommand * num_draw_items)()
 
@@ -1264,7 +1284,49 @@ class Renderer:
 
         return draw_ranges
 
-    def submitIndirectCommands( self, draw_ranges : dict[(int, int), (int, int)] ):
+    #
+    # Renderpasses
+    #
+    def prepareMainRenderpass( self, _scene : SceneManager.Scene ) -> None:
+        self.use_shader( self.general )
+
+        # bind the projection and view  matrix beginning (until shader switch)
+        glUniformMatrix4fv( self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection )
+        glUniformMatrix4fv( self.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.view )
+
+        # static textures
+        self.context.cubemaps.bind( self.context.environment_map, GL_TEXTURE5, "sEnvironment", 5 )
+        self.context.images.bind( self.context.cubemaps.brdf_lut, GL_TEXTURE6, "sBRDF", 6 )
+
+        # editor uniforms
+        glUniform1i( self.shader.uniforms['in_renderMode'], self.renderMode )
+        glUniform1f( self.shader.uniforms['in_roughnessOverride'], self.context.roughnessOverride  )
+        glUniform1f( self.shader.uniforms['in_metallicOverride'], self.context.metallicOverride )
+
+        # camera origin
+        glUniform4f( self.shader.uniforms['u_ViewOrigin'], self.camera.camera_pos[0], self.camera.camera_pos[1], self.camera.camera_pos[2], 0.0 )
+
+        # sun direction, position and color
+        _sun : "GameObject" = self.context.scene.getSun()
+        _sun_active = _sun and _sun.hierachyActive()
+
+        if not self.game_runtime:
+            _sun_active = _sun_active and _sun.hierachyVisible()
+
+        light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
+        light_color = _sun.light.light_color        if _sun_active else self.settings.default_ambient_color
+
+        glUniform4f( self.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
+        glUniform4f( self.shader.uniforms['in_lightcolor'], light_color[0], light_color[1], light_color[2], 1.0 )
+        glUniform4f( self.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )
+
+        # lights
+        self._upload_lights_ubo( _sun )
+
+        # materials
+        self._upload_material_ubo()
+
+    def submitMainRenderpassIndirect( self, draw_ranges : dict[(int, int), (int, int)] ) -> None:
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
 
@@ -1283,6 +1345,16 @@ class Renderer:
                 drawcount,
                 0
             )
+
+        if self.settings.drawWireframe:
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
+
+    def submitMainRenderpassSimple( self, _draw_list : list[DrawItem] ) -> None:
+        if self.settings.drawWireframe:
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+
+        for item in _draw_list:
+            self.submitDrawItem( item.model_index, item.mesh_index, item.matrix )
 
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
@@ -1316,11 +1388,13 @@ class Renderer:
         Dispatch draw calls using the generated item in the draw list
         
             Depending on the OpenGL version:
-            This will either batch meshed and render indirect, 
-            or create individual draw calls for each item. 
+            This will either batch meshes VAO's. (indirect rendering)
+            or create individual draw calls for each item. (simple rendering) 
 
         """
-        # batch draws
+        _scene : SceneManager.Scene = self.context.scene.getCurrentScene()
+
+        # batch meshes (indirect rendering)
         if self.INDIRECT:
             # sort by model and mesh index, constructing a batched VAO list
             batches, num_draw_items = self._build_batched_draw_list( self.draw_list )
@@ -1333,12 +1407,14 @@ class Renderer:
             draw_ranges = self._upload_indirect_buffer( batches, num_draw_items )
 
             # dispatch the actual world drawing commands
-            self.submitIndirectCommands( draw_ranges )
+            self.prepareMainRenderpass( _scene )
+            self.submitMainRenderpassIndirect( draw_ranges )
 
-        # create individual draw calls for each item in the draw list
+        # create individual draw calls for each item in the draw list (simple rendering)
+        # no renderpasses
         else:
-            for item in self.draw_list:
-                self.submitDrawItem( item.model_index, item.mesh_index, item.matrix )
+            self.prepareMainRenderpass( _scene )
+            self.submitMainRenderpassSimple( self.draw_list )
 
         glBindVertexArray(0)
 
