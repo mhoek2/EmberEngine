@@ -1166,94 +1166,126 @@ class Renderer:
     #
     # indirect
     #
-    def upload_model_matrices( self, matrices ):
-        data = np.asarray( matrices, dtype=np.float32 )
+    def _build_batched_draw_list( self, _draw_list : list[DrawItem] ) -> dict[tuple[int, int], list[DrawItem]]:
+        batches = {}
+
+        for item in _draw_list:
+            key = (item.model_index, item.mesh_index)
+
+            if key not in batches:
+                batches[key] = []
+
+            batches[key].append(item)
+
+        return batches, len(_draw_list)
+
+    def _upload_draw_blocks_ssbo( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int ):
+        draw_blocks = (DrawBlock * num_draw_items)()
+
+        i = 0
+        for (model_index, mesh_index), batch in batches.items():
+            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+
+            for item in batch:
+                draw_blocks[i].model[:] = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+                draw_blocks[i].material = mesh["material"]
+                i += 1
 
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.draw_ssbo )
         glBufferData(
             GL_SHADER_STORAGE_BUFFER,
-            data.nbytes,
-            data,
+            ctypes.sizeof(draw_blocks),
+            draw_blocks,
             GL_DYNAMIC_DRAW
         )
 
         glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo )
 
-    def upload_draw_data( self, batch, mesh ):
-        draw_data = (DrawBlock * len(batch))()
+    #def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
+    #    commands = []
+    #    draw_offset = 0
+    #    draw_ranges : dict[(int, int), (int, int)] = {}
+    #
+    #    for (model_index, mesh_index), batch in batches.items():
+    #        mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+    #        start_offset = len(commands)
+    #
+    #        for i in range(len(batch)):
+    #            commands.append(DrawElementsIndirectCommand(
+    #                count         = mesh["num_indices"],
+    #                instanceCount = 1,
+    #                firstIndex    = 0,
+    #                baseVertex    = 0,
+    #                baseInstance  = draw_offset + i
+    #            ))
+    #
+    #        draw_ranges[(model_index, mesh_index)] = (start_offset, len(batch))
+    #        draw_offset += len(batch)
+    #
+    #    glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer )
+    #    glBufferData(
+    #        GL_DRAW_INDIRECT_BUFFER,
+    #        ctypes.sizeof(DrawElementsIndirectCommand) * len(commands),
+    #        (DrawElementsIndirectCommand * len(commands))(*commands),
+    #        GL_DYNAMIC_DRAW
+    #    )
+    #
+    #    return draw_ranges
 
-        for i, item in enumerate(batch):
-            mat = np.asarray(item.matrix, dtype=np.float32).reshape(16)
-            draw_data[i].model[:] = mat
-            draw_data[i].material = int(mesh["material"])
+    def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
+        commands = (DrawElementsIndirectCommand * num_draw_items)()
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.draw_ssbo)
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER,
-            ctypes.sizeof(draw_data),
-            draw_data,
-            GL_DYNAMIC_DRAW
-        )
-
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo)
-
-    def build_indirect_commands( self, mesh, batch, base_instance ):
-        commands = []
-
-        for i, item in enumerate(batch):
-            cmd = DrawElementsIndirectCommand(
-                count         = mesh["num_indices"],
-                instanceCount = 1,
-                #firstIndex    = mesh["first_index"],
-                #baseVertex    = mesh["base_vertex"],
-                firstIndex    = 0,
-                baseVertex    = 0,
-                baseInstance  = base_instance + i
-            )
-            commands.append(cmd)
-
-        return commands
-
-    def upload_indirect_buffer(self, commands):
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer)
-        glBufferData(
-            GL_DRAW_INDIRECT_BUFFER,
-            ctypes.sizeof(DrawElementsIndirectCommand) * len(commands),
-            (DrawElementsIndirectCommand * len(commands))(*commands),
-            GL_DYNAMIC_DRAW
-        )
-
-    def submitIndirectBatches( self, batches ) -> None:
-        if self.settings.drawWireframe:
-            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+        draw_offset = 0
+        i = 0 
+        draw_ranges : dict[(int, int), (int, int)] = {}
 
         for (model_index, mesh_index), batch in batches.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+            start_offset = i
 
-            # directly bind 2D samplers in non-bindless mode:
+            for j in range(len(batch)):
+                commands[i].count = mesh["num_indices"]
+                commands[i].instanceCount = 1
+                commands[i].firstIndex = 0
+                commands[i].baseVertex = 0
+                commands[i].baseInstance = draw_offset + j
+                i += 1
+
+            draw_ranges[(model_index, mesh_index)] = (start_offset, len(batch))
+            draw_offset += len(batch)
+
+        glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer )
+        glBufferData(
+            GL_DRAW_INDIRECT_BUFFER,
+            ctypes.sizeof(commands),
+            commands,
+            GL_DYNAMIC_DRAW
+        )
+
+        return draw_ranges
+
+    def submitIndirectCommands( self, draw_ranges : dict[(int, int), (int, int)] ):
+        if self.settings.drawWireframe:
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
+
+        for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
+            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+
             if not self.BINDLESS_TEXTURES:
                 self.context.materials.bind( mesh["material"] )
 
-            # build draw data SSBO eg; modelmatrix and other related draw (material)
-            self.upload_draw_data( batch, mesh )
-
-            # build indirect buffer commands
-            commands = self.build_indirect_commands( mesh, batch, 0 )
-            self.upload_indirect_buffer( commands )
-
-            # Bind VAO that stores all attribute and buffer state
             glBindVertexArray( mesh["vao"] )
 
             glMultiDrawElementsIndirect(
                 GL_TRIANGLES,
                 GL_UNSIGNED_INT,
-                None,
-                len(commands),
+                ctypes.c_void_p(start_offset * ctypes.sizeof(DrawElementsIndirectCommand)),
+                drawcount,
                 0
             )
 
         if self.settings.drawWireframe:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
     #
     # begin/end frame
@@ -1290,11 +1322,18 @@ class Renderer:
         """
         # batch draws
         if self.INDIRECT:
-            batches = defaultdict(list)
-            for item in self.draw_list:
-                batches[(item.model_index, item.mesh_index)].append(item)
+            # sort by model and mesh index, constructing a batched VAO list
+            batches, num_draw_items = self._build_batched_draw_list( self.draw_list )
 
-            self.submitIndirectBatches( batches )
+            # upload per draw/instance data blocks to a shared SSBO eg: model_matrix, material_id
+            self._upload_draw_blocks_ssbo( batches, num_draw_items )
+
+            # create a shared indirect buffer and draw ranges
+            # so it can be used for future renderpasses, eg: shadowpass?
+            draw_ranges = self._upload_indirect_buffer( batches, num_draw_items )
+
+            # dispatch the actual world drawing commands
+            self.submitIndirectCommands( draw_ranges )
 
         # create individual draw calls for each item in the draw list
         else:

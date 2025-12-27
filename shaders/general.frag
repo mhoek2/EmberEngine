@@ -26,7 +26,7 @@ in vec4 var_ViewDir;
 in vec4 var_LightColor;
 in vec4 var_AmbientColor;
 
-in int var_material_index;
+flat in int var_material_index;
 
 out vec4 out_color;
 
@@ -278,7 +278,7 @@ vec3 CalcDynamicLightContribution(
 
 void main()
 {
-	Material mat = u_materials[0];
+	Material mat = u_materials[var_material_index];
 
 	vec4 diffuse;
 	float attenuation;

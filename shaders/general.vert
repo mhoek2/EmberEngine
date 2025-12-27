@@ -36,7 +36,7 @@ out vec4 var_ViewDir;
   
 out vec4 var_LightColor;
 out vec4 var_AmbientColor;
-out int var_material_index;
+flat out int var_material_index;
 
 #ifdef INDIRECT
 	struct DrawBlock
@@ -61,7 +61,7 @@ void main(){
 	vec3 normal = normalize(aNormal);
 
 #ifdef INDIRECT
-	DrawBlock d = draw[gl_DrawID];
+	DrawBlock d = draw[gl_BaseInstance];
 	mat4 uMMatrix = d.model;
 #endif
 

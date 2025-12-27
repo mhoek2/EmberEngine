@@ -311,7 +311,7 @@ class EmberEngine:
                 # handles onEnable, onDisable, onStart, onUpdate and _dirty flags
                 self.prepare_gameObjects( None, self.world.gameObjects )
 
-                # collect active model meshes (build the draw list)
+                # collect active model meshes (build the draw list, unsorted/batched)
                 for uuid in self.world.models.keys():
                     obj : GameObject = self.world.gameObjects[uuid]
 
