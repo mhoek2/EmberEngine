@@ -2,7 +2,7 @@
 
 # Ember Engine 3D
 
-Developed using ```Python```, ```OpenGL```,```Pygame```, ```ImGui```, and ```Assimp/Impasse```.  
+Developed using ```Python```, ```OpenGL```, ```PyBullet```,```Pygame```, ```ImGui```, and ```Assimp/Impasse```.  
 It demonstrates the core principles of interactive 3D rendering.
 
 
