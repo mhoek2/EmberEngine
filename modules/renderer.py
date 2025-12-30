@@ -1564,6 +1564,8 @@ class Renderer:
         glUniform1f( self.shader.uniforms['ufogHeight'], _scene["fog_height"] )
         glUniform1f( self.shader.uniforms['ufogFalloff'], _scene["fog_falloff"] )
 
+        glUniform1i( self.shader.uniforms['ufogLightsContrib'], int(_scene["fog_lights_contrib"]) )
+
         # lights
         self.ubo_lights.bind()   
 

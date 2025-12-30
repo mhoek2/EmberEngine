@@ -490,11 +490,12 @@ class SceneManager:
         scene["procedural_night_brightness"]     = _scene["procedural_night_brightness"]
 
         # fog
-        scene["fog_enabled"]    = _scene["fog_enabled"]
-        scene["fog_color"]      = _scene["fog_color"]
-        scene["fog_density"]    = _scene["fog_density"]
-        scene["fog_height"]     = _scene["fog_height"]
-        scene["fog_falloff"]    = _scene["fog_falloff"]
+        scene["fog_enabled"]            = _scene["fog_enabled"]
+        scene["fog_lights_contrib"]     = _scene["fog_lights_contrib"]
+        scene["fog_color"]              = _scene["fog_color"]
+        scene["fog_density"]            = _scene["fog_density"]
+        scene["fog_height"]             = _scene["fog_height"]
+        scene["fog_falloff"]            = _scene["fog_falloff"]
 
         # shadowmap
         scene["shadowmap_enabled"]  = _scene["shadowmap_enabled"]
@@ -755,11 +756,12 @@ class SceneManager:
                 scene["procedural_night_brightness"]    = scene.get("procedural_night_brightness",   self.settings.default_procedural_night_brightness )
                 
                 # fog
-                scene["fog_enabled"]    = scene.get("fog_enabled",      self.settings.default_fog_enabled )
-                scene["fog_color"]      = scene.get("fog_color",        self.settings.default_fog_color )
-                scene["fog_density"]    = scene.get("fog_density",      self.settings.default_fog_density )
-                scene["fog_height"]     = scene.get("fog_height",       self.settings.default_fog_height )
-                scene["fog_falloff"]    = scene.get("fog_falloff",      self.settings.default_fog_falloff )
+                scene["fog_enabled"]            = scene.get("fog_enabled",          self.settings.default_fog_enabled )
+                scene["fog_lights_contrib"]     = scene.get("fog_lights_contrib",   self.settings.default_fog_light_contrib )
+                scene["fog_color"]              = scene.get("fog_color",            self.settings.default_fog_color )
+                scene["fog_density"]            = scene.get("fog_density",          self.settings.default_fog_density )
+                scene["fog_height"]             = scene.get("fog_height",           self.settings.default_fog_height )
+                scene["fog_falloff"]            = scene.get("fog_falloff",          self.settings.default_fog_falloff )
 
                 # shadowmap
                 scene["shadowmap_enabled"]  = scene.get("shadowmap_enabled",      self.settings.default_sm_enabled )

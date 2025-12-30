@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
 import uuid as uid
 
+from modules.gui.types import ExponentialFogMode_
+
 class SceneSettings( Context ):
     """Logic related to rendering the Hierarchy window"""
     def __init__( self, context : 'EmberEngine' ):
@@ -251,6 +253,16 @@ class SceneSettings( Context ):
             self.helper._node_header_pad()
 
             _, scene["fog_enabled"] = imgui.checkbox( f"Enable Fog", scene["fog_enabled"] )
+
+            type_names = [t.name for t in ExponentialFogMode_]
+
+            changed, new_index = imgui.combo(
+                "Lights contribution",
+                scene["fog_lights_contrib"],
+                type_names
+            )
+            if changed:
+                scene["fog_lights_contrib"] = ExponentialFogMode_( new_index )
 
             _, scene["fog_color"] = imgui.color_edit3(
                 "Fog color", scene["fog_color"]

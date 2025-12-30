@@ -16,6 +16,12 @@ class RotationMode_(enum.IntEnum):
     radians = enum.auto()
     degrees = enum.auto()
 
+class ExponentialFogMode_(enum.IntEnum):
+    """Modes to visualize rotation angles"""
+    none                = 0
+    additive            = enum.auto()
+    additive_clamped    = enum.auto()
+
 class RadioStruct(TypedDict):
     name    : str
     icon    : str
