@@ -79,13 +79,14 @@ class Shader:
         version = version_330
         defines : list[str] = []
 
-        if self.context.renderer.BINDLESS_TEXTURES:
+        if self.context.renderer.USE_BINDLESS_TEXTURES:
             version = version_460
-            defines.append("#define BINDLESS_TEXTURES")
+            defines.append("#define USE_BINDLESS_TEXTURES")
 
-        if self.context.renderer.INDIRECT:
+        if self.context.renderer.USE_INDIRECT:
             version = version_460
-            defines.append("#define INDIRECT")
+            defines.append("#define USE_INDIRECT")
+            defines.append("#define USE_SHADOWMAP")
 
         define_block = "\n".join(defines)
 

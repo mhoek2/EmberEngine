@@ -4,7 +4,7 @@ import os
 import math
 from OpenGL.arrays import returnPointer
 from pygame.math import Vector2
-from pyrr import matrix44, Matrix44
+from pyrr import matrix44, Matrix44, Vector3
 import pygame
 from pygame.locals import *
 
@@ -170,22 +170,22 @@ class Renderer:
             "Opacity",
             "Light Contribution",
             "View Origin",
+            "Shadowmap",
             ]
 
         # FBO
         self.current_fbo = None;
         self.create_screen_vao()
 
-        self.main_fbo = {}
-        self.main_fbo["size"] = Vector2( int(self.display_size.x), int(self.display_size.y) )
-        self.main_fbo["fbo"], self.main_fbo["color_image"] = self.create_fbo_with_depth( self.main_fbo["size"] )
-        self.main_fbo['output'] = self.main_fbo["color_image"]
+        self.shadowmap_fbo = self.create_shadowmap_fbo( Vector2( 4096, 4096 ) )
+        self.main_fbo = self.create_fbo_with_depth( Vector2( int(self.display_size.x), int(self.display_size.y) ) )
+        self.fog_fbo = self.create_color_fbo( self.main_fbo["size"] )
 
         if self.settings.msaaEnabled:
-            self.main_fbo["resolve"] = {}
-            self.main_fbo["resolve"]["color_image"] = self.create_resolve_texture( self.main_fbo["size"]  )
-            self.main_fbo["resolve"]["fbo"] = self.create_resolve_fbo( self.main_fbo["resolve"]["color_image"]  )
+            self.main_fbo["resolve"] = self.create_resolve_fbo( self.main_fbo["size"] )
             self.main_fbo['output'] = self.main_fbo["resolve"]["color_image"]
+        else:
+            self.main_fbo['output'] = self.main_fbo["color_image"]
 
         glClearColor(0.0, 0.0, 0.0, 1)
 
@@ -209,11 +209,11 @@ class Renderer:
     def create_buffers(self):
         self.ubo_lights             : Renderer.LightUBO     = Renderer.LightUBO( self.general, "Lights", 0 )
 
-        if self.INDIRECT:
+        if self.USE_INDIRECT:
             self.draw_ssbo = glGenBuffers(1)
             self.indirect_buffer = glGenBuffers(1)
 
-        if self.BINDLESS_TEXTURES:
+        if self.USE_BINDLESS_TEXTURES:
             self.ubo_materials      : Renderer.MaterialUBOBindless  = Renderer.MaterialUBOBindless( binding=1 )
         else:
             self.ubo_materials      : Renderer.MaterialUBO  = Renderer.MaterialUBO( self.general, "Materials", 1 )
@@ -331,8 +331,8 @@ class Renderer:
         supports_gl_460 = (major, minor) >= (4, 6)
 
         # renderer configuration
-        self.BINDLESS_TEXTURES  : bool = supports_gl_460 
-        self.INDIRECT           : bool = supports_gl_460  
+        self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 
+        self.USE_INDIRECT           : bool = supports_gl_460  
         
         if supports_gl_460:
             print( "Using glMultiDrawElementsIndirect" )
@@ -347,8 +347,6 @@ class Renderer:
         if self.settings.msaaEnabled:
             glEnable( GL_MULTISAMPLE )
      
-        
-
     def shutdown( self ) -> None:
         """Quit the application"""
         self.render_backend.shutdown()
@@ -387,63 +385,93 @@ class Renderer:
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
-    def create_resolve_texture( self, size : Vector2 ):
-        """Create a image attachment used as the resolved MSAA
+    def create_color_fbo( self, size: Vector2, hdr=True ):
+        fbo = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo)
 
-        :param size: The dimensions of the image
-        :type size: Vector2
-        :return: The uid of the texture in GPU memory
-        :rtype: uint32/uintc
-        """
-        texture_id = glGenTextures( 1 )
-        glBindTexture(GL_TEXTURE_2D, texture_id)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, int(size.x), int(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, None)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glBindTexture(GL_TEXTURE_2D, 0)
-        return texture_id
+        texture = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texture)
 
-    def create_resolve_fbo( self, resolved_texture ):
-        """Create the resolve framebuffer (FBO) and bind the resolve image attachment
+        internal = GL_RGBA16F if hdr else GL_RGBA8
+        glTexImage2D( GL_TEXTURE_2D, 0, internal, int(size.x), int(size.y), 0, GL_RGBA, GL_FLOAT, None )
 
-        :param resolved_texture: The image attachment MSAA should resolve to (not sample from)
-        :type resolved_texture: uint32/uintc
-        :return: The uid of the framebuffer (FBO)
-        :rtype: uint32/uintc
-        """
-        resolve_fbo = glGenFramebuffers(1)
-        glBindFramebuffer(GL_FRAMEBUFFER, resolve_fbo)
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
 
-        glBindTexture(GL_TEXTURE_2D, resolved_texture)
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, resolved_texture, 0)
+        glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0 )
+
+        assert glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+        return {
+            "fbo"           : fbo, 
+            "color_image"   : texture, 
+            "size"          : size
+        }
+
+    def create_resolve_fbo( self, size: Vector2 ):
+        fbo = glGenFramebuffers(1)
+        glBindFramebuffer( GL_FRAMEBUFFER, fbo )
+
+        # Create the image attachment
+        color_texture = glGenTextures( 1 )
+        depth_texture = glGenTextures( 1 )
+
+        # color
+        glBindTexture( GL_TEXTURE_2D, color_texture)
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA16F, int(size.x), int(size.y), 0, GL_RGBA, GL_FLOAT, None )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+        glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0 )
+
+        # depth (postprocessing, need guard?)
+        glBindTexture( GL_TEXTURE_2D, depth_texture )
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, int(size.x), int(size.y), 0, GL_DEPTH_COMPONENT, GL_FLOAT, None )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+        glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0 )
 
         if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
-            raise Exception("Resolve framebuffer is not complete!")
+            raise Exception("Resolve FBO is not complete!")
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        return resolve_fbo
 
-    def resolve_multisample_texture( self ):
-        """The 'renderpass' that samples from main framebuffer and resolves to MSAA"""
-        glBindFramebuffer( GL_FRAMEBUFFER, self.main_fbo["resolve"]["fbo"] )
-        glClear( GL_COLOR_BUFFER_BIT )
+        return {
+            "fbo"           : fbo, 
+            "color_image"   : color_texture, 
+            "depth_image"   : depth_texture
+        }
 
-        self.use_shader( self.resolve )
+    def resolve_multisample( self ):
+        width, height = int(self.main_fbo["size"].x), int(self.main_fbo["size"].y)
 
-        glBindVertexArray( self.screenVAO )
-        glDisable(GL_DEPTH_TEST);
+        glBindFramebuffer( GL_READ_FRAMEBUFFER, self.main_fbo["fbo"] )
+        glBindFramebuffer( GL_DRAW_FRAMEBUFFER, self.main_fbo["resolve"]["fbo" ])
 
-        glActiveTexture( GL_TEXTURE0 )
-        glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, self.main_fbo["color_image"] )
-        glUniform1i( glGetUniformLocation( self.shader.program, "msaa_texture"), 0 )
-        glUniform1i( glGetUniformLocation( self.shader.program, "samples"), self.settings.msaa )
+        # color
+        glReadBuffer( GL_COLOR_ATTACHMENT0 )
+        glDrawBuffer( GL_COLOR_ATTACHMENT0 )
+        glBlitFramebuffer(
+            0, 0, width, height,  # src
+            0, 0, width, height,  # dst
+            GL_COLOR_BUFFER_BIT,
+            GL_NEAREST
+        )
 
-        glUniform1i(glGetUniformLocation( self.shader.program, "screenTexture" ), 0)
-        glDrawArrays(GL_TRIANGLES, 0, 6)
+        # depth
 
-        glBindVertexArray(0)
+        glBindFramebuffer( GL_READ_FRAMEBUFFER, self.main_fbo["fbo"] )
+        glBindFramebuffer( GL_DRAW_FRAMEBUFFER, self.main_fbo["resolve"]["fbo"] )
+        glBlitFramebuffer(
+            0, 0, width, height,
+            0, 0, width, height,
+            GL_DEPTH_BUFFER_BIT,
+            GL_NEAREST
+        )
 
-        glBindFramebuffer( GL_FRAMEBUFFER, 0 )
+        # Unbind
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0 )
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0 )
 
     def create_fbo_with_depth( self, size : Vector2 ):
         """Create the a framebuffer (FBO) with a bound image attachment.
@@ -459,14 +487,15 @@ class Renderer:
         
         # Create the image attachment
         color_texture = glGenTextures( 1 )
+        depth_texture = glGenTextures( 1 )
 
-        # Set MSAA
+        # color
         if self.settings.msaaEnabled:
             glEnable( GL_MULTISAMPLE );
 
             glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, color_texture )
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.settings.msaa, GL_RGBA16F, int(size.x), int(size.y), GL_TRUE)
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0)
+            glTexImage2DMultisample( GL_TEXTURE_2D_MULTISAMPLE, self.settings.msaa, GL_RGBA16F, int(size.x), int(size.y), GL_TRUE )
+            glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_texture, 0 )
         else:
             glBindTexture( GL_TEXTURE_2D, color_texture )
             glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA16F, int(size.x), int(size.y), 0, GL_RGBA, GL_FLOAT, None )
@@ -474,17 +503,22 @@ class Renderer:
             glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
             glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture, 0 )
 
-        # Create a renderbuffer for depth
-        depth_buffer = glGenRenderbuffers( 1 )
-        glBindRenderbuffer( GL_RENDERBUFFER, depth_buffer )
-        
-        # Set MSAA
+        # depth
         if self.settings.msaaEnabled:
-            glRenderbufferStorageMultisample( GL_RENDERBUFFER, self.settings.msaa, GL_DEPTH24_STENCIL8, int(size.x), int(size.y) )
-            glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
+            glBindTexture( GL_TEXTURE_2D_MULTISAMPLE, depth_texture )
+            glTexImage2DMultisample( GL_TEXTURE_2D_MULTISAMPLE, self.settings.msaa, GL_DEPTH_COMPONENT32F, int(size.x), int(size.y), GL_TRUE )
+            glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depth_texture, 0 )
+
         else:
-            glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, int(size.x), int(size.y) )
-            glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer )
+            # single-sample depth
+            glBindTexture(GL_TEXTURE_2D, depth_texture)
+            glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, int(size.x), int(size.y), 0, GL_DEPTH_COMPONENT, GL_FLOAT, None )
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+
+            glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0 )
 
         # Check if the FBO is complete
         framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
@@ -504,9 +538,43 @@ class Renderer:
     
         glBindFramebuffer( GL_FRAMEBUFFER, 0 )
 
-        return fbo, color_texture
+        return {
+            "fbo"           : fbo, 
+            "color_image"   : color_texture, 
+            "depth_image"   : depth_texture,
+            "size"          : size
+        }
+    
+    def create_shadowmap_fbo( self, size : Vector2 ) -> None:
+        fbo = glGenFramebuffers(1)
+        glBindFramebuffer( GL_FRAMEBUFFER, fbo )
 
-    def bind_fbo( self, fbo ) -> None:
+        depth_texture = glGenTextures(1)
+
+        glBindTexture( GL_TEXTURE_2D, depth_texture )
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, int(size.x), int(size.y), 0, GL_DEPTH_COMPONENT, GL_FLOAT, None )
+
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER )
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER )
+        glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, [1, 1, 1, 1] )
+
+        glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_texture, 0 )
+
+        glDrawBuffer( GL_NONE )
+        glReadBuffer( GL_NONE )
+
+        assert glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
+        glBindFramebuffer( GL_FRAMEBUFFER, 0 )
+
+        return {
+            "fbo"           : fbo, 
+            "depth_image"   : depth_texture,
+            "size"          : size
+        }
+
+    def bind_fbo( self, fbo, clear_bits : int = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) -> None:
         """Bind a framebuffer (FBO) to the command buffer.
         
         :param fbo: The framebuffer uid
@@ -518,7 +586,7 @@ class Renderer:
         self.current_fbo = fbo
         glBindFramebuffer( GL_FRAMEBUFFER, self.current_fbo["fbo"] )
         glViewport( 0, 0, int(self.current_fbo["size"].x), int(self.current_fbo["size"].y) )
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+        glClear( clear_bits )
         glEnable(GL_DEPTH_TEST);
 
     def unbind_fbo( self ) -> None:
@@ -568,7 +636,9 @@ class Renderer:
         self.skybox_proc        = Shader( self.context, "skybox_proc" )
         self.gamma              = Shader( self.context, "gamma" )
         self.color              = Shader( self.context, "color" )
-        self.resolve            = Shader( self.context, "resolve" )
+        self.resolve            = Shader( self.context, "resolve" ) # deprecated
+        self.shadowmap          = Shader( self.context, "shadowmap", templated = True )
+        self.fog                = Shader( self.context, "fog" )
 
 
     #
@@ -863,15 +933,15 @@ class Renderer:
             end   = length
 
         vertices = np.array([
-            # X axis
+            # X axis : red
             start, 0.0,   0.0,
             end,   0.0,   0.0,
 
-            # Y axis
+            # Y axis : green
             0.0,   start, 0.0,
             0.0,   end,   0.0,
 
-            # Z axis
+            # Z axis : blue
             0.0,   0.0,   start,
             0.0,   0.0,   end,
         ], dtype=np.float32)
@@ -971,15 +1041,15 @@ class Renderer:
 
         glBindVertexArray( self.editor_axis_vao )
 
-        # X axis – red
+        # X axis : red
         glUniform4f( self.shader.uniforms['uColor'], 1, 0, 0, 1 )
         glDrawArrays( GL_LINES, 0, 2 )
 
-        # Y axis – green
+        # Y axis : green
         glUniform4f( self.shader.uniforms['uColor'], 0, 1, 0, 1 )
         glDrawArrays(GL_LINES, 2, 2)
 
-        # Z axis – blue
+        # Z axis : blue
         glUniform4f( self.shader.uniforms['uColor'], 0, 0, 1, 1 )
         glDrawArrays( GL_LINES, 4, 2 )
 
@@ -1177,6 +1247,64 @@ class Renderer:
             for _ in range( int(self.deltaTime / (1./240.)) ):
                 p.stepSimulation()
 
+
+    #
+    # shadowmap
+    #
+    def _compute_light_vp( self ) -> tuple[Matrix44, Matrix44]:
+        """
+        Compute light View and Projection matrices for directional light (sun)
+        """
+
+        _sun = self.context.scene.getSun()
+        _sun_active = _sun and _sun.hierachyActive()
+
+        if not self.game_runtime:
+            _sun_active = _sun_active and _sun.hierachyVisible()
+
+        if _sun_active:
+            # Use world-space direction
+            sun_position = Vector3(_sun.transform.local_position)
+        else:
+            sun_position = Vector3([0.0, 1.0, 0.0])
+
+        if self.context.renderer.game_runtime:
+            cam_pos = Vector3(self.context.camera._camera.transform._local_position)
+        else:
+            cam_pos = Vector3(self.camera.camera_pos)
+
+        if self.context.renderer.game_runtime and self.camera._camera:
+            cam_pos = Vector3(self.camera._camera.transform._local_position)
+            # target point in front of camera
+            cam_forward = (self.camera.place_object_in_front_of_another(cam_pos, self.camera._camera.transform._local_rotation_quat, 1.0) - cam_pos).normalized
+        else:
+            cam_pos = self.camera.camera_pos
+            cam_forward = Vector3(self.camera.camera_front).normalized
+
+        SHADOW_DISTANCE = 20.0
+        up = Vector3([0.0, 1.0, 0.0])
+
+        #shadow_center = cam_pos + cam_forward * (SHADOW_DISTANCE / 2)
+        shadow_center = Vector3([0,0,0])
+        light_dir = Vector3(shadow_center - sun_position).normalized
+        light_pos = shadow_center - light_dir * SHADOW_DISTANCE
+        light_view = matrix44.create_look_at(light_pos, shadow_center, up)
+
+        SHADOW_EXTENT = 10.0
+        NEAR_PLANE = 0.1
+        FAR_PLANE = 100.0
+
+        light_proj = matrix44.create_orthogonal_projection(
+            left   = -SHADOW_EXTENT,
+            right  =  SHADOW_EXTENT,
+            bottom = -SHADOW_EXTENT,
+            top    =  SHADOW_EXTENT,
+            near   =  NEAR_PLANE,
+            far    =  FAR_PLANE
+        )
+
+        return light_view, light_proj
+
     #
     # draw list
     #
@@ -1203,7 +1331,7 @@ class Renderer:
             glUniform1i( self.shader.uniforms['u_MaterialIndex'], int(mesh["material"]) )
 
         # directly bind 2D samplers in non-bindless mode:
-        if not self.BINDLESS_TEXTURES:
+        if not self.USE_BINDLESS_TEXTURES:
             self.context.materials.bind( mesh["material"] )
 
         glUniformMatrix4fv( self.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
@@ -1287,8 +1415,23 @@ class Renderer:
     #
     # Renderpasses
     #
-    def prepareMainRenderpass( self, _scene : SceneManager.Scene ) -> None:
+    def prepareMainRenderpass( self, _scene : SceneManager.Scene, 
+                               light_view : Matrix44 = None, 
+                               light_projection : Matrix44 = None
+        ) -> None:
         self.use_shader( self.general )
+
+        if self.USE_INDIRECT:
+            glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer )
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.draw_ssbo )
+            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo )
+
+            # shadowmap
+            glUniform1i( self.shader.uniforms['ushadowmapEnabled'], int(_scene["shadowmap_enabled"]) )
+            if _scene["shadowmap_enabled"]:
+                glUniformMatrix4fv( self.shader.uniforms['uLightPMatrix'], 1, GL_FALSE, light_projection )
+                glUniformMatrix4fv( self.shader.uniforms['uLightVMatrix'], 1, GL_FALSE, light_view )
+                self.context.images.bind( self.shadowmap_fbo["depth_image"], GL_TEXTURE7, "sShadowMap", 7 )
 
         # bind the projection and view  matrix beginning (until shader switch)
         glUniformMatrix4fv( self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection )
@@ -1333,7 +1476,7 @@ class Renderer:
         for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
 
-            if not self.BINDLESS_TEXTURES:
+            if not self.USE_BINDLESS_TEXTURES:
                 self.context.materials.bind( mesh["material"] )
 
             glBindVertexArray( mesh["vao"] )
@@ -1359,6 +1502,87 @@ class Renderer:
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
+    def submitShadowRenderpass( self, 
+                                 draw_ranges : dict[(int, int), (int, int)], 
+                                 light_view : Matrix44, 
+                                 light_projection : Matrix44 
+        ):
+        self.bind_fbo( self.shadowmap_fbo, GL_DEPTH_BUFFER_BIT )
+        self.use_shader (self.shadowmap )
+
+        glEnable( GL_CULL_FACE )
+        glCullFace( GL_FRONT )  # reduce peter-panning
+
+        glUniformMatrix4fv(
+            self.shader.uniforms["uVMatrix"],
+            1, GL_FALSE, light_view
+        )
+
+        glUniformMatrix4fv(
+            self.shader.uniforms["uPMatrix"],
+            1, GL_FALSE, light_projection
+        )
+
+        for (model_index, mesh_index), (start, count) in draw_ranges.items():
+            mesh = self.context.models.model_mesh[model_index][mesh_index]
+
+            glBindVertexArray( mesh["vao"] )
+
+            glMultiDrawElementsIndirect(
+                GL_TRIANGLES,
+                GL_UNSIGNED_INT,
+                ctypes.c_void_p(start * ctypes.sizeof(DrawElementsIndirectCommand)),
+                count,
+                0
+            )
+
+        #glCullFace(GL_BACK)
+        glDisable(GL_CULL_FACE)
+
+        self.unbind_fbo()
+    
+    def submitFogRenderPass( self, _scene : SceneManager.Scene, current_image ) -> None:
+        self.bind_fbo( self.fog_fbo )
+        self.use_shader( self.fog )
+
+        glUniformMatrix4fv( self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection )
+        glUniformMatrix4fv( self.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.view )
+        glUniform4f( self.shader.uniforms['u_ViewOrigin'], self.camera.camera_pos[0], self.camera.camera_pos[1], self.camera.camera_pos[2], 0.0 )
+
+        _sun : "GameObject" = self.context.scene.getSun()
+        _sun_active = _sun and _sun.hierachyActive()
+
+        if not self.game_runtime:
+            _sun_active = _sun_active and _sun.hierachyVisible()
+
+        #light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
+        fog_color = _scene["fog_color"]
+
+        #glUniform4f( self.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
+        glUniform4f( self.shader.uniforms['in_lightcolor'], fog_color[0], fog_color[1], fog_color[2], 1.0 )
+        glUniform1f( self.shader.uniforms['ufogDensity'], _scene["fog_density"] )
+        glUniform1f( self.shader.uniforms['ufogHeight'], _scene["fog_height"] )
+        glUniform1f( self.shader.uniforms['ufogFalloff'], _scene["fog_falloff"] )
+
+        # lights
+        self.ubo_lights.bind()   
+
+        glDisable(GL_DEPTH_TEST)
+
+        self.context.images.bind( current_image,  GL_TEXTURE0, "sColorTexture",     0 )
+
+        if self.settings.msaaEnabled:
+            self.context.images.bind( self.context.renderer.main_fbo["resolve"]["depth_image"], GL_TEXTURE1, "sDepthTexture",     1 )
+        else:
+            self.context.images.bind( self.context.renderer.main_fbo['depth_image'], GL_TEXTURE1, "sDepthTexture",     1 )
+   
+        glBindVertexArray( self.screenVAO )
+        glDrawArrays(GL_TRIANGLES, 0, 6)
+
+        self.unbind_fbo()
+
+        return self.fog_fbo["color_image"]
+
     #
     # begin/end frame
     #
@@ -1375,15 +1599,14 @@ class Renderer:
 
         imgui.new_frame()
         self.camera.new_frame()
-        # bind main FBO
-        self.bind_fbo( self.main_fbo )
+
 
         self.view = self.context.camera.get_view_matrix()
 
         # physics
         self._runPhysics()
 
-    def dispatch_drawcalls( self ) -> None:
+    def dispatch_drawcalls( self, _scene : SceneManager.Scene ) -> None:
         """"
         Dispatch draw calls using the generated item in the draw list
         
@@ -1392,10 +1615,8 @@ class Renderer:
             or create individual draw calls for each item. (simple rendering) 
 
         """
-        _scene : SceneManager.Scene = self.context.scene.getCurrentScene()
-
         # batch meshes (indirect rendering)
-        if self.INDIRECT:
+        if self.USE_INDIRECT:
             # sort by model and mesh index, constructing a batched VAO list
             batches, num_draw_items = self._build_batched_draw_list( self.draw_list )
 
@@ -1406,17 +1627,44 @@ class Renderer:
             # so it can be used for future renderpasses, eg: shadowpass?
             draw_ranges = self._upload_indirect_buffer( batches, num_draw_items )
 
+            # shadowmap renderpass
+            if _scene["shadowmap_enabled"]:
+                light_view, light_projection = self._compute_light_vp()
+                self.submitShadowRenderpass( draw_ranges, light_view, light_projection )
+            else:
+                light_view = light_projection = None
+
+            self.bind_fbo( self.main_fbo )
+
+            self.context.skybox.draw( _scene )
+
             # dispatch the actual world drawing commands
-            self.prepareMainRenderpass( _scene )
+            self.prepareMainRenderpass( _scene, light_view, light_projection )
             self.submitMainRenderpassIndirect( draw_ranges )
 
         # create individual draw calls for each item in the draw list (simple rendering)
-        # no renderpasses
+        # only draw the main renderpass to prevent performance regression, skips;
+        # - shadows
+        # -
         else:
-            self.prepareMainRenderpass( _scene )
+            self.bind_fbo( self.main_fbo )
+
+            self.context.skybox.draw( _scene )
+
+            self.prepareMainRenderpass( _scene, None, None )
             self.submitMainRenderpassSimple( self.draw_list )
 
         glBindVertexArray(0)
+
+    def dispatch_postprocess( self ) -> None:
+        _scene : SceneManager.Scene = self.context.scene.getCurrentScene()
+
+        current_image = self.main_fbo['output']
+
+        if _scene["fog_enabled"]:
+            current_image = self.submitFogRenderPass( _scene, current_image )
+
+        self.output_image = current_image
 
     def end_frame( self ) -> None:
         """End for each frame, clear GL states, resolve MSAA if enabled, draw ImGui.
@@ -1437,7 +1685,9 @@ class Renderer:
 
         # resolve multisampled main FBO
         if self.settings.msaaEnabled:
-            self.resolve_multisample_texture()
+            self.resolve_multisample()
+
+        self.dispatch_postprocess()
 
         self.context.gui.render()
 

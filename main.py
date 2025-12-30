@@ -205,11 +205,6 @@ class EmberEngine:
                 #
                 self.models.model_loader_thread_flush()
 
-                #
-                # skybox
-                #
-                self.skybox.draw( _scene )
-
                 # triggers update systems in the registered gameObjects
                 # handles onEnable, onDisable, onStart, onUpdate and _dirty flags
                 self.prepare_gameObjects( None, self.world.gameObjects )
@@ -224,7 +219,7 @@ class EmberEngine:
                     obj.onRender()
 
                 # dispatch world draw calls
-                self.renderer.dispatch_drawcalls()
+                self.renderer.dispatch_drawcalls( _scene )
 
                 # dispatch editor visuals
                 # eg: grid, axis, colliders (instant drawing, not indirect)

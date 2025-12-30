@@ -97,6 +97,8 @@ class SceneSettings( Context ):
         if changed:
             self.scene.setSun( _uuid )
         
+
+
         imgui.pop_id()
 
     def _procedural_skybox_preview( self, scene : SceneManager.Scene ) -> None:
@@ -160,6 +162,8 @@ class SceneSettings( Context ):
             self.helper._node_header_pad()
 
             self._sun_selector()
+
+            _, scene["shadowmap_enabled"] = imgui.checkbox( f"Sun shadows", scene["shadowmap_enabled"] )
 
             self.helper._node_sep()
 
@@ -241,6 +245,31 @@ class SceneSettings( Context ):
             
             imgui.tree_pop()
 
+    def _fog_settings( self, scene : SceneManager.Scene ) -> None:
+        self.helper._node_sep()
+        if imgui.tree_node_ex( f"{fa.ICON_FA_CLOUD_MOON} Fog", imgui.TreeNodeFlags_.default_open ):
+            self.helper._node_header_pad()
+
+            _, scene["fog_enabled"] = imgui.checkbox( f"Enable Fog", scene["fog_enabled"] )
+
+            _, scene["fog_color"] = imgui.color_edit3(
+                "Fog color", scene["fog_color"]
+            )
+
+            _, scene["fog_density"] = imgui.drag_float(
+                f"Fog density", scene["fog_density"], 0.001
+            )
+
+            _, scene["fog_height"] = imgui.drag_float(
+                f"Fog height", scene["fog_height"], 0.001
+            )
+
+            _, scene["fog_falloff"] = imgui.drag_float(
+                f"Fog falloff", scene["fog_falloff"], 0.001
+            )
+
+            imgui.tree_pop()
+
     def _general_settings( self, scene : SceneManager.Scene ) -> None:
         if imgui.tree_node_ex( f"{fa.ICON_FA_SLIDERS} General", imgui.TreeNodeFlags_.default_open ):
             self.helper._node_header_pad()
@@ -255,5 +284,6 @@ class SceneSettings( Context ):
 
         self._general_settings( _scene )
         self._sky_settings( _scene )
+        self._fog_settings( _scene )
 
         imgui.end()

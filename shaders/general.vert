@@ -1,11 +1,14 @@
 // version added programmicly
 
-#ifndef INDIRECT
+#ifndef USE_INDIRECT
 uniform mat4 uMMatrix;
 #endif
 uniform mat4 uVMatrix;
 uniform mat4 uPMatrix;
-
+#ifdef USE_SHADOWMAP
+uniform mat4 uLightPMatrix;
+uniform mat4 uLightVMatrix;
+#endif
 uniform vec4 u_ViewOrigin;
 
 uniform vec4 in_lightdir;
@@ -14,8 +17,8 @@ uniform vec4 in_ambientcolor;
 
 uniform float in_roughnessOverride;
 uniform float in_metallicOverride;
-#ifndef INDIRECT
-	uniform int u_MaterialIndex;
+#ifndef USE_INDIRECT
+uniform int u_MaterialIndex;
 #endif
 
 layout(location = 0) in vec3 aVertex;
@@ -33,12 +36,16 @@ out vec4 var_BiTangent;
 out vec4 var_Normal;
 out vec4 var_LightDir;
 out vec4 var_ViewDir;
-  
+
+#ifdef USE_SHADOWMAP
+	out vec4 var_LightSpacePos;
+#endif
+
 out vec4 var_LightColor;
 out vec4 var_AmbientColor;
 flat out int var_material_index;
 
-#ifdef INDIRECT
+#ifdef USE_INDIRECT
 	struct DrawBlock
 	{
 		mat4 model;        // 64 bytes
@@ -48,7 +55,7 @@ flat out int var_material_index;
 		int  pad2;
 	};
 
-	layout(std430, binding = 0) buffer DrawBuffer
+	layout(std430, binding = 0) readonly buffer DrawBuffer
 	{
 		DrawBlock draw[];
 	};
@@ -60,7 +67,7 @@ void main(){
 	vec3 position = aVertex;
 	vec3 normal = normalize(aNormal);
 
-#ifdef INDIRECT
+#ifdef USE_INDIRECT
 	DrawBlock d = draw[gl_BaseInstance];
 	mat4 uMMatrix = d.model;
 #endif
@@ -89,7 +96,12 @@ void main(){
 	var_roughnessOverride = in_roughnessOverride;
 	var_metallicOverride = in_metallicOverride;
 
-#ifdef INDIRECT
+#ifdef USE_SHADOWMAP
+	vec4 worldPos = uMMatrix * vec4(aVertex, 1.0);
+	var_LightSpacePos = uLightPMatrix * uLightVMatrix * worldPos;
+#endif
+
+#ifdef USE_INDIRECT
 	var_material_index = int(d.material);
 #else
 	var_material_index = u_MaterialIndex;
