@@ -40,6 +40,7 @@ from dataclasses import dataclass, field
 import ctypes
 from collections import defaultdict
 import uuid as uid
+
 class DrawElementsIndirectCommand(ctypes.Structure):
     _fields_ = [
         ("count",         ctypes.c_uint),
@@ -53,8 +54,8 @@ class DrawBlock(ctypes.Structure):
     _fields_ = [
         ("model",               ctypes.c_float * 16),
         ("material",            ctypes.c_int),
-        ("mesh_offset",         ctypes.c_int),
-        ("gameObject_index",    ctypes.c_int),
+        ("meshNodeMatrixId",    ctypes.c_int),
+        ("gameObjectMatrixId",  ctypes.c_int),
         ("pad2",                ctypes.c_int),
     ]
 
@@ -212,20 +213,32 @@ class Renderer:
         # draw list
         self.draw_list : list[Renderer.DrawItem] = []
 
-        # compute shader data,
-        # mesh matrices and mappings
-        self.mesh_offsets = {}          # (model_index, mesh_index) -> offset
-        self.gameobject_offsets = {}    # uuid -> offset
-        self.node_matrix_list_dirty : bool = True
-        self.node_matrix_list : dict[int, list[Renderer.MatrixItem]] = {}
+        # indirect drawing constructs the drawBlock final modelmatrices using 
+        # a compute shader, to do that. a list for each model/mesh combo is required
+        # this list is then flattened and uploaded to a SSBO
+        # to index the correct model/mesh combo, a map is used.
+        # also, a map of the gameObjects modelmatrices is required with a map
+        self.comp_gameobject_matrices_map   : dict[uid.UUID, int] = {}      # uuid -> offset
+        self.comp_meshnode_matrices_dirty   : bool = True
+        self.comp_meshnode_matrices_nested  : dict[int, list[Renderer.MatrixItem]] = {} # not flattened
+        self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}    # (model_index, mesh_index) -> offset
 
     def create_buffers(self):
         self.ubo_lights             : Renderer.LightUBO     = Renderer.LightUBO( self.general, "Lights" )
 
         if self.USE_INDIRECT:
-            self.node_matrix_ssbo   = glGenBuffers(1)
-            self.transform_ssbo     = glGenBuffers(1)
+            # compute
+            max_matrices = 10000 * 16 * 4
 
+            self.node_matrix_ssbo   = glGenBuffers(1)
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.node_matrix_ssbo )
+            glBufferData( GL_SHADER_STORAGE_BUFFER, max_matrices, None, GL_DYNAMIC_DRAW )
+
+            self.transform_ssbo     = glGenBuffers(1)
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.transform_ssbo )
+            glBufferData( GL_SHADER_STORAGE_BUFFER, max_matrices, None, GL_DYNAMIC_DRAW )
+
+            # rendering
             self.draw_ssbo          = glGenBuffers(1)
             self.indirect_buffer    = glGenBuffers(1)
 
@@ -348,7 +361,7 @@ class Renderer:
         # renderer configuration
         # OpenGL ver. < 4.6.0 will fallback to simple rendering and GLSL 330 core features for backwards compat.
         supports_gl_460 = (major, minor) >= (4, 6)
-        self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 
+        self.USE_BINDLESS_TEXTURES  : bool = False 
         self.USE_INDIRECT           : bool = supports_gl_460  
         
         if supports_gl_460:
@@ -1362,65 +1375,70 @@ class Renderer:
         """
         Indirect drawing only, collect mesh matrices for a model:node(mesh) after it loads
 
-            Later, Upload the node(mesh) matrices in a single static SSBO with mappings (model_index, mesh_index). 
+            Later, Upload the node(mesh) matrices in a single flat static SSBO with a mappings table (model_index, mesh_index) -> offset. 
             That way a GPU compute shader can compute the final model matrix for each gameObject
 
         """
-        if model_index not in self.node_matrix_list:
-            self.node_matrix_list[model_index] = []
+        if model_index not in self.comp_meshnode_matrices_nested:
+            self.comp_meshnode_matrices_nested[model_index] = []
 
-        self.node_matrix_list[model_index].append( Renderer.MatrixItem( mesh_index, matrix ) )
+        # add to the nested list, this is flattened and mapped when uploading to SSBO
+        self.comp_meshnode_matrices_nested[model_index].append( 
+            Renderer.MatrixItem( mesh_index, matrix ) 
+        )
     
-    def update_node_matrix_list_ssbo( self ):
-        """Semi-static flat ssbo containing all local model matrices for each model:node(mesh)"""
-        if not self.node_matrix_list_dirty:
+    def _update_comp_meshnode_matrices_ssbo( self ):
+        """
+        Static flattened SSBO containing all local model matrices for each model:node(mesh)
+        Updates only occur, when additional model(s) are loaded
+        """
+        if not self.comp_meshnode_matrices_dirty:
             return
 
         if not self.USE_INDIRECT:
-            self.node_matrix_list_dirty = False
+            self.comp_meshnode_matrices_dirty = False
             return
 
-        self.mesh_offsets = {}       # (model_index, mesh_index) -> offset
-        matrices = []
+        # clear the mapping table, it is rebuilt.
+        self.comp_meshnode_matrices_map = {}       # (model_index, mesh_index) -> offset
 
-        offset = 0
-        for model_index, items in self.node_matrix_list.items():
+        num_matrices = len(self.context.world.transforms)
+        matrices = np.empty((num_matrices, 16), dtype=np.float32)  # 16 floats per mat4 : 64 bytes
+
+        for offset, (model_index, items) in enumerate(self.comp_meshnode_matrices_nested.items()):
             for item in items:
-                matrices.append(item.matrix)
-
+                matrices[offset] = item.matrix.flatten()
+            
                 # create a map
-                self.mesh_offsets[(model_index, item.mesh_index)] = offset
-                offset += 1
+                self.comp_meshnode_matrices_map[(model_index, item.mesh_index)] = offset
 
+        # upload to SSBO
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.node_matrix_ssbo )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, matrices.nbytes, matrices )
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.node_matrix_ssbo)
-        glBufferData(GL_SHADER_STORAGE_BUFFER,
-                     np.array(matrices, dtype=np.float32),
-                     GL_DYNAMIC_DRAW)
+        self.comp_meshnode_matrices_dirty = False   
 
-        self.node_matrix_list_dirty = False   
-
-    def _upload_gameobject_transforms_ssbo( self ):
+    def _upload_comp_gameobject_matrices_map_ssbo( self ):
         """Build a SSBO with all gameObjects world matrices
         
             Still happens per frame.
         
         """
-        self.gameobject_offsets = {}
-        matrices = []
+        # clear the mapping table, it is rebuilt.
+        self.comp_gameobject_matrices_map = {}
 
-        offset = 0
-        for uuid, transform in self.context.world.transforms.items():
-            matrices.append(transform.world_model_matrix)
+        num_matrices = len(self.context.world.transforms)
+        matrices = np.empty((num_matrices, 16), dtype=np.float32)  # 16 floats per mat4 : 64 bytes
+
+        for offset, (uuid, transform) in enumerate(self.context.world.transforms.items()):
+            matrices[offset] = transform.world_model_matrix.flatten()
 
             # create a map
-            self.gameobject_offsets[uuid] = offset
-            offset += 1
+            self.comp_gameobject_matrices_map[uuid] = offset
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.transform_ssbo)
-        glBufferData(GL_SHADER_STORAGE_BUFFER,
-                     np.array(matrices, dtype=np.float32),
-                     GL_DYNAMIC_DRAW)
+        # upload to SSBO
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.transform_ssbo )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, matrices.nbytes, matrices )
 
     def _build_batched_draw_list( self, _draw_list : list[DrawItem] ) -> dict[tuple[int, int], list[DrawItem]]:
         batches = {}
@@ -1447,8 +1465,8 @@ class Renderer:
 
                 if item.uuid:
                     draw_blocks[i].model[:]             = np.zeros((16,), dtype=np.float32)
-                    draw_blocks[i].mesh_offset          = int(self.mesh_offsets[mesh_id]) if mesh_id in self.mesh_offsets else 0
-                    draw_blocks[i].gameObject_index     = int(self.gameobject_offsets[item.uuid])
+                    draw_blocks[i].meshNodeMatrixId     = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
+                    draw_blocks[i].gameObjectMatrixId   = int(self.comp_gameobject_matrices_map[item.uuid])
                 else:
                     draw_blocks[i].model[:]             = np.asarray(item.matrix, dtype=np.float32).reshape(16)
                 
@@ -1694,7 +1712,7 @@ class Renderer:
         self._runPhysics()
 
         # update static model:node(mesh) matrices when dirty
-        self.update_node_matrix_list_ssbo()
+        self._update_comp_meshnode_matrices_ssbo()
 
     def _dispatch_compute( self, num_draw_items ) -> None:
         self.use_shader( self.compute )
@@ -1726,7 +1744,7 @@ class Renderer:
         # batch meshes (indirect rendering)
         if self.USE_INDIRECT:
             # upload transforms to SSBO (for compute shader)
-            self._upload_gameobject_transforms_ssbo()
+            self._upload_comp_gameobject_matrices_map_ssbo()
 
             # sort by model and mesh index, constructing a batched VAO list
             batches, num_draw_items = self._build_batched_draw_list( self.draw_list )

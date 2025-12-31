@@ -4,8 +4,8 @@ struct DrawBlock
 {
 	mat4 model;        // 64 bytes
 	int  material;     // 4 bytes
-	int  mesh_offset;
-	int  gameObject_index;
+	int  meshNodeMatrixId;
+	int  gameObjectMatrixId;
 	int  pad2;
 };
 
@@ -33,8 +33,8 @@ void main()
 
     //if (gid >= draw.length()) return;
 
-	uint nodeIndex = draw[gid].mesh_offset;
-	uint gameObjectIndex = draw[gid].gameObject_index;
+	uint meshNodeMatrixId = draw[gid].meshNodeMatrixId;
+	uint gameObjectMatrixId = draw[gid].gameObjectMatrixId;
 
-    draw[gid].model = gameObject[gameObjectIndex] * matrices[nodeIndex];
+    draw[gid].model = gameObject[gameObjectMatrixId] * matrices[meshNodeMatrixId];
 }
