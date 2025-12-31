@@ -109,6 +109,12 @@ class Models( Context ):
             path    = Path(self.default_cilinder_path)
         )
 
+
+        self.create_matrices( self.default_cube.handle )
+        self.create_matrices( self.default_sphere.handle )
+        self.create_matrices( self.default_cilinder.handle )
+        self.context.renderer.node_matrix_list_dirty = True
+
         self.model_load_queue = Queue()
         self.model_ready_queue = Queue()
 
@@ -358,6 +364,10 @@ class Models( Context ):
             self.upload_to_GPU( index, cpu_meshes )
             self.model_loading.pop( index )
 
+            # construct static mesh matrix buffer
+            self.create_matrices( index )
+            self.context.renderer.node_matrix_list_dirty = True
+
     def loadOrFind( self, path : Path, material : int = -1, lazy_load : bool = True ) -> int:
         """Load or find an model, implement find later
 
@@ -400,13 +410,33 @@ class Models( Context ):
         self._num_models += 1
         return index
 
-    def _draw_collect( self, model_index, mesh_index, world_matrix ):
-        self.renderer.addDrawItem( model_index, mesh_index, world_matrix )
+    def __create_node_matrices( self, node, model_index : int, model_matrix : Matrix44 ):
+        """Recursivly construct a list of nodes with their precomputed local model matrices"""
+        world_matrix = model_matrix * Matrix44(node.transformation).transpose()
 
-    def _draw_instantly( self, model_index, mesh_index, world_matrix ):
+        for mesh in node.meshes:
+            mesh_index = self.model[model_index].meshes.index(mesh)
+
+            self.renderer.addNodeMatrix( model_index, mesh_index, world_matrix )
+
+        for child in node.children:
+            self.__create_node_matrices( child, model_index, world_matrix )
+
+    def create_matrices( self, model ):
+        """Collect local model matrices for nodes in this model"""
+        if model == -1 or self.model[model] is None or model in self.model_loading:
+            return
+
+        model_matrix = Matrix44.identity()
+        self.__create_node_matrices( self.model[model].root_node, model, model_matrix  )
+
+    def __draw_collect( self, model_index, mesh_index, world_matrix, uuid = None ):
+        self.renderer.addDrawItem( model_index, mesh_index, world_matrix, uuid )
+
+    def __draw_instantly( self, model_index, mesh_index, world_matrix ):
         self.renderer.submitDrawItem( model_index, mesh_index, world_matrix )
 
-    def draw_node( self, node, model_index : int, model_matrix : Matrix44, dispatch : Callable ):
+    def __draw_node( self, node, model_index : int, model_matrix : Matrix44, dispatch : Callable ):
         """Recursivly process nodes (parent and child nodes)
 
         :param node: A node of model
@@ -423,14 +453,23 @@ class Models( Context ):
 
         for mesh in node.meshes:
             mesh_index = self.model[model_index].meshes.index(mesh)
-
             dispatch( model_index, mesh_index, world_matrix )
 
         # process child nodes
         for child in node.children:
-            self.draw_node( child, model_index, world_matrix, dispatch )
+            self.__draw_node( child, model_index, world_matrix, dispatch )
 
-    def draw( self, model : Model, model_matrix : Matrix44, instant : bool = False ) -> None:
+    def __collect_node( self, node, model_index, uuid ):
+        """Collect node data with uuid, then use compute shader for modelmatrices"""
+        for mesh in node.meshes:
+            mesh_index = self.model[model_index].meshes.index(mesh)
+            self.__draw_collect( model_index, mesh_index, None, uuid )
+
+        # process child nodes
+        for child in node.children:
+            self.__collect_node( child, model_index, uuid )
+
+    def draw( self, model : Model, model_matrix : Matrix44, instant : bool = False, uuid = None ) -> None:
         """Begin drawing a model
 
         :param model: The model object
@@ -444,8 +483,12 @@ class Models( Context ):
         if model.handle == -1 or self.model[model.handle] is None or model.handle in self.model_loading:
             return
 
-        # either collect the drawcalls and submit them in renderer.end_frame()
-        # or render now/nstantly
-        dispatch = self._draw_collect if not instant else self._draw_instantly
+        # compute model matrices on CPU
+        if instant or not self.context.renderer.USE_INDIRECT:
+            # either collect the drawcalls and submit them in renderer.end_frame() or render instantly
+            dispatch = self.__draw_collect if not instant else self.__draw_instantly
+            self.__draw_node( self.model[model.handle].root_node, model.handle, model_matrix, dispatch )
 
-        self.draw_node( self.model[model.handle].root_node, model.handle, model_matrix, dispatch )
+        # compute model matrices on GPU usinf compute shader
+        else:
+            self.__collect_node( self.model[model.handle].root_node, model.handle, uuid )

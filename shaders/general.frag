@@ -51,7 +51,11 @@ struct Light
 	vec4	rotation;
 };
 
+#ifdef USE_INDIRECT
+layout( std140, binding = 0  ) uniform Lights
+#else
 layout( std140 ) uniform Lights
+#endif
 {
 	int u_num_lights;
 	Light u_lights[64];
@@ -69,7 +73,7 @@ layout( std140 ) uniform Lights
 		uint     padding;      // pad to 16 bytes alignment (std430 rules)
 	};
 
-	layout( std430, binding=1 ) buffer Materials
+	layout( std430, binding = 1 ) buffer Materials
 	{
 		Material u_materials[2096];
 	};

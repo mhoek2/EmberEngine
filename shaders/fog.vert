@@ -1,4 +1,4 @@
-#version 460 core
+// version added programmicly
 
 layout(location = 0) in vec2 in_Position;
 layout(location = 1) in vec2 in_TexCoord;

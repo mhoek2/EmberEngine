@@ -48,6 +48,7 @@ class Settings:
 
         # fog
         self.default_fog_enabled                : bool = False
+        self.default_fog_light_contrib          : int = 0
         self.default_fog_color                  : list[float]  = [0.737, 0.847, 0.918]
         self.default_fog_density                : float = 0.100
         self.default_fog_height                 : float = 1.0
