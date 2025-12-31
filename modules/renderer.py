@@ -1292,8 +1292,8 @@ class Renderer:
         self.use_shader( self.compute )
 
         glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.ubo.draw_ssbo )
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, self.ubo.node_matrix_ssbo )
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.ubo.transform_ssbo )
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, self.ubo.comp_meshnode_matrices_ssbo )
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.ubo.comp_gameobject_matrices_ssbo )
 
         # number of work items = number of draw blocks
         # local_size_x = 64 -> ceil(num_draw_items / 64)

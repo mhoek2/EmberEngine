@@ -49,41 +49,46 @@ class UBO:
         :type context: EmberEngine
         """
         self.context    : 'EmberEngine' = context
+
         # indirect drawing constructs the drawBlock final modelmatrices using 
         # a compute shader, to do that. a list for each model/mesh combo is required
         # this list is then flattened and uploaded to a SSBO
         # to index the correct model/mesh combo, a map is used.
         # also, a map of the gameObjects modelmatrices is required with a map
-        self.comp_gameobject_matrices_map   : dict[uid.UUID, int] = {}      # uuid -> offset
+        self.comp_gameobject_matrices_map   : dict[uid.UUID, int] = {}          # uuid -> offset
         self.comp_meshnode_matrices_dirty   : bool = True
-        self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {} # not flattened
-        self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}    # (model_index, mesh_index) -> offset
+        self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {}  # not flattened
+        self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}        # (model_index, mesh_index) -> offset
 
     def initialize( self ):
         # context
         self.renderer   : 'Renderer' = self.context.renderer
 
+        #
         # general
+        #
         self.ubo_lights             : UBO.LightUBO     = UBO.LightUBO( self.renderer.general, "Lights" )
         if self.renderer.USE_BINDLESS_TEXTURES:
             self.ubo_materials      : UBO.MaterialUBOBindless  = UBO.MaterialSSBOBindless()
         else:
             self.ubo_materials      : UBO.MaterialUBO  = UBO.MaterialUBO( self.renderer.general, "Materials" )
 
+        #
         # indirect
+        #
         if self.renderer.USE_INDIRECT:
             # compute
             MAX_MATRICES = 10000
 
-            self.node_matrix_ssbo   = glGenBuffers(1)
-            self.node_matrix_ssbo_buffer = (ctypes.c_float * (MAX_MATRICES * 16))()  # flat mat4 array
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.node_matrix_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.node_matrix_ssbo_buffer), None, GL_DYNAMIC_DRAW )
+            self.comp_meshnode_matrices_ssbo        = glGenBuffers(1)
+            self.comp_meshnode_matrices_ssbo_buffer = (ctypes.c_float * (MAX_MATRICES * 16))()  # flat mat4 array
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_meshnode_matrices_ssbo )
+            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.comp_meshnode_matrices_ssbo_buffer), None, GL_DYNAMIC_DRAW )
 
-            self.transform_ssbo     = glGenBuffers(1)
-            self.transform_ssbo_buffer = (ctypes.c_float * (MAX_MATRICES * 16))()  # flat mat4 array
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.transform_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.transform_ssbo_buffer), None, GL_DYNAMIC_DRAW )
+            self.comp_gameobject_matrices_ssbo          = glGenBuffers(1)
+            self.comp_gameobject_matrices_ssbo_buffer   = (ctypes.c_float * (MAX_MATRICES * 16))()  # flat mat4 array
+            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_gameobject_matrices_ssbo )
+            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.comp_gameobject_matrices_ssbo_buffer), None, GL_DYNAMIC_DRAW )
 
             # rendering
             self.draw_ssbo          = glGenBuffers(1)
@@ -96,6 +101,9 @@ class UBO:
             glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.indirect_ssbo )
             glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.indirect_ssbo_buffer), None, GL_DYNAMIC_DRAW )
 
+    #
+    # general
+    #
     class MaterialSSBOBindless:
         MAX_MATERIALS = 2096
         # std430 layout: 5 uint64_t, 1 int, 1 uint padding = 48 bytes per material
@@ -362,15 +370,15 @@ class UBO:
         offset = 0
         for model_index, items in self.comp_meshnode_matrices_nested.items():
             for item in items:
-                self.node_matrix_ssbo_buffer[offset*16:(offset+1)*16] = item.matrix.flatten()
+                self.comp_meshnode_matrices_ssbo_buffer[offset*16:(offset+1)*16] = item.matrix.flatten()
             
                 # create a map
                 self.comp_meshnode_matrices_map[(model_index, item.mesh_index)] = offset
                 offset += 1
 
         # upload to SSBO
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.node_matrix_ssbo )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, offset*16*4, self.node_matrix_ssbo_buffer )
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_meshnode_matrices_ssbo )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, offset*16*4, self.comp_meshnode_matrices_ssbo_buffer )
 
         self.comp_meshnode_matrices_dirty = False   
 
@@ -385,15 +393,15 @@ class UBO:
 
         offset = 0
         for uuid, transform in self.context.world.transforms.items():
-            self.transform_ssbo_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
+            self.comp_gameobject_matrices_ssbo_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
 
             # create a map
             self.comp_gameobject_matrices_map[uuid] = offset
             offset += 1
 
         # upload to SSBO
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.transform_ssbo )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, offset*16*4, self.transform_ssbo_buffer )
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_gameobject_matrices_ssbo )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, offset*16*4, self.comp_gameobject_matrices_ssbo_buffer )
 
     def _build_batched_draw_list( self, _draw_list : list[DrawItem] ) -> dict[tuple[int, int], list[DrawItem]]:
         batches = {}
