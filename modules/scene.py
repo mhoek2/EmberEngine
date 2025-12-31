@@ -792,7 +792,7 @@ class SceneManager:
             return False
 
     def postLoadScene( self ) -> None:
-        self.context.renderer.ubo_materials._dirty = True
+        self.context.renderer.ubo.ubo_materials._dirty = True
 
     def loadDefaultScene( self ):
         """Load the default scene, meaing the engine empty scene"""

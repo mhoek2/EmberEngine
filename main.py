@@ -75,7 +75,7 @@ class EmberEngine:
         self.world      : World             = World( self )
 
         self.renderer.create_shaders()
-        self.renderer.create_buffers()
+        self.renderer.ubo.initialize()
         self.renderer.create_editor_vaos()
 
         self.roughnessOverride = -1.0

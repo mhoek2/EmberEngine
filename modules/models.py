@@ -113,7 +113,7 @@ class Models( Context ):
         self.create_matrices( self.default_cube.handle )
         self.create_matrices( self.default_sphere.handle )
         self.create_matrices( self.default_cilinder.handle )
-        self.context.renderer.comp_meshnode_matrices_dirty = True
+        self.context.renderer.ubo.comp_meshnode_matrices_dirty = True
 
         self.model_load_queue = Queue()
         self.model_ready_queue = Queue()
@@ -366,7 +366,7 @@ class Models( Context ):
 
             # construct static mesh matrix buffer
             self.create_matrices( index )
-            self.context.renderer.comp_meshnode_matrices_dirty = True
+            self.context.renderer.ubo.comp_meshnode_matrices_dirty = True
 
     def loadOrFind( self, path : Path, material : int = -1, lazy_load : bool = True ) -> int:
         """Load or find an model, implement find later

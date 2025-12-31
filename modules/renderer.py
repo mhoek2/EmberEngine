@@ -41,23 +41,8 @@ import ctypes
 from collections import defaultdict
 import uuid as uid
 
-class DrawElementsIndirectCommand(ctypes.Structure):
-    _fields_ = [
-        ("count",         ctypes.c_uint),
-        ("instanceCount", ctypes.c_uint),
-        ("firstIndex",    ctypes.c_uint),
-        ("baseVertex",    ctypes.c_uint),
-        ("baseInstance",  ctypes.c_uint),
-    ]
-
-class DrawBlock(ctypes.Structure):
-    _fields_ = [
-        ("model",               ctypes.c_float * 16),
-        ("material",            ctypes.c_int),
-        ("meshNodeMatrixId",    ctypes.c_int),
-        ("gameObjectMatrixId",  ctypes.c_int),
-        ("pad2",                ctypes.c_int),
-    ]
+from modules.render.types import DrawItem, MatrixItem
+from modules.render.ubo import UBO, DrawElementsIndirectCommand, DrawBlock
 
 class Renderer:
     class GameState_(enum.IntEnum):
@@ -65,18 +50,6 @@ class Renderer:
         none        = 0             # (= 0)
         running     = enum.auto()   # (= 1)
         paused      = enum.auto()   # (= 2)
-
-    @dataclass(slots=True)
-    class DrawItem:
-        model_index : int       = field( default_factory=int )
-        mesh_index  : int       = field( default_factory=int )
-        matrix      : Matrix44  = field( default_factory=Matrix44 )
-        uuid        : uid.UUID  = field( default_factory=uid.UUID )
-
-    @dataclass(slots=True)
-    class MatrixItem:
-        mesh_index  : int       = field( default_factory=int )
-        matrix      : Matrix44  = field( default_factory=Matrix44 )
 
     """The rendering backend"""
     def __init__( self, context ):
@@ -180,6 +153,9 @@ class Renderer:
             "Shadowmap",
             ]
 
+        # UBO / SSBO
+        self.ubo : UBO = UBO( context )
+
         # FBO
         self.current_fbo = None;
         self.create_screen_vao()
@@ -211,41 +187,8 @@ class Renderer:
         self._initPhysics()
 
         # draw list
-        self.draw_list : list[Renderer.DrawItem] = []
+        self.draw_list : list[DrawItem] = []
 
-        # indirect drawing constructs the drawBlock final modelmatrices using 
-        # a compute shader, to do that. a list for each model/mesh combo is required
-        # this list is then flattened and uploaded to a SSBO
-        # to index the correct model/mesh combo, a map is used.
-        # also, a map of the gameObjects modelmatrices is required with a map
-        self.comp_gameobject_matrices_map   : dict[uid.UUID, int] = {}      # uuid -> offset
-        self.comp_meshnode_matrices_dirty   : bool = True
-        self.comp_meshnode_matrices_nested  : dict[int, list[Renderer.MatrixItem]] = {} # not flattened
-        self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}    # (model_index, mesh_index) -> offset
-
-    def create_buffers(self):
-        self.ubo_lights             : Renderer.LightUBO     = Renderer.LightUBO( self.general, "Lights" )
-
-        if self.USE_INDIRECT:
-            # compute
-            max_matrices = 10000 * 16 * 4
-
-            self.node_matrix_ssbo   = glGenBuffers(1)
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.node_matrix_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, max_matrices, None, GL_DYNAMIC_DRAW )
-
-            self.transform_ssbo     = glGenBuffers(1)
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.transform_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, max_matrices, None, GL_DYNAMIC_DRAW )
-
-            # rendering
-            self.draw_ssbo          = glGenBuffers(1)
-            self.indirect_buffer    = glGenBuffers(1)
-
-        if self.USE_BINDLESS_TEXTURES:
-            self.ubo_materials      : Renderer.MaterialUBOBindless  = Renderer.MaterialSSBOBindless()
-        else:
-            self.ubo_materials      : Renderer.MaterialUBO  = Renderer.MaterialUBO( self.general, "Materials" )
 
     @property
     def game_state( self ) -> GameState_:
@@ -676,250 +619,7 @@ class Renderer:
     #
     # UBO / SSBO
     #
-    class MaterialSSBOBindless:
-        MAX_MATERIALS = 2096
-        # std430 layout: 5 uint64_t, 1 int, 1 uint padding = 48 bytes per material
-        STRUCT_LAYOUT = struct.Struct("QQQQQiI")
 
-        class Material(TypedDict):
-            albedo          : int
-            normal          : int
-            phyiscal        : int
-            emissive        : int
-            opacity         : int
-            hasNormalMap    : int
-
-        def __init__( self ):
-            self._dirty = True
-
-            self.data = bytearray()
-
-            self.ubo = glGenBuffers(1)
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo )
-
-            total_size = self.MAX_MATERIALS * self.STRUCT_LAYOUT.size
-            glBufferData( GL_SHADER_STORAGE_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, 0 )
-
-        def update(self, materials: list[dict]):
-            num_materials = min(len(materials), self.MAX_MATERIALS)
-            self.data = bytearray()
-
-            # u_materials
-            for mat in materials[:num_materials]:
-                self.data += self.STRUCT_LAYOUT.pack(
-                    mat["albedo"],
-                    mat["normal"],
-                    mat["phyiscal"],
-                    mat["emissive"],
-                    mat["opacity"],
-                    mat.get("hasNormalMap", 0),
-                    0  # padding
-                )
-
-            # fill empty materials
-            empty_count = self.MAX_MATERIALS - num_materials
-            if empty_count:
-                empty = self.STRUCT_LAYOUT.pack( 0, 0, 0, 0, 0, 0, 0 )
-                self.data += empty * empty_count
-
-            self._dirty = False
-
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo )
-            glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, len(self.data), self.data )
-
-        def bind( self, binding : int = 0 ):
-            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, binding, self.ubo )
-
-    class MaterialUBO:
-        MAX_MATERIALS = 2096
-
-        # std140 layout: 1 vec4 = 16 bytes per material
-        STRUCT_LAYOUT = struct.Struct( b"4f" )
-
-        class Material(TypedDict):
-            albedo          : int   # skipped in non-bindless
-            normal          : int   # skipped in non-bindless
-            phyiscal        : int   # skipped in non-bindless
-            emissive        : int   # skipped in non-bindless
-            opacity         : int   # skipped in non-bindless
-            hasNormalMap    : int
-
-        def __init__(self, 
-                     shader : Shader, 
-                     block_name     : str ="Material"
-            ):
-            self._dirty : bool = True
-
-            self.data = bytearray()
-
-            # support older openGL versions (sub 4.2):
-            self.binding = 1
-            self.block_index = glGetUniformBlockIndex( shader.program, block_name )
-            if self.block_index == GL_INVALID_INDEX:
-                raise RuntimeError( f"Uniform block [{block_name}] not found in shader." )
-            glUniformBlockBinding( shader.program, self.block_index, self.binding )
-
-            # create UBO
-            self.ubo = glGenBuffers(1)
-            glBindBuffer( GL_UNIFORM_BUFFER, self.ubo )
-
-            # MAX_MATERIALS * 16 bytes
-            total_size = self.MAX_MATERIALS * self.STRUCT_LAYOUT.size
-            glBufferData( GL_UNIFORM_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
-            glBindBuffer( GL_UNIFORM_BUFFER, 0 )
-
-        def update( self, materials ):
-            num_materials = min(len(materials), self.MAX_MATERIALS)
-
-            self.data = bytearray()
-
-            # u_materials
-            for mat in materials[:num_materials]:
-
-                self.data += self.STRUCT_LAYOUT.pack(
-                    mat["hasNormalMap"], 0.0, 0.0, 0.0
-                )
-
-            # fill empty materials
-            empty_count = self.MAX_MATERIALS - num_materials
-            if empty_count:
-                empty = self.STRUCT_LAYOUT.pack(
-                    0, 0, 0, 0, # vec4(origin.xyz + radius)
-                )
-                self.data += empty * empty_count
-
-            glBindBuffer( GL_UNIFORM_BUFFER, self.ubo )
-            glBufferSubData( GL_UNIFORM_BUFFER, 0, len(self.data), self.data )
-
-            self._dirty = False
-
-        def bind( self, binding : int = 0 ):
-            glBindBufferBase( GL_UNIFORM_BUFFER, binding, self.ubo )
-
-    class LightUBO:
-        MAX_LIGHTS = 64
-
-        # std140 layout:
-        # vec4(origin.xyz + radius) + vec4(color.xyzw) + vec3(rotation + pad0) = 48 bytes
-        LIGHT_STRUCT = struct.Struct( b"4f 4f 4f" )
-
-        class Light(TypedDict):
-            origin      : list[float]
-            rotation    : list[float]
-            color       : list[float]
-            radius      : int
-            intensity   : float
-            t           : int # gameObjects.attachables.Light.Type_
-
-        def __init__(self, 
-                     shader : Shader, 
-                     block_name     : str ="Lights"
-            ):
-            self.data = bytearray()
-
-            # support older openGL versions (sub 4.2):
-            self.binding = 0
-            self.block_index = glGetUniformBlockIndex( shader.program, block_name )
-            if self.block_index == GL_INVALID_INDEX:
-                raise RuntimeError( f"Uniform block [{block_name}] not found in shader." )
-            glUniformBlockBinding( shader.program, self.block_index, self.binding )
-
-            # create UBO
-            self.ubo = glGenBuffers(1)
-            glBindBuffer( GL_UNIFORM_BUFFER, self.ubo )
-
-            # (u_num_lights 4b + 12bpad = 16 bytes) + 32 * 64 bytes
-            total_size = 16 + self.MAX_LIGHTS * self.LIGHT_STRUCT.size
-            glBufferData( GL_UNIFORM_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
-            glBindBuffer( GL_UNIFORM_BUFFER, 0 )
-
-        def update( self, lights ):
-            num_lights = min(len(lights), self.MAX_LIGHTS)
-
-            self.data = bytearray()
-
-            # u_num_lights
-            self.data += struct.pack("I 3I", num_lights, 0, 0, 0)
-
-            # u_lights
-            for light in lights[:num_lights]:
-                ox, oy, oz  = light["origin"]
-                cx, cy, cz  = light["color"]
-                rx, ry, rz  = light["rotation"]
-
-                self.data += self.LIGHT_STRUCT.pack(
-                    ox, oy, oz, light["radius"],    # vec4(origin.xyz + radius)
-                    cx, cy, cz, int(light["t"]),    # vec4(color.xyz + t(type))
-                    rx, ry, rz, light["intensity"], # vec4(rotation.xyz + intensity)
-                )
-
-            # fill empty lights
-            empty_count = self.MAX_LIGHTS - num_lights
-            if empty_count:
-                empty = self.LIGHT_STRUCT.pack(
-                    0, 0, 0, 0, # vec4(origin.xyz + radius)
-                    0, 0, 0, 0,  # vec4(color + type)
-                    0, 0, 0, 0  # vec4(rotation + intensiry)
-                )
-                self.data += empty * empty_count
-
-            glBindBuffer(GL_UNIFORM_BUFFER, self.ubo)
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, len(self.data), self.data)
-
-        def bind( self, binding : int = 0 ):
-            glBindBufferBase( GL_UNIFORM_BUFFER, binding, self.ubo )
-   
-    def _upload_material_ubo( self ) -> None:
-        """Build a UBO of materials and upload to GPU, rebuild when material list is marked dirty"""
-        if self.ubo_materials._dirty:
-            materials : list[Renderer.MaterialUBO.Material] = []
-
-            for i, mat in enumerate(self.context.materials.materials):
-                materials.append( Renderer.MaterialUBO.Material(
-                    # bindless
-                    albedo          = self.context.images.texture_to_bindless[ mat.get( "albedo",     self.context.images.defaultImage)     ],       
-                    normal          = self.context.images.texture_to_bindless[ mat.get( "normal",     self.context.images.defaultNormal)    ],       
-                    phyiscal        = self.context.images.texture_to_bindless[ mat.get( "phyiscal",   self.context.images.defaultRMO)       ],       
-                    emissive        = self.context.images.texture_to_bindless[ mat.get( "emissive",   self.context.images.blackImage)       ],       
-                    opacity         = self.context.images.texture_to_bindless[ mat.get( "opacity",    self.context.images.whiteImage)       ],
-                        
-                    # both bindless and non-bindless paths
-                    hasNormalMap    = mat.get( "hasNormalMap", 0 ),
-                )
-            )
-
-            self.ubo_materials.update( materials )
-
-    def _upload_lights_ubo( self, sun : "GameObject" ) -> None:
-        """Build a UBO of lights, rebuilds every frame (currently)
-        
-        :param sun: The sun GameObject, light is excluded from UBO
-        :type sun: GameObject
-        """
-        lights : list[Renderer.LightUBO.Light] = []
-
-        for uuid in self.context.world.lights.keys():
-            obj : "GameObject" = self.context.world.gameObjects[uuid]
-
-            if not obj.hierachyActive() or obj is sun:
-                continue
-
-            if not self.game_runtime and not obj.hierachyVisible():
-                continue
-
-            lights.append( Renderer.LightUBO.Light(
-                origin      = obj.transform.position,
-                rotation    = obj.transform.rotation,
-
-
-                color       = obj.light.light_color,
-                radius      = obj.light.radius,
-                intensity   = obj.light.intensity,
-                t           = obj.light.light_type
-            ) )
-
-        self.ubo_lights.update( lights )
     
     #
     # editor visuals
@@ -1133,6 +833,7 @@ class Renderer:
         #glEnd()
         #
         #glLineWidth(1.0)
+    
     #
     # projection
     #
@@ -1335,7 +1036,7 @@ class Renderer:
     # draw list
     #
     def addDrawItem( self, model_index : int, mesh_index : int, world_matrix : Matrix44, uuid ):
-        self.draw_list.append( Renderer.DrawItem( model_index, mesh_index, world_matrix, uuid ) )
+        self.draw_list.append( DrawItem( model_index, mesh_index, world_matrix, uuid ) )
 
     #
     # non-indirect (simple)
@@ -1379,140 +1080,14 @@ class Renderer:
             That way a GPU compute shader can compute the final model matrix for each gameObject
 
         """
-        if model_index not in self.comp_meshnode_matrices_nested:
-            self.comp_meshnode_matrices_nested[model_index] = []
+        if model_index not in self.ubo.comp_meshnode_matrices_nested:
+            self.ubo.comp_meshnode_matrices_nested[model_index] = []
 
         # add to the nested list, this is flattened and mapped when uploading to SSBO
-        self.comp_meshnode_matrices_nested[model_index].append( 
-            Renderer.MatrixItem( mesh_index, matrix ) 
+        self.ubo.comp_meshnode_matrices_nested[model_index].append( 
+            MatrixItem( mesh_index, matrix ) 
         )
     
-    def _update_comp_meshnode_matrices_ssbo( self ):
-        """
-        Static flattened SSBO containing all local model matrices for each model:node(mesh)
-        Updates only occur, when additional model(s) are loaded
-        """
-        if not self.comp_meshnode_matrices_dirty:
-            return
-
-        if not self.USE_INDIRECT:
-            self.comp_meshnode_matrices_dirty = False
-            return
-
-        # clear the mapping table, it is rebuilt.
-        self.comp_meshnode_matrices_map = {}       # (model_index, mesh_index) -> offset
-
-        num_matrices = len(self.context.world.transforms)
-        matrices = np.empty((num_matrices, 16), dtype=np.float32)  # 16 floats per mat4 : 64 bytes
-
-        for offset, (model_index, items) in enumerate(self.comp_meshnode_matrices_nested.items()):
-            for item in items:
-                matrices[offset] = item.matrix.flatten()
-            
-                # create a map
-                self.comp_meshnode_matrices_map[(model_index, item.mesh_index)] = offset
-
-        # upload to SSBO
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.node_matrix_ssbo )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, matrices.nbytes, matrices )
-
-        self.comp_meshnode_matrices_dirty = False   
-
-    def _upload_comp_gameobject_matrices_map_ssbo( self ):
-        """Build a SSBO with all gameObjects world matrices
-        
-            Still happens per frame.
-        
-        """
-        # clear the mapping table, it is rebuilt.
-        self.comp_gameobject_matrices_map = {}
-
-        num_matrices = len(self.context.world.transforms)
-        matrices = np.empty((num_matrices, 16), dtype=np.float32)  # 16 floats per mat4 : 64 bytes
-
-        for offset, (uuid, transform) in enumerate(self.context.world.transforms.items()):
-            matrices[offset] = transform.world_model_matrix.flatten()
-
-            # create a map
-            self.comp_gameobject_matrices_map[uuid] = offset
-
-        # upload to SSBO
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.transform_ssbo )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, matrices.nbytes, matrices )
-
-    def _build_batched_draw_list( self, _draw_list : list[DrawItem] ) -> dict[tuple[int, int], list[DrawItem]]:
-        batches = {}
-
-        for item in _draw_list:
-            key = (item.model_index, item.mesh_index)
-
-            if key not in batches:
-                batches[key] = []
-
-            batches[key].append(item)
-
-        return batches, len(_draw_list)
-
-    def _upload_draw_blocks_ssbo( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int ):
-        draw_blocks = (DrawBlock * num_draw_items)()
-
-        i = 0
-        for (model_index, mesh_index), batch in batches.items():
-            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
-
-            for item in batch:
-                mesh_id = (model_index, item.mesh_index)
-
-                if item.uuid:
-                    draw_blocks[i].model[:]             = np.zeros((16,), dtype=np.float32)
-                    draw_blocks[i].meshNodeMatrixId     = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
-                    draw_blocks[i].gameObjectMatrixId   = int(self.comp_gameobject_matrices_map[item.uuid])
-                else:
-                    draw_blocks[i].model[:]             = np.asarray(item.matrix, dtype=np.float32).reshape(16)
-                
-                draw_blocks[i].material             = mesh["material"]
-                i += 1
-
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.draw_ssbo )
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER,
-            ctypes.sizeof(draw_blocks),
-            draw_blocks,
-            GL_DYNAMIC_DRAW
-        )
-
-    def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
-        commands = (DrawElementsIndirectCommand * num_draw_items)()
-
-        draw_offset = 0
-        i = 0 
-        draw_ranges : dict[(int, int), (int, int)] = {}
-
-        for (model_index, mesh_index), batch in batches.items():
-            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
-            start_offset = i
-
-            for j in range(len(batch)):
-                commands[i].count = mesh["num_indices"]
-                commands[i].instanceCount = 1
-                commands[i].firstIndex = 0
-                commands[i].baseVertex = 0
-                commands[i].baseInstance = draw_offset + j
-                i += 1
-
-            draw_ranges[(model_index, mesh_index)] = (start_offset, len(batch))
-            draw_offset += len(batch)
-
-        glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer )
-        glBufferData(
-            GL_DRAW_INDIRECT_BUFFER,
-            ctypes.sizeof(commands),
-            commands,
-            GL_DYNAMIC_DRAW
-        )
-
-        return draw_ranges
-
     #
     # Renderpasses
     #
@@ -1523,7 +1098,7 @@ class Renderer:
         self.use_shader( self.general )
 
         if self.USE_INDIRECT:
-            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo )
+            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.ubo.draw_ssbo )
 
             # shadowmap
             glUniform1i( self.shader.uniforms['ushadowmapEnabled'], int(_scene["shadowmap_enabled"]) )
@@ -1563,18 +1138,18 @@ class Renderer:
         glUniform4f( self.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )
 
         # lights
-        self._upload_lights_ubo( _sun )
-        self.ubo_lights.bind( binding = 0 )  
+        self.ubo._upload_lights_ubo( _sun )
+        self.ubo.ubo_lights.bind( binding = 0 )  
 
         # materials
-        self._upload_material_ubo()
-        self.ubo_materials.bind( binding = 1 )
+        self.ubo._upload_material_ubo()
+        self.ubo.ubo_materials.bind( binding = 1 )
 
     def submitMainRenderpassIndirect( self, draw_ranges : dict[(int, int), (int, int)] ) -> None:
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
 
-        glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.indirect_buffer )
+        glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.ubo.indirect_ssbo )
 
         for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
@@ -1666,11 +1241,10 @@ class Renderer:
         glUniform1f( self.shader.uniforms['ufogDensity'], _scene["fog_density"] )
         glUniform1f( self.shader.uniforms['ufogHeight'], _scene["fog_height"] )
         glUniform1f( self.shader.uniforms['ufogFalloff'], _scene["fog_falloff"] )
-
         glUniform1i( self.shader.uniforms['ufogLightsContrib'], int(_scene["fog_lights_contrib"]) )
 
         # lights
-        self.ubo_lights.bind( binding = 0 )  
+        self.ubo.ubo_lights.bind( binding = 0 )  
 
         glDisable(GL_DEPTH_TEST)
 
@@ -1712,14 +1286,14 @@ class Renderer:
         self._runPhysics()
 
         # update static model:node(mesh) matrices when dirty
-        self._update_comp_meshnode_matrices_ssbo()
+        self.ubo._update_comp_meshnode_matrices_ssbo()
 
     def _dispatch_compute( self, num_draw_items ) -> None:
         self.use_shader( self.compute )
 
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.draw_ssbo )
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, self.node_matrix_ssbo )
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.transform_ssbo )
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.ubo.draw_ssbo )
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, self.ubo.node_matrix_ssbo )
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.ubo.transform_ssbo )
 
         # number of work items = number of draw blocks
         # local_size_x = 64 -> ceil(num_draw_items / 64)
@@ -1744,19 +1318,19 @@ class Renderer:
         # batch meshes (indirect rendering)
         if self.USE_INDIRECT:
             # upload transforms to SSBO (for compute shader)
-            self._upload_comp_gameobject_matrices_map_ssbo()
+            self.ubo._upload_comp_gameobject_matrices_map_ssbo()
 
             # sort by model and mesh index, constructing a batched VAO list
-            batches, num_draw_items = self._build_batched_draw_list( self.draw_list )
+            batches, num_draw_items = self.ubo._build_batched_draw_list( self.draw_list )
 
             # upload per draw/instance data blocks to a shared SSBO eg: model_matrix, material_id
-            self._upload_draw_blocks_ssbo( batches, num_draw_items )
+            self.ubo._upload_draw_blocks_ssbo( batches, num_draw_items )
 
             # compute model matrices on the GPU
             self._dispatch_compute( num_draw_items )
 
             # build a shared indirect buffer and draw ranges
-            draw_ranges = self._upload_indirect_buffer( batches, num_draw_items )
+            draw_ranges = self.ubo._upload_indirect_buffer( batches, num_draw_items )
 
             # shadowmap renderpass
             if _scene["shadowmap_enabled"]:
