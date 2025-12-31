@@ -33,16 +33,29 @@ class Settings:
         self.default_scene          = Path(f"{self.engineAssets}\\scenes\engine_default{self.SCENE_EXTENSION}")
         self.default_environment    = f"{self.engineAssets}\\cubemaps\\day"
 
+        # scene general
         self.default_sky_type        : int          = 0 # procedural
         self.default_light_color     : list[float]  = [0.0, 0.0, 0.0]
         self.default_ambient_color   : list[float]  = [0.0, 0.0, 0.0]
 
+        # procedural sky
         self.default_procedural_sky_color       : list[float]  = [0.4, 0.6, 1.0]
         self.default_procedural_horizon_color   : list[float]  = [0.9, 0.9, 1.0]
         self.default_procedural_ground_color    : list[float]  = [0.2, 0.25, 0.3]
         self.default_procedural_sunset_color    : list[float]  = [0.5, 0., 0.3]
         self.default_procedural_night_color     : list[float]  = [0.3, 0.2, 0.3]
         self.default_procedural_night_brightness : float = 0.05
+
+        # fog
+        self.default_fog_enabled                : bool = False
+        self.default_fog_light_contrib          : int = 0
+        self.default_fog_color                  : list[float]  = [0.737, 0.847, 0.918]
+        self.default_fog_density                : float = 0.100
+        self.default_fog_height                 : float = 1.0
+        self.default_fog_falloff                : float = 0.100
+
+        # shadowmap
+        self.default_sm_enabled                 : bool = False
 
         # grid parameters
         self.grid_color     = ( 0.83, 0.74, 94.0, 1.0 )

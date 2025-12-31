@@ -630,7 +630,7 @@ class GameObject( Context, Transform ):
         if not is_visible:
             return
 
-        self.models.draw( self.model, self.transform._getModelMatrix() ) 
+        self.models.draw( self.model, self.transform._getModelMatrix(), uuid=self.uuid ) 
 
     def onRenderColliders( self ) -> None:
         # debug draw collision geometry

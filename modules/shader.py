@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from main import EmberEngine
 
 class Shader:
-    def __init__( self, context, uid : str, templated : bool = False ):
+    def __init__( self, context, uid : str, templated : bool = False, compute : bool = False ):
         """Load and parse GLSL shaders from .vert and .frag files
         
         :param context: This is the main context of the application
@@ -32,15 +32,24 @@ class Shader:
 
         # fix path to use root..
         basepath = self.settings.shader_path
-        vert_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.vert").getContent())
-        frag_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.frag").getContent())
 
         self.templated = templated
-        self.program = self.load_program( vert_shader, frag_shader )
-        
+        self.compute = compute
         self.uniforms = {}
-        self.parse_uniforms( vert_shader )
-        self.parse_uniforms( frag_shader )
+
+        if compute:
+            comp_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.comp").getContent())
+            self.program = self.load_compute( comp_shader )
+
+            self.parse_uniforms( comp_shader )
+
+        else:
+            vert_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.vert").getContent())
+            frag_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.frag").getContent())
+            self.program = self.load_program( vert_shader, frag_shader )
+        
+            self.parse_uniforms( vert_shader )
+            self.parse_uniforms( frag_shader )
 
         self.bind_uniforms()
         return
@@ -79,17 +88,46 @@ class Shader:
         version = version_330
         defines : list[str] = []
 
-        if self.context.renderer.BINDLESS_TEXTURES:
+        if self.context.renderer.USE_BINDLESS_TEXTURES:
             version = version_460
-            defines.append("#define BINDLESS_TEXTURES")
+            defines.append("#define USE_BINDLESS_TEXTURES")
 
-        if self.context.renderer.INDIRECT:
+        if self.context.renderer.USE_INDIRECT:
             version = version_460
-            defines.append("#define INDIRECT")
+            defines.append("#define USE_INDIRECT")
+            defines.append("#define USE_SHADOWMAP")
 
         define_block = "\n".join(defines)
 
         return f"{version}\n{define_block}\n{src}"
+
+    def load_compute( self, in_comp : str ):
+        if self.templated:
+            in_comp = self.inject_version_and_defines( in_comp )
+
+        comp = self.load_shader( GL_COMPUTE_SHADER, in_comp )
+        if comp == 0:
+            return 0
+
+        program = glCreateProgram()
+
+        if program == 0:
+            return 0
+
+        glAttachShader( program, comp )
+        self.printOpenGLError()
+
+        glLinkProgram( program )
+
+        if(GL_TRUE!=glGetProgramiv(program, GL_LINK_STATUS)):
+            err =  glGetShaderInfoLog(comp) 
+            raise Exception(err)          
+        self.printOpenGLError()
+        if glGetProgramiv( program, GL_LINK_STATUS, None ) == GL_FALSE:
+            glDeleteProgram( program )
+            return 0
+
+        return program
 
     def load_program( self, in_vert : str, in_frag : str ) -> int:
         """Build and create the shader program from .vert and .frag shader

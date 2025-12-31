@@ -36,7 +36,7 @@ class Images( Context ):
         """Create a bindless handle for a texture an map it"""
         handle = 0
 
-        if self.context.renderer.BINDLESS_TEXTURES:
+        if self.context.renderer.USE_BINDLESS_TEXTURES:
             handle = glGetTextureHandleARB(texture_id)
             glMakeTextureHandleResidentARB(handle)
             #self.bindless_handles.append( handle )

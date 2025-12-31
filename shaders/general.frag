@@ -1,6 +1,6 @@
 // version added programmicly
 
-#ifdef BINDLESS_TEXTURES
+#ifdef USE_BINDLESS_TEXTURES
 #extension GL_ARB_bindless_texture : enable
 #extension GL_NV_uniform_buffer_std430_layout : enable
 #extension GL_NV_gpu_shader5 : enable
@@ -12,6 +12,10 @@ precision highp float;
 
 uniform samplerCube sEnvironment;
 uniform sampler2D sBRDF;
+#ifdef USE_SHADOWMAP
+uniform sampler2D sShadowMap;
+uniform int ushadowmapEnabled;
+#endif
 
 in vec2 vTexCoord;
 in float var_roughnessOverride;
@@ -22,11 +26,14 @@ in vec4 var_BiTangent;
 in vec4 var_Normal;
 in vec4 var_LightDir;
 in vec4 var_ViewDir;
+#ifdef USE_SHADOWMAP
+	in vec4 var_LightSpacePos;
+#endif
 
 in vec4 var_LightColor;
 in vec4 var_AmbientColor;
 
-in int var_material_index;
+flat in int var_material_index;
 
 out vec4 out_color;
 
@@ -44,13 +51,17 @@ struct Light
 	vec4	rotation;
 };
 
+#ifdef USE_INDIRECT
+layout( std140, binding = 0  ) uniform Lights
+#else
 layout( std140 ) uniform Lights
+#endif
 {
 	int u_num_lights;
 	Light u_lights[64];
 };
 
-#ifdef BINDLESS_TEXTURES
+#ifdef USE_BINDLESS_TEXTURES
 	struct Material
 	{
 		uint64_t sTexture;
@@ -62,7 +73,7 @@ layout( std140 ) uniform Lights
 		uint     padding;      // pad to 16 bytes alignment (std430 rules)
 	};
 
-	layout( std430, binding=1 ) buffer Materials
+	layout( std430, binding = 1 ) buffer Materials
 	{
 		Material u_materials[2096];
 	};
@@ -88,11 +99,11 @@ layout( std140 ) uniform Lights
 		return texture( s, uv );
 	}
 #else
-	uniform sampler2D sTexture;
-	uniform sampler2D sNormal;
-	uniform sampler2D sPhysical;
-	uniform sampler2D sEmissive;
-	uniform sampler2D sOpacity;
+uniform sampler2D sTexture;
+uniform sampler2D sNormal;
+uniform sampler2D sPhysical;
+uniform sampler2D sEmissive;
+uniform sampler2D sOpacity;
 
 	struct Material
 	{
@@ -167,7 +178,7 @@ vec3 CalcSpecular( in vec3 specular, in float NH, in float NL,
 
 vec3 CalcNormal( in Material mat, in vec3 vertexNormal, in vec2 frag_tex_coord )
 {
-#ifdef BINDLESS_TEXTURES
+#ifdef USE_BINDLESS_TEXTURES
 	int hasNormalMap = mat.hasNormalMap;
 #else
 	int hasNormalMap = int( mat.data_0[0] );
@@ -276,9 +287,22 @@ vec3 CalcDynamicLightContribution(
 	return outColor;
 }
 
+#ifdef USE_SHADOWMAP
+	float ComputeShadow(in vec4 lightSpacePos)
+	{
+		vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+		projCoords = projCoords * 0.5 + 0.5;
+
+		float closestDepth = texture(sShadowMap, projCoords.xy).r;
+		float currentDepth = projCoords.z;
+
+		return (currentDepth > closestDepth) ? 0.0 : 1.0;
+	}
+#endif
+
 void main()
 {
-	Material mat = u_materials[0];
+	Material mat = u_materials[var_material_index];
 
 	vec4 diffuse;
 	float attenuation;
@@ -350,7 +374,19 @@ void main()
 
 	vec3 reflectance = Fd + Fs;
 
+#ifdef USE_SHADOWMAP
+	float shadow = 1.0;
+
+	if (ushadowmapEnabled != 0) {
+		shadow = ComputeShadow( var_LightSpacePos );
+	}
+
+	out_color.rgb  = lightColor * reflectance * ( attenuation * NL * shadow );
+#else
+	const float shadow = 1.0;
 	out_color.rgb  = lightColor * reflectance * ( attenuation * NL );
+#endif
+
 	out_color.rgb += ambientColor * diffuse.rgb;
 	out_color.rgb += emissiveColor;
 
@@ -393,6 +429,8 @@ void main()
 			case 24 : out_color.rgb = vec3(opacity); break;
 			case 25 : out_color.rgb = vec3(light_contrib); break;
 			case 26 : out_color.rgb = vec3(u_ViewOrigin.xyz); break;
+			case 27 : out_color.rgb = vec3(shadow); break;
+
 		}
 	}
 

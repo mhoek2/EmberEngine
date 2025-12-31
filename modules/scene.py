@@ -45,6 +45,12 @@ class SceneManager:
         procedural_night_color      : List[float]
         procedural_night_brightness : float
 
+        fog_color           : List[float]
+        fog_density         : float
+        fog_density         : float
+        fog_height          : float
+        fog_falloff         : float
+
     class _GameObject(TypedDict):
         """Typedef for a gameObjects in a scene file"""
         instance    : str
@@ -483,6 +489,17 @@ class SceneManager:
         scene["procedural_night_color"]     = _scene["procedural_night_color"]
         scene["procedural_night_brightness"]     = _scene["procedural_night_brightness"]
 
+        # fog
+        scene["fog_enabled"]            = _scene["fog_enabled"]
+        scene["fog_lights_contrib"]     = _scene["fog_lights_contrib"]
+        scene["fog_color"]              = _scene["fog_color"]
+        scene["fog_density"]            = _scene["fog_density"]
+        scene["fog_height"]             = _scene["fog_height"]
+        scene["fog_falloff"]            = _scene["fog_falloff"]
+
+        # shadowmap
+        scene["shadowmap_enabled"]  = _scene["shadowmap_enabled"]
+
         _gameObjects : List[SceneManager._GameObject] = []
 
         self.saveGameObjectRecursive( 
@@ -730,13 +747,24 @@ class SceneManager:
                 scene["ambient_color"]  = scene.get("ambient_color",    self.settings.default_ambient_color )
                 scene["sky_type"]       = scene.get("sky_type",         self.settings.default_sky_type )
 
-                # procedural sky settings
-                scene["procedural_sky_color"]       = scene.get("procedural_sky_color",     self.settings.default_procedural_sky_color )
-                scene["procedural_horizon_color"]   = scene.get("procedural_horizon_color", self.settings.default_procedural_horizon_color )
-                scene["procedural_ground_color"]    = scene.get("procedural_ground_color",  self.settings.default_procedural_ground_color )
-                scene["procedural_sunset_color"]    = scene.get("procedural_sunset_color",  self.settings.default_procedural_sunset_color )
-                scene["procedural_night_color"]     = scene.get("procedural_night_color",   self.settings.default_procedural_night_color )
-                scene["procedural_night_brightness"]     = scene.get("procedural_night_brightness",   self.settings.default_procedural_night_brightness )
+                # procedural sky
+                scene["procedural_sky_color"]           = scene.get("procedural_sky_color",     self.settings.default_procedural_sky_color )
+                scene["procedural_horizon_color"]       = scene.get("procedural_horizon_color", self.settings.default_procedural_horizon_color )
+                scene["procedural_ground_color"]        = scene.get("procedural_ground_color",  self.settings.default_procedural_ground_color )
+                scene["procedural_sunset_color"]        = scene.get("procedural_sunset_color",  self.settings.default_procedural_sunset_color )
+                scene["procedural_night_color"]         = scene.get("procedural_night_color",   self.settings.default_procedural_night_color )
+                scene["procedural_night_brightness"]    = scene.get("procedural_night_brightness",   self.settings.default_procedural_night_brightness )
+                
+                # fog
+                scene["fog_enabled"]            = scene.get("fog_enabled",          self.settings.default_fog_enabled )
+                scene["fog_lights_contrib"]     = scene.get("fog_lights_contrib",   self.settings.default_fog_light_contrib )
+                scene["fog_color"]              = scene.get("fog_color",            self.settings.default_fog_color )
+                scene["fog_density"]            = scene.get("fog_density",          self.settings.default_fog_density )
+                scene["fog_height"]             = scene.get("fog_height",           self.settings.default_fog_height )
+                scene["fog_falloff"]            = scene.get("fog_falloff",          self.settings.default_fog_falloff )
+
+                # shadowmap
+                scene["shadowmap_enabled"]  = scene.get("shadowmap_enabled",      self.settings.default_sm_enabled )
 
                 if "gameObjects" in scene: 
                     self.loadGameObjectsRecursive( 
@@ -764,7 +792,7 @@ class SceneManager:
             return False
 
     def postLoadScene( self ) -> None:
-        self.context.renderer.ubo_materials._dirty = True
+        self.context.renderer.ubo.ubo_materials._dirty = True
 
     def loadDefaultScene( self ):
         """Load the default scene, meaing the engine empty scene"""

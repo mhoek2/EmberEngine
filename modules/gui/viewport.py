@@ -130,9 +130,9 @@ class Viewport( Context ):
                 size = self.renderer.viewport_size
             )
 
-        glBindTexture( GL_TEXTURE_2D, self.renderer.main_fbo["output"] )
+        glBindTexture( GL_TEXTURE_2D, self.context.renderer.output_image )
 
-        image       = imgui.ImTextureRef(self.renderer.main_fbo["output"])
+        image       = imgui.ImTextureRef( self.context.renderer.output_image )
         image_size  = imgui.ImVec2(self.renderer.viewport_size.x, (self.renderer.viewport_size.y - bias_y));
         image_uv0   = imgui.ImVec2( 0, 1 )
         image_uv1   = imgui.ImVec2( 1, 0 )

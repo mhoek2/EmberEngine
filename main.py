@@ -75,7 +75,7 @@ class EmberEngine:
         self.world      : World             = World( self )
 
         self.renderer.create_shaders()
-        self.renderer.create_buffers()
+        self.renderer.ubo.initialize()
         self.renderer.create_editor_vaos()
 
         self.roughnessOverride = -1.0
@@ -185,60 +185,6 @@ class EmberEngine:
             if obj.children:
                 self.prepare_gameObjects( obj, obj.children )
 
-    def _upload_material_ubo( self ) -> None:
-        """Build a UBO of materials and upload to GPU, rebuild when material list is marked dirty"""
-        if self.renderer.ubo_materials._dirty:
-            materials : list[Renderer.MaterialUBO.Material] = []
-
-            for i, mat in enumerate(self.materials.materials):
-                materials.append( Renderer.MaterialUBO.Material(
-                    # bindless
-                    albedo          = self.images.texture_to_bindless[ mat.get( "albedo",     self.images.defaultImage)     ],       
-                    normal          = self.images.texture_to_bindless[ mat.get( "normal",     self.images.defaultNormal)    ],       
-                    phyiscal        = self.images.texture_to_bindless[ mat.get( "phyiscal",   self.images.defaultRMO)       ],       
-                    emissive        = self.images.texture_to_bindless[ mat.get( "emissive",   self.images.blackImage)       ],       
-                    opacity         = self.images.texture_to_bindless[ mat.get( "opacity",    self.images.whiteImage)       ],
-                        
-                    # both bindless and non-bindless paths
-                    hasNormalMap    = mat.get( "hasNormalMap", 0 ),
-                )
-            )
-
-            self.renderer.ubo_materials.update( materials )
-
-        self.renderer.ubo_materials.bind()
-
-    def _upload_lights_ubo( self, sun : GameObject ) -> None:
-        """Build a UBO of lights, rebuilds every frame (currently)
-        
-        :param sun: The sun GameObject, light is excluded from UBO
-        :type sun: GameObject
-        """
-        lights : list[Renderer.LightUBO.Light] = []
-
-        for uuid in self.world.lights.keys():
-            obj : GameObject = self.world.gameObjects[uuid]
-
-            if not obj.hierachyActive() or obj is sun:
-                continue
-
-            if not self.renderer.game_runtime and not obj.hierachyVisible():
-                continue
-
-            lights.append( Renderer.LightUBO.Light(
-                origin      = obj.transform.position,
-                rotation    = obj.transform.rotation,
-
-
-                color       = obj.light.light_color,
-                radius      = obj.light.radius,
-                intensity   = obj.light.intensity,
-                t           = obj.light.light_type
-            ) )
-
-        self.renderer.ubo_lights.update( lights )
-        self.renderer.ubo_lights.bind()
-
     def run( self ) -> None: 
         """The main loop of the appliction, remains active as long as 'self.renderer.running'
         is True.
@@ -249,6 +195,9 @@ class EmberEngine:
             if not self.renderer.paused:
                 self.renderer.begin_frame()
 
+                if self.renderer.game_start:
+                    self.console.clear()
+
                 _scene = self.scene.getCurrentScene()
 
                 #
@@ -256,62 +205,11 @@ class EmberEngine:
                 #
                 self.models.model_loader_thread_flush()
 
-                #
-                # skybox
-                #
-                self.skybox.draw( _scene )
-
-                #
-                # general
-                #
-                self.renderer.use_shader( self.renderer.general )
-                # bind the projection and view  matrix beginning (until shader switch)
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.renderer.projection )
-                glUniformMatrix4fv( self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view )
-
-                # static textures
-                self.cubemaps.bind( self.environment_map, GL_TEXTURE5, "sEnvironment", 5 )
-                self.images.bind( self.cubemaps.brdf_lut, GL_TEXTURE6, "sBRDF", 6 )
-
-                # editor uniforms
-                glUniform1i( self.renderer.shader.uniforms['in_renderMode'], self.renderer.renderMode )
-                glUniform1f( self.renderer.shader.uniforms['in_roughnessOverride'], self.roughnessOverride  )
-                glUniform1f( self.renderer.shader.uniforms['in_metallicOverride'], self.metallicOverride )
-
-                #
-                # setup scene
-                #
-                # camera origin
-                glUniform4f( self.renderer.shader.uniforms['u_ViewOrigin'], self.camera.camera_pos[0], self.camera.camera_pos[1], self.camera.camera_pos[2], 0.0 )
-
-                # sun direction, position and color
-                _sun : GameObject = self.scene.getSun()
-                _sun_active = _sun and _sun.hierachyActive()
-
-                if not self.renderer.game_runtime:
-                    _sun_active = _sun_active and _sun.hierachyVisible()
-
-                light_dir   = _sun.transform.local_position if _sun_active else self.settings.default_light_color
-                light_color = _sun.light.light_color        if _sun_active else self.settings.default_ambient_color
-
-                glUniform4f( self.renderer.shader.uniforms['in_lightdir'], light_dir[0], light_dir[1], light_dir[2], 0.0 )
-                glUniform4f( self.renderer.shader.uniforms['in_lightcolor'], light_color[0], light_color[1], light_color[2], 1.0 )
-                glUniform4f( self.renderer.shader.uniforms['in_ambientcolor'], _scene["ambient_color"][0], _scene["ambient_color"][1], _scene["ambient_color"][2], 1.0 )
-
-                # lights
-                self._upload_lights_ubo( _sun )
-
-                # materials
-                self._upload_material_ubo()
-
-                if self.renderer.game_start:
-                    self.console.clear()
-
                 # triggers update systems in the registered gameObjects
                 # handles onEnable, onDisable, onStart, onUpdate and _dirty flags
                 self.prepare_gameObjects( None, self.world.gameObjects )
 
-                # collect active model meshes (build the draw list)
+                # collect active model meshes (build the draw list, unsorted/batched)
                 for uuid in self.world.models.keys():
                     obj : GameObject = self.world.gameObjects[uuid]
 
@@ -321,7 +219,7 @@ class EmberEngine:
                     obj.onRender()
 
                 # dispatch world draw calls
-                self.renderer.dispatch_drawcalls()
+                self.renderer.dispatch_drawcalls( _scene )
 
                 # dispatch editor visuals
                 # eg: grid, axis, colliders (instant drawing, not indirect)
