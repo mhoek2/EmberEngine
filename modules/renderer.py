@@ -304,7 +304,7 @@ class Renderer:
         # renderer configuration
         # OpenGL ver. < 4.6.0 will fallback to simple rendering and GLSL 330 core features for backwards compat.
         supports_gl_460 = (major, minor) >= (4, 6)
-        self.USE_BINDLESS_TEXTURES  : bool = False 
+        self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 
         self.USE_INDIRECT           : bool = supports_gl_460  
         
         if supports_gl_460:
@@ -1085,7 +1085,7 @@ class Renderer:
 
         # add to the nested list, this is flattened and mapped when uploading to SSBO
         self.ubo.comp_meshnode_matrices_nested[model_index].append( 
-            MatrixItem( mesh_index, matrix ) 
+            MatrixItem( mesh_index, np.array(matrix, dtype=np.float32) ) 
         )
     
     #
@@ -1098,7 +1098,7 @@ class Renderer:
         self.use_shader( self.general )
 
         if self.USE_INDIRECT:
-            glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.ubo.draw_ssbo )
+            self.ubo.draw_ssbo.bind_base( binding = 0 )
 
             # shadowmap
             glUniform1i( self.shader.uniforms['ushadowmapEnabled'], int(_scene["shadowmap_enabled"]) )
@@ -1149,7 +1149,7 @@ class Renderer:
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
 
-        glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.ubo.indirect_ssbo )
+        self.ubo.indirect_ssbo.bind_buffer()
 
         for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
@@ -1291,9 +1291,9 @@ class Renderer:
     def _dispatch_compute( self, num_draw_items ) -> None:
         self.use_shader( self.compute )
 
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 0, self.ubo.draw_ssbo )
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 1, self.ubo.comp_meshnode_matrices_ssbo )
-        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.ubo.comp_gameobject_matrices_ssbo )
+        self.ubo.draw_ssbo.bind_base( binding = 0 )
+        self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
+        self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
 
         # number of work items = number of draw blocks
         # local_size_x = 64 -> ceil(num_draw_items / 64)

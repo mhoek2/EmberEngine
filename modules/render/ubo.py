@@ -60,6 +60,45 @@ class UBO:
         self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {}  # not flattened
         self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}        # (model_index, mesh_index) -> offset
 
+
+    class GpuBuffer:
+        def __init__( self, max_elements, element_type, target ):
+            self.max_elements   = max_elements
+            self.element_type   = element_type
+            self.target         = target
+
+            if isinstance(element_type, int):
+                # flat float array
+                self.element_size = element_type      # number of floats per element
+                self.buffer = (ctypes.c_float * (max_elements * self.element_size))()
+                self.is_struct = False
+            else:
+                # structured type
+                self.element_size = ctypes.sizeof(element_type)  # bytes per element
+                self.buffer = (element_type * max_elements)()
+                self.is_struct = True
+
+            self.ssbo           = glGenBuffers(1)
+
+            glBindBuffer( target, self.ssbo )
+            glBufferData( target, ctypes.sizeof(self.buffer), None, GL_DYNAMIC_DRAW )
+
+        def upload( self, num_elements ):
+            glBindBuffer( self.target, self.ssbo )
+
+            if self.is_struct:
+                size_bytes = num_elements * self.element_size
+            else:
+                size_bytes = num_elements * self.element_size * 4  # float32 = 4 bytes
+
+            glBufferSubData(self.target, 0, size_bytes, self.buffer)
+            
+        def bind_buffer( self, binding : int = 0 ):
+            glBindBuffer( self.target, self.ssbo )
+
+        def bind_base( self, binding : int = 0 ):
+            glBindBufferBase( self.target, binding, self.ssbo )
+
     def initialize( self ):
         # context
         self.renderer   : 'Renderer' = self.context.renderer
@@ -77,32 +116,38 @@ class UBO:
         # indirect
         #
         if self.renderer.USE_INDIRECT:
-            # compute
             MAX_MATRICES = 10000
+            MAX_DRAWS = 10000
 
-            self.comp_meshnode_matrices_ssbo        = glGenBuffers(1)
-            self.comp_meshnode_matrices_ssbo_buffer = (ctypes.c_float * (MAX_MATRICES * 16))()  # flat mat4 array
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_meshnode_matrices_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.comp_meshnode_matrices_ssbo_buffer), None, GL_DYNAMIC_DRAW )
+            # compute
+            self.comp_meshnode_matrices_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                 max_elements   = MAX_MATRICES,
+                 element_type   = 16, # 64 bytes mat4 item buffer
+                 target         = GL_SHADER_STORAGE_BUFFER
+            )
 
-            self.comp_gameobject_matrices_ssbo          = glGenBuffers(1)
-            self.comp_gameobject_matrices_ssbo_buffer   = (ctypes.c_float * (MAX_MATRICES * 16))()  # flat mat4 array
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_gameobject_matrices_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.comp_gameobject_matrices_ssbo_buffer), None, GL_DYNAMIC_DRAW )
+            self.comp_gameobject_matrices_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                 max_elements   = MAX_MATRICES,
+                 element_type   = 16, # 64 bytes mat4 item buffer
+                 target         = GL_SHADER_STORAGE_BUFFER
+            )
 
-            # rendering
-            self.draw_ssbo          = glGenBuffers(1)
-            self.draw_ssbo_buffer   = (DrawBlock * 10000)()
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.draw_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.draw_ssbo_buffer), None, GL_DYNAMIC_DRAW )
+            # render
+            self.draw_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                 max_elements   = MAX_DRAWS,
+                 element_type   = DrawBlock,
+                 target         = GL_SHADER_STORAGE_BUFFER
+            )
 
-            self.indirect_ssbo          = glGenBuffers(1)
-            self.indirect_ssbo_buffer   = (DrawElementsIndirectCommand * 10000)()
-            glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.indirect_ssbo )
-            glBufferData( GL_SHADER_STORAGE_BUFFER, ctypes.sizeof(self.indirect_ssbo_buffer), None, GL_DYNAMIC_DRAW )
+            self.indirect_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                 max_elements   = MAX_DRAWS,
+                 element_type   = DrawElementsIndirectCommand,
+                 target         = GL_DRAW_INDIRECT_BUFFER
+            )
 
     #
-    # general
+    # general 330 compat, 
+    # TODO: Maybe merge with GpuBuffer eventually?
     #
     class MaterialSSBOBindless:
         MAX_MATERIALS = 2096
@@ -370,15 +415,14 @@ class UBO:
         offset = 0
         for model_index, items in self.comp_meshnode_matrices_nested.items():
             for item in items:
-                self.comp_meshnode_matrices_ssbo_buffer[offset*16:(offset+1)*16] = item.matrix.flatten()
+                self.comp_meshnode_matrices_ssbo.buffer[offset*16:(offset+1)*16] = item.matrix.flatten()
             
                 # create a map
                 self.comp_meshnode_matrices_map[(model_index, item.mesh_index)] = offset
                 offset += 1
 
         # upload to SSBO
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_meshnode_matrices_ssbo )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, offset*16*4, self.comp_meshnode_matrices_ssbo_buffer )
+        self.comp_meshnode_matrices_ssbo.upload( offset )
 
         self.comp_meshnode_matrices_dirty = False   
 
@@ -393,17 +437,17 @@ class UBO:
 
         offset = 0
         for uuid, transform in self.context.world.transforms.items():
-            self.comp_gameobject_matrices_ssbo_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
+            self.comp_gameobject_matrices_ssbo.buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
 
             # create a map
             self.comp_gameobject_matrices_map[uuid] = offset
             offset += 1
 
         # upload to SSBO
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.comp_gameobject_matrices_ssbo )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, offset*16*4, self.comp_gameobject_matrices_ssbo_buffer )
+        self.comp_gameobject_matrices_ssbo.upload( offset )
 
     def _build_batched_draw_list( self, _draw_list : list[DrawItem] ) -> dict[tuple[int, int], list[DrawItem]]:
+        """Convert draw_list to a grouped list per model:mesh(node) used for indirect batching"""
         batches = {}
 
         for item in _draw_list:
@@ -417,6 +461,12 @@ class UBO:
         return batches, len(_draw_list)
 
     def _upload_draw_blocks_ssbo( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int ):
+        """
+        Create the per draw ssbo used for indirect rendering
+        For indirect rendering, this holds the mesh and gameobject indexes, and material index.
+
+        Modelmatrix is empty and filled on the GPU compute pass when compute is enabled
+        """
         i = 0
         for (model_index, mesh_index), batch in batches.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
@@ -425,19 +475,23 @@ class UBO:
                 mesh_id = (model_index, item.mesh_index)
 
                 if item.uuid:
-                    self.draw_ssbo_buffer[i].model[:]             = np.zeros((16,), dtype=np.float32)
-                    self.draw_ssbo_buffer[i].meshNodeMatrixId     = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
-                    self.draw_ssbo_buffer[i].gameObjectMatrixId   = int(self.comp_gameobject_matrices_map[item.uuid])
+                    #self.draw_ssbo.buffer[i].model[:]             = np.zeros((16,), dtype=np.float32)
+                    self.draw_ssbo.buffer[i].meshNodeMatrixId     = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
+                    self.draw_ssbo.buffer[i].gameObjectMatrixId   = int(self.comp_gameobject_matrices_map[item.uuid])
                 else:
-                    self.draw_ssbo_buffer[i].model[:]             = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+                    # probably never hits anymore and can be deprecated?
+                    self.draw_ssbo.buffer[i].model[:]             = np.asarray(item.matrix, dtype=np.float32).reshape(16)
                 
-                self.draw_ssbo_buffer[i].material             = mesh["material"]
+                self.draw_ssbo.buffer[i].material             = mesh["material"]
                 i += 1
 
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.draw_ssbo )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, num_draw_items * ctypes.sizeof(DrawBlock), self.draw_ssbo_buffer )
+        self.draw_ssbo.upload( num_draw_items )
 
     def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
+        """
+        Create the shared indirect buffer and draw ranges dictionary, 
+        This used to submit glMultiDrawElementsIndirect drawcalls later.
+        """
         draw_offset = 0
         i = 0 
         draw_ranges : dict[(int, int), (int, int)] = {}
@@ -447,17 +501,16 @@ class UBO:
             start_offset = i
 
             for j in range(len(batch)):
-                self.indirect_ssbo_buffer[i].count = mesh["num_indices"]
-                self.indirect_ssbo_buffer[i].instanceCount = 1
-                self.indirect_ssbo_buffer[i].firstIndex = 0
-                self.indirect_ssbo_buffer[i].baseVertex = 0
-                self.indirect_ssbo_buffer[i].baseInstance = draw_offset + j
+                self.indirect_ssbo.buffer[i].count = mesh["num_indices"]
+                self.indirect_ssbo.buffer[i].instanceCount = 1
+                self.indirect_ssbo.buffer[i].firstIndex = 0
+                self.indirect_ssbo.buffer[i].baseVertex = 0
+                self.indirect_ssbo.buffer[i].baseInstance = draw_offset + j
                 i += 1
 
             draw_ranges[(model_index, mesh_index)] = (start_offset, len(batch))
             draw_offset += len(batch)
 
-        glBindBuffer( GL_DRAW_INDIRECT_BUFFER, self.indirect_ssbo )
-        glBufferSubData( GL_DRAW_INDIRECT_BUFFER, 0, num_draw_items * ctypes.sizeof(DrawElementsIndirectCommand), self.indirect_ssbo_buffer )
+        self.indirect_ssbo.upload( num_draw_items )
 
         return draw_ranges
