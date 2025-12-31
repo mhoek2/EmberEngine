@@ -583,6 +583,12 @@ required to render.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="modules.models.Models.create_matrices">
+<span class="sig-name descname"><span class="pre">create_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.models.Models.create_matrices" title="Link to this definition">#</a></dt>
+<dd><p>Collect local model matrices for nodes in this model</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="modules.models.Models.create_mesh_and_gl_buffers">
 <span class="sig-name descname"><span class="pre">create_mesh_and_gl_buffers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.models.Models.CPUMeshData" title="modules.models.Models.CPUMeshData"><span class="pre">CPUMeshData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.models.Models.Mesh" title="modules.models.Models.Mesh"><span class="pre">Mesh</span></a></span></span><a class="headerlink" href="#modules.models.Models.create_mesh_and_gl_buffers" title="Link to this definition">#</a></dt>
 <dd><p>Upload CPU mesh data to the GPU and create OpenGL buffers.</p>
@@ -604,7 +610,7 @@ required to render.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.models.Models.draw">
-<span class="sig-name descname"><span class="pre">draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../gameObjects/a_attachables/gameObjects.attachables.model.html#gameObjects.attachables.model.Model" title="gameObjects.attachables.model.Model"><span class="pre">Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Matrix44</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instant</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.models.Models.draw" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../gameObjects/a_attachables/gameObjects.attachables.model.html#gameObjects.attachables.model.Model" title="gameObjects.attachables.model.Model"><span class="pre">Model</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Matrix44</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instant</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.models.Models.draw" title="Link to this definition">#</a></dt>
 <dd><p>Begin drawing a model</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -612,22 +618,6 @@ required to render.</p>
 <li><p><strong>model</strong> (<a class="reference internal" href="../gameObjects/a_attachables/gameObjects.attachables.model.html#gameObjects.attachables.model.Model" title="gameObjects.attachables.model.Model"><em>Model</em></a>) – The model object</p></li>
 <li><p><strong>model_matrix</strong> (<em>matrix44</em>) – The transformation model matrix, used along with view and projection matrices</p></li>
 <li><p><strong>instant</strong> (<em>bool</em>) – either collect the drawcalls and submit them in renderer.end_frame() or render now/nstantly</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.models.Models.draw_node">
-<span class="sig-name descname"><span class="pre">draw_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Matrix44</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispatch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.models.Models.draw_node" title="Link to this definition">#</a></dt>
-<dd><p>Recursivly process nodes (parent and child nodes)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>node</strong> (<em>int</em>) – A node of model</p></li>
-<li><p><strong>model_index</strong> (<em>int</em>) – The index of a loaded model</p></li>
-<li><p><strong>model_matrix</strong> (<em>matrix44</em>) – The transformation model matrix, used along with view and projection matrices</p></li>
-<li><p><strong>dispatch</strong> (<em>Callable</em>) – Reference to what function to dispatch (collect or immidiate rendering)</p></li>
 </ul>
 </dd>
 </dl>
@@ -813,9 +803,9 @@ and bitangents for normal mapping.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.__init__"><code class="docutils literal notranslate"><span class="pre">Models.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.compute_tangents_bitangents"><code class="docutils literal notranslate"><span class="pre">Models.compute_tangents_bitangents()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.create_matrices"><code class="docutils literal notranslate"><span class="pre">Models.create_matrices()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.create_mesh_and_gl_buffers"><code class="docutils literal notranslate"><span class="pre">Models.create_mesh_and_gl_buffers()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.draw"><code class="docutils literal notranslate"><span class="pre">Models.draw()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.draw_node"><code class="docutils literal notranslate"><span class="pre">Models.draw_node()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.loadOrFind"><code class="docutils literal notranslate"><span class="pre">Models.loadOrFind()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.model_loader_thread"><code class="docutils literal notranslate"><span class="pre">Models.model_loader_thread()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.model_loader_thread_flush"><code class="docutils literal notranslate"><span class="pre">Models.model_loader_thread_flush()</span></code></a></li>
