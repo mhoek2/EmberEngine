@@ -28,7 +28,8 @@ class DrawElementsIndirectCommand(ctypes.Structure):
         ("count",         ctypes.c_uint),
         ("instanceCount", ctypes.c_uint),
         ("firstIndex",    ctypes.c_uint),
-        ("baseVertex",    ctypes.c_uint),
+        #("baseVertex",    ctypes.c_uint),
+        ("baseVertex",    ctypes.c_int),
         ("baseInstance",  ctypes.c_uint),
     ]
 
@@ -503,8 +504,10 @@ class UBO:
             for j in range(len(batch)):
                 self.indirect_ssbo.buffer[i].count = mesh["num_indices"]
                 self.indirect_ssbo.buffer[i].instanceCount = 1
-                self.indirect_ssbo.buffer[i].firstIndex = 0
-                self.indirect_ssbo.buffer[i].baseVertex = 0
+                #self.indirect_ssbo.buffer[i].firstIndex = 0
+                #self.indirect_ssbo.buffer[i].baseVertex = 0
+                self.indirect_ssbo.buffer[i].firstIndex    = mesh["firstIndex"]
+                self.indirect_ssbo.buffer[i].baseVertex    = mesh["baseVertex"]
                 self.indirect_ssbo.buffer[i].baseInstance = draw_offset + j
                 i += 1
 

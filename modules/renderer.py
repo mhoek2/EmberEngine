@@ -306,6 +306,7 @@ class Renderer:
         supports_gl_460 = (major, minor) >= (4, 6)
         self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 
         self.USE_INDIRECT           : bool = supports_gl_460  
+        self.SHARED_VAO             : bool = True
         
         if supports_gl_460:
             print( "OpenGL 4.6.0 is supported, use Indirect and Bindless rendering" )
@@ -1064,11 +1065,20 @@ class Renderer:
         glUniformMatrix4fv( self.shader.uniforms['uMMatrix'], 1, GL_FALSE, model_matrix )
 
         # Bind VAO that stores all attribute and buffer state
-        assert glIsVertexArray(mesh["vao"])
-        glBindVertexArray(mesh["vao"])
+        # 
+        # in case of shared VAO, this is not the right place. but ok for now
+        # this mode is used in older system with shared VAO disabled
+        # or for instant rendering which is only used for editor rendering (colliders)
+        glBindVertexArray( mesh["vao_simple"].vao )
 
-        glDrawElements( GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT, None )
-    
+        if self.SHARED_VAO:
+            glDrawElementsBaseVertex( GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT,
+                ctypes.c_void_p(mesh["firstIndex"] * 4),
+                mesh["baseVertex"]
+            )
+        else:
+            glDrawElements( GL_TRIANGLES, mesh["num_indices"], GL_UNSIGNED_INT, None )
+
     #
     # indirect
     #
@@ -1148,17 +1158,26 @@ class Renderer:
     def submitMainRenderpassIndirect( self, draw_ranges : dict[(int, int), (int, int)] ) -> None:
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
-
+    
         self.ubo.indirect_ssbo.bind_buffer()
 
+        if self.SHARED_VAO:
+            glBindVertexArray( self.context.models.shared_vao.vao )
+            #glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.context.models.shared_vao.ebo) # should not be needed
+    
+        #for model_index, mesh_index in draw_ranges:
+        #    mesh = self.context.models.model_mesh[model_index][mesh_index]
+        #    print(f"Mesh {model_index},{mesh_index}: baseVertex={mesh['baseVertex']}, firstIndex={mesh['firstIndex']}, num_indices={mesh['num_indices']}")
+    
         for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
-
+    
             if not self.USE_BINDLESS_TEXTURES:
                 self.context.materials.bind( mesh["material"] )
-
-            glBindVertexArray( mesh["vao"] )
-
+    
+            if not self.SHARED_VAO:
+                glBindVertexArray( mesh["vao_simple"].vao )
+    
             glMultiDrawElementsIndirect(
                 GL_TRIANGLES,
                 GL_UNSIGNED_INT,
@@ -1166,7 +1185,7 @@ class Renderer:
                 drawcount,
                 0
             )
-
+    
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
@@ -1201,10 +1220,14 @@ class Renderer:
             1, GL_FALSE, light_projection
         )
 
+        if self.SHARED_VAO:
+            glBindVertexArray( self.context.models.shared_vao.vao )
+
         for (model_index, mesh_index), (start, count) in draw_ranges.items():
             mesh = self.context.models.model_mesh[model_index][mesh_index]
 
-            glBindVertexArray( mesh["vao"] )
+            if not self.SHARED_VAO:
+                glBindVertexArray( mesh["vao_simple"].vao )
 
             glMultiDrawElementsIndirect(
                 GL_TRIANGLES,

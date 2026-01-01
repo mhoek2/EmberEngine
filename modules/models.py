@@ -21,6 +21,7 @@ from impasse.constants import MaterialPropertyKey, ProcessingStep
 import numpy as np
 
 from modules.settings import Settings
+from modules.render.vao import VAO
 from dataclasses import dataclass, field
 
 from queue import Queue
@@ -28,10 +29,18 @@ from threading import Thread
 import traceback
 
 class Models( Context ):
+    class Mesh(TypedDict):
+        """"Final representation a mesh (used for rendering)"""
+        baseVertex : int
+        firstIndex : int
+        num_indices: int
+        material   : int
+        vao_simple : VAO
+
     @dataclass(slots=True)
     class CPUMeshData:
         """
-        CPU-side representation of a mesh.
+        CPU-side representation of a mesh. (used for loading)
 
         Stores interleaved vertex data, indices, and metadata required
         for uploading the mesh to the GPU.
@@ -64,15 +73,6 @@ class Models( Context ):
         path        : Path
         material    : int
 
-    class Mesh(TypedDict):
-        vao             : int
-        vbo             : vbo.VBO
-        vbo_size        : int
-        vbo_shape       : Any # np._shape
-        indices         : int # uint32/uintc
-        num_indices     : int
-        material        : int
-
     def __init__( self, context ):
         """Setup model buffers, containg mesh and material information 
         required to render.
@@ -89,6 +89,14 @@ class Models( Context ):
         self.model_mesh: List[List[Models.Mesh]] = [{} for _ in range(300)]
         self.model_map : Dict[Path, int] = {}
         self.model_loading : Dict[int, bool] = {}
+
+        if self.context.renderer.SHARED_VAO:
+            self.shared_vao = VAO( 
+                32 * 1024 * 1024, 
+                16 * 1024 * 1024 
+            )
+        else: 
+            self.shared_vao = None
 
         # default models
         self.default_cube_path = f"{self.settings.engineAssets}models\\cube\\model.obj"
@@ -204,16 +212,36 @@ class Models( Context ):
 
         if mesh.texture_coords and len(mesh.texture_coords) > 0:
             t = np.asarray(mesh.texture_coords[0], dtype=np.float32)
+
+            # some formats use 3 floats sized for texturecoords, supporting projective texture mapping
+            # do not support this, and remove the third component, so the VAO can use a shared stride
+            if t.shape[1] >= 2:
+                t = t[:, :2]
         else:
             t = np.zeros((len(v), 2), dtype=np.float32)
 
         indices = np.asarray(mesh.faces, dtype=np.uint32).ravel()
-        #indices  = np.array(mesh.faces, dtype=np.uint32).flatten()
-        #indices  = np.array(mesh.faces).flatten()
+
+        # might cause problems for non shared VAO mode?
+        indices -= indices.min()
 
         tangents, bitangents = self.compute_tangents_bitangents(v, t, indices)
 
-        combined = np.hstack((v, n, t, tangents, bitangents)).astype(np.float32, copy=False)
+        combined = np.hstack((
+            v,          # 3 : 12 bytes
+            n,          # 3 : 12 bytes
+            t,          # 2 : 8 bytes
+            tangents,   # 3 : 12 bytes
+            bitangents  # 3 : 12 bytes
+        )).astype(np.float32, copy=False)
+        #print(str(path))
+        #print(
+        #    v.shape,
+        #    n.shape,
+        #    t.shape,
+        #    tangents.shape,
+        #    bitangents.shape
+        #)
 
         if material == -1:
             material = self.materials.loadOrFind( mesh.material, path )
@@ -226,70 +254,6 @@ class Models( Context ):
             path        = path,
             mesh        = mesh
         )
-
-    def create_mesh_and_gl_buffers( self, cpu: CPUMeshData ) -> Mesh:
-        """
-        Upload CPU mesh data to the GPU and create OpenGL buffers.
-
-            Sets up VBO, VAO, index buffer, and vertex attribute layout.
-
-        :param cpu: CPU-side mesh data
-        :return: GPU mesh handle
-        :rtype: Mesh
-        """
-        _mesh : Models.Mesh = Models.Mesh()
-
-        _mesh["vbo"]        = vbo.VBO( cpu.combined )
-        _mesh["vbo_size"]   = cpu.combined.itemsize
-        _mesh["vbo_shape"]  = cpu.combined.shape[1]
-
-        _mesh["vao"]        = glGenVertexArrays(1)
-        glBindVertexArray(_mesh["vao"])
-
-        _mesh["vbo"].bind()
-
-        stride = _mesh["vbo_size"] * _mesh["vbo_shape"]
-
-        # Fill the buffer for vertex positions
-        _mesh["indices"] = glGenBuffers(1)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _mesh["indices"])
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, cpu.indices, GL_STATIC_DRAW)
-        _mesh["num_indices"] = len(cpu.mesh.faces) * 3
-
-        # Vertex Positions
-        glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(0))
-
-        # Normals
-        glEnableVertexAttribArray(2)
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 3))
-
-        # UVs
-        glEnableVertexAttribArray(1)
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 6))
-
-        # Tangents
-        glEnableVertexAttribArray(3)
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 9))
-
-        # Bitangents
-        glEnableVertexAttribArray(4)
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, ctypes.c_void_p(_mesh["vbo_size"] * 12))
-
-        # Unbind VAO (which also unbinds the VBO from ARRAY_BUFFER target)
-        glBindVertexArray(0)
-
-        # Unbind buffers
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-
-        # material
-        #if material == -1:
-        #    _mesh["material"] = self.materials.loadOrFind( mesh.material, cpu.path.parent )
-        #else:
-        _mesh["material"] = cpu.material
-
-        return _mesh
 
     def prepare_on_CPU( self, index : int, path : Path, material : int = -1 ) -> None:
         """
@@ -306,7 +270,7 @@ class Models( Context ):
         :return: List of prepared CPU meshes
         :rtype: list[CPUMeshData]
         """
-        self.model[index] = imp.load( str(path), processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace )
+        self.model[index] = imp.load( str(path), processing=ProcessingStep.Triangulate | ProcessingStep.CalcTangentSpace | ProcessingStep.JoinIdenticalVertices )
 
         cpu_meshes : list[Models.CPUMeshData] = [
             self.prepare_mesh_cpu( mesh, path, material )
@@ -326,8 +290,30 @@ class Models( Context ):
         :return: True if upload succeeded
         :rtype: bool
         """
-        for mesh_idx, cpu in enumerate(cpu_meshes):
-            self.model_mesh[index][mesh_idx] = self.create_mesh_and_gl_buffers( cpu )
+        for mesh_idx, cpu_mesh in enumerate(cpu_meshes):
+            if self.context.renderer.SHARED_VAO:
+                base_vtx, first_idx = self.shared_vao.append_mesh( cpu_mesh )
+                vao_simple = self.shared_vao
+            
+            else:
+                vtx_count = cpu_mesh.combined.shape[0]
+                idx_count = len(cpu_mesh.mesh.faces) * 3
+                #idx_count = cpu_mesh.num_indices
+                #idx_count = cpu_mesh.indices.size
+
+                vao_simple : VAO = VAO( 
+                    VAO.bytes_in_vertices( vtx_count ), 
+                    VAO.bytes_in_indices(  idx_count )
+                )
+                base_vtx, first_idx = vao_simple.append_mesh( cpu_mesh )
+
+            self.model_mesh[index][mesh_idx] = {
+                "baseVertex"    : base_vtx,
+                "firstIndex"    : first_idx,
+                "num_indices"   : cpu_mesh.num_indices,
+                "material"      : cpu_mesh.material,
+                "vao_simple"    : vao_simple
+            }
 
         cpu_meshes.clear()
 
