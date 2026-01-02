@@ -308,6 +308,9 @@ class Renderer:
         self.USE_INDIRECT           : bool = supports_gl_460  
         self.SHARED_VAO             : bool = True
         
+        # do not change
+        self.USE_INDIRECT_INSTANCED : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
+
         if supports_gl_460:
             print( "OpenGL 4.6.0 is supported, use Indirect and Bindless rendering" )
         else:
@@ -1155,7 +1158,10 @@ class Renderer:
         self.ubo._upload_material_ubo()
         self.ubo.ubo_materials.bind( binding = 1 )
 
-    def submitMainRenderpassIndirect( self, draw_ranges : dict[(int, int), (int, int)] ) -> None:
+    def submitMainRenderpassIndirect( self, 
+                                      batches : dict[tuple[int, int]],               # used for drawcount using instancing
+                                      draw_ranges : dict[(int, int), (int, int)]    # only used for per mesh
+        ) -> None:
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )
     
@@ -1163,29 +1169,42 @@ class Renderer:
 
         if self.SHARED_VAO:
             glBindVertexArray( self.context.models.shared_vao.vao )
-            #glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.context.models.shared_vao.ebo) # should not be needed
     
         #for model_index, mesh_index in draw_ranges:
         #    mesh = self.context.models.model_mesh[model_index][mesh_index]
         #    print(f"Mesh {model_index},{mesh_index}: baseVertex={mesh['baseVertex']}, firstIndex={mesh['firstIndex']}, num_indices={mesh['num_indices']}")
     
-        for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
-            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
-    
-            if not self.USE_BINDLESS_TEXTURES:
-                self.context.materials.bind( mesh["material"] )
-    
-            if not self.SHARED_VAO:
-                glBindVertexArray( mesh["vao_simple"].vao )
-    
+        # support for indirect, bindless, and shared vao is enabled.
+        # allows to render scene in one indirect drawcall
+        # same as: if not draw_ranges
+        if self.context.renderer.USE_INDIRECT_INSTANCED: 
             glMultiDrawElementsIndirect(
                 GL_TRIANGLES,
                 GL_UNSIGNED_INT,
-                ctypes.c_void_p(start_offset * ctypes.sizeof(DrawElementsIndirectCommand)),
-                drawcount,
+                ctypes.c_void_p(0),
+                len(batches),
                 0
             )
-    
+
+        # need to render batches per mesh, no support for shared VAO or bindless
+        else:
+            for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
+                mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+            
+                if not self.USE_BINDLESS_TEXTURES:
+                    self.context.materials.bind( mesh["material"] )
+            
+                if not self.SHARED_VAO:
+                    glBindVertexArray( mesh["vao_simple"].vao )
+            
+                glMultiDrawElementsIndirect(
+                    GL_TRIANGLES,
+                    GL_UNSIGNED_INT,
+                    ctypes.c_void_p(start_offset * ctypes.sizeof(DrawElementsIndirectCommand)),
+                    drawcount,
+                    0
+                )
+
         if self.settings.drawWireframe:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
@@ -1352,7 +1371,8 @@ class Renderer:
             # compute model matrices on the GPU
             self._dispatch_compute( num_draw_items )
 
-            # build a shared indirect buffer and draw ranges
+            # build a shared indirect buffer and draw_ranges
+            # *only build draw_ranges when instancing is disabled
             draw_ranges = self.ubo._upload_indirect_buffer( batches, num_draw_items )
 
             # shadowmap renderpass
@@ -1370,7 +1390,7 @@ class Renderer:
             self.context.skybox.draw( _scene )
 
             self.prepareMainRenderpass( _scene, light_view, light_projection )
-            self.submitMainRenderpassIndirect( draw_ranges )
+            self.submitMainRenderpassIndirect( batches, draw_ranges )
 
         # create individual draw calls for each item in the draw list (simple rendering)
         # only draw the main renderpass to prevent performance regression, skips;

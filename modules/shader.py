@@ -97,6 +97,9 @@ class Shader:
             defines.append("#define USE_INDIRECT")
             defines.append("#define USE_SHADOWMAP")
 
+        if self.context.renderer.USE_INDIRECT_INSTANCED:
+            defines.append("#define USE_INDIRECT_INSTANCED")
+
         define_block = "\n".join(defines)
 
         return f"{version}\n{define_block}\n{src}"
