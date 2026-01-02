@@ -300,6 +300,12 @@ class Renderer:
         gl_version, renderer, vendor, glsl_version = Renderer.print_opengl_version()
         major, minor = map(int, gl_version.split('.')[0:2])
 
+        # Retrieve supported OpenGL extensions
+        num_ext = glGetIntegerv(GL_NUM_EXTENSIONS)
+        self.gl_extensions = [
+            glGetStringi( GL_EXTENSIONS, i ).decode()
+            for i in range(num_ext)
+        ]
 
         # renderer configuration
         # OpenGL ver. < 4.6.0 will fallback to simple rendering and GLSL 330 core features for backwards compat.
@@ -309,7 +315,13 @@ class Renderer:
         self.SHARED_VAO             : bool = supports_gl_460
         
         # do not change
-        self.USE_INDIRECT_INSTANCED : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
+        self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
+        
+        # RenderDoc debug overrrides
+        self.RENDERDOC = False
+        if self.RENDERDOC:
+            self.USE_BINDLESS_TEXTURES         = False          # bindless not supported
+            pass
 
         if supports_gl_460:
             print( "OpenGL 4.6.0 is supported, use Indirect and Bindless rendering" )
