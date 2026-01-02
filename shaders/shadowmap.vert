@@ -28,7 +28,7 @@ layout(location = 0) in vec3 aVertex;
 void main()
 {
 #ifdef USE_INDIRECT
-    DrawBlock d = draw[gl_BaseInstance];
+	DrawBlock d = draw[gl_BaseInstance + gl_InstanceID];
     mat4 uMMatrix = d.model;
 #endif
 

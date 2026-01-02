@@ -306,7 +306,7 @@ class Renderer:
         supports_gl_460 = (major, minor) >= (4, 6)
         self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 
         self.USE_INDIRECT           : bool = supports_gl_460  
-        self.SHARED_VAO             : bool = True
+        self.SHARED_VAO             : bool = supports_gl_460
         
         # do not change
         self.USE_INDIRECT_INSTANCED : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
@@ -1174,19 +1174,19 @@ class Renderer:
         #    mesh = self.context.models.model_mesh[model_index][mesh_index]
         #    print(f"Mesh {model_index},{mesh_index}: baseVertex={mesh['baseVertex']}, firstIndex={mesh['firstIndex']}, num_indices={mesh['num_indices']}")
     
-        # support for indirect, bindless, and shared vao is enabled.
-        # allows to render scene in one indirect drawcall
-        # same as: if not draw_ranges
-        if self.context.renderer.USE_INDIRECT_INSTANCED: 
+        # support for indirect, bindless, and shared VAO is enabled.
+        # allowing to render the scene in one indirect instanced drawcall
+        if self.context.renderer.USE_GPU_DRIVEN_RENDERING: 
             glMultiDrawElementsIndirect(
                 GL_TRIANGLES,
                 GL_UNSIGNED_INT,
                 ctypes.c_void_p(0),
-                len(batches),
+                len(batches), # issue all commands at once (instanced + bindless + shared VAO )
                 0
             )
 
-        # need to render batches per mesh, no support for shared VAO or bindless
+        # Indirect rendering per mesh: batches group game objects sharing the same mesh,
+        # but VAO and material bindings are performed per batch on the CPU.
         else:
             for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
                 mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
@@ -1201,7 +1201,7 @@ class Renderer:
                     GL_TRIANGLES,
                     GL_UNSIGNED_INT,
                     ctypes.c_void_p(start_offset * ctypes.sizeof(DrawElementsIndirectCommand)),
-                    drawcount,
+                    1, # single command per mesh batch (instance for each gamobject)
                     0
                 )
 
@@ -1219,9 +1219,10 @@ class Renderer:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
     def submitShadowRenderpass( self, 
-                                 draw_ranges : dict[(int, int), (int, int)], 
-                                 light_view : Matrix44, 
-                                 light_projection : Matrix44 
+                                batches : dict[tuple[int, int]], 
+                                draw_ranges : dict[(int, int), (int, int)], 
+                                light_view : Matrix44, 
+                                light_projection : Matrix44 
         ):
         self.bind_fbo( self.shadowmap_fbo, GL_DEPTH_BUFFER_BIT )
         self.use_shader (self.shadowmap )
@@ -1242,19 +1243,28 @@ class Renderer:
         if self.SHARED_VAO:
             glBindVertexArray( self.context.models.shared_vao.vao )
 
-        for (model_index, mesh_index), (start, count) in draw_ranges.items():
-            mesh = self.context.models.model_mesh[model_index][mesh_index]
-
-            if not self.SHARED_VAO:
-                glBindVertexArray( mesh["vao_simple"].vao )
-
+        if self.context.renderer.USE_GPU_DRIVEN_RENDERING: 
             glMultiDrawElementsIndirect(
                 GL_TRIANGLES,
                 GL_UNSIGNED_INT,
-                ctypes.c_void_p(start * ctypes.sizeof(DrawElementsIndirectCommand)),
-                count,
+                ctypes.c_void_p(0),
+                len(batches), # issue all commands at once (instanced + bindless + shared VAO )
                 0
             )
+        else:
+            for (model_index, mesh_index), (start_offset, drawcount) in draw_ranges.items():
+                mesh = self.context.models.model_mesh[model_index][mesh_index]
+
+                if not self.SHARED_VAO:
+                    glBindVertexArray( mesh["vao_simple"].vao )
+
+                glMultiDrawElementsIndirect(
+                    GL_TRIANGLES,
+                    GL_UNSIGNED_INT,
+                    ctypes.c_void_p(start_offset * ctypes.sizeof(DrawElementsIndirectCommand)),
+                    1, # single command per mesh batch (instance for each gamobject)
+                    0
+                )
 
         #glCullFace(GL_BACK)
         glDisable(GL_CULL_FACE)
@@ -1378,7 +1388,7 @@ class Renderer:
             # shadowmap renderpass
             if _scene["shadowmap_enabled"]:
                 light_view, light_projection = self._compute_light_vp()
-                self.submitShadowRenderpass( draw_ranges, light_view, light_projection )
+                self.submitShadowRenderpass( batches, draw_ranges, light_view, light_projection )
             else:
                 light_view = light_projection = None
 

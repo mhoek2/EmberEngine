@@ -68,12 +68,7 @@ void main(){
 	vec3 normal = normalize(aNormal);
 
 #ifdef USE_INDIRECT
-	uint drawIndex = gl_BaseInstance;
-	#ifdef USE_INDIRECT_INSTANCED
-		drawIndex += gl_InstanceID;
-	#endif
-
-	DrawBlock d = draw[drawIndex];
+	DrawBlock d = draw[gl_BaseInstance + gl_InstanceID];
 	mat4 uMMatrix = d.model;
 #endif
 

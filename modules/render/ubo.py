@@ -500,37 +500,27 @@ class UBO:
 
         for (model_index, mesh_index), batch in batches.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
-            start_offset = i
-
             #print(f"Mesh {model_index},{mesh_index}: instancecount={len(batch)} baseVertex={mesh['baseVertex']}, firstIndex={mesh['firstIndex']}, num_indices={mesh['num_indices']}")
     
-            # support for indirect, bindless, and shared vao is enabled.
-            # allows to render scene in one indirect drawcall
-            if self.context.renderer.USE_INDIRECT_INSTANCED:
-                self.indirect_ssbo.buffer[i].count          = mesh["num_indices"]
-                self.indirect_ssbo.buffer[i].instanceCount  = len(batch)
-                self.indirect_ssbo.buffer[i].firstIndex     = mesh["firstIndex"]
-                self.indirect_ssbo.buffer[i].baseVertex     = mesh["baseVertex"]
-                self.indirect_ssbo.buffer[i].baseInstance   = draw_offset
+            self.indirect_ssbo.buffer[i].count          = mesh["num_indices"]
+            self.indirect_ssbo.buffer[i].instanceCount  = len(batch)
+            self.indirect_ssbo.buffer[i].firstIndex     = mesh["firstIndex"]
+            self.indirect_ssbo.buffer[i].baseVertex     = mesh["baseVertex"]
+            self.indirect_ssbo.buffer[i].baseInstance   = draw_offset
 
-                i += 1
-                draw_offset += len(batch)
+            # support for indirect, bindless, and shared VAO is enabled.
+            # allowing to render the scene in one indirect instanced drawcall
+            if self.context.renderer.USE_GPU_DRIVEN_RENDERING:
                 draw_ranges = None
 
-            # need to render batches per mesh, no support for shared VAO or bindless
+            # Indirect rendering per mesh: batches group game objects sharing the same mesh,
+            # but VAO and material bindings are performed per batch on the CPU.
             else:
-                for j in range(len(batch)):
-                    self.indirect_ssbo.buffer[i].count         = mesh["num_indices"]
-                    self.indirect_ssbo.buffer[i].instanceCount = 1
-                    self.indirect_ssbo.buffer[i].firstIndex    = mesh["firstIndex"]
-                    self.indirect_ssbo.buffer[i].baseVertex    = mesh["baseVertex"]
-                    self.indirect_ssbo.buffer[i].baseInstance  = draw_offset + j
-                
-                    i += 1
-                draw_offset += len(batch)
-                draw_ranges[(model_index, mesh_index)] = (start_offset, len(batch))
+                draw_ranges[(model_index, mesh_index)] = (i, len(batch))
+
+            draw_offset += len(batch)
+            i += 1
             
-        #self.indirect_ssbo.upload( num_draw_items )
         self.indirect_ssbo.upload( i )
 
         return draw_ranges
