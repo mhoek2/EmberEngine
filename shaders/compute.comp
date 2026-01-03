@@ -9,15 +9,24 @@ struct DrawBlock
 	int  pad2;
 };
 
+struct MeshNodeBlock
+{
+	mat4 model;        // 64 bytes
+	int  num_indices;     // 4 bytes
+	int  firstIndex;
+	int  baseVertex;
+	int  pad2;
+};
+
 layout(std430, binding = 0) buffer DrawBuffer
 {
 	DrawBlock draw[];
 };
 
-
-layout(std430, binding = 1) buffer MeshNodeMatrices
+layout(std430, binding = 1) buffer MeshNodeBuffer
 {
-    mat4 matrices[];
+	//mat4 matrices[];
+    MeshNodeBlock mesh_node[];
 };
 
 layout(std430, binding = 2) buffer GameObjectMatrices
@@ -36,5 +45,5 @@ void main()
 	uint meshNodeMatrixId = draw[gid].meshNodeMatrixId;
 	uint gameObjectMatrixId = draw[gid].gameObjectMatrixId;
 
-    draw[gid].model = gameObject[gameObjectMatrixId] * matrices[meshNodeMatrixId];
+    draw[gid].model = gameObject[gameObjectMatrixId] * mesh_node[meshNodeMatrixId].model;
 }

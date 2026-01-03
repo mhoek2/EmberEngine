@@ -316,9 +316,10 @@ class Renderer:
         
         # do not change
         self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
-        
+        self.USE_INDIRECT_COMPUTE : bool = True and self.USE_GPU_DRIVEN_RENDERING
+
         # RenderDoc debug overrrides
-        self.RENDERDOC = False
+        self.RENDERDOC = True
         if self.RENDERDOC:
             self.USE_BINDLESS_TEXTURES         = False          # bindless not supported
             pass
@@ -630,6 +631,7 @@ class Renderer:
         self.fog                = Shader( self.context, "fog", templated = True )
 
         self.compute            = Shader( self.context, "compute", compute=True )
+        self.indirect            = Shader( self.context, "indirect", compute=True )
 
 
     #
@@ -1327,6 +1329,44 @@ class Renderer:
         return self.fog_fbo["color_image"]
 
     #
+    # Compute
+    #
+    def _dispatch_compute_draw_ssbo( self, num_draw_items ) -> None:
+        self.use_shader( self.compute )
+
+        self.ubo.draw_ssbo.bind_base( binding = 0 )
+        self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
+        self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
+
+        # number of work items = number of draw blocks
+        # local_size_x = 64 -> ceil(num_draw_items / 64)
+        group_count = (num_draw_items + 63) // 64
+        glDispatchCompute(group_count, 1, 1)
+
+        # make SSBO writes visible to vertex/fragment shaders
+        glMemoryBarrier(
+            GL_SHADER_STORAGE_BARRIER_BIT |
+            GL_COMMAND_BARRIER_BIT
+        )
+
+    def _dispatch_compute_indirect_sbbo( self, num_batches ) -> None:
+        self.use_shader( self.indirect )
+
+        self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.ubo.indirect_ssbo.ssbo )
+        self.ubo.batch_ssbo.bind_base( binding = 3 )
+
+        # number of work items = number of batches
+        # local_size_x = 64 -> ceil(num_batches / 64)
+        group_count = (num_batches + 63) // 64
+        glDispatchCompute(group_count, 1, 1)
+
+        # make SSBO writes visible to vertex/fragment shaders
+        glMemoryBarrier(
+            GL_SHADER_STORAGE_BARRIER_BIT |
+            GL_COMMAND_BARRIER_BIT
+        )
+    #
     # begin/end frame
     #
     def begin_frame( self ) -> None:
@@ -1352,24 +1392,6 @@ class Renderer:
         # update static model:node(mesh) matrices when dirty
         self.ubo._update_comp_meshnode_matrices_ssbo()
 
-    def _dispatch_compute( self, num_draw_items ) -> None:
-        self.use_shader( self.compute )
-
-        self.ubo.draw_ssbo.bind_base( binding = 0 )
-        self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
-        self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
-
-        # number of work items = number of draw blocks
-        # local_size_x = 64 -> ceil(num_draw_items / 64)
-        group_count = (num_draw_items + 63) // 64
-        glDispatchCompute(group_count, 1, 1)
-
-        # make SSBO writes visible to vertex/fragment shaders
-        glMemoryBarrier(
-            GL_SHADER_STORAGE_BARRIER_BIT |
-            GL_COMMAND_BARRIER_BIT
-        )
-
     def dispatch_drawcalls( self, _scene : SceneManager.Scene ) -> None:
         """"
         Dispatch draw calls using the generated item in the draw list
@@ -1391,8 +1413,8 @@ class Renderer:
             self.ubo._upload_draw_blocks_ssbo( batches, num_draw_items )
 
             # compute model matrices on the GPU
-            self._dispatch_compute( num_draw_items )
-
+            self._dispatch_compute_draw_ssbo( num_draw_items )
+            
             # build a shared indirect buffer and draw_ranges
             # *only build draw_ranges when instancing is disabled
             draw_ranges = self.ubo._upload_indirect_buffer( batches, num_draw_items )

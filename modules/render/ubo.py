@@ -42,6 +42,23 @@ class DrawBlock(ctypes.Structure):
         ("pad2",                ctypes.c_int),
     ]
 
+class MeshNodeBlock(ctypes.Structure):
+    _fields_ = [
+        ("model",               ctypes.c_float * 16),
+        ("num_indices",         ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
+        ("firstIndex",          ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
+        ("baseVertex",          ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
+        ("pad2",                ctypes.c_int),
+    ]
+
+class BatchBlock(ctypes.Structure):
+    _fields_ = [
+        ("instanceCount",       ctypes.c_int),
+        ("baseInstance",        ctypes.c_int),
+        ("meshNodeMatrixId",    ctypes.c_int),
+        ("pad1",                ctypes.c_int),
+    ]
+
 class UBO:
     def __init__( self, context ):
         """Renderer backend, creating window instance, openGL, FBO's, shaders and rendertargets
@@ -119,11 +136,12 @@ class UBO:
         if self.renderer.USE_INDIRECT:
             MAX_MATRICES = 10000
             MAX_DRAWS = 10000
+            MAX_BATCHES = 1000
 
             # compute
             self.comp_meshnode_matrices_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                  max_elements   = MAX_MATRICES,
-                 element_type   = 16, # 64 bytes mat4 item buffer
+                 element_type   = MeshNodeBlock,
                  target         = GL_SHADER_STORAGE_BUFFER
             )
 
@@ -133,6 +151,12 @@ class UBO:
                  target         = GL_SHADER_STORAGE_BUFFER
             )
 
+            self.batch_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                 max_elements   = MAX_BATCHES,
+                 element_type   = BatchBlock,
+                 target         = GL_SHADER_STORAGE_BUFFER
+            )
+  
             # render
             self.draw_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                  max_elements   = MAX_DRAWS,
@@ -416,7 +440,18 @@ class UBO:
         offset = 0
         for model_index, items in self.comp_meshnode_matrices_nested.items():
             for item in items:
-                self.comp_meshnode_matrices_ssbo.buffer[offset*16:(offset+1)*16] = item.matrix.flatten()
+                mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][item.mesh_index]
+
+                # before indirect compute ssbo used a one mat4 stride: 
+                # renderer.element_type = 16, # 64 bytes mat4 item buffer
+                #self.comp_meshnode_matrices_ssbo.buffer[offset*16:(offset+1)*16] = item.matrix.flatten()
+                self.comp_meshnode_matrices_ssbo.buffer[offset].model[:] = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+
+                if self.context.renderer.USE_INDIRECT_COMPUTE:
+                    # use for indirect compute shader only -USE_INDIRECT_COMPUTE
+                    self.comp_meshnode_matrices_ssbo.buffer[offset].num_indices = mesh["num_indices"]
+                    self.comp_meshnode_matrices_ssbo.buffer[offset].firstIndex = mesh["firstIndex"]
+                    self.comp_meshnode_matrices_ssbo.buffer[offset].baseVertex = mesh["baseVertex"]
             
                 # create a map
                 self.comp_meshnode_matrices_map[(model_index, item.mesh_index)] = offset
@@ -493,10 +528,29 @@ class UBO:
         Create the shared indirect buffer and draw ranges dictionary, 
         This used to submit glMultiDrawElementsIndirect drawcalls later.
         """
-        draw_offset = 0
-        i = 0 
+        draw_offset : int = 0
 
+        # GPU driven indirect buffer
+        if self.context.renderer.USE_INDIRECT_COMPUTE:
+            for i, ((model_index, mesh_index), batch) in enumerate(batches.items()):
+                mesh_id = (model_index, mesh_index)
+
+                self.batch_ssbo.buffer[i].instanceCount     = len(batch)
+                self.batch_ssbo.buffer[i].baseInstance      = draw_offset
+                self.batch_ssbo.buffer[i].meshNodeMatrixId  = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
+
+                draw_offset += len(batch)
+
+            num_batches : int = len(batches)
+            self.batch_ssbo.upload( num_batches )
+
+            self.context.renderer._dispatch_compute_indirect_sbbo( num_batches )
+            return None
+
+
+        # CPU driven indirect buffer
         draw_ranges : dict[(int, int), (int, int)] = {}
+        i : int = 0
 
         for (model_index, mesh_index), batch in batches.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
@@ -522,5 +576,4 @@ class UBO:
             i += 1
             
         self.indirect_ssbo.upload( i )
-
         return draw_ranges
