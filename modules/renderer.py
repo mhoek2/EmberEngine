@@ -319,7 +319,7 @@ class Renderer:
         self.USE_INDIRECT_COMPUTE : bool = True and self.USE_GPU_DRIVEN_RENDERING
 
         # RenderDoc debug overrrides
-        self.RENDERDOC = True
+        self.RENDERDOC = False
         if self.RENDERDOC:
             self.USE_BINDLESS_TEXTURES         = False          # bindless not supported
             pass
