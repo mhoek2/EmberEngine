@@ -18,6 +18,15 @@ struct MeshNodeBlock
 	int  pad2;
 };
 
+struct GameObjectBlock
+{
+	mat4 model;        // 64 bytes
+	int  model_index;     // 4 bytes
+	int  pad0;
+	int  pad1;
+	int  pad2;
+};
+
 layout(std430, binding = 0) buffer DrawBuffer
 {
 	DrawBlock draw[];
@@ -31,7 +40,7 @@ layout(std430, binding = 1) buffer MeshNodeBuffer
 
 layout(std430, binding = 2) buffer GameObjectMatrices
 {
-    mat4 gameObject[];
+    GameObjectBlock gameObject[];
 };
 
 layout(local_size_x = 64) in;
@@ -45,5 +54,5 @@ void main()
 	uint meshNodeMatrixId = draw[gid].meshNodeMatrixId;
 	uint gameObjectMatrixId = draw[gid].gameObjectMatrixId;
 
-    draw[gid].model = gameObject[gameObjectMatrixId] * mesh_node[meshNodeMatrixId].model;
+    draw[gid].model = gameObject[gameObjectMatrixId].model * mesh_node[meshNodeMatrixId].model;
 }

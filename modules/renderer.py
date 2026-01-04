@@ -317,6 +317,7 @@ class Renderer:
         # do not change
         self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
         self.USE_INDIRECT_COMPUTE : bool = True and self.USE_GPU_DRIVEN_RENDERING
+        self.USE_FULL_GPU_DRIVEN : bool = True and self.USE_INDIRECT_COMPUTE
 
         # RenderDoc debug overrrides
         self.RENDERDOC = False
@@ -631,8 +632,13 @@ class Renderer:
         self.fog                = Shader( self.context, "fog", templated = True )
 
         self.compute            = Shader( self.context, "compute", compute=True )
-        self.indirect            = Shader( self.context, "indirect", compute=True )
+        self.indirect           = Shader( self.context, "indirect", compute=True )
 
+        # Full GPU driven
+        self.gpu_driven_batch_counter       = Shader( self.context, "gpu_driven_batch_counter", compute=True )
+        self.gpu_driven_compact_batches     = Shader( self.context, "gpu_driven_compact_batches", compute=True )
+        self.gpu_driven_build_instances     = Shader( self.context, "gpu_driven_build_instances", compute=True )
+        self.gpu_driven_build_draw_buffer   = Shader( self.context, "gpu_driven_build_draw_buffer", compute=True )
 
     #
     # UBO / SSBO
@@ -1173,7 +1179,7 @@ class Renderer:
         self.ubo.ubo_materials.bind( binding = 1 )
 
     def submitMainRenderpassIndirect( self, 
-                                      batches : dict[tuple[int, int]],               # used for drawcount using instancing
+                                      num_batches : int,               # used for drawcount using instancing
                                       draw_ranges : dict[(int, int), (int, int)]    # only used for per mesh
         ) -> None:
         if self.settings.drawWireframe:
@@ -1195,7 +1201,7 @@ class Renderer:
                 GL_TRIANGLES,
                 GL_UNSIGNED_INT,
                 ctypes.c_void_p(0),
-                len(batches), # issue all commands at once (instanced + bindless + shared VAO )
+                num_batches, # issue all commands at once (instanced + bindless + shared VAO )
                 0
             )
 
@@ -1233,7 +1239,7 @@ class Renderer:
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL )
 
     def submitShadowRenderpass( self, 
-                                batches : dict[tuple[int, int]], 
+                                num_batches : int, 
                                 draw_ranges : dict[(int, int), (int, int)], 
                                 light_view : Matrix44, 
                                 light_projection : Matrix44 
@@ -1262,7 +1268,7 @@ class Renderer:
                 GL_TRIANGLES,
                 GL_UNSIGNED_INT,
                 ctypes.c_void_p(0),
-                len(batches), # issue all commands at once (instanced + bindless + shared VAO )
+                num_batches, # issue all commands at once (instanced + bindless + shared VAO )
                 0
             )
         else:
@@ -1329,7 +1335,206 @@ class Renderer:
         return self.fog_fbo["color_image"]
 
     #
-    # Compute
+    # Full GPU driven dispatch pipeline
+    #
+    # +-----------------------+
+    # |  Game Objects         
+    # |  (CPU-side transforms)
+    # +-----------------------+
+    #             |
+    #             v
+    # +-----------------------+
+    # | SSBO : comp_gameobject_matrices_ssbo
+    # |  - Stores per-game-object world matrices
+    # +-----------------------+
+    #             |
+    #             v
+    # +-----------------------+
+    # | Dispatch : collect_batches shader (gpu_driven_collect_batches)
+    # |  Inputs: gameObjects, models
+    # |  Outputs: mesh_instance_counter
+    # +-----------------------+
+    #             |
+    #             v
+    # +-----------------------+
+    # | Dispatch : compact_batches shader (gpu_driven_compact_batches)
+    # |  Inputs: mesh_instance_counter
+    # |  Outputs: batch_ssbo, meshnode_to_batch
+    # +-----------------------+
+    #             |
+    #             v
+    # +-----------------------+
+    # | Dispatch : build_instances shader (gpu_driven_build_instances)
+    # |  Inputs: batch_ssbo, meshnode_to_batch,
+    # |          comp_gameobject_matrices_ssbo
+    # |  Outputs: mesh_instances
+    # +-----------------------+
+    #             |
+    #             v
+    # +-----------------------+
+    # | Dispatch : build_draw_buffer shader (gpu_driven_build_draw_buffer)
+    # |  Inputs: mesh_instances, comp_meshnode_matrices_ssbo,
+    # |          model_ssbo
+    # |  Outputs: draw_ssbo
+    # +-----------------------+
+    #             |
+    #             v
+    # +-----------------------+
+    # | Dispatch : build_indirect_draw shader (gpu_driven_build_indirect_draw)
+    # |  Inputs: draw_ssbo, batch_ssbo
+    # |  Outputs: indirect_ssbo
+    # +-----------------------+
+    #             |
+    #             v
+    # +-----------------------+
+    # | GPU Draw Call
+    # |  glMultiDrawElementsIndirect using indirect_ssbo already stored on GPU
+    # +-----------------------+
+    #
+    def _dispatch_full_gpu_collect_batches( self, num_gameObjects : int ) -> None:
+
+        #
+        # collect mesh/node batches per gameObject
+        #
+        self.use_shader( self.gpu_driven_batch_counter )
+
+        # this lets the compute shader know the valid range of global invocation IDs (gid),
+        # threads that hit gid >= numGameObjects return and do nothing.
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+
+        # reset all 'mesh_instance_counter' entries
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_counter )
+        glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, None )          
+
+        # dispatch
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+        group_count = (num_gameObjects + 63) // 64
+        glDispatchCompute(group_count, 1, 1)
+        glMemoryBarrier(
+            GL_SHADER_STORAGE_BARRIER_BIT |
+            GL_COMMAND_BARRIER_BIT
+        )
+
+        #
+        # fill self.ubo.batch_ssbo and
+        # construct a compact batch lookup map 
+        # because previous dispatch result in:
+        #
+        # batches [
+        #  model/mesh idx      instances
+        #    0:                       1
+        #    1:                       2
+        #  * 2:                       0   - zero instances, model may be unused
+        #    3:                       1
+        #    4:                       1
+        #  ...
+        # ]
+        #
+        # build 'self.batch_ssbo' with unused models removed,
+        # and add a compact batch lookup ap
+        # meshnode_to_batch [
+        # model/mesh idx         batch idx
+        #    0:                       0
+        #    1:                       1
+        #  * 2:                      -1   - unused
+        #    3:                       3
+        #    4:                       4
+        # 
+        # ]
+        self.use_shader( self.gpu_driven_compact_batches )
+
+        # reset all 'meshnode_to_batch' entries to -1 first
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.meshnode_to_batch )
+        glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED_INTEGER, GL_INT, np.array([-1], dtype=np.int32) )
+
+        # re-purpose draw count as batch idx counter internally
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+        group_count = (self.ubo.comp_meshnode_max + 127) // 128
+        glDispatchCompute(group_count, 1, 1)
+        glMemoryBarrier(
+            GL_SHADER_STORAGE_BARRIER_BIT |
+            GL_COMMAND_BARRIER_BIT
+        )
+
+    def _dispatch_full_gpu_collect_instances( self, num_gameObjects : int ) -> None:
+        #
+        # construct the instance buffer, binding gameObjects to a mesh/node instance
+        #
+        self.use_shader( self.gpu_driven_build_instances )
+
+        # this lets the compute shader know the valid range of global invocation IDs (gid),
+        # threads that hit gid >= numGameObjects return and do nothing.
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+
+        # re-purpose buffer. reset all 'mesh_instance_counter' entries
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_counter )
+        glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, None )        
+        
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+        group_count = (num_gameObjects + 63) // 64
+        glDispatchCompute(group_count, 1, 1)
+        glMemoryBarrier(
+            GL_SHADER_STORAGE_BARRIER_BIT |
+            GL_COMMAND_BARRIER_BIT
+        )
+
+    def _dispatch_full_gpu_build_draw_buffer( self, num_gameObjects ) -> None:
+        # can probably use half of self.ubo.comp_meshnode_max.
+        # very unlikely a gameObject uses maximum nodes
+        num_instances = self.ubo.comp_meshnode_max * num_gameObjects
+
+        #
+        # build the draw buffer for color pass shaders
+        # contains per instance data, eg; modelmatrix, gameObject and material
+        #
+        self.use_shader( self.gpu_driven_build_draw_buffer )
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+        group_count = (num_instances + 127) // 128
+        glDispatchCompute(group_count, 1, 1)
+
+        # make SSBO writes visible to vertex/fragment shaders
+        glMemoryBarrier(
+            GL_SHADER_STORAGE_BARRIER_BIT |
+            GL_COMMAND_BARRIER_BIT
+        )
+
+    def _dispatch_full_gpu( self ) -> None:
+        
+        num_gameObjects = len(self.context.world.transforms)
+
+        # sadly, ton of uniforms
+        self.ubo.draw_ssbo.bind_base( binding = 0 )
+        self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
+        glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.ubo.indirect_ssbo.ssbo )
+        self.ubo.batch_ssbo.bind_base( binding = 3 )
+        self.ubo.model_ssbo.bind_base( binding = 4 )
+        self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 5 )
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.ubo.gpu_counter)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, self.ubo.mesh_instance_counter)
+        self.ubo.mesh_instances.bind_base( binding = 9 )
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
+
+        # reset states
+        self.ubo.batch_ssbo.clear()
+        self.ubo.mesh_instances.clear()
+        self.ubo.indirect_ssbo.clear()
+        self.ubo.draw_ssbo.clear()
+
+        # dispatch and construct the final draw and indirect buffers
+        self._dispatch_full_gpu_collect_batches( num_gameObjects )
+        self._dispatch_full_gpu_collect_instances( num_gameObjects )
+        self._dispatch_full_gpu_build_draw_buffer( num_gameObjects )
+        self._dispatch_compute_indirect_sbbo( self.ubo.comp_meshnode_max )
+
+    #
+    # Compute (hybrid GPU driven)
     #
     def _dispatch_compute_draw_ssbo( self, num_draw_items ) -> None:
         self.use_shader( self.compute )
@@ -1366,6 +1571,7 @@ class Renderer:
             GL_SHADER_STORAGE_BARRIER_BIT |
             GL_COMMAND_BARRIER_BIT
         )
+
     #
     # begin/end frame
     #
@@ -1406,23 +1612,33 @@ class Renderer:
             # upload transforms to SSBO (for compute shader)
             self.ubo._upload_comp_gameobject_matrices_map_ssbo()
 
-            # sort by model and mesh index, constructing a batched VAO list
-            batches, num_draw_items = self.ubo._build_batched_draw_list( self.draw_list )
+            # Full GPU driven, batching, drawbuffer, and indirict buffer (no drawlist)
+            if self.USE_FULL_GPU_DRIVEN:
+                self._dispatch_full_gpu()
 
-            # upload per draw/instance data blocks to a shared SSBO eg: model_matrix, material_id
-            self.ubo._upload_draw_blocks_ssbo( batches, num_draw_items )
+                draw_ranges = None
+                num_batches = self.ubo.comp_meshnode_max # bad
 
-            # compute model matrices on the GPU
-            self._dispatch_compute_draw_ssbo( num_draw_items )
+            # Hybrid, use GPU compute for draw and indirect buffers (if enabled)
+            else:
+                # sort by model and mesh index, constructing a batched VAO list
+                batches, num_draw_items = self.ubo._build_batched_draw_list( self.draw_list )
+                num_batches = len(batches)
+
+                # upload per draw/instance data blocks to a shared SSBO eg: model_matrix, material_id
+                self.ubo._upload_draw_blocks_ssbo( batches, num_draw_items )
+
+                # compute model matrices on the GPU
+                self._dispatch_compute_draw_ssbo( num_draw_items )
             
-            # build a shared indirect buffer and draw_ranges
-            # *only build draw_ranges when instancing is disabled
-            draw_ranges = self.ubo._upload_indirect_buffer( batches, num_draw_items )
+                # build a shared indirect buffer and draw_ranges
+                # *only build draw_ranges when instancing is disabled
+                draw_ranges = self.ubo._upload_indirect_buffer( batches, num_draw_items )
 
             # shadowmap renderpass
             if _scene["shadowmap_enabled"]:
                 light_view, light_projection = self._compute_light_vp()
-                self.submitShadowRenderpass( batches, draw_ranges, light_view, light_projection )
+                self.submitShadowRenderpass( num_batches, draw_ranges, light_view, light_projection )
             else:
                 light_view = light_projection = None
 
@@ -1434,7 +1650,7 @@ class Renderer:
             self.context.skybox.draw( _scene )
 
             self.prepareMainRenderpass( _scene, light_view, light_projection )
-            self.submitMainRenderpassIndirect( batches, draw_ranges )
+            self.submitMainRenderpassIndirect( num_batches, draw_ranges )
 
         # create individual draw calls for each item in the draw list (simple rendering)
         # only draw the main renderpass to prevent performance regression, skips;

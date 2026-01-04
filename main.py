@@ -210,13 +210,14 @@ class EmberEngine:
                 self.prepare_gameObjects( None, self.world.gameObjects )
 
                 # collect active model meshes (build the draw list, unsorted/batched)
-                for uuid in self.world.models.keys():
-                    obj : GameObject = self.world.gameObjects[uuid]
+                if not self.renderer.USE_FULL_GPU_DRIVEN:
+                    for uuid in self.world.models.keys():
+                        obj : GameObject = self.world.gameObjects[uuid]
 
-                    if isinstance(obj, Camera) and self.renderer.game_runtime:
-                        continue
+                        if isinstance(obj, Camera) and self.renderer.game_runtime:
+                            continue
 
-                    obj.onRender()
+                        obj.onRender()
 
                 # dispatch world draw calls
                 self.renderer.dispatch_drawcalls( _scene )

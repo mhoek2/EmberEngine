@@ -42,6 +42,14 @@ class DrawBlock(ctypes.Structure):
         ("pad2",                ctypes.c_int),
     ]
 
+class ModelBlock(ctypes.Structure):
+    _fields_ = [
+        ("nodeOffset",          ctypes.c_int),
+        ("nodeCount",           ctypes.c_int),
+        ("pad0",                ctypes.c_int),
+        ("pad1",                ctypes.c_int),
+    ]
+
 class MeshNodeBlock(ctypes.Structure):
     _fields_ = [
         ("model",               ctypes.c_float * 16),
@@ -51,12 +59,29 @@ class MeshNodeBlock(ctypes.Structure):
         ("pad2",                ctypes.c_int),
     ]
 
+class GameObjectBlock(ctypes.Structure):
+    _fields_ = [
+        ("model",               ctypes.c_float * 16),
+        ("model_index",         ctypes.c_int),
+        ("enabled",             ctypes.c_int),
+        ("pad1",                ctypes.c_int),
+        ("pad2",                ctypes.c_int),
+    ]
+
 class BatchBlock(ctypes.Structure):
     _fields_ = [
         ("instanceCount",       ctypes.c_int),
         ("baseInstance",        ctypes.c_int),
         ("meshNodeMatrixId",    ctypes.c_int),
         ("pad1",                ctypes.c_int),
+    ]
+
+class InstanceBlock(ctypes.Structure):
+    _fields_ = [
+        ("gameObjectId",        ctypes.c_uint),
+        ("meshNodeMatrixId",    ctypes.c_uint),
+        ("pad0",                ctypes.c_uint),
+        ("pad1",                ctypes.c_uint),
     ]
 
 class UBO:
@@ -77,7 +102,7 @@ class UBO:
         self.comp_meshnode_matrices_dirty   : bool = True
         self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {}  # not flattened
         self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}        # (model_index, mesh_index) -> offset
-
+        self.comp_meshnode_max              : int = 0 # max possible bacthes to make
 
     class GpuBuffer:
         def __init__( self, max_elements, element_type, target ):
@@ -117,6 +142,15 @@ class UBO:
         def bind_base( self, binding : int = 0 ):
             glBindBufferBase( self.target, binding, self.ssbo )
 
+        def clear(self, value=0):
+            glBindBuffer(self.target, self.ssbo)
+
+            if self.is_struct:
+                glClearBufferData( self.target, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, ctypes.c_uint32(value) )
+
+            else:
+                glClearBufferData( self.target, GL_R32F, GL_RED, GL_FLOAT, ctypes.c_float(value) )
+
     def initialize( self ):
         # context
         self.renderer   : 'Renderer' = self.context.renderer
@@ -137,8 +171,15 @@ class UBO:
             MAX_MATRICES = 10000
             MAX_DRAWS = 10000
             MAX_BATCHES = 1000
+            MAX_MODELS = 1000
 
             # compute
+            self.model_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                 max_elements   = MAX_MODELS,
+                 element_type   = ModelBlock,
+                 target         = GL_SHADER_STORAGE_BUFFER
+            )
+
             self.comp_meshnode_matrices_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                  max_elements   = MAX_MATRICES,
                  element_type   = MeshNodeBlock,
@@ -147,7 +188,7 @@ class UBO:
 
             self.comp_gameobject_matrices_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                  max_elements   = MAX_MATRICES,
-                 element_type   = 16, # 64 bytes mat4 item buffer
+                 element_type   = GameObjectBlock, # 64 bytes mat4 item buffer
                  target         = GL_SHADER_STORAGE_BUFFER
             )
 
@@ -168,6 +209,36 @@ class UBO:
                  max_elements   = MAX_DRAWS,
                  element_type   = DrawElementsIndirectCommand,
                  target         = GL_DRAW_INDIRECT_BUFFER
+            )
+
+        #
+        # Full GPU driven pipeline
+        #
+        if self.renderer.USE_FULL_GPU_DRIVEN:
+            MAX_INSTANCES = 4096 * 10
+            MAX_MESH_NODE_BATCHES = 4096    # for alloc only, approx size is calculated at runtime
+
+            # used for multiple purposes at various stages during the compute path
+            self.gpu_counter = glGenBuffers(1)
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.gpu_counter)
+            glBufferData(GL_SHADER_STORAGE_BUFFER, 4, None, GL_DYNAMIC_DRAW)  # one uint
+
+            self.instance_counter = glGenBuffers(1)
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.instance_counter)
+            glBufferData(GL_SHADER_STORAGE_BUFFER, 4, None, GL_DYNAMIC_DRAW)  # one uint
+
+            self.mesh_instance_counter = glGenBuffers(1)
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.mesh_instance_counter)
+            glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * MAX_MESH_NODE_BATCHES, None, GL_DYNAMIC_DRAW)  # uint array
+
+            self.meshnode_to_batch = glGenBuffers(1)
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.meshnode_to_batch)
+            glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * MAX_MESH_NODE_BATCHES, None, GL_DYNAMIC_DRAW)  # uint array
+
+            self.mesh_instances : UBO.GpuBuffer = UBO.GpuBuffer(
+                    max_elements   = MAX_MESH_NODE_BATCHES,
+                    element_type   = InstanceBlock,
+                    target         = GL_SHADER_STORAGE_BUFFER
             )
 
     #
@@ -436,9 +507,12 @@ class UBO:
 
         # clear the mapping table, it is rebuilt.
         self.comp_meshnode_matrices_map = {}       # (model_index, mesh_index) -> offset
+        self.comp_meshnode_max = 0
 
         offset = 0
-        for model_index, items in self.comp_meshnode_matrices_nested.items():
+        node_offset = 0;
+        #for model_index, items in self.comp_meshnode_matrices_nested.items():
+        for i, (model_index, items) in enumerate(self.comp_meshnode_matrices_nested.items()):
             for item in items:
                 mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][item.mesh_index]
 
@@ -457,8 +531,15 @@ class UBO:
                 self.comp_meshnode_matrices_map[(model_index, item.mesh_index)] = offset
                 offset += 1
 
+            # model info
+            self.model_ssbo.buffer[i].nodeOffset = node_offset
+            self.model_ssbo.buffer[i].nodeCount = len(items)
+            node_offset += len(items)
+            self.comp_meshnode_max += len(items)
+
         # upload to SSBO
         self.comp_meshnode_matrices_ssbo.upload( offset )
+        self.model_ssbo.upload( len(self.comp_meshnode_matrices_nested) )
 
         self.comp_meshnode_matrices_dirty = False   
 
@@ -471,9 +552,23 @@ class UBO:
         # clear the mapping table, it is rebuilt.
         self.comp_gameobject_matrices_map = {}
 
+        self.comp_gameobject_matrices_ssbo.clear()
+
         offset = 0
         for uuid, transform in self.context.world.transforms.items():
-            self.comp_gameobject_matrices_ssbo.buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
+            #if uuid in self.context.world.trash:
+            #    continue
+
+            #self.comp_gameobject_matrices_ssbo.buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
+            self.comp_gameobject_matrices_ssbo.buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
+            
+
+            self.comp_gameobject_matrices_ssbo.buffer[offset].enabled = int(uuid not in self.context.world.trash)
+
+            if uuid in self.context.world.models:
+                self.comp_gameobject_matrices_ssbo.buffer[offset].model_index = self.context.world.models[uuid].handle
+            else:
+                self.comp_gameobject_matrices_ssbo.buffer[offset].model_index = -1
 
             # create a map
             self.comp_gameobject_matrices_map[uuid] = offset
@@ -493,6 +588,12 @@ class UBO:
                 batches[key] = []
 
             batches[key].append(item)
+
+        #print( f"{len(batches)}")
+        #for (model_index, mesh_index), batch in batches.items():   
+        #    mesh_id = (model_index, item.mesh_index)
+        #    meshNodeMatrixId = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
+        #    print( f"[{meshNodeMatrixId}] = {len(batch)}")
 
         return batches, len(_draw_list)
 
@@ -534,13 +635,13 @@ class UBO:
         if self.context.renderer.USE_INDIRECT_COMPUTE:
             for i, ((model_index, mesh_index), batch) in enumerate(batches.items()):
                 mesh_id = (model_index, mesh_index)
-
+            
                 self.batch_ssbo.buffer[i].instanceCount     = len(batch)
                 self.batch_ssbo.buffer[i].baseInstance      = draw_offset
                 self.batch_ssbo.buffer[i].meshNodeMatrixId  = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
-
+            
                 draw_offset += len(batch)
-
+            
             num_batches : int = len(batches)
             self.batch_ssbo.upload( num_batches )
 
