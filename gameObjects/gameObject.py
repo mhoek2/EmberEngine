@@ -135,6 +135,10 @@ class GameObject( Context, Transform ):
         for script in scripts:
             self.addScript( script )
 
+        # shared
+        self.is_camera          = False
+        self.is_default_camera  = False
+
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 

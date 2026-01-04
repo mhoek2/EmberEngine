@@ -1,76 +1,15 @@
 #version 430
+#extension GL_ARB_shading_language_include : require
 
-struct BatchBlock
-{
-	int instanceCount;
-	int baseInstance;
-	int meshNodeMatrixId;
-	int pad1;
-};
+#include "common_structs.glsl"
 
-struct ModelBlock
-{
-    uint nodeOffset;    // start index in MeshNodeBuffer
-    uint nodeCount;     // how many nodes per model
-	int  pad0;
-	int  pad1;
-};
-
-struct GameObjectBlock
-{
-	mat4 model;        // 64 bytes
-	int  model_index;     // 4 bytes
-	int  enabled;
-	int  pad1;
-	int  pad2;
-};
-
-struct InstancesBlock
-{
-	uint gameObjectId;
-	uint meshNodeMatrixId;
-	uint pad0;
-	uint pad1;
-};
-
-layout(std430, binding = 3) buffer BatchBuffer
-{
-	BatchBlock batches[];
-};
-
-layout(std430, binding = 4) buffer ModelBuffer
-{
-    ModelBlock models[];
-};
-
-layout(std430, binding = 5) buffer GameObjectMatrices
-{
-    GameObjectBlock gameObjects[];
-};
-
-layout( binding = 6 ) buffer GpuCounter
-{
-    uint num_gameObjects;
-};
-
-layout( binding = 7 ) buffer MeshInstanceCounterBufer
-{
-    uint meshInstanceCounter[];
-};
-
-layout(binding = 9) buffer InstancesBuffer {
-    InstancesBlock instances[];
-};
-
-//layout( binding = 10 ) buffer BatchCounter
-//{
-//    uint num_batches;
-//};
-
-layout(binding = 12) buffer MeshNodeToBatchBuffer
-{
-    int meshNodeToBatch[]; // size = MAX_MESH_NODES
-};
+layout( std430, binding =  3 )	buffer BatchBuffer					{ BatchBlock batches[];				};
+layout( std430, binding =  4 )	buffer ModelBuffer					{ ModelBlock models[];				};
+layout( std430, binding =  5 )	buffer GameObjectMatrices			{ GameObjectBlock gameObjects[];	};
+layout( std430, binding =  6 )	buffer GpuCounter					{ uint num_gameObjects;				};
+layout( std430, binding =  7 )	buffer MeshInstanceCounterBuffer	{ uint meshInstanceCounter[];		};
+layout( std430, binding =  9 )	buffer InstancesBuffer				{ InstancesBlock instances[];		};
+layout( std430, binding = 12 )	buffer MeshNodeToBatchBuffer		{ int  meshNodeToBatch[];			};
 
 layout(local_size_x = 64) in;
 

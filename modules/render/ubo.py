@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from modules.renderer import Renderer
     from modules.models import Models
     from gameObjects.gameObject import GameObject
+    from gameObjects.gameObject import Camera
 
 import ctypes
 from collections import defaultdict
@@ -562,8 +563,11 @@ class UBO:
             #self.comp_gameobject_matrices_ssbo.buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
             self.comp_gameobject_matrices_ssbo.buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
             
-
-            self.comp_gameobject_matrices_ssbo.buffer[offset].enabled = int(uuid not in self.context.world.trash)
+            # active/visible state
+            obj : GameObject = transform.gameObject
+            self.comp_gameobject_matrices_ssbo.buffer[offset].enabled = obj.hierachyActive() \
+                         and (self.renderer.game_runtime or obj.hierachyVisible()) \
+                         and not (obj.is_camera and self.renderer.game_runtime)
 
             if uuid in self.context.world.models:
                 self.comp_gameobject_matrices_ssbo.buffer[offset].model_index = self.context.world.models[uuid].handle

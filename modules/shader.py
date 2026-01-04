@@ -31,21 +31,21 @@ class Shader:
         self.settings   : Settings = context.settings
 
         # fix path to use root..
-        basepath = self.settings.shader_path
+        self.basepath = self.settings.shader_path
 
         self.templated = templated
         self.compute = compute
         self.uniforms = {}
 
         if compute:
-            comp_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.comp").getContent())
+            comp_shader = textwrap.dedent(FileHandler(f"{self.basepath}{uid}.comp").getContent())
             self.program = self.load_compute( comp_shader )
 
             self.parse_uniforms( comp_shader )
 
         else:
-            vert_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.vert").getContent())
-            frag_shader = textwrap.dedent(FileHandler(f"{basepath}{uid}.frag").getContent())
+            vert_shader = textwrap.dedent(FileHandler(f"{self.basepath}{uid}.vert").getContent())
+            frag_shader = textwrap.dedent(FileHandler(f"{self.basepath}{uid}.frag").getContent())
             self.program = self.load_program( vert_shader, frag_shader )
         
             self.parse_uniforms( vert_shader )
@@ -101,9 +101,26 @@ class Shader:
 
         return f"{version}\n{define_block}\n{src}"
 
+    def inject_includes( self, src: str ) -> str:
+        buffer = []
+
+        for line in src.splitlines():
+            if line.strip().startswith("#include"):
+                filename = line.split('"')[1]
+
+                included = FileHandler(f"{self.basepath}{filename}").getContent()
+                buffer.append( self.inject_includes( included ) )
+
+            else:
+                buffer.append(line)
+
+        return "\n".join(buffer)
+
     def load_compute( self, in_comp : str ):
         if self.templated:
             in_comp = self.inject_version_and_defines( in_comp )
+
+        in_comp = self.inject_includes( in_comp )
 
         comp = self.load_shader( GL_COMPUTE_SHADER, in_comp )
         if comp == 0:
@@ -143,6 +160,10 @@ class Shader:
         if self.templated:
             in_vert = self.inject_version_and_defines( in_vert )
             in_frag = self.inject_version_and_defines( in_frag )
+
+
+        in_vert = self.inject_includes( in_vert )
+        in_frag = self.inject_includes( in_frag )
 
         vert = self.load_shader( GL_VERTEX_SHADER, in_vert )
         if vert == 0:
