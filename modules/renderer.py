@@ -1448,9 +1448,13 @@ class Renderer:
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.meshnode_to_batch )
         glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED_INTEGER, GL_INT, np.array([-1], dtype=np.int32) )
 
-        # re-purpose draw count as batch idx counter internally
+        # re-purpose draw count as 'num_batches' counter internally
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
+
+        # 'num_instances'
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.instance_counter )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
         group_count = (self.ubo.comp_meshnode_max + 127) // 128
