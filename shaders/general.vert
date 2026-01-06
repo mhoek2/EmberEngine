@@ -53,6 +53,8 @@ flat out int var_material_index;
 
 #ifdef USE_INDIRECT
 	layout(std430, binding = 0) readonly buffer DrawBuffer { DrawBlock draw[]; };
+	layout(std430, binding = 9) readonly buffer InstancesBuffer { InstancesBlock instance[]; };
+	layout(std430, binding = 13) readonly buffer ObjectBuffer { ObjectBlock object[]; };
 #endif
 
 void main(){
@@ -62,7 +64,7 @@ void main(){
 	vec3 normal = normalize(aNormal);
 
 #ifdef USE_INDIRECT
-	DrawBlock d = draw[gl_BaseInstance + gl_InstanceID];
+	ObjectBlock d = object[instance[gl_BaseInstance + gl_InstanceID].ObjectId];
 	mat4 uMMatrix = d.model;
 #endif
 

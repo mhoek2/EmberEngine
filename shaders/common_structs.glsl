@@ -7,6 +7,15 @@ struct DrawBlock
 	int  pad2;
 };
 
+struct ObjectBlock
+{
+	mat4 model;        // 64 bytes
+	int  material;     // 4 bytes
+	int  meshNodeMatrixId;
+	int  gameObjectMatrixId;
+	int  pad2;
+};
+
 struct MeshNodeBlock
 {
 	mat4 model;        // 64 bytes
@@ -47,7 +56,7 @@ struct InstancesBlock
 {
 	uint gameObjectId;
 	uint meshNodeMatrixId;
-	uint pad0;
+	uint ObjectId;
 	uint pad1;
 };
 
@@ -57,6 +66,5 @@ struct IndirectBlock
 	uint instanceCount;    
 	uint firstIndex;    
 	int baseVertex;    
-	uint baseInstance;    
-
+	uint baseInstance;
 };

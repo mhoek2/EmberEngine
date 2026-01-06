@@ -320,7 +320,7 @@ class Renderer:
         self.USE_FULL_GPU_DRIVEN : bool = True and self.USE_INDIRECT_COMPUTE
 
         # RenderDoc debug overrrides
-        self.RENDERDOC = False
+        self.RENDERDOC = True
         if self.RENDERDOC:
             self.USE_BINDLESS_TEXTURES         = False          # bindless not supported
             pass
@@ -639,6 +639,7 @@ class Renderer:
         self.gpu_driven_compact_batches     = Shader( self.context, "gpu_driven_compact_batches", compute=True )
         self.gpu_driven_build_instances     = Shader( self.context, "gpu_driven_build_instances", compute=True )
         self.gpu_driven_build_draw_buffer   = Shader( self.context, "gpu_driven_build_draw_buffer", compute=True )
+        self.gpu_driven_build_object_buffer = Shader( self.context, "gpu_driven_build_object_buffer", compute=True )
 
     #
     # UBO / SSBO
@@ -1513,6 +1514,10 @@ class Renderer:
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_counter )
         glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, None )        
         
+        # re-purpose object counter
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.object_counter )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
+
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
         group_count = (num_gameObjects + 63) // 64
         glDispatchCompute(group_count, 1, 1)
@@ -1542,6 +1547,33 @@ class Renderer:
             GL_COMMAND_BARRIER_BIT
         )
 
+    def _dispatch_full_gpu_build_object_buffer( self, num_gameObjects ) -> None:
+        # can probably use half of self.ubo.comp_meshnode_max.
+        # very unlikely a gameObject uses maximum nodes
+        num_instances = self.ubo.comp_meshnode_max * num_gameObjects
+
+        #
+        # build the draw buffer for color pass shaders
+        # contains per instance data, eg; modelmatrix, gameObject and material
+        #
+        self.use_shader( self.gpu_driven_build_object_buffer )
+
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.object_counter )
+        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+        group_count = (num_instances + 127) // 128
+        glDispatchCompute(group_count, 1, 1)
+
+        # make SSBO writes visible to vertex/fragment shaders
+        glMemoryBarrier(
+            GL_SHADER_STORAGE_BARRIER_BIT |
+            GL_COMMAND_BARRIER_BIT
+        )
+
     def _dispatch_full_gpu( self ) -> None:
         
         num_gameObjects = len(self.context.world.transforms)
@@ -1555,16 +1587,22 @@ class Renderer:
         self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 5 )
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.ubo.gpu_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, self.ubo.mesh_instance_counter)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, self.ubo.object_counter)
         self.ubo.mesh_instances.bind_base( binding = 9 )
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, self.ubo.visbuf)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, self.ubo.visbuf)
+        self.ubo.object_ssbo.bind_base( binding = 13 )
 
         # reset states
         self.ubo.batch_ssbo.clear()
         self.ubo.mesh_instances.clear()
         self.ubo.indirect_ssbo.clear()
         self.ubo.draw_ssbo.clear()
+        self.ubo.object_ssbo.clear()
+
+        # build object buffer
+        self._dispatch_full_gpu_build_object_buffer( num_gameObjects )
 
         # dispatch and construct the final draw and indirect buffers
         self._dispatch_full_gpu_collect_batches( num_gameObjects )

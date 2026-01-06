@@ -83,7 +83,7 @@ class InstanceBlock(ctypes.Structure):
     _fields_ = [
         ("gameObjectId",        ctypes.c_uint),
         ("meshNodeMatrixId",    ctypes.c_uint),
-        ("pad0",                ctypes.c_uint),
+        ("ObjectId",            ctypes.c_uint),
         ("pad1",                ctypes.c_uint),
     ]
 
@@ -202,6 +202,12 @@ class UBO:
             )
   
             # render
+            self.object_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                 max_elements   = MAX_DRAWS,
+                 element_type   = DrawBlock,
+                 target         = GL_SHADER_STORAGE_BUFFER
+            )
+
             self.draw_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                  max_elements   = MAX_DRAWS,
                  element_type   = DrawBlock,
@@ -228,6 +234,10 @@ class UBO:
 
             self.instance_counter = glGenBuffers(1)
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.instance_counter)
+            glBufferData(GL_SHADER_STORAGE_BUFFER, 4, None, GL_DYNAMIC_DRAW)  # one uint
+
+            self.object_counter = glGenBuffers(1)
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.object_counter)
             glBufferData(GL_SHADER_STORAGE_BUFFER, 4, None, GL_DYNAMIC_DRAW)  # one uint
 
             self.mesh_instance_counter = glGenBuffers(1)
