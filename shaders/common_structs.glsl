@@ -54,10 +54,10 @@ struct GameObjectBlock
 
 struct InstancesBlock
 {
-	uint gameObjectId;
-	uint meshNodeMatrixId;
 	uint ObjectId;
+	uint pad0;
 	uint pad1;
+	uint pad2;
 };
 
 struct IndirectBlock

@@ -638,7 +638,7 @@ class Renderer:
         self.gpu_driven_batch_counter       = Shader( self.context, "gpu_driven_batch_counter", compute=True )
         self.gpu_driven_compact_batches     = Shader( self.context, "gpu_driven_compact_batches", compute=True )
         self.gpu_driven_build_instances     = Shader( self.context, "gpu_driven_build_instances", compute=True )
-        self.gpu_driven_build_draw_buffer   = Shader( self.context, "gpu_driven_build_draw_buffer", compute=True )
+        
         self.gpu_driven_build_object_buffer = Shader( self.context, "gpu_driven_build_object_buffer", compute=True )
 
     #
@@ -1526,27 +1526,6 @@ class Renderer:
             GL_COMMAND_BARRIER_BIT
         )
 
-    def _dispatch_full_gpu_build_draw_buffer( self, num_gameObjects ) -> None:
-        # can probably use half of self.ubo.comp_meshnode_max.
-        # very unlikely a gameObject uses maximum nodes
-        num_instances = self.ubo.comp_meshnode_max * num_gameObjects
-
-        #
-        # build the draw buffer for color pass shaders
-        # contains per instance data, eg; modelmatrix, gameObject and material
-        #
-        self.use_shader( self.gpu_driven_build_draw_buffer )
-
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
-        group_count = (num_instances + 127) // 128
-        glDispatchCompute(group_count, 1, 1)
-
-        # make SSBO writes visible to vertex/fragment shaders
-        glMemoryBarrier(
-            GL_SHADER_STORAGE_BARRIER_BIT |
-            GL_COMMAND_BARRIER_BIT
-        )
-
     def _dispatch_full_gpu_build_object_buffer( self, num_gameObjects ) -> None:
         # can probably use half of self.ubo.comp_meshnode_max.
         # very unlikely a gameObject uses maximum nodes
@@ -1607,7 +1586,6 @@ class Renderer:
         # dispatch and construct the final draw and indirect buffers
         self._dispatch_full_gpu_collect_batches( num_gameObjects )
         self._dispatch_full_gpu_collect_instances( num_gameObjects )
-        self._dispatch_full_gpu_build_draw_buffer( num_gameObjects )
         self._dispatch_compute_indirect_sbbo( self.ubo.comp_meshnode_max )
 
     #

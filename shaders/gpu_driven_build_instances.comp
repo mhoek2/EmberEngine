@@ -73,8 +73,6 @@ void main()
 		uint dst   = uint(batches[batchIndex].baseInstance) + local;
 
 		// bind gameObject and store index of mesh/node for later lookup
-		instances[ dst ].gameObjectId = gid;
-		instances[ dst ].meshNodeMatrixId = meshNodeMatrixId;
 		instances[ dst ].ObjectId = object_idx;
 	}
 }
