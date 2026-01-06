@@ -52,7 +52,6 @@ out vec4 var_AmbientColor;
 flat out int var_material_index;
 
 #ifdef USE_INDIRECT
-	layout(std430, binding = 0) readonly buffer DrawBuffer { DrawBlock draw[]; };
 	layout(std430, binding = 9) readonly buffer InstancesBuffer { InstancesBlock instance[]; };
 	layout(std430, binding = 13) readonly buffer ObjectBuffer { ObjectBlock object[]; };
 #endif

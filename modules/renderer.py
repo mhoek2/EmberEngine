@@ -316,8 +316,8 @@ class Renderer:
         
         # do not change
         self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
-        self.USE_INDIRECT_COMPUTE : bool = True and self.USE_GPU_DRIVEN_RENDERING
-        self.USE_FULL_GPU_DRIVEN : bool = True and self.USE_INDIRECT_COMPUTE
+        self.USE_INDIRECT_COMPUTE : bool = False and self.USE_GPU_DRIVEN_RENDERING
+        self.USE_FULL_GPU_DRIVEN : bool = False and self.USE_INDIRECT_COMPUTE
 
         # RenderDoc debug overrrides
         self.RENDERDOC = True
@@ -1594,9 +1594,10 @@ class Renderer:
     def _dispatch_compute_draw_ssbo( self, num_draw_items ) -> None:
         self.use_shader( self.compute )
 
-        self.ubo.draw_ssbo.bind_base( binding = 0 )
         self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
         self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
         # number of work items = number of draw blocks
         # local_size_x = 64 -> ceil(num_draw_items / 64)
@@ -1676,15 +1677,18 @@ class Renderer:
 
             # Hybrid, use GPU compute for draw and indirect buffers (if enabled)
             else:
+                self.ubo.mesh_instances.bind_base( binding = 9 )
+                self.ubo.object_ssbo.bind_base( binding = 13 )
+
                 # sort by model and mesh index, constructing a batched VAO list
                 batches, num_draw_items = self.ubo._build_batched_draw_list( self.draw_list )
                 num_batches = len(batches)
 
                 # upload per draw/instance data blocks to a shared SSBO eg: model_matrix, material_id
-                self.ubo._upload_draw_blocks_ssbo( batches, num_draw_items )
+                num_object_items = self.ubo._upload_object_blocks_ssbo()
 
                 # compute model matrices on the GPU
-                self._dispatch_compute_draw_ssbo( num_draw_items )
+                self._dispatch_compute_draw_ssbo( num_object_items )
             
                 # build a shared indirect buffer and draw_ranges
                 # *only build draw_ranges when instancing is disabled

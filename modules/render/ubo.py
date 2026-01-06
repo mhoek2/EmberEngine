@@ -81,10 +81,10 @@ class BatchBlock(ctypes.Structure):
 
 class InstanceBlock(ctypes.Structure):
     _fields_ = [
-        ("gameObjectId",        ctypes.c_uint),
-        ("meshNodeMatrixId",    ctypes.c_uint),
-        ("ObjectId",            ctypes.c_uint),
-        ("pad1",                ctypes.c_uint),
+        ("ObjectId",        ctypes.c_uint),
+        ("pad0",            ctypes.c_uint),
+        ("pad1",            ctypes.c_uint),
+        ("pad1",            ctypes.c_uint),
     ]
 
 class UBO:
@@ -106,6 +106,8 @@ class UBO:
         self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {}  # not flattened
         self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}        # (model_index, mesh_index) -> offset
         self.comp_meshnode_max              : int = 0 # max possible bacthes to make
+
+        self.object_map     : dict[(int, int, int), int] = {}
 
     class GpuBuffer:
         def __init__( self, max_elements, element_type, target ):
@@ -175,6 +177,7 @@ class UBO:
             MAX_DRAWS = 10000
             MAX_BATCHES = 1000
             MAX_MODELS = 1000
+            MAX_MESH_NODE_BATCHES = 4096    # for alloc only, approx size is calculated at runtime
 
             # compute
             self.model_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
@@ -220,6 +223,11 @@ class UBO:
                  target         = GL_DRAW_INDIRECT_BUFFER
             )
 
+            self.mesh_instances : UBO.GpuBuffer = UBO.GpuBuffer(
+                    max_elements   = MAX_MESH_NODE_BATCHES,
+                    element_type   = InstanceBlock,
+                    target         = GL_SHADER_STORAGE_BUFFER
+            )
         #
         # Full GPU driven pipeline
         #
@@ -248,11 +256,7 @@ class UBO:
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.meshnode_to_batch)
             glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * MAX_MESH_NODE_BATCHES, None, GL_DYNAMIC_DRAW)  # uint array
 
-            self.mesh_instances : UBO.GpuBuffer = UBO.GpuBuffer(
-                    max_elements   = MAX_MESH_NODE_BATCHES,
-                    element_type   = InstanceBlock,
-                    target         = GL_SHADER_STORAGE_BUFFER
-            )
+
 
             # visbuf, I dont fancy this. (design issue)
             # reserve 100 node gap between gameobjects, store states for 32 nodes in one uint.
@@ -565,8 +569,8 @@ class UBO:
                 offset += 1
 
             # model info
-            _model_buffer[i].nodeOffset = node_offset
-            _model_buffer[i].nodeCount = len(items)
+            _model_buffer[model_index].nodeOffset = node_offset
+            _model_buffer[model_index].nodeCount = len(items)
             node_offset += len(items)
 
         # max num nodes
@@ -592,7 +596,7 @@ class UBO:
         offset = 0
         _gameobject_ssbo        = self.comp_gameobject_matrices_ssbo
         _gameobject_buffer      = self.comp_gameobject_matrices_ssbo.buffer
-        _gameobject_offset_map  = self.comp_meshnode_matrices_map
+        _gameobject_offset_map  = self.comp_gameobject_matrices_map
 
         for uuid, transform in self.context.world.transforms.items():
             #if uuid in self.context.world.trash:
@@ -613,7 +617,7 @@ class UBO:
                 _gameobject_buffer[offset].model_index = -1
 
             # create a map
-            self.comp_gameobject_matrices_map[uuid] = offset
+            _gameobject_offset_map[uuid] = offset
             offset += 1
 
         # upload to SSBO
@@ -639,7 +643,7 @@ class UBO:
 
         return batches, len(_draw_list)
 
-    def _upload_draw_blocks_ssbo( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int ):
+    def _upload_object_blocks_ssbo( self ):
         """
         Create the per draw ssbo used for indirect rendering
         For indirect rendering, this holds the mesh and gameobject indexes, and material index.
@@ -647,27 +651,44 @@ class UBO:
         Modelmatrix is empty and filled on the GPU compute pass when compute is enabled
         """
         offset = 0
-        _draw_ssbo      = self.draw_ssbo
-        _draw_buffer    = self.draw_ssbo.buffer
+        _object_ssbo      = self.object_ssbo
+        _object_buffer    = self.object_ssbo.buffer
 
-        for (model_index, mesh_index), batch in batches.items():
-            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+        _gameobject_buffer      = self.comp_gameobject_matrices_ssbo.buffer
+        _model_buffer      = self.model_ssbo.buffer
 
-            for item in batch:
-                mesh_id = (model_index, item.mesh_index)
+        num_gameObjects = len(self.context.world.transforms)
 
-                if item.uuid:
-                    #_draw_buffer[offset].model[:]             = np.zeros((16,), dtype=np.float32)
-                    _draw_buffer[offset].meshNodeMatrixId   = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
-                    _draw_buffer[offset].gameObjectMatrixId = int(self.comp_gameobject_matrices_map[item.uuid])
-                else:
-                    # probably never hits anymore and can be deprecated?
-                    _draw_buffer[offset].model[:]           = np.asarray(item.matrix, dtype=np.float32).reshape(16)
-                
-                _draw_buffer[offset].material              = mesh["material"]
-                offset += 1
+        object_idx = 0
+        for i, uuid in enumerate(self.context.world.transforms.keys()):
 
-        _draw_ssbo.upload( num_draw_items )
+            gid = self.comp_gameobject_matrices_map[uuid]
+
+            obj = _gameobject_buffer[gid]
+            model = _model_buffer[obj.model_index]
+
+            if obj.enabled == 0:
+                continue
+
+            if obj.model_index < 0:
+                continue
+
+            for n in range(0, model.nodeCount):
+                meshNodeMatrixId = model.nodeOffset + n
+
+                _object_buffer[object_idx].meshNodeMatrixId = meshNodeMatrixId
+                _object_buffer[object_idx].gameObjectMatrixId = gid
+                _object_buffer[object_idx].material = 0
+                #_object_buffer[offset].gameObjectMatrixId = int(self.comp_gameobject_matrices_map[uuid])
+                #_object_buffer[offset].model[:] = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+
+                self.object_map[(obj.model_index, n, uuid)] = object_idx
+                object_idx += 1 
+
+
+        _object_ssbo.upload( object_idx )
+
+        return object_idx
 
     def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
         """
@@ -678,9 +699,21 @@ class UBO:
         _batch_ssbo        = self.batch_ssbo
         _batch_buffer      = self.batch_ssbo.buffer
 
+        _instances_ssbo = self.mesh_instances
+        _instances_buffer = self.mesh_instances.buffer
+        _instances_offset = 0
+        #self._upload_instance_buffer( batches )
+
         # GPU driven indirect buffer
         if self.context.renderer.USE_INDIRECT_COMPUTE:
             for offset, ((model_index, mesh_index), batch) in enumerate(batches.items()):
+
+                # set instance buffer
+                for _object in batch:
+                    object_key = (model_index, mesh_index, _object.uuid)
+                    _instances_buffer[_instances_offset].ObjectId = self.object_map[object_key] if object_key in self.object_map else 0
+                    _instances_offset += 1
+
                 mesh_id = (model_index, mesh_index)
             
                 _batch_buffer[offset].instanceCount     = len(batch)
@@ -692,6 +725,7 @@ class UBO:
             num_batches : int = len(batches)
             _batch_ssbo.upload( num_batches )
 
+            _instances_ssbo.upload( _instances_offset )
             self.context.renderer._dispatch_compute_indirect_sbbo( num_batches )
             return None
 
@@ -712,6 +746,12 @@ class UBO:
             _indirect_buffer[offset].baseVertex     = mesh["baseVertex"]
             _indirect_buffer[offset].baseInstance   = base_instance
 
+            # set instance buffer
+            for _object in batch:
+                object_key = (model_index, mesh_index, _object.uuid)
+                _instances_buffer[_instances_offset].ObjectId = self.object_map[object_key] if object_key in self.object_map else 0
+                _instances_offset += 1
+
             # support for indirect, bindless, and shared VAO is enabled.
             # allowing to render the scene in one indirect instanced drawcall
             if self.context.renderer.USE_GPU_DRIVEN_RENDERING:
@@ -726,4 +766,5 @@ class UBO:
             offset += 1
             
         _indirect_ssbo.upload( offset )
+        _instances_ssbo.upload( _instances_offset )
         return draw_ranges

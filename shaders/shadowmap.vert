@@ -16,13 +16,14 @@ uniform mat4 uPMatrix;
 layout(location = 0) in vec3 aVertex;
 
 #ifdef USE_INDIRECT
-    layout(std430, binding = 0) readonly buffer DrawBuffer { DrawBlock draw[]; };
+	layout(std430, binding = 9) readonly buffer InstancesBuffer { InstancesBlock instance[]; };
+	layout(std430, binding = 13) readonly buffer ObjectBuffer { ObjectBlock object[]; };
 #endif
 
 void main()
 {
 #ifdef USE_INDIRECT
-	DrawBlock d = draw[gl_BaseInstance + gl_InstanceID];
+	ObjectBlock d = object[instance[gl_BaseInstance + gl_InstanceID].ObjectId];
     mat4 uMMatrix = d.model;
 #endif
 
