@@ -57,7 +57,9 @@ class MeshNodeBlock(ctypes.Structure):
         ("num_indices",         ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
         ("firstIndex",          ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
         ("baseVertex",          ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
-        ("pad2",                ctypes.c_int),
+        ("pad0",                ctypes.c_int),
+        ("min_aabb",            ctypes.c_float * 4),
+        ("max_aabb",            ctypes.c_float * 4),
     ]
 
 class GameObjectBlock(ctypes.Structure):
@@ -241,6 +243,14 @@ class UBO:
                     element_type   = InstanceBlock,
                     target         = GL_SHADER_STORAGE_BUFFER
             )
+
+            # visbuf, I dont fancy this. (design issue)
+            # reserve 100 node gap between gameobjects, store states for 32 nodes in one uint.
+            # needs a 100 gap, because the amount of nodes varies per object. 
+            MAX_NODES_PER_MODEL = 100
+            self.visbuf = glGenBuffers(1)
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.visbuf)
+            glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * (MAX_DRAWS * MAX_NODES_PER_MODEL), None, GL_DYNAMIC_DRAW)  # uint array
 
     #
     # general 330 compat, 
@@ -512,6 +522,12 @@ class UBO:
 
         offset = 0
         node_offset = 0;
+        _model_ssbo         = self.model_ssbo
+        _model_buffer       = self.model_ssbo.buffer
+        _mesh_ssbo          = self.comp_meshnode_matrices_ssbo
+        _mesh_buffer        = self.comp_meshnode_matrices_ssbo.buffer
+        _mesh_offset_map    = self.comp_meshnode_matrices_map
+
         #for model_index, items in self.comp_meshnode_matrices_nested.items():
         for i, (model_index, items) in enumerate(self.comp_meshnode_matrices_nested.items()):
             for item in items:
@@ -520,27 +536,35 @@ class UBO:
                 # before indirect compute ssbo used a one mat4 stride: 
                 # renderer.element_type = 16, # 64 bytes mat4 item buffer
                 #self.comp_meshnode_matrices_ssbo.buffer[offset*16:(offset+1)*16] = item.matrix.flatten()
-                self.comp_meshnode_matrices_ssbo.buffer[offset].model[:] = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+
+                # model matrix
+                _mesh_buffer[offset].model[:] = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+
+                # aabb
+                _mesh_buffer[offset].min_aabb[:] = ( item.min_aabb[0], item.min_aabb[1], item.min_aabb[2], 1.0 )
+                _mesh_buffer[offset].max_aabb[:] = ( item.max_aabb[0], item.max_aabb[1], item.max_aabb[2], 1.0 )
 
                 if self.context.renderer.USE_INDIRECT_COMPUTE:
                     # use for indirect compute shader only -USE_INDIRECT_COMPUTE
-                    self.comp_meshnode_matrices_ssbo.buffer[offset].num_indices = mesh["num_indices"]
-                    self.comp_meshnode_matrices_ssbo.buffer[offset].firstIndex = mesh["firstIndex"]
-                    self.comp_meshnode_matrices_ssbo.buffer[offset].baseVertex = mesh["baseVertex"]
+                    _mesh_buffer[offset].num_indices = mesh["num_indices"]
+                    _mesh_buffer[offset].firstIndex = mesh["firstIndex"]
+                    _mesh_buffer[offset].baseVertex = mesh["baseVertex"]
             
                 # create a map
-                self.comp_meshnode_matrices_map[(model_index, item.mesh_index)] = offset
+                _mesh_offset_map[(model_index, item.mesh_index)] = offset
                 offset += 1
 
             # model info
-            self.model_ssbo.buffer[i].nodeOffset = node_offset
-            self.model_ssbo.buffer[i].nodeCount = len(items)
+            _model_buffer[i].nodeOffset = node_offset
+            _model_buffer[i].nodeCount = len(items)
             node_offset += len(items)
-            self.comp_meshnode_max += len(items)
+
+        # max num nodes
+        self.comp_meshnode_max += node_offset
 
         # upload to SSBO
-        self.comp_meshnode_matrices_ssbo.upload( offset )
-        self.model_ssbo.upload( len(self.comp_meshnode_matrices_nested) )
+        _mesh_ssbo.upload( offset )
+        _model_ssbo.upload( len(self.comp_meshnode_matrices_nested) )
 
         self.comp_meshnode_matrices_dirty = False   
 
@@ -556,30 +580,34 @@ class UBO:
         self.comp_gameobject_matrices_ssbo.clear()
 
         offset = 0
+        _gameobject_ssbo        = self.comp_gameobject_matrices_ssbo
+        _gameobject_buffer      = self.comp_gameobject_matrices_ssbo.buffer
+        _gameobject_offset_map  = self.comp_meshnode_matrices_map
+
         for uuid, transform in self.context.world.transforms.items():
             #if uuid in self.context.world.trash:
             #    continue
 
-            #self.comp_gameobject_matrices_ssbo.buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
-            self.comp_gameobject_matrices_ssbo.buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
+            #_gameobject_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
+            _gameobject_buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
             
             # active/visible state
             obj : GameObject = transform.gameObject
-            self.comp_gameobject_matrices_ssbo.buffer[offset].enabled = obj.hierachyActive() \
+            _gameobject_buffer[offset].enabled = obj.hierachyActive() \
                          and (self.renderer.game_runtime or obj.hierachyVisible()) \
                          and not (obj.is_camera and self.renderer.game_runtime)
 
             if uuid in self.context.world.models:
-                self.comp_gameobject_matrices_ssbo.buffer[offset].model_index = self.context.world.models[uuid].handle
+                _gameobject_buffer[offset].model_index = self.context.world.models[uuid].handle
             else:
-                self.comp_gameobject_matrices_ssbo.buffer[offset].model_index = -1
+                _gameobject_buffer[offset].model_index = -1
 
             # create a map
             self.comp_gameobject_matrices_map[uuid] = offset
             offset += 1
 
         # upload to SSBO
-        self.comp_gameobject_matrices_ssbo.upload( offset )
+        _gameobject_ssbo.upload( offset )
 
     def _build_batched_draw_list( self, _draw_list : list[DrawItem] ) -> dict[tuple[int, int], list[DrawItem]]:
         """Convert draw_list to a grouped list per model:mesh(node) used for indirect batching"""
@@ -608,7 +636,10 @@ class UBO:
 
         Modelmatrix is empty and filled on the GPU compute pass when compute is enabled
         """
-        i = 0
+        offset = 0
+        _draw_ssbo      = self.draw_ssbo
+        _draw_buffer    = self.draw_ssbo.buffer
+
         for (model_index, mesh_index), batch in batches.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
 
@@ -616,56 +647,60 @@ class UBO:
                 mesh_id = (model_index, item.mesh_index)
 
                 if item.uuid:
-                    #self.draw_ssbo.buffer[i].model[:]             = np.zeros((16,), dtype=np.float32)
-                    self.draw_ssbo.buffer[i].meshNodeMatrixId     = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
-                    self.draw_ssbo.buffer[i].gameObjectMatrixId   = int(self.comp_gameobject_matrices_map[item.uuid])
+                    #_draw_buffer[offset].model[:]             = np.zeros((16,), dtype=np.float32)
+                    _draw_buffer[offset].meshNodeMatrixId   = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
+                    _draw_buffer[offset].gameObjectMatrixId = int(self.comp_gameobject_matrices_map[item.uuid])
                 else:
                     # probably never hits anymore and can be deprecated?
-                    self.draw_ssbo.buffer[i].model[:]             = np.asarray(item.matrix, dtype=np.float32).reshape(16)
+                    _draw_buffer[offset].model[:]           = np.asarray(item.matrix, dtype=np.float32).reshape(16)
                 
-                self.draw_ssbo.buffer[i].material             = mesh["material"]
-                i += 1
+                _draw_buffer[offset].material              = mesh["material"]
+                offset += 1
 
-        self.draw_ssbo.upload( num_draw_items )
+        _draw_ssbo.upload( num_draw_items )
 
     def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
         """
         Create the shared indirect buffer and draw ranges dictionary, 
         This used to submit glMultiDrawElementsIndirect drawcalls later.
         """
-        draw_offset : int = 0
+        base_instance : int = 0
+        _batch_ssbo        = self.batch_ssbo
+        _batch_buffer      = self.batch_ssbo.buffer
 
         # GPU driven indirect buffer
         if self.context.renderer.USE_INDIRECT_COMPUTE:
-            for i, ((model_index, mesh_index), batch) in enumerate(batches.items()):
+            for offset, ((model_index, mesh_index), batch) in enumerate(batches.items()):
                 mesh_id = (model_index, mesh_index)
             
-                self.batch_ssbo.buffer[i].instanceCount     = len(batch)
-                self.batch_ssbo.buffer[i].baseInstance      = draw_offset
-                self.batch_ssbo.buffer[i].meshNodeMatrixId  = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
+                _batch_buffer[offset].instanceCount     = len(batch)
+                _batch_buffer[offset].baseInstance      = base_instance
+                _batch_buffer[offset].meshNodeMatrixId  = int(self.comp_meshnode_matrices_map[mesh_id]) if mesh_id in self.comp_meshnode_matrices_map else 0
             
-                draw_offset += len(batch)
+                base_instance += len(batch)
             
             num_batches : int = len(batches)
-            self.batch_ssbo.upload( num_batches )
+            _batch_ssbo.upload( num_batches )
 
             self.context.renderer._dispatch_compute_indirect_sbbo( num_batches )
             return None
 
-
         # CPU driven indirect buffer
         draw_ranges : dict[(int, int), (int, int)] = {}
-        i : int = 0
+
+        offset : int = 0
+        _indirect_ssbo        = self.indirect_ssbo
+        _indirect_buffer      = self.indirect_ssbo.buffer
 
         for (model_index, mesh_index), batch in batches.items():
             mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
             #print(f"Mesh {model_index},{mesh_index}: instancecount={len(batch)} baseVertex={mesh['baseVertex']}, firstIndex={mesh['firstIndex']}, num_indices={mesh['num_indices']}")
     
-            self.indirect_ssbo.buffer[i].count          = mesh["num_indices"]
-            self.indirect_ssbo.buffer[i].instanceCount  = len(batch)
-            self.indirect_ssbo.buffer[i].firstIndex     = mesh["firstIndex"]
-            self.indirect_ssbo.buffer[i].baseVertex     = mesh["baseVertex"]
-            self.indirect_ssbo.buffer[i].baseInstance   = draw_offset
+            _indirect_buffer[offset].count          = mesh["num_indices"]
+            _indirect_buffer[offset].instanceCount  = len(batch)
+            _indirect_buffer[offset].firstIndex     = mesh["firstIndex"]
+            _indirect_buffer[offset].baseVertex     = mesh["baseVertex"]
+            _indirect_buffer[offset].baseInstance   = base_instance
 
             # support for indirect, bindless, and shared VAO is enabled.
             # allowing to render the scene in one indirect instanced drawcall
@@ -675,10 +710,10 @@ class UBO:
             # Indirect rendering per mesh: batches group game objects sharing the same mesh,
             # but VAO and material bindings are performed per batch on the CPU.
             else:
-                draw_ranges[(model_index, mesh_index)] = (i, len(batch))
+                draw_ranges[(model_index, mesh_index)] = (offset, len(batch))
 
-            draw_offset += len(batch)
-            i += 1
+            base_instance += len(batch)
+            offset += 1
             
-        self.indirect_ssbo.upload( i )
+        _indirect_ssbo.upload( offset )
         return draw_ranges

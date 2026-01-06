@@ -13,13 +13,6 @@ layout(local_size_x = 128) in;
 
 void main()
 {
-    //if (gl_GlobalInvocationID.x == 0) {
-    //    num_instances = 0;
-    //    num_batches = 0;
-    //    memoryBarrier();
-    //}
-    //barrier();
-
     uint gid = gl_GlobalInvocationID.x;
 
     uint count = meshInstanceCounter[gid];

@@ -36,6 +36,7 @@ class Models( Context ):
         num_indices: int
         material   : int
         vao_simple : VAO
+        aabb       : tuple[np.ndarray, np.ndarray]
 
     @dataclass(slots=True)
     class CPUMeshData:
@@ -58,6 +59,7 @@ class Models( Context ):
         material    : int
         path        : Path
         mesh        : Any
+        aabb        : tuple[np.ndarray, np.ndarray]
 
     @dataclass(slots=True)
     class Load:
@@ -246,13 +248,20 @@ class Models( Context ):
         if material == -1:
             material = self.materials.loadOrFind( mesh.material, path )
 
+        # aabb
+        aabb = (
+            v.min( axis=0 ), 
+            v.max( axis=0 )
+        )
+
         return Models.CPUMeshData(
             combined    = combined,
             indices     = indices,
             num_indices = len(indices),
             material    = material,
             path        = path,
-            mesh        = mesh
+            mesh        = mesh,
+            aabb        = aabb,
         )
 
     def prepare_on_CPU( self, index : int, path : Path, material : int = -1 ) -> None:
@@ -312,7 +321,8 @@ class Models( Context ):
                 "firstIndex"    : first_idx,
                 "num_indices"   : cpu_mesh.num_indices,
                 "material"      : cpu_mesh.material,
-                "vao_simple"    : vao_simple
+                "vao_simple"    : vao_simple,
+                "aabb"          : cpu_mesh.aabb
             }
 
         cpu_meshes.clear()
@@ -403,7 +413,12 @@ class Models( Context ):
         for mesh in node.meshes:
             mesh_index = self.model[model_index].meshes.index(mesh)
 
-            self.renderer.addNodeMatrix( model_index, mesh_index, world_matrix )
+            self.renderer.addNodeMatrix( 
+                self.model_mesh[model_index][mesh_index], 
+                model_index, 
+                mesh_index, 
+                world_matrix 
+            )
 
         for child in node.children:
             self.__create_node_matrices( child, model_index, world_matrix )

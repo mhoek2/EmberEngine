@@ -10,8 +10,29 @@ layout( std430, binding =  6 )	buffer GpuCounter					{ uint num_gameObjects;				
 layout( std430, binding =  7 )	buffer MeshInstanceCounterBuffer	{ uint meshInstanceCounter[];		};
 layout( std430, binding =  9 )	buffer InstancesBuffer				{ InstancesBlock instances[];		};
 layout( std430, binding = 12 )	buffer MeshNodeToBatchBuffer		{ int  meshNodeToBatch[];			};
+layout( std430, binding = 10)   buffer visBuffer                    { uint visbuf[];		            };
 
 layout(local_size_x = 64) in;
+
+// plane frustum culling
+#define MAX_NODES_PER_MODEL 100
+bool isVisible( in uint gid, in uint n )
+{
+	// use one uint per node (max: MAX_NODES_PER_MODEL)
+    //uint nodeIndex = gid * MAX_NODES_PER_MODEL + n;
+	//if (visbuf[nodeIndex] == 1u) 
+	//	return true;
+
+	// use one bit per node (max: MAX_NODES_PER_MODEL * 32)
+    uint visIndex = gid * MAX_NODES_PER_MODEL + (n >> 5);
+    uint bitIndex = n & 31u;
+
+	if ((visbuf[visIndex] & (1u << bitIndex)) == 1u)
+		return true;
+
+	return false;
+}
+
 
 void main()
 {	
@@ -32,6 +53,15 @@ void main()
 
 		// -1 means its unused/no instances for this model
 		if (batchIndex < 0) continue; 
+
+		// use uint per node
+        //uint nodeIndex = gid * MAX_NODES_PER_MODEL + n;
+		//if (visbuf[nodeIndex] == 0u) continue;
+
+		// use one bit per node
+        uint visIndex = gid * MAX_NODES_PER_MODEL + (n >> 5);
+        uint bitIndex = n & 31u;
+		if ((visbuf[visIndex] & (1u << bitIndex)) == 0u) continue;
 
 		// get current instance count for this mesh/node then increment by one
 		uint local = atomicAdd(meshInstanceCounter[meshNodeMatrixId], 1);

@@ -1105,7 +1105,7 @@ class Renderer:
     #
     # indirect
     #
-    def addNodeMatrix( self, model_index : int, mesh_index : int, matrix : Matrix44 ):
+    def addNodeMatrix( self, model_mesh : "Models.Mesh", model_index : int, mesh_index : int, matrix : Matrix44 ):
         """
         Indirect drawing only, collect mesh matrices for a model:node(mesh) after it loads
 
@@ -1116,10 +1116,37 @@ class Renderer:
         if model_index not in self.ubo.comp_meshnode_matrices_nested:
             self.ubo.comp_meshnode_matrices_nested[model_index] = []
 
+        matrix_np = np.array(matrix, dtype=np.float32)
+        min_l, max_l = model_mesh["aabb"]
+
+        # 8 corners
+        corners = np.array([
+            [min_l[0], min_l[1], min_l[2], 1.0],
+            [min_l[0], min_l[1], max_l[2], 1.0],
+            [min_l[0], max_l[1], min_l[2], 1.0],
+            [min_l[0], max_l[1], max_l[2], 1.0],
+            [max_l[0], min_l[1], min_l[2], 1.0],
+            [max_l[0], min_l[1], max_l[2], 1.0],
+            [max_l[0], max_l[1], min_l[2], 1.0],
+            [max_l[0], max_l[1], max_l[2], 1.0],
+        ], dtype=np.float32)
+
+        world = (matrix_np @ corners.T).T[:, :3]
+
+        min_aabb = world.min(axis=0)
+        max_aabb = world.max(axis=0)
+
         # add to the nested list, this is flattened and mapped when uploading to SSBO
         self.ubo.comp_meshnode_matrices_nested[model_index].append( 
-            MatrixItem( mesh_index, np.array(matrix, dtype=np.float32) ) 
+            MatrixItem( 
+                mesh_index, 
+                matrix_np,
+                min_aabb   = min_aabb,
+                max_aabb   = max_aabb
+            ) 
         )
+
+
     
     #
     # Renderpasses
@@ -1407,6 +1434,13 @@ class Renderer:
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_counter )
         glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, None )          
 
+        glUniformMatrix4fv( self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection )
+        glUniformMatrix4fv( self.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.view )
+
+        # visbuf
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.visbuf )
+        glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, np.array([0], dtype=np.uint32) )
+
         # dispatch
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
         group_count = (num_gameObjects + 63) // 64
@@ -1524,6 +1558,7 @@ class Renderer:
         self.ubo.mesh_instances.bind_base( binding = 9 )
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, self.ubo.visbuf)
 
         # reset states
         self.ubo.batch_ssbo.clear()

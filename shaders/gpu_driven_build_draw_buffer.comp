@@ -22,8 +22,8 @@ void main()
 
 	// build the draw buffer, this is used in color pass shaders
 	// it holds the modelmatrix, material, and references to the gameobject and model
-	draw[gid].model = gameObjects[gameObjectMatrixId].model * mesh_node[meshNodeMatrixId].model;
-	draw[gid].meshNodeMatrixId = int(meshNodeMatrixId);
-	draw[gid].gameObjectMatrixId = int(gameObjectMatrixId);
-	draw[gid].material = 0;
+	draw[gid].model					= gameObjects[gameObjectMatrixId].model * mesh_node[meshNodeMatrixId].model;
+	draw[gid].meshNodeMatrixId		= int(meshNodeMatrixId);
+	draw[gid].gameObjectMatrixId	= int(gameObjectMatrixId);
+	draw[gid].material				= 0;
 }

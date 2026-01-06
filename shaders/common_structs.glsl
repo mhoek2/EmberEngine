@@ -13,7 +13,9 @@ struct MeshNodeBlock
 	int  num_indices;     // 4 bytes
 	int  firstIndex;
 	int  baseVertex;
-	int  pad2;
+	int  pad0;
+	vec4 min_aabb;
+	vec4 max_aabb;
 };
 
 struct BatchBlock
