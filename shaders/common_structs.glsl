@@ -1,12 +1,3 @@
-struct DrawBlock
-{
-	mat4 model;        // 64 bytes
-	int  material;     // 4 bytes
-	int  meshNodeMatrixId;
-	int  gameObjectMatrixId;
-	int  pad2;
-};
-
 struct ObjectBlock
 {
 	mat4 model;        // 64 bytes

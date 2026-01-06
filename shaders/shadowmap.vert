@@ -16,8 +16,8 @@ uniform mat4 uPMatrix;
 layout(location = 0) in vec3 aVertex;
 
 #ifdef USE_INDIRECT
+	layout(std430, binding = 0) readonly buffer ObjectBuffer	{ ObjectBlock object[]; };
 	layout(std430, binding = 9) readonly buffer InstancesBuffer { InstancesBlock instance[]; };
-	layout(std430, binding = 13) readonly buffer ObjectBuffer { ObjectBlock object[]; };
 #endif
 
 void main()

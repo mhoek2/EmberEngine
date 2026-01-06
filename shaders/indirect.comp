@@ -4,9 +4,9 @@
 
 #include "common_structs.glsl"
 
-layout( std430, binding =  1 )	buffer MeshNodeBuffer	{ MeshNodeBlock mesh_node[];};
-layout( std430, binding =  2 )	buffer IndirectBuffer	{ IndirectBlock indirect[];	};
-layout( std430, binding =  3 )	buffer BatchBuffer		{ BatchBlock batches[];		};
+layout( std430, binding = 1 )	buffer MeshNodeBuffer	{ MeshNodeBlock mesh_node[];};
+layout( std430, binding = 2 )	buffer IndirectBuffer	{ IndirectBlock indirect[];	};
+layout( std430, binding = 3 )	buffer BatchBuffer		{ BatchBlock batches[];		};
 
 layout(local_size_x = 64) in;
 

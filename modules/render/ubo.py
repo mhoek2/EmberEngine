@@ -34,7 +34,7 @@ class DrawElementsIndirectCommand(ctypes.Structure):
         ("baseInstance",  ctypes.c_uint),
     ]
 
-class DrawBlock(ctypes.Structure):
+class ObjectBlock(ctypes.Structure):
     _fields_ = [
         ("model",               ctypes.c_float * 16),
         ("material",            ctypes.c_int),
@@ -207,13 +207,7 @@ class UBO:
             # render
             self.object_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                  max_elements   = MAX_DRAWS,
-                 element_type   = DrawBlock,
-                 target         = GL_SHADER_STORAGE_BUFFER
-            )
-
-            self.draw_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
-                 max_elements   = MAX_DRAWS,
-                 element_type   = DrawBlock,
+                 element_type   = ObjectBlock,
                  target         = GL_SHADER_STORAGE_BUFFER
             )
 
@@ -223,7 +217,7 @@ class UBO:
                  target         = GL_DRAW_INDIRECT_BUFFER
             )
 
-            self.mesh_instances : UBO.GpuBuffer = UBO.GpuBuffer(
+            self.instances_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                     max_elements   = MAX_MESH_NODE_BATCHES,
                     element_type   = InstanceBlock,
                     target         = GL_SHADER_STORAGE_BUFFER
@@ -679,12 +673,12 @@ class UBO:
                 _object_buffer[object_idx].meshNodeMatrixId = meshNodeMatrixId
                 _object_buffer[object_idx].gameObjectMatrixId = gid
                 _object_buffer[object_idx].material = 0
-                #_object_buffer[offset].gameObjectMatrixId = int(self.comp_gameobject_matrices_map[uuid])
+
+                # done in compute shader
                 #_object_buffer[offset].model[:] = np.asarray(item.matrix, dtype=np.float32).reshape(16)
 
                 self.object_map[(obj.model_index, n, uuid)] = object_idx
                 object_idx += 1 
-
 
         _object_ssbo.upload( object_idx )
 
@@ -692,28 +686,36 @@ class UBO:
 
     def _upload_indirect_buffer( self, batches : dict[tuple[int, int], list[DrawItem]], num_draw_items : int  ):
         """
-        Create the shared indirect buffer and draw ranges dictionary, 
-        This used to submit glMultiDrawElementsIndirect drawcalls later.
+        Create the shared indirect and instances buffer and optional: 
+        *draw ranges with insufficient GlExtenstion support.
+
+        These buffers are used to for glMultiDrawElementsIndirect drawcall(s) later.
         """
         base_instance : int = 0
-        _batch_ssbo        = self.batch_ssbo
-        _batch_buffer      = self.batch_ssbo.buffer
+        _batch_ssbo         = self.batch_ssbo
+        _batch_buffer       = self.batch_ssbo.buffer
 
-        _instances_ssbo = self.mesh_instances
-        _instances_buffer = self.mesh_instances.buffer
-        _instances_offset = 0
-        #self._upload_instance_buffer( batches )
+        _instances_ssbo     = self.instances_ssbo
+        _instances_buffer   = self.instances_ssbo.buffer
+        _instances_offset   = 0
 
-        # GPU driven indirect buffer
-        if self.context.renderer.USE_INDIRECT_COMPUTE:
-            for offset, ((model_index, mesh_index), batch) in enumerate(batches.items()):
+        # CPU driven indirect buffer only
+        if not self.context.renderer.USE_INDIRECT_COMPUTE:
+            draw_ranges : dict[(int, int), (int, int)] = {}
+            _indirect_ssbo        = self.indirect_ssbo
+            _indirect_buffer      = self.indirect_ssbo.buffer
 
-                # set instance buffer
-                for _object in batch:
-                    object_key = (model_index, mesh_index, _object.uuid)
-                    _instances_buffer[_instances_offset].ObjectId = self.object_map[object_key] if object_key in self.object_map else 0
-                    _instances_offset += 1
+        # build and upload the buffers
+        for offset, ((model_index, mesh_index), batch) in enumerate(batches.items()):
 
+            # build the instance buffer
+            for _object in batch:
+                object_key = (model_index, mesh_index, _object.uuid)
+                _instances_buffer[_instances_offset].ObjectId = self.object_map[object_key] if object_key in self.object_map else 0
+                _instances_offset += 1
+
+            # GPU driven indirect buffer (compute shader)
+            if self.context.renderer.USE_INDIRECT_COMPUTE:
                 mesh_id = (model_index, mesh_index)
             
                 _batch_buffer[offset].instanceCount     = len(batch)
@@ -722,49 +724,39 @@ class UBO:
             
                 base_instance += len(batch)
             
-            num_batches : int = len(batches)
-            _batch_ssbo.upload( num_batches )
+            # CPU driven indirect buffer
+            else:
+                mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
+                #print(f"Mesh {model_index},{mesh_index}: instancecount={len(batch)} baseVertex={mesh['baseVertex']}, firstIndex={mesh['firstIndex']}, num_indices={mesh['num_indices']}")
+    
+                _indirect_buffer[offset].count          = mesh["num_indices"]
+                _indirect_buffer[offset].instanceCount  = len(batch)
+                _indirect_buffer[offset].firstIndex     = mesh["firstIndex"]
+                _indirect_buffer[offset].baseVertex     = mesh["baseVertex"]
+                _indirect_buffer[offset].baseInstance   = base_instance
 
+                # support for indirect, bindless, and shared VAO is enabled.
+                # allowing to render the scene in one indirect instanced drawcall
+                if self.context.renderer.USE_GPU_DRIVEN_RENDERING:
+                    draw_ranges = None
+
+                # Indirect rendering per mesh: batches group game objects sharing the same mesh,
+                # but VAO and material bindings are performed per batch on the CPU.
+                else:
+                    draw_ranges[(model_index, mesh_index)] = (offset, len(batch))
+
+                base_instance += len(batch)
+
+        # GPU driven indirect buffer
+        if self.context.renderer.USE_INDIRECT_COMPUTE:
+            _batch_ssbo.upload( len(batches) )
+
+            self.context.renderer._dispatch_compute_indirect_sbbo( len(batches) )
             _instances_ssbo.upload( _instances_offset )
-            self.context.renderer._dispatch_compute_indirect_sbbo( num_batches )
             return None
 
         # CPU driven indirect buffer
-        draw_ranges : dict[(int, int), (int, int)] = {}
-
-        offset : int = 0
-        _indirect_ssbo        = self.indirect_ssbo
-        _indirect_buffer      = self.indirect_ssbo.buffer
-
-        for (model_index, mesh_index), batch in batches.items():
-            mesh : "Models.Mesh" = self.context.models.model_mesh[model_index][mesh_index]
-            #print(f"Mesh {model_index},{mesh_index}: instancecount={len(batch)} baseVertex={mesh['baseVertex']}, firstIndex={mesh['firstIndex']}, num_indices={mesh['num_indices']}")
-    
-            _indirect_buffer[offset].count          = mesh["num_indices"]
-            _indirect_buffer[offset].instanceCount  = len(batch)
-            _indirect_buffer[offset].firstIndex     = mesh["firstIndex"]
-            _indirect_buffer[offset].baseVertex     = mesh["baseVertex"]
-            _indirect_buffer[offset].baseInstance   = base_instance
-
-            # set instance buffer
-            for _object in batch:
-                object_key = (model_index, mesh_index, _object.uuid)
-                _instances_buffer[_instances_offset].ObjectId = self.object_map[object_key] if object_key in self.object_map else 0
-                _instances_offset += 1
-
-            # support for indirect, bindless, and shared VAO is enabled.
-            # allowing to render the scene in one indirect instanced drawcall
-            if self.context.renderer.USE_GPU_DRIVEN_RENDERING:
-                draw_ranges = None
-
-            # Indirect rendering per mesh: batches group game objects sharing the same mesh,
-            # but VAO and material bindings are performed per batch on the CPU.
-            else:
-                draw_ranges[(model_index, mesh_index)] = (offset, len(batch))
-
-            base_instance += len(batch)
-            offset += 1
-            
-        _indirect_ssbo.upload( offset )
+        _indirect_ssbo.upload( len(batches) )
         _instances_ssbo.upload( _instances_offset )
+
         return draw_ranges

@@ -42,7 +42,7 @@ from collections import defaultdict
 import uuid as uid
 
 from modules.render.types import DrawItem, MatrixItem
-from modules.render.ubo import UBO, DrawElementsIndirectCommand, DrawBlock
+from modules.render.ubo import UBO, DrawElementsIndirectCommand
 
 class Renderer:
     class GameState_(enum.IntEnum):
@@ -631,7 +631,7 @@ class Renderer:
         self.shadowmap          = Shader( self.context, "shadowmap", templated = True )
         self.fog                = Shader( self.context, "fog", templated = True )
 
-        self.compute            = Shader( self.context, "compute", compute=True )
+        self.object_modelmatrix = Shader( self.context, "object_modelmatrix", compute=True )
         self.indirect           = Shader( self.context, "indirect", compute=True )
 
         # Full GPU driven
@@ -1159,8 +1159,6 @@ class Renderer:
         self.use_shader( self.general )
 
         if self.USE_INDIRECT:
-            self.ubo.draw_ssbo.bind_base( binding = 0 )
-
             # shadowmap
             glUniform1i( self.shader.uniforms['ushadowmapEnabled'], int(_scene["shadowmap_enabled"]) )
             if _scene["shadowmap_enabled"]:
@@ -1378,39 +1376,34 @@ class Renderer:
     #             |
     #             v
     # +-----------------------+
-    # | Dispatch : collect_batches shader (gpu_driven_collect_batches)
-    # |  Inputs: gameObjects, models
-    # |  Outputs: mesh_instance_counter
+    # | Dispatch: gpu_driven_build_object_buffer
+    # |  - Builds per-object GPU-side data (model matrices etc.)
+    # |  - (key part) CAN be shared across indirect and instance buffers
     # +-----------------------+
     #             |
     #             v
     # +-----------------------+
-    # | Dispatch : compact_batches shader (gpu_driven_compact_batches)
-    # |  Inputs: mesh_instance_counter
-    # |  Outputs: batch_ssbo, meshnode_to_batch
+    # | Dispatch: gpu_driven_collect_batches
+    # |  - Count mesh/node instances per object
     # +-----------------------+
     #             |
     #             v
     # +-----------------------+
-    # | Dispatch : build_instances shader (gpu_driven_build_instances)
-    # |  Inputs: batch_ssbo, meshnode_to_batch,
-    # |          comp_gameobject_matrices_ssbo
-    # |  Outputs: mesh_instances
+    # | Dispatch: gpu_driven_compact_batches
+    # |  - Remove unused meshes
+    # |  - Build compact batch lookup table
     # +-----------------------+
     #             |
     #             v
     # +-----------------------+
-    # | Dispatch : build_draw_buffer shader (gpu_driven_build_draw_buffer)
-    # |  Inputs: mesh_instances, comp_meshnode_matrices_ssbo,
-    # |          model_ssbo
-    # |  Outputs: draw_ssbo
+    # | Dispatch: gpu_driven_build_instances
+    # |  - Construct instances_ssbo
     # +-----------------------+
     #             |
     #             v
     # +-----------------------+
-    # | Dispatch : build_indirect_draw shader (gpu_driven_build_indirect_draw)
-    # |  Inputs: draw_ssbo, batch_ssbo
-    # |  Outputs: indirect_ssbo
+    # | Dispatch: compute_indirect
+    # |  - Fill indirect_ssbo
     # +-----------------------+
     #             |
     #             v
@@ -1558,7 +1551,7 @@ class Renderer:
         num_gameObjects = len(self.context.world.transforms)
 
         # sadly, ton of uniforms
-        self.ubo.draw_ssbo.bind_base( binding = 0 )
+        self.ubo.object_ssbo.bind_base( binding = 0 )
         self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
         glBindBufferBase( GL_SHADER_STORAGE_BUFFER, 2, self.ubo.indirect_ssbo.ssbo )
         self.ubo.batch_ssbo.bind_base( binding = 3 )
@@ -1567,23 +1560,21 @@ class Renderer:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.ubo.gpu_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, self.ubo.mesh_instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, self.ubo.object_counter)
-        self.ubo.mesh_instances.bind_base( binding = 9 )
+        self.ubo.instances_ssbo.bind_base( binding = 9 )
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, self.ubo.visbuf)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
-        self.ubo.object_ssbo.bind_base( binding = 13 )
 
         # reset states
-        self.ubo.batch_ssbo.clear()
-        self.ubo.mesh_instances.clear()
-        self.ubo.indirect_ssbo.clear()
-        self.ubo.draw_ssbo.clear()
         self.ubo.object_ssbo.clear()
+        self.ubo.batch_ssbo.clear()
+        self.ubo.instances_ssbo.clear()
+        self.ubo.indirect_ssbo.clear()
 
-        # build object buffer
+        # build object buffer containing gameObject's model mesh/node data eg; modelmatrix
         self._dispatch_full_gpu_build_object_buffer( num_gameObjects )
 
-        # dispatch and construct the final draw and indirect buffers
+        # construct the indirect and instance buffers
         self._dispatch_full_gpu_collect_batches( num_gameObjects )
         self._dispatch_full_gpu_collect_instances( num_gameObjects )
         self._dispatch_compute_indirect_sbbo( self.ubo.comp_meshnode_max )
@@ -1591,11 +1582,9 @@ class Renderer:
     #
     # Compute (hybrid GPU driven)
     #
-    def _dispatch_compute_draw_ssbo( self, num_draw_items ) -> None:
-        self.use_shader( self.compute )
-
-        self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
-        self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
+    def _dispatch_compute_object_block_modelmatrix( self, num_draw_items ) -> None:
+        """Compute all modelmatrices for each gameObject's model mesh/node"""
+        self.use_shader( self.object_modelmatrix )
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
@@ -1677,18 +1666,18 @@ class Renderer:
 
             # Hybrid, use GPU compute for draw and indirect buffers (if enabled)
             else:
-                self.ubo.mesh_instances.bind_base( binding = 9 )
-                self.ubo.object_ssbo.bind_base( binding = 13 )
+                self.ubo.instances_ssbo.bind_base( binding = 9 )
+                self.ubo.object_ssbo.bind_base( binding = 0 )
+                self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
+                self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
 
                 # sort by model and mesh index, constructing a batched VAO list
                 batches, num_draw_items = self.ubo._build_batched_draw_list( self.draw_list )
                 num_batches = len(batches)
 
-                # upload per draw/instance data blocks to a shared SSBO eg: model_matrix, material_id
+                # build object buffer containing gameObject's model mesh/node data eg; modelmatrix
                 num_object_items = self.ubo._upload_object_blocks_ssbo()
-
-                # compute model matrices on the GPU
-                self._dispatch_compute_draw_ssbo( num_object_items )
+                self._dispatch_compute_object_block_modelmatrix( num_object_items )
             
                 # build a shared indirect buffer and draw_ranges
                 # *only build draw_ranges when instancing is disabled
