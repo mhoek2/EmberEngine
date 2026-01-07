@@ -110,15 +110,21 @@ class UBO:
         self.object_map     : dict[(int, int, int), int] = {}
 
     class GpuBuffer:
-        def __init__( self, max_elements, element_type, target ):
+        def __init__( self, max_elements, element_type, target, buffer_type = ctypes.c_float ):
             self.max_elements   = max_elements
             self.element_type   = element_type
             self.target         = target
 
             if isinstance(element_type, int):
-                # flat float array
+
+                #if buffer_type == ctypes.c_float:
+                #    self.element_size = element_type      # number of floats per element
+                #    self.buffer = (ctypes.c_float * (max_elements * self.element_size))()
+                #
+                #if buffer_type == ctypes.c_float:
                 self.element_size = element_type      # number of floats per element
-                self.buffer = (ctypes.c_float * (max_elements * self.element_size))()
+                self.buffer = (buffer_type * (max_elements * self.element_size))()
+
                 self.is_struct = False
             else:
                 # structured type
@@ -249,6 +255,17 @@ class UBO:
             self.meshnode_to_batch = glGenBuffers(1)
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.meshnode_to_batch)
             glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * MAX_MESH_NODE_BATCHES, None, GL_DYNAMIC_DRAW)  # uint array
+
+            # object base
+            self.object_base_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                    max_elements   = MAX_MESH_NODE_BATCHES,
+                    element_type   = 4 * MAX_MODELS,
+                    target         = GL_SHADER_STORAGE_BUFFER,
+                    buffer_type    = ctypes.c_uint
+            )
+            #self.object_base_ssbo = glGenBuffers(1)
+            #glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.object_base_ssbo)
+            #glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * MAX_MODELS, None, GL_DYNAMIC_DRAW)  # uint array
 
 
 
@@ -637,6 +654,39 @@ class UBO:
 
         return batches, len(_draw_list)
 
+
+    def _cpu_build_object_base( self ) -> None:
+        object_base : int = 0
+        object_idx : int = 0
+
+        _object_base_ssbo        = self.object_base_ssbo
+        _object_base_buffer      = self.object_base_ssbo.buffer
+
+        _gameobject_buffer  = self.comp_gameobject_matrices_ssbo.buffer
+        _model_buffer       = self.model_ssbo.buffer
+
+        for i, uuid in enumerate(self.context.world.transforms.keys()):      
+            
+            gid = self.comp_gameobject_matrices_map[uuid]
+
+            obj = _gameobject_buffer[gid]
+            
+            if obj.enabled == 0: 
+                _object_base_buffer[gid] = -1
+                continue
+            if obj.model_index < 0: 
+                _object_base_buffer[gid] = -1
+                continue
+
+            model = _model_buffer[obj.model_index]
+            
+            _object_base_buffer[gid] = object_base
+            #object_base += max(1, model.nodeCount-1)
+            object_base += model.nodeCount
+
+        print("hi")
+        _object_base_ssbo.upload( i )
+
     def _upload_object_blocks_ssbo( self ):
         """
         Create the per draw ssbo used for indirect rendering
@@ -645,13 +695,11 @@ class UBO:
         Modelmatrix is empty and filled on the GPU compute pass when compute is enabled
         """
         offset = 0
-        _object_ssbo      = self.object_ssbo
-        _object_buffer    = self.object_ssbo.buffer
+        _object_ssbo        = self.object_ssbo
+        _object_buffer      = self.object_ssbo.buffer
 
-        _gameobject_buffer      = self.comp_gameobject_matrices_ssbo.buffer
-        _model_buffer      = self.model_ssbo.buffer
-
-        num_gameObjects = len(self.context.world.transforms)
+        _gameobject_buffer  = self.comp_gameobject_matrices_ssbo.buffer
+        _model_buffer       = self.model_ssbo.buffer
 
         object_idx = 0
         for i, uuid in enumerate(self.context.world.transforms.keys()):
@@ -659,13 +707,11 @@ class UBO:
             gid = self.comp_gameobject_matrices_map[uuid]
 
             obj = _gameobject_buffer[gid]
+            
+            if obj.enabled == 0: continue
+            if obj.model_index < 0: continue
+
             model = _model_buffer[obj.model_index]
-
-            if obj.enabled == 0:
-                continue
-
-            if obj.model_index < 0:
-                continue
 
             for n in range(0, model.nodeCount):
                 meshNodeMatrixId = model.nodeOffset + n

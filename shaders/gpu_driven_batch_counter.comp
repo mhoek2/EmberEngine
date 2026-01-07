@@ -84,7 +84,7 @@ bool frustumCull( in GameObjectBlock obj, in uint meshNodeMatrixId )
 void setVisible( in uint gid, in uint n )
 {
     // use one uint per node (max: MAX_NODES_PER_MODEL)
-    //uint nodeIndex = gid * UINTS_PER_OBJECT + n;
+    //uint nodeIndex = gid * MAX_NODES_PER_MODEL + n;
     //atomicOr(visbuf[nodeIndex], 1u);
 
     // use one bit per node (max: MAX_NODES_PER_MODEL * 32)

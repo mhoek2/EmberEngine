@@ -9,6 +9,7 @@ layout( std430, binding =  4 )	buffer ModelBuffer					{ ModelBlock models[];				
 layout( std430, binding =  5 )	buffer GameObjectMatrices			{ GameObjectBlock gameObjects[];};
 layout( std430, binding =  6 )	buffer GpuCounter					{ uint num_gameObjects;			};
 layout( std430, binding =  8 )	buffer ObjectCounter				{ uint num_objects;				};
+layout( std430, binding =  13 )	buffer ObjectBase					{ uint object_base[];			};
 
 layout(local_size_x = 128) in;
 
@@ -19,20 +20,24 @@ void main()
 	if (gid >= num_gameObjects) return;
 
 	GameObjectBlock obj = gameObjects[gid];
-	ModelBlock model = models[obj.model_index];
 
 	if (obj.enabled == 0) return;
+	if (obj.model_index < 0) return;
+
+	ModelBlock model = models[obj.model_index];
+
+	uint base = object_base[gid];
 
 	for (uint n = 0; n < model.nodeCount; n++) {
 		uint meshNodeMatrixId = model.nodeOffset + n;
 
-		uint object_idx = atomicAdd(num_objects, 1);
+		uint object_idx = base + n;
 
 		// build the draw buffer, this is used in color pass shaders
 		// it holds the modelmatrix, material, and references to the gameobject and model
 		object[object_idx].model				= obj.model * mesh_node[meshNodeMatrixId].model;
-		object[object_idx].meshNodeMatrixId	= int(meshNodeMatrixId);
+		object[object_idx].meshNodeMatrixId		= int(meshNodeMatrixId);
 		object[object_idx].gameObjectMatrixId	= int(gid);
-		object[object_idx].material			= 0;
+		object[object_idx].material				= 0;
 	}
 }

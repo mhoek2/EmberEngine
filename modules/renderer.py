@@ -316,8 +316,8 @@ class Renderer:
         
         # do not change
         self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
-        self.USE_INDIRECT_COMPUTE : bool = False and self.USE_GPU_DRIVEN_RENDERING
-        self.USE_FULL_GPU_DRIVEN : bool = False and self.USE_INDIRECT_COMPUTE
+        self.USE_INDIRECT_COMPUTE : bool = True and self.USE_GPU_DRIVEN_RENDERING
+        self.USE_FULL_GPU_DRIVEN : bool = True and self.USE_INDIRECT_COMPUTE
 
         # RenderDoc debug overrrides
         self.RENDERDOC = True
@@ -1520,12 +1520,8 @@ class Renderer:
         )
 
     def _dispatch_full_gpu_build_object_buffer( self, num_gameObjects ) -> None:
-        # can probably use half of self.ubo.comp_meshnode_max.
-        # very unlikely a gameObject uses maximum nodes
-        num_instances = self.ubo.comp_meshnode_max * num_gameObjects
-
         #
-        # build the draw buffer for color pass shaders
+        # build the shared object buffer
         # contains per instance data, eg; modelmatrix, gameObject and material
         #
         self.use_shader( self.gpu_driven_build_object_buffer )
@@ -1537,7 +1533,7 @@ class Renderer:
         glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
-        group_count = (num_instances + 127) // 128
+        group_count = (num_gameObjects + 127) // 128
         glDispatchCompute(group_count, 1, 1)
 
         # make SSBO writes visible to vertex/fragment shaders
@@ -1564,6 +1560,8 @@ class Renderer:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, self.ubo.visbuf)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
+        #glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 13, self.ubo.object_base_ssbo)
+        self.ubo.object_base_ssbo.bind_base( binding = 13 )
 
         # reset states
         self.ubo.object_ssbo.clear()
@@ -1572,6 +1570,7 @@ class Renderer:
         self.ubo.indirect_ssbo.clear()
 
         # build object buffer containing gameObject's model mesh/node data eg; modelmatrix
+        self.ubo._cpu_build_object_base()
         self._dispatch_full_gpu_build_object_buffer( num_gameObjects )
 
         # construct the indirect and instance buffers
