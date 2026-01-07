@@ -210,6 +210,15 @@ class UBO:
                  target         = GL_SHADER_STORAGE_BUFFER
             )
 
+            if self.renderer.USE_FULL_GPU_DRIVEN:
+                # object base, precomuted index table for: gid(gameObject idx) + nodeIndex
+                self.object_base_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                        max_elements   = MAX_MATRICES,
+                        element_type   = 4,
+                        target         = GL_SHADER_STORAGE_BUFFER,
+                        buffer_type    = ctypes.c_uint
+                )
+
             self.indirect_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                  max_elements   = MAX_DRAWS,
                  element_type   = DrawElementsIndirectCommand,
@@ -228,15 +237,16 @@ class UBO:
             MAX_INSTANCES = 4096 * 10
             MAX_MESH_NODE_BATCHES = 4096    # for alloc only, approx size is calculated at runtime
 
-            # used for multiple purposes at various stages during the compute path
-            self.gpu_counter = glGenBuffers(1)
-            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.gpu_counter)
+            # atomics
+            self.batch_counter = glGenBuffers(1)
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.batch_counter)
             glBufferData(GL_SHADER_STORAGE_BUFFER, 4, None, GL_DYNAMIC_DRAW)  # one uint
 
             self.instance_counter = glGenBuffers(1)
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.instance_counter)
             glBufferData(GL_SHADER_STORAGE_BUFFER, 4, None, GL_DYNAMIC_DRAW)  # one uint
 
+            # buffers
             self.mesh_instance_counter = glGenBuffers(1)
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.mesh_instance_counter)
             glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * MAX_MESH_NODE_BATCHES, None, GL_DYNAMIC_DRAW)  # uint array
@@ -248,14 +258,6 @@ class UBO:
             self.meshnode_to_batch = glGenBuffers(1)
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.meshnode_to_batch)
             glBufferData(GL_SHADER_STORAGE_BUFFER, 4 * MAX_MESH_NODE_BATCHES, None, GL_DYNAMIC_DRAW)  # uint array
-
-            # object base, precomuted index table for: gid(gameObject idx) + nodeIndex
-            self.object_base_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
-                    max_elements   = MAX_MESH_NODE_BATCHES,
-                    element_type   = 4 * MAX_MODELS,
-                    target         = GL_SHADER_STORAGE_BUFFER,
-                    buffer_type    = ctypes.c_uint
-            )
 
             # visbuf, I dont fancy this. (design issue)
             # reserve 100 node gap between gameobjects, store states for 32 nodes in one uint.

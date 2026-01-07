@@ -4,7 +4,7 @@
 #include "common_structs.glsl"
 
 layout( std430, binding = 3 )	buffer BatchBuffer					{ BatchBlock batches[];				};
-layout( std430, binding = 6 )	buffer GpuCounter					{ uint num_batches;					};
+layout( std430, binding = 6 )	buffer BatchCounter					{ uint num_batches;					};
 layout( std430, binding = 7 )	buffer MeshInstanceCounterBuffer	{ uint meshInstanceCounter[];		};
 layout( std430, binding = 11 )	buffer InstanceCounter				{ uint num_instances;				};
 layout( std430, binding = 12 )	buffer MeshNodeToBatchBuffer		{ int  meshNodeToBatch[];			};

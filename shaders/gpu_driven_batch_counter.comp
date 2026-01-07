@@ -9,9 +9,10 @@ uniform mat4 uPMatrix;
 layout( std430, binding = 1 )	buffer MeshNodeBuffer	            { MeshNodeBlock mesh_node[];        };
 layout( std430, binding = 4 )	buffer ModelBuffer					{ ModelBlock models[];				};
 layout( std430, binding = 5 )	buffer GameObjectMatrices			{ GameObjectBlock gameObjects[];	};
-layout( binding = 6)			buffer GpuCounter					{ uint numGameObjects;				};
 layout( binding = 7)			buffer MeshInstanceCounterBuffer	{ uint meshInstanceCounter[];		};
 layout( std430, binding = 10)   buffer visBuffer                    { uint visbuf[];		            };
+
+uniform uint num_gameObjects;
 
 layout(local_size_x = 64) in;
 
@@ -103,7 +104,7 @@ void main()
 
     uint gid = gl_GlobalInvocationID.x;
 
-    if (gid >= numGameObjects) return;
+    if (gid >= num_gameObjects) return;
 
     GameObjectBlock obj = gameObjects[gid];
 

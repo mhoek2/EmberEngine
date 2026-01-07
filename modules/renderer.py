@@ -636,7 +636,7 @@ class Renderer:
 
         # Full GPU driven
         self.gpu_driven_batch_counter       = Shader( self.context, "gpu_driven_batch_counter", compute=True )
-        self.gpu_driven_compact_batches     = Shader( self.context, "gpu_driven_compact_batches", compute=True )
+        self.gpu_driven_batch_compact       = Shader( self.context, "gpu_driven_batch_compact", compute=True )
         self.gpu_driven_build_instances     = Shader( self.context, "gpu_driven_build_instances", compute=True )
         
         self.gpu_driven_build_object_buffer = Shader( self.context, "gpu_driven_build_object_buffer", compute=True )
@@ -1389,7 +1389,7 @@ class Renderer:
     #             |
     #             v
     # +-----------------------+
-    # | Dispatch: gpu_driven_compact_batches
+    # | Dispatch: gpu_driven_batch_compact
     # |  - Remove unused meshes
     # |  - Build compact batch lookup table
     # +-----------------------+
@@ -1420,9 +1420,7 @@ class Renderer:
         self.use_shader( self.gpu_driven_batch_counter )
 
         # this lets the compute shader know the valid range of global invocation IDs (gid),
-        # threads that hit gid >= numGameObjects return and do nothing.
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+        glUniform1ui( self.shader.uniforms['num_gameObjects'], num_gameObjects )
 
         # reset all 'mesh_instance_counter' entries
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_counter )
@@ -1470,14 +1468,14 @@ class Renderer:
         #    4:                       4
         # 
         # ]
-        self.use_shader( self.gpu_driven_compact_batches )
+        self.use_shader( self.gpu_driven_batch_compact )
 
         # reset all 'meshnode_to_batch' entries to -1 first
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.meshnode_to_batch )
         glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED_INTEGER, GL_INT, np.array([-1], dtype=np.int32) )
 
         # re-purpose draw count as 'num_batches' counter internally
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.batch_counter )
         glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
 
         # 'num_instances'
@@ -1492,16 +1490,14 @@ class Renderer:
             GL_COMMAND_BARRIER_BIT
         )
 
-    def _dispatch_full_gpu_collect_instances( self, num_gameObjects : int ) -> None:
+    def _dispatch_full_gpu_build_instances( self, num_gameObjects : int ) -> None:
         #
         # construct the instance buffer, binding gameObjects to a mesh/node instance
         #
         self.use_shader( self.gpu_driven_build_instances )
 
         # this lets the compute shader know the valid range of global invocation IDs (gid),
-        # threads that hit gid >= numGameObjects return and do nothing.
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+        glUniform1ui( self.shader.uniforms['num_gameObjects'], num_gameObjects )
 
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_writer )
         glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, None )        
@@ -1521,8 +1517,8 @@ class Renderer:
         #
         self.use_shader( self.gpu_driven_build_object_buffer )
 
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
+        # this lets the compute shader know the valid range of global invocation IDs (gid),
+        glUniform1ui( self.shader.uniforms['num_gameObjects'], num_gameObjects )
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
         group_count = (num_gameObjects + 127) // 128
@@ -1536,7 +1532,7 @@ class Renderer:
 
     def _dispatch_full_gpu( self ) -> None:
         
-        num_gameObjects = len(self.context.world.transforms)
+        num_gameObjects : int = len(self.context.world.transforms)
 
         # sadly, ton of uniforms
         self.ubo.object_ssbo.bind_base( binding = 0 )
@@ -1545,7 +1541,7 @@ class Renderer:
         self.ubo.batch_ssbo.bind_base( binding = 3 )
         self.ubo.model_ssbo.bind_base( binding = 4 )
         self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 5 )
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.ubo.gpu_counter)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.ubo.batch_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, self.ubo.mesh_instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, self.ubo.mesh_instance_writer)
         self.ubo.instances_ssbo.bind_base( binding = 9 )
@@ -1566,7 +1562,7 @@ class Renderer:
 
         # construct the indirect and instance buffers
         self._dispatch_full_gpu_collect_batches( num_gameObjects )
-        self._dispatch_full_gpu_collect_instances( num_gameObjects )
+        self._dispatch_full_gpu_build_instances( num_gameObjects )
         self._dispatch_compute_indirect_sbbo( self.ubo.comp_meshnode_max )
 
     #

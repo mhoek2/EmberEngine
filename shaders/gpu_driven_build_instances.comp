@@ -6,12 +6,13 @@
 layout( std430, binding = 3 )	buffer BatchBuffer					{ BatchBlock batches[];				};
 layout( std430, binding = 4 )	buffer ModelBuffer					{ ModelBlock models[];				};
 layout( std430, binding = 5 )	buffer GameObjectMatrices			{ GameObjectBlock gameObjects[];	};
-layout( std430, binding = 6 )	buffer GpuCounter					{ uint num_gameObjects;				};
 layout( std430, binding = 8 )	buffer MeshInstanceWriterBuffer		{ uint meshInstanceWriter[];		};
 layout( std430, binding = 9 )	buffer InstancesBuffer				{ InstancesBlock instances[];		};
 layout( std430, binding = 12)	buffer MeshNodeToBatchBuffer		{ int  meshNodeToBatch[];			};
 layout( std430, binding = 10)   buffer visBuffer                    { uint visbuf[];		            };
 layout( std430, binding = 13 )	buffer ObjectBase					{ uint object_base[];				};
+
+uniform uint num_gameObjects;
 
 layout(local_size_x = 64) in;
 
