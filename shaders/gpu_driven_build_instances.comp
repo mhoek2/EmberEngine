@@ -7,12 +7,11 @@ layout( std430, binding = 3 )	buffer BatchBuffer					{ BatchBlock batches[];				
 layout( std430, binding = 4 )	buffer ModelBuffer					{ ModelBlock models[];				};
 layout( std430, binding = 5 )	buffer GameObjectMatrices			{ GameObjectBlock gameObjects[];	};
 layout( std430, binding = 6 )	buffer GpuCounter					{ uint num_gameObjects;				};
-layout( std430, binding = 7 )	buffer MeshInstanceCounterBuffer	{ uint meshInstanceCounter[];		};
-layout( std430, binding = 8 )	buffer ObjectCounter				{ uint num_objects;				};
+layout( std430, binding = 8 )	buffer MeshInstanceWriterBuffer		{ uint meshInstanceWriter[];		};
 layout( std430, binding = 9 )	buffer InstancesBuffer				{ InstancesBlock instances[];		};
 layout( std430, binding = 12)	buffer MeshNodeToBatchBuffer		{ int  meshNodeToBatch[];			};
 layout( std430, binding = 10)   buffer visBuffer                    { uint visbuf[];		            };
-layout( std430, binding =  13 )	buffer ObjectBase					{ uint object_base[];			};
+layout( std430, binding = 13 )	buffer ObjectBase					{ uint object_base[];				};
 
 layout(local_size_x = 64) in;
 
@@ -29,7 +28,7 @@ bool isVisible( in uint gid, in uint n )
     uint visIndex = gid * MAX_NODES_PER_MODEL + (n >> 5);
     uint bitIndex = n & 31u;
 
-	if ((visbuf[visIndex] & (1u << bitIndex)) == 1u)
+	if ((visbuf[visIndex] & (1u << bitIndex)) != 0u)
 		return true;
 
 	return false;
@@ -60,17 +59,12 @@ void main()
 		// -1 means its unused/no instances for this model
 		if (batchIndex < 0) continue; 
 
-		// use uint per node
-        //uint nodeIndex = gid * MAX_NODES_PER_MODEL + n;
-		//if (visbuf[nodeIndex] == 0u) continue;
-
-		// use one bit per node
-        uint visIndex = gid * MAX_NODES_PER_MODEL + (n >> 5);
-        uint bitIndex = n & 31u;
-		if ((visbuf[visIndex] & (1u << bitIndex)) == 0u) continue;
+		if (!isVisible(gid, n)) continue;
 
 		// get current instance count for this mesh/node then increment by one
-		uint local = atomicAdd(meshInstanceCounter[meshNodeMatrixId], 1);
+		uint local = atomicAdd(meshInstanceWriter[meshNodeMatrixId], 1);
+		if (local >= uint(batches[batchIndex].instanceCount))
+			return;
 
 		// compute destination index in the instance buffer
 		uint dst   = uint(batches[batchIndex].baseInstance) + local;

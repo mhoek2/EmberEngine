@@ -320,7 +320,7 @@ class Renderer:
         self.USE_FULL_GPU_DRIVEN : bool = True and self.USE_INDIRECT_COMPUTE
 
         # RenderDoc debug overrrides
-        self.RENDERDOC = True
+        self.RENDERDOC = False
         if self.RENDERDOC:
             self.USE_BINDLESS_TEXTURES         = False          # bindless not supported
             pass
@@ -1503,13 +1503,8 @@ class Renderer:
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
         glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
 
-        # re-purpose buffer. reset all 'mesh_instance_counter' entries
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_counter )
+        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.mesh_instance_writer )
         glClearBufferData( GL_SHADER_STORAGE_BUFFER, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, None )        
-        
-        # re-purpose object counter
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.object_counter )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
         group_count = (num_gameObjects + 63) // 64
@@ -1528,9 +1523,6 @@ class Renderer:
 
         glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.gpu_counter )
         glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([num_gameObjects], dtype=np.uint32) )
-
-        glBindBuffer( GL_SHADER_STORAGE_BUFFER, self.ubo.object_counter )
-        glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, 4, np.array([0], dtype=np.uint32) )
 
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
         group_count = (num_gameObjects + 127) // 128
@@ -1555,12 +1547,11 @@ class Renderer:
         self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 5 )
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.ubo.gpu_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, self.ubo.mesh_instance_counter)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, self.ubo.object_counter)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, self.ubo.mesh_instance_writer)
         self.ubo.instances_ssbo.bind_base( binding = 9 )
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, self.ubo.visbuf)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
-        #glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 13, self.ubo.object_base_ssbo)
         self.ubo.object_base_ssbo.bind_base( binding = 13 )
 
         # reset states

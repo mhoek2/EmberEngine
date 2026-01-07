@@ -101,12 +101,13 @@ void main()
     }
     barrier();
 
-	uint gid = gl_GlobalInvocationID.x;
+    uint gid = gl_GlobalInvocationID.x;
+
+    if (gid >= numGameObjects) return;
 
     GameObjectBlock obj = gameObjects[gid];
 
-    if (gid >= numGameObjects || obj.enabled == 0) 
-		return;
+    if (obj.enabled == 0) return;
 
 	ModelBlock model = models[obj.model_index];
 
