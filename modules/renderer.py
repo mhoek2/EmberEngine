@@ -267,6 +267,25 @@ class Renderer:
     def get_window_title(self) -> str:
         return self.project.meta.get("name") if self.settings.is_exported else self.settings.application_name
 
+    def set_supported_opengl_extensions( self ) -> None:
+        num_ext = glGetIntegerv( GL_NUM_EXTENSIONS )
+
+        return [
+            glGetStringi( GL_EXTENSIONS, i ).decode()
+            for i in range(num_ext)
+        ]
+
+    def has_extension( self, extension : str ) -> bool:
+
+        # debugging
+        if self.RENDERDOC:
+            return True
+
+        if extension in self.gl_extensions:
+            return True
+
+        return False
+
     def create_instance( self ) -> None:
         """Create the window and instance with openGL"""
         pygame.init()
@@ -300,17 +319,16 @@ class Renderer:
         gl_version, renderer, vendor, glsl_version = Renderer.print_opengl_version()
         major, minor = map(int, gl_version.split('.')[0:2])
 
-        # Retrieve supported OpenGL extensions
-        num_ext = glGetIntegerv(GL_NUM_EXTENSIONS)
-        self.gl_extensions = [
-            glGetStringi( GL_EXTENSIONS, i ).decode()
-            for i in range(num_ext)
-        ]
-
+        # Retrieve supported OpenGL extensions 
+        # https://opengl.gpuinfo.org/listextensions.php
+        self.RENDERDOC = True
+        self.gl_extensions = self.set_supported_opengl_extensions()
+ 
         # renderer configuration
         # OpenGL ver. < 4.6.0 will fallback to simple rendering and GLSL 330 core features for backwards compat.
         supports_gl_460 = (major, minor) >= (4, 6)
-        self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 
+        #
+        self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 and self.has_extension("GL_ARB_bindless_texture") 
         self.USE_INDIRECT           : bool = supports_gl_460  
         self.SHARED_VAO             : bool = supports_gl_460
         
@@ -320,10 +338,10 @@ class Renderer:
         self.USE_FULL_GPU_DRIVEN : bool = True and self.USE_INDIRECT_COMPUTE
 
         # RenderDoc debug overrrides
-        self.RENDERDOC = False
         if self.RENDERDOC:
-            self.USE_BINDLESS_TEXTURES         = False          # bindless not supported
-            pass
+            # bindless not supported, 
+            # will break rendering but ok to inspect dispatches
+            self.USE_BINDLESS_TEXTURES = False  
 
         if supports_gl_460:
             print( "OpenGL 4.6.0 is supported, use Indirect and Bindless rendering" )
