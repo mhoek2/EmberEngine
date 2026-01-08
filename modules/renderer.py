@@ -321,7 +321,7 @@ class Renderer:
 
         # Retrieve supported OpenGL extensions 
         # https://opengl.gpuinfo.org/listextensions.php
-        self.RENDERDOC = True
+        self.RENDERDOC = False
         self.gl_extensions = self.set_supported_opengl_extensions()
  
         # renderer configuration
@@ -1007,6 +1007,15 @@ class Renderer:
         #p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0, -10, 0)
 
+        self.physics_step = 1.0 / 240.0
+        p.setTimeStep(self.physics_step)
+
+        #p.setPhysicsEngineParameter(
+        #    numSolverIterations    = 10,
+        #    numSubSteps            = 1
+        #)
+
+        self.physics_accumulator = 0.0
         # debug print list of available functions
         #for name in dir(p):
         #    if callable(getattr(p, name)):
@@ -1014,9 +1023,17 @@ class Renderer:
 
     def _runPhysics( self ):
         """Run the step simulation when game is running"""
-        if self.game_running:
-            for _ in range( int(self.deltaTime / (1./240.)) ):
-                p.stepSimulation()
+        if not self.game_running:
+            return
+
+        self.physics_accumulator += self.deltaTime
+        max_steps = 8
+        steps = 0
+
+        while self.physics_accumulator >= self.physics_step and steps < max_steps:
+            p.stepSimulation()
+            self.physics_accumulator -= self.physics_step
+            steps += 1
 
     #
     # shadowmap
@@ -1627,7 +1644,7 @@ class Renderer:
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
         Bind framebuffer (FBO), view matrix, frame&delta time"""
-        self.frameTime = self.clock.tick(0)
+        self.frameTime = self.clock.tick( 120 )
         self.deltaTime = self.frameTime / self.DELTA_SHIFT
 
         # set the deltatime for ImGui
