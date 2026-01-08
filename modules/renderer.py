@@ -321,7 +321,7 @@ class Renderer:
 
         # Retrieve supported OpenGL extensions 
         # https://opengl.gpuinfo.org/listextensions.php
-        self.RENDERDOC = False
+        self.RENDERDOC = True
         self.gl_extensions = self.set_supported_opengl_extensions()
  
         # renderer configuration
@@ -329,8 +329,8 @@ class Renderer:
         supports_gl_460 = (major, minor) >= (4, 6)
         #
         self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 and self.has_extension("GL_ARB_bindless_texture") 
-        self.USE_INDIRECT           : bool = supports_gl_460  
-        self.SHARED_VAO             : bool = supports_gl_460
+        self.USE_INDIRECT           : bool = True  
+        self.SHARED_VAO             : bool = True
         
         # do not change
         self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES

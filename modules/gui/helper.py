@@ -445,3 +445,25 @@ class Helper( Context ):
         draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), _bg_color)
         #draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
         draw_list.channels_merge()
+
+    def draw_color_legend_item( self, 
+                                text        : str, 
+                                color, 
+                                size        : float = 14.0, 
+                                rounding    : float = 5.0 
+        ):
+        draw_list = imgui.get_window_draw_list()
+        pos = imgui.get_cursor_screen_pos()
+
+        draw_list.add_rect_filled(
+            pos,
+            imgui.ImVec2(pos.x + size, pos.y + size),
+            color,
+            rounding
+        )
+
+        imgui.dummy(imgui.ImVec2(size, size))
+        imgui.same_line()
+
+        imgui.set_cursor_pos_y(imgui.get_cursor_pos_y() + (size - imgui.get_text_line_height()) * 0.5)
+        imgui.text(text)
