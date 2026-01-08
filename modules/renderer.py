@@ -902,11 +902,13 @@ class Renderer:
         Toggling visibility and position of the mouse"""
         if self.ImGuiInput:
             self.ImGuiInput = False
-            self.ImGuiInputFocussed = True
+            self.ImGuiInputFocussed = True # first frame hack
+            pygame.event.set_grab(True)
             pygame.mouse.set_visible( False )
             pygame.mouse.set_pos( self.screen_center )
         else:
             self.ImGuiInput = True
+            pygame.event.set_grab(False)
             pygame.mouse.set_visible( True )
             
     #
@@ -944,7 +946,7 @@ class Renderer:
     def event_handler( self ) -> None:
         """The main event handler for the application itself, handling input event states
         eg. Keep mouse hidden and in center of window when F1 is pressed to go into 3D space."""
-        mouse_moving = False
+        #mouse_moving = False
 
         for event in self.context.events.get():
             self.render_backend.process_event(event)
@@ -989,13 +991,14 @@ class Renderer:
                 if event.key == pygame.K_TAB:
                     self.context.cevent.add("tab")
 
-            if not self.paused: 
-                if event.type == pygame.MOUSEMOTION:
-                    self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
-                    mouse_moving = True
+        # deprecated and replaced with pygame.event.set_grab (08-01-2026)
+            #if not self.paused: 
+            #    if event.type == pygame.MOUSEMOTION:
+            #        self.mouse_move = [event.pos[i] - self.screen_center[i] for i in range(2)]
+            #        mouse_moving = True
 
-        if not self.ImGuiInput and not mouse_moving:
-            pygame.mouse.set_pos( self.screen_center )
+        #if not self.ImGuiInput and not mouse_moving:
+        #    pygame.mouse.set_pos( self.screen_center )
 
     #
     # physics
@@ -1644,7 +1647,7 @@ class Renderer:
     def begin_frame( self ) -> None:
         """Start for each frame, but triggered after the event_handler.
         Bind framebuffer (FBO), view matrix, frame&delta time"""
-        self.frameTime = self.clock.tick( 120 )
+        self.frameTime = self.clock.tick( 0 )
         self.deltaTime = self.frameTime / self.DELTA_SHIFT
 
         # set the deltatime for ImGui
