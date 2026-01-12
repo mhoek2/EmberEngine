@@ -342,13 +342,19 @@
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.shader.html">modules.shader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.cubemap.html">modules.cubemap</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.files.html">modules.files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="a_modules/modules.imageLoader.html">modules.imageLoader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.images.html">modules.images</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.jsonHandling.html">modules.jsonHandling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.material.html">modules.material</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="modules/gui.html">Gui</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="modules/a_gui/modules.gui.consoleWindow.html">modules.gui.consoleWindow</a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules/a_gui/modules.gui.project.html">modules.gui.project</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="modules/render.html">Render</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.image.html">modules.render.image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.types.html">modules.render.types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.ubo.html">modules.render.ubo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.vao.html">modules.render.vao</a></li>
 </ul>
 </details></li>
 </ul>
@@ -479,7 +485,6 @@
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.models.html#modules.models.Models.__init__"><code class="docutils literal notranslate"><span class="pre">Models.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.models.html#modules.models.Models.compute_tangents_bitangents"><code class="docutils literal notranslate"><span class="pre">Models.compute_tangents_bitangents()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.models.html#modules.models.Models.create_matrices"><code class="docutils literal notranslate"><span class="pre">Models.create_matrices()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.models.html#modules.models.Models.create_mesh_and_gl_buffers"><code class="docutils literal notranslate"><span class="pre">Models.create_mesh_and_gl_buffers()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.models.html#modules.models.Models.draw"><code class="docutils literal notranslate"><span class="pre">Models.draw()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.models.html#modules.models.Models.loadOrFind"><code class="docutils literal notranslate"><span class="pre">Models.loadOrFind()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.models.html#modules.models.Models.model_loader_thread"><code class="docutils literal notranslate"><span class="pre">Models.model_loader_thread()</span></code></a></li>
@@ -496,6 +501,7 @@
 <li class="toctree-l3"><a class="reference internal" href="a_modules/modules.shader.html#modules.shader.Shader"><code class="docutils literal notranslate"><span class="pre">Shader</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.shader.html#modules.shader.Shader.__init__"><code class="docutils literal notranslate"><span class="pre">Shader.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.shader.html#modules.shader.Shader.bind_uniforms"><code class="docutils literal notranslate"><span class="pre">Shader.bind_uniforms()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.shader.html#modules.shader.Shader.inject_includes"><code class="docutils literal notranslate"><span class="pre">Shader.inject_includes()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.shader.html#modules.shader.Shader.inject_version_and_defines"><code class="docutils literal notranslate"><span class="pre">Shader.inject_version_and_defines()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.shader.html#modules.shader.Shader.load_compute"><code class="docutils literal notranslate"><span class="pre">Shader.load_compute()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.shader.html#modules.shader.Shader.load_program"><code class="docutils literal notranslate"><span class="pre">Shader.load_program()</span></code></a></li>
@@ -534,23 +540,26 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="a_modules/modules.imageLoader.html">modules.imageLoader</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="a_modules/modules.imageLoader.html#modules.imageLoader.create_black_image"><code class="docutils literal notranslate"><span class="pre">create_black_image()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="a_modules/modules.imageLoader.html#modules.imageLoader.create_grey_image"><code class="docutils literal notranslate"><span class="pre">create_grey_image()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="a_modules/modules.imageLoader.html#modules.imageLoader.create_image_pygame"><code class="docutils literal notranslate"><span class="pre">create_image_pygame()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="a_modules/modules.imageLoader.html#modules.imageLoader.create_rmo_map"><code class="docutils literal notranslate"><span class="pre">create_rmo_map()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="a_modules/modules.imageLoader.html#modules.imageLoader.create_white_image"><code class="docutils literal notranslate"><span class="pre">create_white_image()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="a_modules/modules.imageLoader.html#modules.imageLoader.load_cubemap_pygame"><code class="docutils literal notranslate"><span class="pre">load_cubemap_pygame()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="a_modules/modules.imageLoader.html#modules.imageLoader.load_image_pygame"><code class="docutils literal notranslate"><span class="pre">load_image_pygame()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.images.html">modules.images</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images"><code class="docutils literal notranslate"><span class="pre">Images</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.Queue"><code class="docutils literal notranslate"><span class="pre">Images.Queue</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.__init__"><code class="docutils literal notranslate"><span class="pre">Images.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.bind"><code class="docutils literal notranslate"><span class="pre">Images.bind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.bind_gl"><code class="docutils literal notranslate"><span class="pre">Images.bind_gl()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.create_black_image"><code class="docutils literal notranslate"><span class="pre">Images.create_black_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.create_default_physical_image"><code class="docutils literal notranslate"><span class="pre">Images.create_default_physical_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.create_grey_image"><code class="docutils literal notranslate"><span class="pre">Images.create_grey_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.create_white_image"><code class="docutils literal notranslate"><span class="pre">Images.create_white_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.get_by_path"><code class="docutils literal notranslate"><span class="pre">Images.get_by_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.get_gl_texture"><code class="docutils literal notranslate"><span class="pre">Images.get_gl_texture()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.image_upload_queue_flush"><code class="docutils literal notranslate"><span class="pre">Images.image_upload_queue_flush()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.loadFromPixels"><code class="docutils literal notranslate"><span class="pre">Images.loadFromPixels()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.loadOrFindFullPath"><code class="docutils literal notranslate"><span class="pre">Images.loadOrFindFullPath()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.loadOrFindPhysicalMap"><code class="docutils literal notranslate"><span class="pre">Images.loadOrFindPhysicalMap()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.make_bindless"><code class="docutils literal notranslate"><span class="pre">Images.make_bindless()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.pixelsToImage"><code class="docutils literal notranslate"><span class="pre">Images.pixelsToImage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.queue_upload"><code class="docutils literal notranslate"><span class="pre">Images.queue_upload()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.images.html#modules.images.Images.tex_to_bindless"><code class="docutils literal notranslate"><span class="pre">Images.tex_to_bindless()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -567,13 +576,15 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="a_modules/modules.material.html">modules.material</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials"><code class="docutils literal notranslate"><span class="pre">Materials</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.Material"><code class="docutils literal notranslate"><span class="pre">Materials.Material</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.__init__"><code class="docutils literal notranslate"><span class="pre">Materials.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.add_ao_suffix"><code class="docutils literal notranslate"><span class="pre">Materials.add_ao_suffix()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.bind"><code class="docutils literal notranslate"><span class="pre">Materials.bind()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.buildMaterial"><code class="docutils literal notranslate"><span class="pre">Materials.buildMaterial()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.getMaterialByIndex"><code class="docutils literal notranslate"><span class="pre">Materials.getMaterialByIndex()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.get_texture_kind"><code class="docutils literal notranslate"><span class="pre">Materials.get_texture_kind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.is_gltf_texture"><code class="docutils literal notranslate"><span class="pre">Materials.is_gltf_texture()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.loadOrFind"><code class="docutils literal notranslate"><span class="pre">Materials.loadOrFind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="a_modules/modules.material.html#modules.material.Materials.load_texture"><code class="docutils literal notranslate"><span class="pre">Materials.load_texture()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -585,6 +596,39 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="modules/a_gui/modules.gui.project.html">modules.gui.project</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="modules/a_gui/modules.gui.project.html#modules.gui.project.Project"><code class="docutils literal notranslate"><span class="pre">Project</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules/render.html">Render</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.image.html">modules.render.image</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.image.html#modules.render.image.ImageUpload"><code class="docutils literal notranslate"><span class="pre">ImageUpload</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.image.html#modules.render.image.create_image_pygame"><code class="docutils literal notranslate"><span class="pre">create_image_pygame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.image.html#modules.render.image.load_cubemap_pygame"><code class="docutils literal notranslate"><span class="pre">load_cubemap_pygame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.image.html#modules.render.image.upload_image"><code class="docutils literal notranslate"><span class="pre">upload_image()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.types.html">modules.render.types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.types.html#modules.render.types.DrawItem"><code class="docutils literal notranslate"><span class="pre">DrawItem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.types.html#modules.render.types.ImageMeta"><code class="docutils literal notranslate"><span class="pre">ImageMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.types.html#modules.render.types.Material"><code class="docutils literal notranslate"><span class="pre">Material</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.types.html#modules.render.types.MatrixItem"><code class="docutils literal notranslate"><span class="pre">MatrixItem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.types.html#modules.render.types.TextureKind_"><code class="docutils literal notranslate"><span class="pre">TextureKind_</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.ubo.html">modules.render.ubo</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.BatchBlock"><code class="docutils literal notranslate"><span class="pre">BatchBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.DrawElementsIndirectCommand"><code class="docutils literal notranslate"><span class="pre">DrawElementsIndirectCommand</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.GameObjectBlock"><code class="docutils literal notranslate"><span class="pre">GameObjectBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.InstanceBlock"><code class="docutils literal notranslate"><span class="pre">InstanceBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.MeshNodeBlock"><code class="docutils literal notranslate"><span class="pre">MeshNodeBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.ModelBlock"><code class="docutils literal notranslate"><span class="pre">ModelBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.ObjectBlock"><code class="docutils literal notranslate"><span class="pre">ObjectBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.ubo.html#modules.render.ubo.UBO"><code class="docutils literal notranslate"><span class="pre">UBO</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules/a_render/modules.render.vao.html">modules.render.vao</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules/a_render/modules.render.vao.html#modules.render.vao.VAO"><code class="docutils literal notranslate"><span class="pre">VAO</span></code></a></li>
 </ul>
 </li>
 </ul>

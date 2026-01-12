@@ -14,5 +14,6 @@ Gui
    modules.gui.inspector
    modules.gui.project
    modules.gui.sceneSettings
+   modules.gui.rendererInfo
    modules.gui.textEditor
    modules.gui.types

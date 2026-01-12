@@ -341,7 +341,6 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.shader.html">modules.shader</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.cubemap.html">modules.cubemap</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.files.html">modules.files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.imageLoader.html">modules.imageLoader</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.images.html">modules.images</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.jsonHandling.html">modules.jsonHandling</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">modules.material</a></li>
@@ -350,6 +349,13 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../modules/gui.html">Gui</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.consoleWindow.html">modules.gui.consoleWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.project.html">modules.gui.project</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/render.html">Render</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.image.html">modules.render.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.types.html">modules.render.types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.ubo.html">modules.render.ubo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.vao.html">modules.render.vao</a></li>
 </ul>
 </details></li>
 </ul>
@@ -421,42 +427,6 @@
 <dt class="sig sig-object py" id="modules.material.Materials">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.material.</span></span><span class="sig-name descname"><span class="pre">Materials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.material.Materials" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
-<dl class="py class">
-<dt class="sig sig-object py" id="modules.material.Materials.Material">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Material</span></span><a class="headerlink" href="#modules.material.Materials.Material" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.material.Materials.Material.albedo">
-<span class="sig-name descname"><span class="pre">albedo</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.material.Materials.Material.albedo" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.material.Materials.Material.emissive">
-<span class="sig-name descname"><span class="pre">emissive</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.material.Materials.Material.emissive" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.material.Materials.Material.hasNormalMap">
-<span class="sig-name descname"><span class="pre">hasNormalMap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.material.Materials.Material.hasNormalMap" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.material.Materials.Material.normal">
-<span class="sig-name descname"><span class="pre">normal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.material.Materials.Material.normal" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.material.Materials.Material.opacity">
-<span class="sig-name descname"><span class="pre">opacity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.material.Materials.Material.opacity" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.material.Materials.Material.phyiscal">
-<span class="sig-name descname"><span class="pre">phyiscal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.material.Materials.Material.phyiscal" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.material.Materials.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.material.Materials.__init__" title="Link to this definition">#</a></dt>
@@ -511,7 +481,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.material.Materials.getMaterialByIndex">
-<span class="sig-name descname"><span class="pre">getMaterialByIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.material.Materials.Material" title="modules.material.Materials.Material"><span class="pre">Material</span></a></span></span><a class="headerlink" href="#modules.material.Materials.getMaterialByIndex" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">getMaterialByIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="../modules/a_render/modules.render.types.html#modules.render.types.Material" title="modules.render.types.Material"><span class="pre">Material</span></a></span></span><a class="headerlink" href="#modules.material.Materials.getMaterialByIndex" title="Link to this definition">#</a></dt>
 <dd><p>Get material by index, return default material if out of scope</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -524,6 +494,17 @@
 <dd class="field-odd"><p>Dict, no TypedDict yet</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.material.Materials.get_texture_kind">
+<span class="sig-name descname"><span class="pre">get_texture_kind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#modules.material.Materials.get_texture_kind" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.material.Materials.is_gltf_texture">
+<span class="sig-name descname"><span class="pre">is_gltf_texture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#modules.material.Materials.is_gltf_texture" title="Link to this definition">#</a></dt>
+<dd><p>Assimp..</p>
 </dd></dl>
 
 <dl class="py method">
@@ -545,6 +526,11 @@
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.material.Materials.load_texture">
+<span class="sig-name descname"><span class="pre">load_texture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.material.Materials.load_texture" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -598,21 +584,15 @@
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials"><code class="docutils literal notranslate"><span class="pre">Materials</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.Material"><code class="docutils literal notranslate"><span class="pre">Materials.Material</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.Material.albedo"><code class="docutils literal notranslate"><span class="pre">Materials.Material.albedo</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.Material.emissive"><code class="docutils literal notranslate"><span class="pre">Materials.Material.emissive</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.Material.hasNormalMap"><code class="docutils literal notranslate"><span class="pre">Materials.Material.hasNormalMap</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.Material.normal"><code class="docutils literal notranslate"><span class="pre">Materials.Material.normal</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.Material.opacity"><code class="docutils literal notranslate"><span class="pre">Materials.Material.opacity</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.Material.phyiscal"><code class="docutils literal notranslate"><span class="pre">Materials.Material.phyiscal</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.__init__"><code class="docutils literal notranslate"><span class="pre">Materials.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.add_ao_suffix"><code class="docutils literal notranslate"><span class="pre">Materials.add_ao_suffix()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.bind"><code class="docutils literal notranslate"><span class="pre">Materials.bind()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.buildMaterial"><code class="docutils literal notranslate"><span class="pre">Materials.buildMaterial()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.getMaterialByIndex"><code class="docutils literal notranslate"><span class="pre">Materials.getMaterialByIndex()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.get_texture_kind"><code class="docutils literal notranslate"><span class="pre">Materials.get_texture_kind()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.is_gltf_texture"><code class="docutils literal notranslate"><span class="pre">Materials.is_gltf_texture()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.loadOrFind"><code class="docutils literal notranslate"><span class="pre">Materials.loadOrFind()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.material.Materials.load_texture"><code class="docutils literal notranslate"><span class="pre">Materials.load_texture()</span></code></a></li>
 </ul>
 </li>
 </ul>

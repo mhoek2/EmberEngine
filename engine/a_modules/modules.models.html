@@ -341,7 +341,6 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.shader.html">modules.shader</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.cubemap.html">modules.cubemap</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.files.html">modules.files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.imageLoader.html">modules.imageLoader</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.images.html">modules.images</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.jsonHandling.html">modules.jsonHandling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.material.html">modules.material</a></li>
@@ -350,6 +349,13 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../modules/gui.html">Gui</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.consoleWindow.html">modules.gui.consoleWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.project.html">modules.gui.project</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/render.html">Render</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.image.html">modules.render.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.types.html">modules.render.types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.ubo.html">modules.render.ubo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.vao.html">modules.render.vao</a></li>
 </ul>
 </details></li>
 </ul>
@@ -423,9 +429,9 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="modules.models.Models.CPUMeshData">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CPUMeshData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">combined</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.models.Models.CPUMeshData" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CPUMeshData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">combined</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aabb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.models.Models.CPUMeshData" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>CPU-side representation of a mesh.</p>
+<p>CPU-side representation of a mesh. (used for loading)</p>
 <p>Stores interleaved vertex data, indices, and metadata required
 for uploading the mesh to the GPU.</p>
 <dl class="field-list simple">
@@ -442,7 +448,12 @@ for uploading the mesh to the GPU.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.models.Models.CPUMeshData.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">combined</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.models.Models.CPUMeshData.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">combined</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aabb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.models.Models.CPUMeshData.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.models.Models.CPUMeshData.aabb">
+<span class="sig-name descname"><span class="pre">aabb</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.models.Models.CPUMeshData.aabb" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -512,9 +523,20 @@ for uploading the mesh to the GPU.</p>
 <dt class="sig sig-object py" id="modules.models.Models.Mesh">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Mesh</span></span><a class="headerlink" href="#modules.models.Models.Mesh" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
+<p>“Final representation a mesh (used for rendering)</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="modules.models.Models.Mesh.indices">
-<span class="sig-name descname"><span class="pre">indices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.models.Models.Mesh.indices" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="modules.models.Models.Mesh.aabb">
+<span class="sig-name descname"><span class="pre">aabb</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.models.Models.Mesh.aabb" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.models.Models.Mesh.baseVertex">
+<span class="sig-name descname"><span class="pre">baseVertex</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.models.Models.Mesh.baseVertex" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.models.Models.Mesh.firstIndex">
+<span class="sig-name descname"><span class="pre">firstIndex</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.models.Models.Mesh.firstIndex" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -528,23 +550,8 @@ for uploading the mesh to the GPU.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="modules.models.Models.Mesh.vao">
-<span class="sig-name descname"><span class="pre">vao</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.models.Models.Mesh.vao" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.models.Models.Mesh.vbo">
-<span class="sig-name descname"><span class="pre">vbo</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">OpenGL.arrays.vbo.VBO</span></em><a class="headerlink" href="#modules.models.Models.Mesh.vbo" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.models.Models.Mesh.vbo_shape">
-<span class="sig-name descname"><span class="pre">vbo_shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="headerlink" href="#modules.models.Models.Mesh.vbo_shape" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.models.Models.Mesh.vbo_size">
-<span class="sig-name descname"><span class="pre">vbo_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.models.Models.Mesh.vbo_size" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="modules.models.Models.Mesh.vao_simple">
+<span class="sig-name descname"><span class="pre">vao_simple</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../modules/a_render/modules.render.vao.html#modules.render.vao.VAO" title="modules.render.vao.VAO"><span class="pre">VAO</span></a></em><a class="headerlink" href="#modules.models.Models.Mesh.vao_simple" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -586,26 +593,6 @@ required to render.</p>
 <dt class="sig sig-object py" id="modules.models.Models.create_matrices">
 <span class="sig-name descname"><span class="pre">create_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.models.Models.create_matrices" title="Link to this definition">#</a></dt>
 <dd><p>Collect local model matrices for nodes in this model</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.models.Models.create_mesh_and_gl_buffers">
-<span class="sig-name descname"><span class="pre">create_mesh_and_gl_buffers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.models.Models.CPUMeshData" title="modules.models.Models.CPUMeshData"><span class="pre">CPUMeshData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#modules.models.Models.Mesh" title="modules.models.Models.Mesh"><span class="pre">Mesh</span></a></span></span><a class="headerlink" href="#modules.models.Models.create_mesh_and_gl_buffers" title="Link to this definition">#</a></dt>
-<dd><p>Upload CPU mesh data to the GPU and create OpenGL buffers.</p>
-<blockquote>
-<div><p>Sets up VBO, VAO, index buffer, and vertex attribute layout.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cpu</strong> – CPU-side mesh data</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>GPU mesh handle</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#modules.models.Models.Mesh" title="modules.models.Models.Mesh">Mesh</a></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -777,6 +764,7 @@ and bitangents for normal mapping.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models"><code class="docutils literal notranslate"><span class="pre">Models</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.CPUMeshData"><code class="docutils literal notranslate"><span class="pre">Models.CPUMeshData</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.CPUMeshData.__init__"><code class="docutils literal notranslate"><span class="pre">Models.CPUMeshData.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.CPUMeshData.aabb"><code class="docutils literal notranslate"><span class="pre">Models.CPUMeshData.aabb</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.CPUMeshData.combined"><code class="docutils literal notranslate"><span class="pre">Models.CPUMeshData.combined</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.CPUMeshData.indices"><code class="docutils literal notranslate"><span class="pre">Models.CPUMeshData.indices</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.CPUMeshData.material"><code class="docutils literal notranslate"><span class="pre">Models.CPUMeshData.material</span></code></a></li>
@@ -792,19 +780,17 @@ and bitangents for normal mapping.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh"><code class="docutils literal notranslate"><span class="pre">Models.Mesh</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.indices"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.indices</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.aabb"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.aabb</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.baseVertex"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.baseVertex</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.firstIndex"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.firstIndex</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.material"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.material</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.num_indices"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.num_indices</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.vao"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.vao</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.vbo"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.vbo</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.vbo_shape"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.vbo_shape</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.vbo_size"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.vbo_size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.Mesh.vao_simple"><code class="docutils literal notranslate"><span class="pre">Models.Mesh.vao_simple</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.__init__"><code class="docutils literal notranslate"><span class="pre">Models.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.compute_tangents_bitangents"><code class="docutils literal notranslate"><span class="pre">Models.compute_tangents_bitangents()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.create_matrices"><code class="docutils literal notranslate"><span class="pre">Models.create_matrices()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.create_mesh_and_gl_buffers"><code class="docutils literal notranslate"><span class="pre">Models.create_mesh_and_gl_buffers()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.draw"><code class="docutils literal notranslate"><span class="pre">Models.draw()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.loadOrFind"><code class="docutils literal notranslate"><span class="pre">Models.loadOrFind()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.models.Models.model_loader_thread"><code class="docutils literal notranslate"><span class="pre">Models.model_loader_thread()</span></code></a></li>

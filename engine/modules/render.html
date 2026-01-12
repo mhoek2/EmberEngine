@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>modules.imageLoader &#8212; EmberEngine 1.0.0 documentation</title>
+    <title>Render &#8212; EmberEngine 1.0.0 documentation</title>
   
   
   
@@ -44,12 +44,12 @@
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'engine/a_modules/modules.imageLoader';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'engine/modules/render';</script>
     <link rel="icon" href="../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="modules.images" href="modules.images.html" />
-    <link rel="prev" title="modules.files" href="modules.files.html" />
+    <link rel="next" title="modules.render.image" href="a_render/modules.render.image.html" />
+    <link rel="prev" title="modules.gui.project" href="a_gui/modules.gui.project.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -332,24 +332,30 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="modules.settings.html">modules.settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.engineTypes.html">modules.engineTypes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.script.html">modules.script</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.console.html">modules.console</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.models.html">modules.models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.shader.html">modules.shader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.cubemap.html">modules.cubemap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.files.html">modules.files</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">modules.imageLoader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.images.html">modules.images</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.jsonHandling.html">modules.jsonHandling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.material.html">modules.material</a></li>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.settings.html">modules.settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.engineTypes.html">modules.engineTypes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.script.html">modules.script</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.console.html">modules.console</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.models.html">modules.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.shader.html">modules.shader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.cubemap.html">modules.cubemap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.files.html">modules.files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.images.html">modules.images</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.jsonHandling.html">modules.jsonHandling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a_modules/modules.material.html">modules.material</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/gui.html">Gui</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.consoleWindow.html">modules.gui.consoleWindow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.project.html">modules.gui.project</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="gui.html">Gui</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="a_gui/modules.gui.consoleWindow.html">modules.gui.consoleWindow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a_gui/modules.gui.project.html">modules.gui.project</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Render</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="a_render/modules.render.image.html">modules.render.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a_render/modules.render.types.html">modules.render.types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a_render/modules.render.ubo.html">modules.render.ubo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a_render/modules.render.vao.html">modules.render.vao</a></li>
 </ul>
 </details></li>
 </ul>
@@ -398,7 +404,7 @@
     
     <li class="breadcrumb-item"><a href="../modules.html" class="nav-link">Modules</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">modules.imageLoader</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Render</span></li>
   </ul>
 </nav>
 </div>
@@ -415,43 +421,25 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-modules.imageLoader">
-<span id="modules-imageloader"></span><h1>modules.imageLoader<a class="headerlink" href="#module-modules.imageLoader" title="Link to this heading">#</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.imageLoader.create_black_image">
-<span class="sig-prename descclassname"><span class="pre">modules.imageLoader.</span></span><span class="sig-name descname"><span class="pre">create_black_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imageLoader.create_black_image" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.imageLoader.create_grey_image">
-<span class="sig-prename descclassname"><span class="pre">modules.imageLoader.</span></span><span class="sig-name descname"><span class="pre">create_grey_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imageLoader.create_grey_image" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.imageLoader.create_image_pygame">
-<span class="sig-prename descclassname"><span class="pre">modules.imageLoader.</span></span><span class="sig-name descname"><span class="pre">create_image_pygame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imageLoader.create_image_pygame" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.imageLoader.create_rmo_map">
-<span class="sig-prename descclassname"><span class="pre">modules.imageLoader.</span></span><span class="sig-name descname"><span class="pre">create_rmo_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roughness_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metallic_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imageLoader.create_rmo_map" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.imageLoader.create_white_image">
-<span class="sig-prename descclassname"><span class="pre">modules.imageLoader.</span></span><span class="sig-name descname"><span class="pre">create_white_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imageLoader.create_white_image" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.imageLoader.load_cubemap_pygame">
-<span class="sig-prename descclassname"><span class="pre">modules.imageLoader.</span></span><span class="sig-name descname"><span class="pre">load_cubemap_pygame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imageLoader.load_cubemap_pygame" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.imageLoader.load_image_pygame">
-<span class="sig-prename descclassname"><span class="pre">modules.imageLoader.</span></span><span class="sig-name descname"><span class="pre">load_image_pygame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.imageLoader.load_image_pygame" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+  <section id="render">
+<h1>Render<a class="headerlink" href="#render" title="Link to this heading">#</a></h1>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="a_render/modules.render.image.html#module-modules.render.image" title="modules.render.image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modules.render.image</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="a_render/modules.render.types.html#module-modules.render.types" title="modules.render.types"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modules.render.types</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="a_render/modules.render.ubo.html#module-modules.render.ubo" title="modules.render.ubo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modules.render.ubo</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="a_render/modules.render.vao.html#module-modules.render.vao" title="modules.render.vao"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modules.render.vao</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 
 
@@ -465,20 +453,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="modules.files.html"
+       href="a_gui/modules.gui.project.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">modules.files</p>
+        <p class="prev-next-title">modules.gui.project</p>
       </div>
     </a>
     <a class="right-next"
-       href="modules.images.html"
+       href="a_render/modules.render.image.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">modules.images</p>
+        <p class="prev-next-title">modules.render.image</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -494,28 +482,10 @@
 
 
   <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imageLoader.create_black_image"><code class="docutils literal notranslate"><span class="pre">create_black_image()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imageLoader.create_grey_image"><code class="docutils literal notranslate"><span class="pre">create_grey_image()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imageLoader.create_image_pygame"><code class="docutils literal notranslate"><span class="pre">create_image_pygame()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imageLoader.create_rmo_map"><code class="docutils literal notranslate"><span class="pre">create_rmo_map()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imageLoader.create_white_image"><code class="docutils literal notranslate"><span class="pre">create_white_image()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imageLoader.load_cubemap_pygame"><code class="docutils literal notranslate"><span class="pre">load_cubemap_pygame()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.imageLoader.load_image_pygame"><code class="docutils literal notranslate"><span class="pre">load_image_pygame()</span></code></a></li>
-</ul>
-  </nav></div>
-
-  <div class="sidebar-secondary-item">
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/engine/a_modules/modules.imageLoader.rst.txt"
+      <li><a href="../../_sources/engine/modules/render.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

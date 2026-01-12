@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>modules.gui.consoleWindow &#8212; EmberEngine 1.0.0 documentation</title>
+    <title>modules.render.image &#8212; EmberEngine 1.0.0 documentation</title>
   
   
   
@@ -44,12 +44,12 @@
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'engine/modules/a_gui/modules.gui.consoleWindow';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'engine/modules/a_render/modules.render.image';</script>
     <link rel="icon" href="../../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="modules.gui.project" href="modules.gui.project.html" />
-    <link rel="prev" title="Gui" href="../gui.html" />
+    <link rel="next" title="modules.render.types" href="modules.render.types.html" />
+    <link rel="prev" title="Render" href="../render.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -346,16 +346,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../a_modules/modules.material.html">modules.material</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../gui.html">Gui</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">modules.gui.consoleWindow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules.gui.project.html">modules.gui.project</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../gui.html">Gui</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../a_gui/modules.gui.consoleWindow.html">modules.gui.consoleWindow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../a_gui/modules.gui.project.html">modules.gui.project</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../render.html">Render</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../a_render/modules.render.image.html">modules.render.image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../a_render/modules.render.types.html">modules.render.types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../a_render/modules.render.ubo.html">modules.render.ubo</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../a_render/modules.render.vao.html">modules.render.vao</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../render.html">Render</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">modules.render.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.render.types.html">modules.render.types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.render.ubo.html">modules.render.ubo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.render.vao.html">modules.render.vao</a></li>
 </ul>
 </details></li>
 </ul>
@@ -405,9 +405,9 @@
     <li class="breadcrumb-item"><a href="../../modules.html" class="nav-link">Modules</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../gui.html" class="nav-link">Gui</a></li>
+    <li class="breadcrumb-item"><a href="../render.html" class="nav-link">Render</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">modules.gui.consoleWindow</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">modules.render.image</span></li>
   </ul>
 </nav>
 </div>
@@ -424,29 +424,58 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-modules.gui.consoleWindow">
-<span id="modules-gui-consolewindow"></span><h1>modules.gui.consoleWindow<a class="headerlink" href="#module-modules.gui.consoleWindow" title="Link to this heading">#</a></h1>
+  <section id="module-modules.render.image">
+<span id="modules-render-image"></span><h1>modules.render.image<a class="headerlink" href="#module-modules.render.image" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="modules.gui.consoleWindow.ConsoleWindow">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.gui.consoleWindow.</span></span><span class="sig-name descname"><span class="pre">ConsoleWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.gui.consoleWindow.ConsoleWindow" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
-<p>Logic related to rendering the Hierarchy window</p>
+<dt class="sig sig-object py" id="modules.render.image.ImageUpload">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">ImageUpload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mipmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_UNSIGNED_BYTE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_internal_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_RGBA</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.ImageUpload" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="modules.gui.consoleWindow.ConsoleWindow.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.gui.consoleWindow.ConsoleWindow.__init__" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="modules.render.image.ImageUpload.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mipmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_UNSIGNED_BYTE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_internal_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_RGBA</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.render.image.ImageUpload.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.gui.consoleWindow.ConsoleWindow.render">
-<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.gui.consoleWindow.ConsoleWindow.render" title="Link to this definition">#</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.render.image.ImageUpload.buffer">
+<span class="sig-name descname"><span class="pre">buffer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.buffer" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="modules.gui.consoleWindow.ConsoleWindow.render_entry">
-<span class="sig-name descname"><span class="pre">render_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_modules/modules.console.html#modules.console.Console.Entry" title="modules.console.Console.Entry"><span class="pre">Entry</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.gui.consoleWindow.ConsoleWindow.render_entry" title="Link to this definition">#</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.render.image.ImageUpload.height">
+<span class="sig-name descname"><span class="pre">height</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.height" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.render.image.ImageUpload.mipmap">
+<span class="sig-name descname"><span class="pre">mipmap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.mipmap" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.render.image.ImageUpload.path">
+<span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.path" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.render.image.ImageUpload.width">
+<span class="sig-name descname"><span class="pre">width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.width" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.render.image.create_image_pygame">
+<span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">create_image_pygame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.create_image_pygame" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.render.image.load_cubemap_pygame">
+<span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">load_cubemap_pygame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.load_cubemap_pygame" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="modules.render.image.upload_image">
+<span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">upload_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texture_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.render.image.ImageUpload" title="modules.render.image.ImageUpload"><span class="pre">ImageUpload</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.upload_image" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </section>
 
@@ -461,20 +490,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../gui.html"
+       href="../render.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Gui</p>
+        <p class="prev-next-title">Render</p>
       </div>
     </a>
     <a class="right-next"
-       href="modules.gui.project.html"
+       href="modules.render.types.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">modules.gui.project</p>
+        <p class="prev-next-title">modules.render.types</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -497,12 +526,18 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.gui.consoleWindow.ConsoleWindow"><code class="docutils literal notranslate"><span class="pre">ConsoleWindow</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.gui.consoleWindow.ConsoleWindow.__init__"><code class="docutils literal notranslate"><span class="pre">ConsoleWindow.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.gui.consoleWindow.ConsoleWindow.render"><code class="docutils literal notranslate"><span class="pre">ConsoleWindow.render()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.gui.consoleWindow.ConsoleWindow.render_entry"><code class="docutils literal notranslate"><span class="pre">ConsoleWindow.render_entry()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload"><code class="docutils literal notranslate"><span class="pre">ImageUpload</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.__init__"><code class="docutils literal notranslate"><span class="pre">ImageUpload.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.buffer"><code class="docutils literal notranslate"><span class="pre">ImageUpload.buffer</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.height"><code class="docutils literal notranslate"><span class="pre">ImageUpload.height</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.mipmap"><code class="docutils literal notranslate"><span class="pre">ImageUpload.mipmap</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.path"><code class="docutils literal notranslate"><span class="pre">ImageUpload.path</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.width"><code class="docutils literal notranslate"><span class="pre">ImageUpload.width</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.create_image_pygame"><code class="docutils literal notranslate"><span class="pre">create_image_pygame()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.load_cubemap_pygame"><code class="docutils literal notranslate"><span class="pre">load_cubemap_pygame()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.upload_image"><code class="docutils literal notranslate"><span class="pre">upload_image()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -510,7 +545,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../../_sources/engine/modules/a_gui/modules.gui.consoleWindow.rst.txt"
+      <li><a href="../../../_sources/engine/modules/a_render/modules.render.image.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

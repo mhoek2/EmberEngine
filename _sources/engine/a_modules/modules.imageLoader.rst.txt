@@ -1,9 +1,0 @@
-﻿modules.imageLoader
-===================
-
-
-.. automodule:: modules.imageLoader
-   :members:
-   :undoc-members:
-   :show-inheritance:
-

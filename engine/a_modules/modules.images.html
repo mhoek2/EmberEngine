@@ -49,7 +49,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="modules.jsonHandling" href="modules.jsonHandling.html" />
-    <link rel="prev" title="modules.imageLoader" href="modules.imageLoader.html" />
+    <link rel="prev" title="modules.files" href="modules.files.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -341,7 +341,6 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.shader.html">modules.shader</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.cubemap.html">modules.cubemap</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.files.html">modules.files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.imageLoader.html">modules.imageLoader</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">modules.images</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.jsonHandling.html">modules.jsonHandling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.material.html">modules.material</a></li>
@@ -350,6 +349,13 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../modules/gui.html">Gui</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.consoleWindow.html">modules.gui.consoleWindow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/a_gui/modules.gui.project.html">modules.gui.project</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/render.html">Render</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.image.html">modules.render.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.types.html">modules.render.types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.ubo.html">modules.render.ubo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/a_render/modules.render.vao.html">modules.render.vao</a></li>
 </ul>
 </details></li>
 </ul>
@@ -421,6 +427,37 @@
 <dt class="sig sig-object py" id="modules.images.Images">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.images.</span></span><span class="sig-name descname"><span class="pre">Images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="modules.images.Images.Queue">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'Images.ImageUpload'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.Queue" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.Queue.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Images.ImageUpload</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.images.Images.Queue.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.images.Images.Queue.base">
+<span class="sig-name descname"><span class="pre">base</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Images.ImageUpload</span></em><a class="headerlink" href="#modules.images.Images.Queue.base" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.images.Images.Queue.flip_x">
+<span class="sig-name descname"><span class="pre">flip_x</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#modules.images.Images.Queue.flip_x" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.images.Images.Queue.flip_y">
+<span class="sig-name descname"><span class="pre">flip_y</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#modules.images.Images.Queue.flip_y" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="modules.images.Images.Queue.image_index">
+<span class="sig-name descname"><span class="pre">image_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.images.Images.Queue.image_index" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.images.Images.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.__init__" title="Link to this definition">#</a></dt>
@@ -435,7 +472,23 @@ Also create the defaul, white, black and PBR textures</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.images.Images.bind">
-<span class="sig-name descname"><span class="pre">bind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texture_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_uniform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.bind" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">bind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_uniform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.bind" title="Link to this definition">#</a></dt>
+<dd><p>Bind texture using OpenGL with image index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_index</strong> (<em>int</em>) – the image index point to image list containing the texture uid in GPU memory</p></li>
+<li><p><strong>texture_index</strong> (<em>uint32/uintc</em>) – The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)</p></li>
+<li><p><strong>shader_uniform</strong> (<em>str</em>) – The varaible name of the GLSL uniform sampler</p></li>
+<li><p><strong>shader_index</strong> (<em>int</em>) – Represent the number also indicated with ‘texture_index’. revisit this?</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.bind_gl">
+<span class="sig-name descname"><span class="pre">bind_gl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texture_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_uniform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shader_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.bind_gl" title="Link to this definition">#</a></dt>
 <dd><p>Bind texture using OpenGL with image index</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -450,14 +503,41 @@ Also create the defaul, white, black and PBR textures</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="modules.images.Images.loadOrFindFullPath">
-<span class="sig-name descname"><span class="pre">loadOrFindFullPath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.loadOrFindFullPath" title="Link to this definition">#</a></dt>
-<dd><p>Load or find existing texture</p>
+<dt class="sig sig-object py" id="modules.images.Images.create_black_image">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_black_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.create_black_image" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.create_default_physical_image">
+<span class="sig-name descname"><span class="pre">create_default_physical_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#modules.images.Images.create_default_physical_image" title="Link to this definition">#</a></dt>
+<dd><p>Create a 256x256 texture where each channel represents a phyisical kind, occlusion, roughness, metallic
+Current map format is ORM (occlusion, roughness, metallic )</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.create_grey_image">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_grey_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.create_grey_image" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.create_white_image">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_white_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.create_white_image" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.get_by_path">
+<span class="sig-name descname"><span class="pre">get_by_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.get_by_path" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.get_gl_texture">
+<span class="sig-name descname"><span class="pre">get_gl_texture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.get_gl_texture" title="Link to this definition">#</a></dt>
+<dd><p>Get the GPU uid of a texture</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – The path to the texture</p>
+<dd class="field-odd"><p><strong>image_index</strong> (<em>int</em>) – the image index point to image list containing the texture uid in GPU memory</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Param<span class="colon">:</span></dt>
 <dd class="field-even"><p>the texture uid in GPU memory</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -467,8 +547,36 @@ Also create the defaul, white, black and PBR textures</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.image_upload_queue_flush">
+<span class="sig-name descname"><span class="pre">image_upload_queue_flush</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.images.Images.image_upload_queue_flush" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.loadFromPixels">
+<span class="sig-name descname"><span class="pre">loadFromPixels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.loadFromPixels" title="Link to this definition">#</a></dt>
+<dd><p>Submit image data to the upload queue, Path is optional</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.loadOrFindFullPath">
+<span class="sig-name descname"><span class="pre">loadOrFindFullPath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#modules.images.Images.loadOrFindFullPath" title="Link to this definition">#</a></dt>
+<dd><p>Load or find existing texture</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>Path</em>) – The path to the texture</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the image index point to image list containing the texture uid in GPU memory</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="modules.images.Images.loadOrFindPhysicalMap">
-<span class="sig-name descname"><span class="pre">loadOrFindPhysicalMap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roughness_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metallic_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.loadOrFindPhysicalMap" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">loadOrFindPhysicalMap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roughness_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metallic_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#modules.images.Images.loadOrFindPhysicalMap" title="Link to this definition">#</a></dt>
 <dd><p>Load/Create/Combine a physical RMO texture.
 Find from cache is not implemented yet.</p>
 <dl class="field-list simple">
@@ -480,19 +588,34 @@ Find from cache is not implemented yet.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the texture uid in GPU memory</p>
+<dd class="field-even"><p>the image index point to image list containing the texture uid in GPU memory</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>uint32/uintc</p>
+<dd class="field-odd"><p>int</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="modules.images.Images.make_bindless">
-<span class="sig-name descname"><span class="pre">make_bindless</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texture_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.make_bindless" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_bindless</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.make_bindless" title="Link to this definition">#</a></dt>
 <dd><p>Create a bindless handle for a texture an map it</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.pixelsToImage">
+<span class="sig-name descname"><span class="pre">pixelsToImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.pixelsToImage" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.queue_upload">
+<span class="sig-name descname"><span class="pre">queue_upload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">upload_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../modules/a_render/modules.render.image.html#modules.render.image.ImageUpload" title="modules.render.image.ImageUpload"><span class="pre">ImageUpload</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#modules.images.Images.queue_upload" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.images.Images.tex_to_bindless">
+<span class="sig-name descname"><span class="pre">tex_to_bindless</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.images.Images.tex_to_bindless" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -509,12 +632,12 @@ Find from cache is not implemented yet.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="modules.imageLoader.html"
+       href="modules.files.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">modules.imageLoader</p>
+        <p class="prev-next-title">modules.files</p>
       </div>
     </a>
     <a class="right-next"
@@ -546,11 +669,31 @@ Find from cache is not implemented yet.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images"><code class="docutils literal notranslate"><span class="pre">Images</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.Queue"><code class="docutils literal notranslate"><span class="pre">Images.Queue</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.Queue.__init__"><code class="docutils literal notranslate"><span class="pre">Images.Queue.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.Queue.base"><code class="docutils literal notranslate"><span class="pre">Images.Queue.base</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.Queue.flip_x"><code class="docutils literal notranslate"><span class="pre">Images.Queue.flip_x</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.Queue.flip_y"><code class="docutils literal notranslate"><span class="pre">Images.Queue.flip_y</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.Queue.image_index"><code class="docutils literal notranslate"><span class="pre">Images.Queue.image_index</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.__init__"><code class="docutils literal notranslate"><span class="pre">Images.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.bind"><code class="docutils literal notranslate"><span class="pre">Images.bind()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.bind_gl"><code class="docutils literal notranslate"><span class="pre">Images.bind_gl()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.create_black_image"><code class="docutils literal notranslate"><span class="pre">Images.create_black_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.create_default_physical_image"><code class="docutils literal notranslate"><span class="pre">Images.create_default_physical_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.create_grey_image"><code class="docutils literal notranslate"><span class="pre">Images.create_grey_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.create_white_image"><code class="docutils literal notranslate"><span class="pre">Images.create_white_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.get_by_path"><code class="docutils literal notranslate"><span class="pre">Images.get_by_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.get_gl_texture"><code class="docutils literal notranslate"><span class="pre">Images.get_gl_texture()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.image_upload_queue_flush"><code class="docutils literal notranslate"><span class="pre">Images.image_upload_queue_flush()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.loadFromPixels"><code class="docutils literal notranslate"><span class="pre">Images.loadFromPixels()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.loadOrFindFullPath"><code class="docutils literal notranslate"><span class="pre">Images.loadOrFindFullPath()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.loadOrFindPhysicalMap"><code class="docutils literal notranslate"><span class="pre">Images.loadOrFindPhysicalMap()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.make_bindless"><code class="docutils literal notranslate"><span class="pre">Images.make_bindless()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.pixelsToImage"><code class="docutils literal notranslate"><span class="pre">Images.pixelsToImage()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.queue_upload"><code class="docutils literal notranslate"><span class="pre">Images.queue_upload()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.images.Images.tex_to_bindless"><code class="docutils literal notranslate"><span class="pre">Images.tex_to_bindless()</span></code></a></li>
 </ul>
 </li>
 </ul>
