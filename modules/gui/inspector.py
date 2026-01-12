@@ -19,8 +19,10 @@ from gameObjects.skybox import Skybox
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
+from gameObjects.attachables.model import Model
 
 from modules.gui.types import GameObjectTypes, RotationMode_
+from modules.render.types import Material
 
 from imgui_bundle import imgui
 from imgui_bundle import icons_fontawesome_6 as fa
@@ -66,10 +68,10 @@ class Inspector( Context ):
         #    self.helper.draw_transform_world( _t )
         #    imgui.tree_pop()
 
-    def _material_thumb( self, label, texture_id ) -> None:
+    def _material_thumb( self, label, image_index ) -> None:
         imgui.text( f"{label}" );
         imgui.next_column()
-        self.helper.draw_thumb( texture_id, imgui.ImVec2(75.0, 75.0) )
+        self.helper.draw_thumb( image_index, imgui.ImVec2(75.0, 75.0), mouse_over_tooltip=True )
         imgui.next_column()
 
     def _material( self ) -> None:
@@ -106,7 +108,7 @@ class Inspector( Context ):
             multi_mat : bool = True if len(materials) > 1 else False
 
             for material_id in materials:
-                mat : Materials.Material = _materials.getMaterialByIndex( material_id )
+                mat : Material = _materials.getMaterialByIndex( material_id )
 
                 is_open : bool = False
 
@@ -123,10 +125,11 @@ class Inspector( Context ):
                     imgui.columns( count=2, borders=False )
                     imgui.set_column_width (0, 70.0 )
 
-                    self._material_thumb( "Albedo",     mat["albedo"]   if 'albedo'     in mat else _images.defaultImage    )
-                    self._material_thumb( "Normal",     mat["normal"]   if 'normal'     in mat else _images.defaultNormal   )
-                    self._material_thumb( "Phyiscal",   mat["phyiscal"] if 'phyiscal'   in mat else _images.defaultRMO      )
-                    self._material_thumb( "Emissive",   mat["emissive"] if 'emissive'   in mat else _images.blackImage      )
+                    self._material_thumb( "Albedo",     mat.albedo   )
+                    self._material_thumb( "Normal",     mat.normal   )
+                    self._material_thumb( "Emissive",   mat.emissive )
+                    self._material_thumb( "Opacity",    mat.opacity )
+                    self._material_thumb( "Phyiscal",   mat.phyiscal )
             
                     imgui.columns( count=1 )
 
@@ -444,7 +447,7 @@ class Inspector( Context ):
 
     def _model( self ) -> None:
         gameObject  : GameObject = self.gui.selectedObject
-        _model      : Light = gameObject.model
+        _model      : Model = gameObject.model
 
         if not gameObject.model:
             return

@@ -339,9 +339,33 @@ class Helper( Context ):
 
         return bool(new_index != current_index), new_index, total_width
 
-    def draw_thumb( self, image : int, size : imgui.ImVec2 ):
+    def draw_thumb_tooltip( self, image_index ):
+        # Check if the item is hovered
+        if imgui.is_item_hovered():
+            m = imgui.get_cursor_screen_pos()
+
+            imgui.set_next_window_pos(imgui.ImVec2(m.x - 10, m.y))
+            imgui.set_next_window_size(imgui.ImVec2(170.0, 170.0))
+
+            _flags = imgui.WindowFlags_.tooltip | \
+                    imgui.WindowFlags_.no_scrollbar | \
+                    imgui.WindowFlags_.no_title_bar | \
+                    imgui.WindowFlags_.no_resize
+
+            imgui.begin( "##image_inspector", flags=_flags )
+
+            texture_id = self.gui.images.get_gl_texture(image_index)
+            imgui.image( imgui.ImTextureRef(texture_id), imgui.ImVec2(150.0, 150.0) )
+
+            imgui.end()
+
+    def draw_thumb( self, image_index : int, size : imgui.ImVec2, mouse_over_tooltip : bool = False ):
         #glBindTexture( GL_TEXTURE_2D, image )
-        imgui.image( imgui.ImTextureRef(image), size )
+        texture_id = self.gui.images.get_gl_texture(image_index)
+        imgui.image( imgui.ImTextureRef(texture_id), size )
+
+        if mouse_over_tooltip:
+            self.draw_thumb_tooltip( image_index )
 
     def draw_popup_gameObject( self, uid : str, filter = None ):
         selected = -1
@@ -445,3 +469,25 @@ class Helper( Context ):
         draw_list.add_rect_filled(p_min, imgui.ImVec2(p_max.x, (p_min.y + _header_height)), _bg_color)
         #draw_list.add_rect_filled(imgui.ImVec2(p_min.x, p_min.y + _header_height), p_max, imgui.color_convert_float4_to_u32(imgui.ImVec4(1, 1, 1, 0.1)))
         draw_list.channels_merge()
+
+    def draw_color_legend_item( self, 
+                                text        : str, 
+                                color, 
+                                size        : float = 14.0, 
+                                rounding    : float = 5.0 
+        ):
+        draw_list = imgui.get_window_draw_list()
+        pos = imgui.get_cursor_screen_pos()
+
+        draw_list.add_rect_filled(
+            pos,
+            imgui.ImVec2(pos.x + size, pos.y + size),
+            color,
+            rounding
+        )
+
+        imgui.dummy(imgui.ImVec2(size, size))
+        imgui.same_line()
+
+        imgui.set_cursor_pos_y(imgui.get_cursor_pos_y() + (size - imgui.get_text_line_height()) * 0.5)
+        imgui.text(text)

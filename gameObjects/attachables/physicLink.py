@@ -316,6 +316,12 @@ class PhysicLink:
     def __create_uuid( self ) -> uid.UUID:
         return uid.uuid4()
 
+    def getJointId( self ) -> int:
+        return self.runtime_link_index
+
+    def getBodyId( self ) -> int:
+        return self.physics_id
+
     def _runPhysics(self) -> bool:
         if not self.context.renderer.game_running:
             return False

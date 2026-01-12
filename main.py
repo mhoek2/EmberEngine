@@ -204,19 +204,21 @@ class EmberEngine:
                 # lazy model loading, flush loaded models set ready from thread
                 #
                 self.models.model_loader_thread_flush()
+                self.images.image_upload_queue_flush()
 
                 # triggers update systems in the registered gameObjects
                 # handles onEnable, onDisable, onStart, onUpdate and _dirty flags
                 self.prepare_gameObjects( None, self.world.gameObjects )
 
                 # collect active model meshes (build the draw list, unsorted/batched)
-                for uuid in self.world.models.keys():
-                    obj : GameObject = self.world.gameObjects[uuid]
+                if not self.renderer.USE_FULL_GPU_DRIVEN:
+                    for uuid in self.world.models.keys():
+                        obj : GameObject = self.world.gameObjects[uuid]
 
-                    if isinstance(obj, Camera) and self.renderer.game_runtime:
-                        continue
+                        if isinstance(obj, Camera) and self.renderer.game_runtime:
+                            continue
 
-                    obj.onRender()
+                        obj.onRender()
 
                 # dispatch world draw calls
                 self.renderer.dispatch_drawcalls( _scene )

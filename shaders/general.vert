@@ -1,5 +1,11 @@
 // version added programmicly
 
+#extension GL_ARB_shading_language_include : require
+
+#ifdef USE_INDIRECT
+#include "common_structs.glsl"
+#endif
+
 #ifndef USE_INDIRECT
 uniform mat4 uMMatrix;
 #endif
@@ -46,19 +52,8 @@ out vec4 var_AmbientColor;
 flat out int var_material_index;
 
 #ifdef USE_INDIRECT
-	struct DrawBlock
-	{
-		mat4 model;        // 64 bytes
-		int  material;     // 4 bytes
-		int  pad0;
-		int  pad1;
-		int  pad2;
-	};
-
-	layout(std430, binding = 0) readonly buffer DrawBuffer
-	{
-		DrawBlock draw[];
-	};
+	layout(std430, binding = 0) readonly buffer ObjectBuffer { ObjectBlock object[]; };
+	layout(std430, binding = 9) readonly buffer InstancesBuffer { InstancesBlock instance[]; };
 #endif
 
 void main(){
@@ -68,7 +63,7 @@ void main(){
 	vec3 normal = normalize(aNormal);
 
 #ifdef USE_INDIRECT
-	DrawBlock d = draw[gl_BaseInstance];
+	ObjectBlock d = object[instance[gl_BaseInstance + gl_InstanceID].ObjectId];
 	mat4 uMMatrix = d.model;
 #endif
 

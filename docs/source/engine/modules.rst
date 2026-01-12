@@ -19,7 +19,6 @@ Modules
    modules.camera
    modules.cubemap
    modules.files
-   modules.imageLoader
    modules.images
    modules.jsonHandling
    modules.material
@@ -28,3 +27,4 @@ Modules
    :maxdepth: 2
 
    modules/gui.rst
+   modules/render.rst

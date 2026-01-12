@@ -29,6 +29,7 @@ from modules.gui.textEditor import TextEditor
 from modules.gui.project import Project
 from modules.gui.sceneSettings import SceneSettings
 from modules.gui.viewport import Viewport
+from modules.gui.rendererInfo import RendererInfo
 
 import pybullet as p
 
@@ -93,6 +94,7 @@ class UserInterface( Context ):
         self.guizmo         : ImGuizmo          = ImGuizmo( self.context )
         self.scene_settings : SceneSettings     = SceneSettings( self.context )
         self.viewport       : Viewport          = Viewport( self.context )
+        self.renderer_info  : RendererInfo      = RendererInfo( self.context )
 
         # drag and drop
         self.dnd_payload    : DragAndDropPayload = DragAndDropPayload()
@@ -161,9 +163,10 @@ class UserInterface( Context ):
         imgui.end()
 
     def draw_menu_bar( self ) -> None:
-        _open_save_scene_as_modal = False
-        _open_new_scene_modal = False
-        _open_project_settings = False
+        _open_save_scene_as_modal   = False
+        _open_new_scene_modal       = False
+        _open_project_settings      = False
+        _open_renderer_info      = False
 
         if imgui.begin_main_menu_bar():
             viewport = imgui.get_main_viewport()
@@ -188,6 +191,9 @@ class UserInterface( Context ):
                 if imgui.menu_item( "Project Settings", '', False, True )[0]:
                     _open_project_settings = True
     
+                if imgui.menu_item( "Renderer info", '', False, True )[0]:
+                    _open_renderer_info = True
+
                 if imgui.menu_item( "Export", '', False, True )[0]:
                     self.context.project.export()
 
@@ -205,6 +211,9 @@ class UserInterface( Context ):
 
             if _open_project_settings:
                 imgui.open_popup("Project Settings")
+
+            if _open_renderer_info:
+                imgui.open_popup("Renderer Info")
 
     def draw_status_bar( self ) -> None:
         viewport = imgui.get_main_viewport()
@@ -265,6 +274,10 @@ class UserInterface( Context ):
             f"Metallic override", self.context.metallicOverride, 0.01
         )
 
+        # debug button to force material SSBO update
+        #if imgui.button(f"Update Materials"):
+        #    self.context.renderer.ubo.ubo_materials._dirty = True
+
         imgui.end()
         return
 
@@ -301,3 +314,4 @@ class UserInterface( Context ):
             self.project.draw_save_scene_modal( "Save Scene As##Modal", "Choose a name for the scene\n\n", self.scene.saveSceneAs )
             self.project.draw_save_scene_modal( "New Scene##Modal", "Choose a name for the scene\n\n", self.scene.newScene )
             self.project.draw_settings_modal()
+            self.renderer_info.render()

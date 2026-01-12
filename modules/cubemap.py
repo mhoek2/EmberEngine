@@ -3,9 +3,8 @@ from pathlib import Path
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from modules.imageLoader import load_image_pygame as load_image
-from modules.imageLoader import create_image_pygame as create_image
-from modules.imageLoader import load_cubemap_pygame as load_cubemap
+from modules.render.image import create_image_pygame as create_image
+from modules.render.image import load_cubemap_pygame as load_cubemap
 from modules.context import Context
 
 import numpy as np
