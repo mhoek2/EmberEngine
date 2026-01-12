@@ -87,9 +87,10 @@ class Models( Context ):
         self.materials  : Materials = context.materials
         
         self._num_models = 0
-        self.model = [i for i in range(300)]
+        self.model = [None] * 300
         self.model_mesh: List[List[Models.Mesh]] = [{} for _ in range(300)]
         self.model_map : Dict[Path, int] = {}
+        self.model_path : Dict[int, Path] = {} # gui hack
         self.model_loading : Dict[int, bool] = {}
 
         if self.context.renderer.SHARED_VAO:
@@ -387,6 +388,7 @@ class Models( Context ):
             return self.model_map[path]
 
         self.model_map[path] = index
+        self.model_path[index] = path # gui hack
 
         # lazy load
         if lazy_load:
@@ -410,8 +412,9 @@ class Models( Context ):
         """Recursivly construct a list of nodes with their precomputed local model matrices"""
         world_matrix = model_matrix * Matrix44(node.transformation).transpose()
 
+        model = self.model[model_index]
         for mesh in node.meshes:
-            mesh_index = self.model[model_index].meshes.index(mesh)
+            mesh_index = model.meshes.index(mesh)
 
             self.renderer.addNodeMatrix( 
                 self.model_mesh[model_index][mesh_index], 
@@ -452,8 +455,9 @@ class Models( Context ):
         # apply transformation matrices recursivly
         world_matrix = model_matrix * Matrix44(node.transformation).transpose()
 
+        model = self.model[model_index]
         for mesh in node.meshes:
-            mesh_index = self.model[model_index].meshes.index(mesh)
+            mesh_index = model.meshes.index(mesh)
             dispatch( model_index, mesh_index, world_matrix )
 
         # process child nodes
@@ -462,8 +466,9 @@ class Models( Context ):
 
     def __collect_node( self, node, model_index, uuid ):
         """Collect node data with uuid, then use compute shader for modelmatrices"""
+        model = self.model[model_index]
         for mesh in node.meshes:
-            mesh_index = self.model[model_index].meshes.index(mesh)
+            mesh_index = model.meshes.index(mesh)
             self.__draw_collect( model_index, mesh_index, None, uuid )
 
         # process child nodes

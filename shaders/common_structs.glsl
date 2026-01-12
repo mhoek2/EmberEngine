@@ -13,7 +13,7 @@ struct MeshNodeBlock
 	int  num_indices;     // 4 bytes
 	int  firstIndex;
 	int  baseVertex;
-	int  pad0;
+	int  material;
 	vec4 min_aabb;
 	vec4 max_aabb;
 };

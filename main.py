@@ -204,6 +204,7 @@ class EmberEngine:
                 # lazy model loading, flush loaded models set ready from thread
                 #
                 self.models.model_loader_thread_flush()
+                self.images.image_upload_queue_flush()
 
                 # triggers update systems in the registered gameObjects
                 # handles onEnable, onDisable, onStart, onUpdate and _dirty flags

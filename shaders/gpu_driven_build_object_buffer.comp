@@ -38,6 +38,6 @@ void main()
 		object[object_idx].model				= obj.model * mesh_node[meshNodeMatrixId].model;
 		object[object_idx].meshNodeMatrixId		= int(meshNodeMatrixId);
 		object[object_idx].gameObjectMatrixId	= int(gid);
-		object[object_idx].material				= 0;
+		object[object_idx].material				= mesh_node[meshNodeMatrixId].material;
 	}
 }

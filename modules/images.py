@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import List
 
@@ -6,10 +7,59 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GL.ARB.bindless_texture import *
 
-from modules.imageLoader import load_image_pygame as load_image, create_rmo_map
+from modules.imageLoader import ImageUpload, upload_image, create_white_image, create_black_image, create_grey_image 
 from modules.context import Context
 
+import traceback
+
+from dataclasses import dataclass, field
+import queue
+
+import pygame
+import numpy as np
+import io
+
 class Images( Context ):
+    @dataclass(slots=True)
+    class Queue:
+        image_index     : int  = field( default=-1 )
+        flip_x          : bool = field( default=False )
+        flip_y          : bool = field( default=True )
+        base            : "Images.ImageUpload" = field( default=None )
+
+    #@dataclass(slots=True)
+    #class QueueRMO():
+    #    image_index     : int  = field( default=-1 )
+    #    roughness_path  : Path = field( default=None )
+    #    metallic_path   : Path = field( default=None )
+    #    ao_path         : Path = field( default=None )
+    #    roughness       : "Images.ImageUpload" = field( default=None )
+    #    metallic        : "Images.ImageUpload" = field( default=None )
+    #    ao              : "Images.ImageUpload" = field( default=None )
+
+    def image_upload_queue_flush( self ) -> None:
+        import pygame
+
+        while not self.upload_queue.empty():
+            item = self.upload_queue.get()
+            image_index = item.image_index
+
+            texture_id = glGenTextures( 1 ) 
+
+            upload_image( texture_id, item.base )
+
+            # check if texture is valid
+            # ..later
+
+            self.images[image_index] = texture_id
+
+            _path = str(item.base.path)
+            print(f"load: {_path}")
+            self.images_paths[image_index]  = _path
+
+            handle = self.make_bindless( image_index, texture_id )
+            self.context.renderer.ubo.ubo_materials._dirty = True
+
     def __init__( self, context ):
         """Setup image buffers that store the GPU texture uid's and paths for fast loading
         Also create the defaul, white, black and PBR textures
@@ -19,8 +69,12 @@ class Images( Context ):
         """
         super().__init__( context )
 
-        self.images = []
-        self.images_paths : List[str] = []
+        self._num_images = 0
+        self.images = [None] * 300
+
+        self.upload_queue = queue.Queue()
+
+        self.images_paths : List[str] = [None] * 1000
 
         # bindless texture mapping
         #self.bindless_handles: List[int] = []
@@ -32,16 +86,27 @@ class Images( Context ):
         self.whiteImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}whiteimage.jpg") )
         self.blackImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}blackimage.jpg") )
 
-    def make_bindless( self, texture_id ):
+    def get_by_path( self, path : Path ):
+        for i, _path in enumerate(self.images_paths):
+            if str(path) == _path:
+                return i
+
+        return None
+
+    def get_gl_texture( self, image_index ):
+        return self.images[image_index] if self.images[image_index] else self.images[self.defaultImage]
+
+    def make_bindless( self, image_index : int, texture_id ):
         """Create a bindless handle for a texture an map it"""
         handle = 0
+        #texture_id = self.images[image_index]
 
         if self.context.renderer.USE_BINDLESS_TEXTURES:
             handle = glGetTextureHandleARB(texture_id)
             glMakeTextureHandleResidentARB(handle)
             #self.bindless_handles.append( handle )
 
-        self.texture_to_bindless[texture_id] = handle
+        self.texture_to_bindless[image_index] = handle
         return handle
 
     def loadOrFindPhysicalMap( self, roughness_path : Path, metallic_path : Path, ao_path : Path ):
@@ -57,19 +122,151 @@ class Images( Context ):
         :return: the texture uid in GPU memory
         :rtype: uint32/uintc
         """
-        texture_id = glGenTextures( 1 ) 
-        if not create_rmo_map( roughness_path, metallic_path, ao_path, texture_id ):
+        index = self._num_images
+
+        try:
+            size = (-1, -1)
+
+            # Load images and get highest dimension
+            # TODO: fix missing file issue..
+            if roughness_path:
+                roughness = pygame.image.load( roughness_path )
+                if size < roughness.get_size() : size = roughness.get_size()
+
+            if metallic_path:
+                metallic = pygame.image.load( metallic_path )
+                if size < metallic.get_size() : size = metallic.get_size()
+
+            if ao_path:
+                ambient_occlusion = pygame.image.load( ao_path )
+                if size < ambient_occlusion.get_size() : size = ambient_occlusion.get_size()
+
+            if size == (-1, -1):
+                raise ValueError("No map found!")
+
+            # fill empty channels
+            if not roughness_path:
+                roughness = create_grey_image( size )
+
+            if not metallic_path:
+                metallic = create_black_image( size )
+
+            if not ao_path:
+                ambient_occlusion = create_white_image( size )
+
+            # Ensure all images are the same size
+            # todo: should probably auto-scale to highest dimension ..
+            if roughness.get_size() != metallic.get_size() or roughness.get_size() != ambient_occlusion.get_size():
+                raise ValueError("All images must be the same size!")
+
+            # Get image dimensions
+            image_width, image_height = roughness.get_size()
+
+            # Create a new surface to hold combined image data
+            combined_image = pygame.Surface((image_width, image_height))
+
+            # Lock surfaces to access pixel data
+            roughness.lock()
+            metallic.lock()
+            ambient_occlusion.lock()
+            combined_image.lock()
+
+            roughness_array = pygame.surfarray.array3d(roughness).astype(np.float32) / 255.0
+            metallic_array = pygame.surfarray.array3d(metallic).astype(np.float32) / 255.0
+            ambient_occlusion_array = pygame.surfarray.array3d(ambient_occlusion).astype(np.float32) / 255.0
+
+            # you may need to transpose based on your orientation.
+            combined_array = np.zeros((image_width, image_height, 4), dtype=np.float32)
+            #combined_array[..., 0] = roughness_array[..., 0]                            # Roughness from R channel
+            #combined_array[..., 1] = metallic_array[..., 1]                             # Metallic from G channel
+            #combined_array[..., 2] = ambient_occlusion_array[..., 2]                    # AO from B channel
+            
+            # yup..
+            # need to update stored default RMO
+            combined_array[..., 1] = roughness_array[..., 0]                            # Roughness from R channel
+            combined_array[..., 2] = metallic_array[..., 1]                             # Metallic from G channel
+            combined_array[..., 0] = ambient_occlusion_array[..., 2]                    # AO from B channel
+
+            combined_array[..., 3] = 1.0
+            combined_array = np.rot90(combined_array, k=1)
+
+            # Unlock surfaces
+            roughness.unlock()
+            metallic.unlock()
+            ambient_occlusion.unlock()
+            combined_image.unlock()
+
+            base : ImageUpload = ImageUpload(
+                path                = f"rmomap_placeholder_{index}",
+                width               = image_width,
+                height              = image_height,
+                buffer              = combined_array.tobytes(),
+                _internal_format    = GL_RGBA16F,
+                _format             = GL_FLOAT,
+                mipmap              = True
+            )
+
+            self.upload_queue.put(Images.Queue(
+                image_index     = index,
+                base            = base,
+            ))
+
+        except Exception as e:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            self.console.error( e, traceback.format_tb(exc_tb) )
+
             return self.defaultImage
 
-        # todo: hash combined r, m and o path name for "images_paths" lookup table.
-        # to prevent loading the same rmo map multiple times
-        self.images_paths.append( f"rmomap_placeholder_{texture_id}" )
-        self.images.append( texture_id )
+        self._num_images += 1
+        return index
 
-        handle = self.make_bindless( texture_id )
-        return texture_id
+    def queue_upload( self, upload_data : ImageUpload ) -> int:
+        index = self._num_images
 
-    def loadOrFindFullPath( self, path : Path, flip_x: bool = False, flip_y: bool = True ):
+        self.upload_queue.put(Images.Queue(
+            image_index = index,
+            base        = upload_data
+        ))
+
+        self._num_images += 1
+        return index
+
+    def pixelsToImage( self, data, path : Path = None ):
+        exists = self.get_by_path( path )
+        if path is not None:
+            if exists:
+                return None, None, None
+
+        byte_stream = io.BytesIO(data)
+        base_buffer = pygame.image.load(byte_stream)
+
+        base_buffer = pygame.transform.flip(base_buffer, False, True)
+        width, height = base_buffer.get_rect().size
+        buffer = pygame.image.tostring(base_buffer, "RGBA")
+
+        return width, height, buffer
+
+    def loadFromPixels( self, width, height, buffer, path : Path = None ):
+        """Submit image data to the upload queue, Path is optional"""
+
+        # find
+        if path is not None:
+            exists = self.get_by_path( path )
+            if exists:
+                return exists
+
+        return self.queue_upload( 
+            upload_data = ImageUpload(
+                    path                = path,
+                    width               = width,
+                    height              = height,
+                    buffer              = buffer,
+                    _format             = GL_UNSIGNED_BYTE,
+                    _internal_format    = GL_RGBA
+                )
+            )
+
+    def loadOrFindFullPath( self, path : Path, flip_x: bool = False, flip_y: bool = True ) -> int:
         """Load or find existing texture
 
         :param path: The path to the texture
@@ -77,28 +274,27 @@ class Images( Context ):
         :return: the texture uid in GPU memory
         :rtype: uint32/uintc
         """
+
         # not found
         if not path or not path.is_file():
             return self.defaultImage
 
         # find
-        for i, _path in enumerate(self.images_paths):
-            if str(path) == _path:
-                return self.images[i]
+        exists = self.get_by_path( path )
+        if exists:
+            return exists
 
-        # load
-        texture_id = glGenTextures( 1 ) 
-        load_image( path, texture_id, flip_x, flip_y )
-        self.images_paths.append( str(path) )
-        self.images.append( texture_id )
+        # load and queue GPU upload
+        base_buffer = pygame.transform.flip( pygame.image.load( path ), flip_x, flip_y )
+        width, height = base_buffer.get_rect().size
+        buffer = pygame.image.tostring( base_buffer, "RGBA" )
 
-        handle = self.make_bindless( texture_id )
-        return texture_id
+        return self.loadFromPixels( width, height, buffer, path )
 
-    def bind( self, texture_id, texture_index, shader_uniform : str, shader_index : int ):
+    def bind_gl( self, texture_id : int, texture_index, shader_uniform : str, shader_index : int ):
         """Bind texture using OpenGL with image index
 
-        :param texture_id: the texture uid in GPU memory
+        :param texture_id: the image index point to image list containing the texture uid in GPU memory
         :type texture_id: uint32/uintc
         :param texture_index: The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)
         :type texture_index: uint32/uintc
@@ -107,6 +303,24 @@ class Images( Context ):
         :param shader_index: Represent the number also indicated with 'texture_index'. revisit this?
         :type shader_index: int
         """
+        glActiveTexture( texture_index )
+        glBindTexture( GL_TEXTURE_2D, texture_id )
+        glUniform1i(glGetUniformLocation( self.renderer.shader.program, shader_uniform ), shader_index)
+
+    def bind( self, image_index : int, texture_index, shader_uniform : str, shader_index : int ):
+        """Bind texture using OpenGL with image index
+
+        :param image_index: the image index point to image list containing the texture uid in GPU memory
+        :type image_index: uint32/uintc
+        :param texture_index: The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)
+        :type texture_index: uint32/uintc
+        :param shader_uniform: The varaible name of the GLSL uniform sampler
+        :type shader_uniform: str
+        :param shader_index: Represent the number also indicated with 'texture_index'. revisit this?
+        :type shader_index: int
+        """
+        texture_id = self.get_gl_texture(image_index)
+        
         glActiveTexture( texture_index )
         glBindTexture( GL_TEXTURE_2D, texture_id )
         glUniform1i(glGetUniformLocation( self.renderer.shader.program, shader_uniform ), shader_index)

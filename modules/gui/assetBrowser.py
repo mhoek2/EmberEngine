@@ -67,7 +67,7 @@ class AssetBrowser( Context ):
         if path.is_dir() and ".folder" in _icons:
             icon = _icons['.folder']
 
-        return imgui.ImTextureRef( icon )
+        return imgui.ImTextureRef( self.context.images.get_gl_texture(icon) )
 
     def set_path( self, path ) -> None:
         self._file_browser_dir = path

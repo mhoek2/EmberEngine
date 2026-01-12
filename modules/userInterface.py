@@ -274,6 +274,10 @@ class UserInterface( Context ):
             f"Metallic override", self.context.metallicOverride, 0.01
         )
 
+        if imgui.button(f"Update Materials"):
+            self.context.renderer.ubo.ubo_materials._dirty = True
+
+
         imgui.end()
         return
 

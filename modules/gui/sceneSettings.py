@@ -147,7 +147,7 @@ class SceneSettings( Context ):
                 for i in range(6):
                     glBindTexture( GL_TEXTURE_2D, self.test_cubemap[i] )
 
-                    image       = imgui.ImTextureRef(self.test_cubemap[i])
+                    image       = self.gui.images.get_gl_texture( imgui.ImTextureRef(self.test_cubemap[i]))
                     image_size  = imgui.ImVec2(100, 100);
                     image_uv0   = imgui.ImVec2( 0, 1 )
                     image_uv1   = imgui.ImVec2( 1, 0 )

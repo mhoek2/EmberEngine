@@ -321,7 +321,7 @@ class Renderer:
 
         # Retrieve supported OpenGL extensions 
         # https://opengl.gpuinfo.org/listextensions.php
-        self.RENDERDOC = True
+        self.RENDERDOC = False
         self.gl_extensions = self.set_supported_opengl_extensions()
  
         # renderer configuration
@@ -1202,7 +1202,7 @@ class Renderer:
             if _scene["shadowmap_enabled"]:
                 glUniformMatrix4fv( self.shader.uniforms['uLightPMatrix'], 1, GL_FALSE, light_projection )
                 glUniformMatrix4fv( self.shader.uniforms['uLightVMatrix'], 1, GL_FALSE, light_view )
-                self.context.images.bind( self.shadowmap_fbo["depth_image"], GL_TEXTURE7, "sShadowMap", 7 )
+                self.context.images.bind_gl( self.shadowmap_fbo["depth_image"], GL_TEXTURE7, "sShadowMap", 7 )
 
         # bind the projection and view  matrix beginning (until shader switch)
         glUniformMatrix4fv( self.shader.uniforms['uPMatrix'], 1, GL_FALSE, self.projection )
@@ -1384,12 +1384,12 @@ class Renderer:
 
         glDisable(GL_DEPTH_TEST)
 
-        self.context.images.bind( current_image,  GL_TEXTURE0, "sColorTexture",     0 )
+        self.context.images.bind_gl( current_image,  GL_TEXTURE0, "sColorTexture",     0 )
 
         if self.settings.msaaEnabled:
-            self.context.images.bind( self.context.renderer.main_fbo["resolve"]["depth_image"], GL_TEXTURE1, "sDepthTexture",     1 )
+            self.context.images.bind_gl( self.context.renderer.main_fbo["resolve"]["depth_image"], GL_TEXTURE1, "sDepthTexture",     1 )
         else:
-            self.context.images.bind( self.context.renderer.main_fbo['depth_image'], GL_TEXTURE1, "sDepthTexture",     1 )
+            self.context.images.bind_gl( self.context.renderer.main_fbo['depth_image'], GL_TEXTURE1, "sDepthTexture",     1 )
    
         glBindVertexArray( self.screenVAO )
         glDrawArrays(GL_TRIANGLES, 0, 6)

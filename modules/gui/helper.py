@@ -339,9 +339,10 @@ class Helper( Context ):
 
         return bool(new_index != current_index), new_index, total_width
 
-    def draw_thumb( self, image : int, size : imgui.ImVec2 ):
+    def draw_thumb( self, image_index : int, size : imgui.ImVec2 ):
         #glBindTexture( GL_TEXTURE_2D, image )
-        imgui.image( imgui.ImTextureRef(image), size )
+        texture_id = self.gui.images.get_gl_texture(image_index)
+        imgui.image( imgui.ImTextureRef(texture_id), size )
 
     def draw_popup_gameObject( self, uid : str, filter = None ):
         selected = -1

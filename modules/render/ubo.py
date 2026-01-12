@@ -57,7 +57,7 @@ class MeshNodeBlock(ctypes.Structure):
         ("num_indices",         ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
         ("firstIndex",          ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
         ("baseVertex",          ctypes.c_int),  # use for indirect compute shader only -USE_INDIRECT_COMPUTE
-        ("pad0",                ctypes.c_int),
+        ("material",            ctypes.c_int),
         ("min_aabb",            ctypes.c_float * 4),
         ("max_aabb",            ctypes.c_float * 4),
     ]
@@ -466,6 +466,17 @@ class UBO:
         def bind( self, binding : int = 0 ):
             glBindBufferBase( GL_UNIFORM_BUFFER, binding, self.ubo )
    
+    # move to images module?
+    def tex_to_bindless( self, index ):
+        if index in self.context.images.texture_to_bindless:
+            handle = self.context.images.texture_to_bindless[index]
+
+            # todomeh, fix this. init to 0
+            return handle if handle is not None else 0
+
+        else:
+            self.context.images.texture_to_bindless[self.context.images.defaultImage]
+
     def _upload_material_ubo( self ) -> None:
         """Build a UBO of materials and upload to GPU, rebuild when material list is marked dirty"""
         if self.ubo_materials._dirty:
@@ -474,11 +485,11 @@ class UBO:
             for i, mat in enumerate(self.context.materials.materials):
                 materials.append( UBO.MaterialUBO.Material(
                     # bindless
-                    albedo          = self.context.images.texture_to_bindless[ mat.get( "albedo",     self.context.images.defaultImage)     ],       
-                    normal          = self.context.images.texture_to_bindless[ mat.get( "normal",     self.context.images.defaultNormal)    ],       
-                    phyiscal        = self.context.images.texture_to_bindless[ mat.get( "phyiscal",   self.context.images.defaultRMO)       ],       
-                    emissive        = self.context.images.texture_to_bindless[ mat.get( "emissive",   self.context.images.blackImage)       ],       
-                    opacity         = self.context.images.texture_to_bindless[ mat.get( "opacity",    self.context.images.whiteImage)       ],
+                    albedo          = self.tex_to_bindless( mat.get( "albedo",     self.context.images.defaultImage)     ),       
+                    normal          = self.tex_to_bindless( mat.get( "normal",     self.context.images.defaultNormal)    ),       
+                    phyiscal        = self.tex_to_bindless( mat.get( "phyiscal",   self.context.images.defaultRMO)       ),       
+                    emissive        = self.tex_to_bindless( mat.get( "emissive",   self.context.images.blackImage)       ),       
+                    opacity         = self.tex_to_bindless( mat.get( "opacity",    self.context.images.whiteImage)       ),
                         
                     # both bindless and non-bindless paths
                     hasNormalMap    = mat.get( "hasNormalMap", 0 ),
@@ -559,6 +570,9 @@ class UBO:
                 # aabb
                 _mesh_buffer[offset].min_aabb[:] = ( item.min_aabb[0], item.min_aabb[1], item.min_aabb[2], 1.0 )
                 _mesh_buffer[offset].max_aabb[:] = ( item.max_aabb[0], item.max_aabb[1], item.max_aabb[2], 1.0 )
+
+                # material
+                _mesh_buffer[offset].material = mesh["material"]
 
                 if self.context.renderer.USE_INDIRECT_COMPUTE:
                     # use for indirect compute shader only -USE_INDIRECT_COMPUTE

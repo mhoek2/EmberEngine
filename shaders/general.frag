@@ -340,7 +340,8 @@ void main()
 	const vec4 specularScale = vec4( 1.0, 1.0, 1.0, 0.5 );
 
 	// metallic roughness workflow
-	vec4 ORMS = SamplePhysical( mat, vTexCoord ).brga;
+	//vec4 ORMS = SamplePhysical( mat, vTexCoord ).brga;
+	vec4 ORMS = SamplePhysical( mat, vTexCoord ).rgba;
 	ORMS.xyzw *= specularScale.zwxy;
 	specular.rgb = mix(vec3(0.08) * ORMS.w, diffuse.rgb, ORMS.z);
 	diffuse.rgb *= vec3(1.0 - ORMS.z);

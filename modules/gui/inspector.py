@@ -19,6 +19,7 @@ from gameObjects.skybox import Skybox
 from gameObjects.attachables.physic import Physic
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
+from gameObjects.attachables.model import Model
 
 from modules.gui.types import GameObjectTypes, RotationMode_
 
@@ -66,10 +67,10 @@ class Inspector( Context ):
         #    self.helper.draw_transform_world( _t )
         #    imgui.tree_pop()
 
-    def _material_thumb( self, label, texture_id ) -> None:
+    def _material_thumb( self, label, image_index ) -> None:
         imgui.text( f"{label}" );
         imgui.next_column()
-        self.helper.draw_thumb( texture_id, imgui.ImVec2(75.0, 75.0) )
+        self.helper.draw_thumb(image_index, imgui.ImVec2(75.0, 75.0) )
         imgui.next_column()
 
     def _material( self ) -> None:
@@ -444,7 +445,7 @@ class Inspector( Context ):
 
     def _model( self ) -> None:
         gameObject  : GameObject = self.gui.selectedObject
-        _model      : Light = gameObject.model
+        _model      : Model = gameObject.model
 
         if not gameObject.model:
             return

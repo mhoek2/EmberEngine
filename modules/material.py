@@ -12,6 +12,8 @@ from impasse.constants import MaterialPropertyKey, TextureSemantic
 from modules.context import Context
 from modules.images import Images
 
+import uuid as uid
+
 class Materials( Context ):
     class Material(TypedDict):
         albedo      : int # uint32/uintc
@@ -35,6 +37,9 @@ class Materials( Context ):
         self._num_materials : int = 0;
 
         self.defaultMaterial = self.buildMaterial()
+
+    def __create_uuid( self ) -> uid.UUID:
+        return uid.uuid4()
 
     @staticmethod
     def add_ao_suffix( filename ):
@@ -108,6 +113,65 @@ class Materials( Context ):
         
         return self.materials[self.context.materials.defaultMaterial]
 
+    def is_gltf_texture( self, prop ) -> bool:
+        """Assimp.."""
+        return prop.data.startswith("*")
+
+    def _get_texture_path( self, texture_str, model_path ) -> Path:
+        model_dir = Path(model_path).parent      # /path/to
+        texture_name = Path(texture_str).name     # texture.png or /path/to/texture.png, inconsistencies..
+        
+        return model_dir / texture_name   # /path/to/texture.png
+
+    def load_texture( self, prop, model_path ):
+        texture_path : Path = self._get_texture_path( prop.data, model_path )
+
+        return self.images.loadOrFindFullPath( texture_path )
+
+    def get_texture_kind( self, prop ) -> str:
+        #
+        # odd layout this assimp..
+        #
+
+        if prop.semantic == TextureSemantic.DIFFUSE:
+            return "albedo"
+
+        elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
+            return "normal"
+
+        elif prop.semantic == TextureSemantic.OPACITY:
+            return "opacity"
+
+        elif prop.semantic == TextureSemantic.EMISSIVE:
+            return "emissive"
+
+        elif prop.semantic == TextureSemantic.SHININESS: 
+            return "roughness"
+
+        elif prop.semantic == TextureSemantic.AMBIENT: 
+            return "ambient"
+
+        elif prop.key == "$raw.ReflectionFactor|file": # hmmmm
+            return "metallic"
+
+        #elif prop.semantic == TextureSemantic.UNKNOWN: 
+        else: 
+            return {
+                0: "albedo",
+                1: "specular",
+                2: "ambient",
+                3: "emissive",
+                6: "metallicRoughness",     # whats this?
+                10: "metallicRoughness",    # orm?
+                #20: "normal",              # orm?
+                16: "normal",               #actual normal # orm?
+                12: "albedo_dup",
+                15: "metallic",
+                27: "occlusion",
+            }.get( prop.semantic )
+            #}.get( prop.index )
+            # uff, i dont think semantic is the correct index here
+
     def loadOrFind( self, material : ImpasseMaterial, path : Path ) -> int:
         """Create a material by parsing model material info and loading textures
 
@@ -131,56 +195,110 @@ class Materials( Context ):
         m = False
         o = False
 
-        load_texture = lambda prop, path: self.images.loadOrFindFullPath( 
-            path / Path(prop.data).name
-        )
+        _model_name = os.path.basename(path)
+        scene = material._scene
+        #material_name = f"{self.__create_uuid().hex}_modelname_"
+        #
+        #for prop in material.properties:
+        #    if prop.key == "?mat.name":
+        #        material_name += prop.data
+        #        break
+
+        # preload textures (queued) shared across all meshes/nodes
+        # should be global and cleared when model load is finished
+        # also needs to store pixels localy, for rmo building?
+        # or change order of exising rmo?
+        textures = [None] * 25
+        for i, tex in enumerate(scene.textures):
+            texture_name = f"{_model_name}_{i}"
+
+            width, height, buffer = self.images.pixelsToImage( tex.data )
+            textures[i] = self.images.loadFromPixels( width, height, buffer, texture_name )
+
+        # maybce change rmo order to:
+        # R -> Occlusion
+        # G -> Roughness
+        # B -> Metallic
+        found_phyisical = False
 
         for prop in material.properties:
+            if prop.key != "$tex.file":
+                continue
 
-            if prop.key == MaterialPropertyKey.TEXTURE:
-                # albedo
-                if prop.semantic == TextureSemantic.DIFFUSE:
-                    mat["albedo"] = load_texture( prop, path )
+            kind = self.get_texture_kind( prop )
+            print( f"texture kind: {kind}")
+
+            if kind == None:
+                # console print?
+                print( f"uknown prop - semantic: {prop.semantic}")
+
+            # albedo/diffuse
+            if kind == "albedo":
+                if self.is_gltf_texture( prop ):
+                    mat["albedo"] = textures[ int(prop.data[1:]) ]
+                else:
+                    mat["albedo"] = self.load_texture( prop, path )
 
                     # find ambient occlusion
-                    _filepath_ao = Path( f"{path}\\{ self.add_ao_suffix( os.path.basename(prop.data) )}" )
-                    if os.path.isfile( _filepath_ao ):
-                        o = _filepath_ao
+                    ao = self._get_texture_path( self.add_ao_suffix( os.path.basename(prop.data) ), path )
+                    if os.path.isfile( ao ):
+                        o = ao
         
-                # normals
-                elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
-                    mat["normal"] = load_texture( prop, path )
+            # normals
+            if kind == "normal":
+                if self.is_gltf_texture( prop ):
+                    mat["normal"] = textures[ int(prop.data[1:]) ]
+                else:
+                    mat["normal"] = self.load_texture( prop, path )
         
-                # roughness
-                elif prop.semantic == TextureSemantic.SHININESS: 
-                    r = path / Path(prop.data).name
+            # opacity
+            if kind == "opacity":
+                if self.is_gltf_texture( prop ):
+                    mat["opacity"] = textures[ int(prop.data[1:]) ]
+                else:
+                    mat["opacity"] = self.load_texture( prop, path )
 
-                # opacity
-                elif prop.semantic == TextureSemantic.OPACITY:
-                    mat["opacity"] = load_texture( prop, path )
+            # emissive
+            if kind == "emissive":
+                if self.is_gltf_texture( prop ):
+                    mat["emissive"] = textures[ int(prop.data[1:]) ]
+                else:
+                    mat["emissive"] = self.load_texture( prop, path )
 
-                # emissive
-                if prop.semantic == TextureSemantic.EMISSIVE:
-                    mat["emissive"] = load_texture( prop, path )
+            # roughness
+            if kind == "roughness":
+                r = self._get_texture_path( prop.data, path )
+                #r = path / Path(prop.data).name
 
-                # ambient occlusion
-                elif prop.semantic == TextureSemantic.AMBIENT: 
-                    o = path / Path(prop.data).name
+            # ambient occlusion
+            if kind == "ambient":
+                o = self._get_texture_path( prop.data, path )
+                #o = path / Path(prop.data).name
 
             # metallic
-            if prop.key == "$raw.ReflectionFactor|file":  # hmmm... 
-                m = path / Path(prop.data).name
+            if kind == "metallic":
+                m = self._get_texture_path( prop.data, path )
+                #m = path / Path(prop.data).name
 
+            # hm
+            if kind == "metallicRoughness":
+                if self.is_gltf_texture( prop ):
+                    mat["phyiscal"] = textures[ int(prop.data[1:]) ]
+                    found_phyisical = True
+                else:
+                    pass
+ 
         # r, m and o should be packed into a new _rmo file.
-        if not r and not m and not o:
-            mat["phyiscal"] = self.images.defaultRMO
-        else:
-            mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
+        if not found_phyisical:
+            if not r and not m and not o:
+                mat["phyiscal"] = self.images.defaultRMO
+            else:
+                mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
-        
         normal = mat.get( "normal", self.images.defaultNormal )
         mat["hasNormalMap"] = int( normal is not self.images.defaultNormal )
 
+        self.context.renderer.ubo.ubo_materials._dirty = True
         return index
 
     def bind( self, index : int ):

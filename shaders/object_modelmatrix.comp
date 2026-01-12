@@ -20,4 +20,5 @@ void main()
 	uint gameObjectMatrixId = object[gid].gameObjectMatrixId;
 
     object[gid].model = gameObject[gameObjectMatrixId].model * mesh_node[meshNodeMatrixId].model;
+    object[gid].material = mesh_node[meshNodeMatrixId].material;
 }
