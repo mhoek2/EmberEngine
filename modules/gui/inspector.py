@@ -71,7 +71,7 @@ class Inspector( Context ):
     def _material_thumb( self, label, image_index ) -> None:
         imgui.text( f"{label}" );
         imgui.next_column()
-        self.helper.draw_thumb(image_index, imgui.ImVec2(75.0, 75.0) )
+        self.helper.draw_thumb( image_index, imgui.ImVec2(75.0, 75.0), mouse_over_tooltip=True )
         imgui.next_column()
 
     def _material( self ) -> None:

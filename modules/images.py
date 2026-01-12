@@ -8,6 +8,7 @@ from OpenGL.GLU import *
 from OpenGL.GL.ARB.bindless_texture import *
 
 from modules.render.image import ImageUpload, upload_image
+from modules.render.types import ImageMeta
 from modules.context import Context
 
 import traceback
@@ -61,7 +62,10 @@ class Images( Context ):
 
             _path = str(item.base.path)
             print(f"load: {_path}")
-            self.images_paths[image_index]  = _path
+            self.image_meta[image_index].path       = _path
+            self.image_meta[image_index].dimension  = (item.base.width, item.base.height)
+            #self.image_meta[image_index].size       = item.base.width * item.base.height * 4
+            self.image_meta[image_index].size       = len(item.base.buffer)
 
             handle = self.make_bindless( image_index, texture_id )
             self.context.renderer.ubo.ubo_materials._dirty = True
@@ -76,26 +80,36 @@ class Images( Context ):
         super().__init__( context )
 
         self._num_images = 0
-        self.images = [None] * 300
-        self.images_paths : List[str] = [None] * 300
 
+        # lookup table containing GPU texture ids
+        self.images = [None] * 300
+
+        # store meta data, eg: path, size
+        self.image_meta : List[ImageMeta] = [ImageMeta() for _ in range(300) ]
+
+        # The actual GPU upload is using a queue, this allows for model load threading optimization
+        # because the OpenGL context is not shared across threads.
+        # this also means, when an image is loaded, it will not be available until the next frame.
+        # for that frame, default texture is used.
         self.upload_queue = queue.Queue()
 
-
         # bindless texture mapping
-        #self.bindless_handles: List[int] = []
         self.texture_to_bindless : dict = {}
 
         self.defaultImage   = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default.jpg") )
+        # deprecated (12-01-2026)
+        # generate physical texture on applictation init, 
+        # this allows to change format more easily. 
+        # alternative is to use GPU swizzle (overhead)
         #self.defaultRMO     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default_rmo_deprecated.png") )
-        self.defaultRMO     = self.create_default_physical_image() # allows to change format. alternative is to swizzle
+        self.defaultRMO     = self.create_default_physical_image() 
         self.defaultNormal  = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default_normal.png") )
         self.whiteImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}whiteimage.jpg") )
         self.blackImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}blackimage.jpg") )
 
     def get_by_path( self, path : Path ):
-        for i, _path in enumerate(self.images_paths):
-            if str(path) == _path:
+        for i, meta in enumerate(self.image_meta):
+            if str(path) == meta.path:
                 return i
 
         return None

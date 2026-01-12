@@ -145,7 +145,7 @@ class RendererInfo( Context ):
             imgui.table_next_row()
 
             # treenode column
-            imgui.table_set_column_index(0)
+            imgui.table_set_column_index(1)
             flags = (
                 imgui.TreeNodeFlags_.leaf
                 | imgui.TreeNodeFlags_.no_tree_push_on_open
@@ -154,16 +154,16 @@ class RendererInfo( Context ):
 
             imgui.tree_node_ex( f"Mesh {mesh_index} {mesh.name}", flags )
 
-            imgui.table_set_column_index(1)
+            imgui.table_set_column_index(2)
             imgui.text( f"{_model_mesh["num_indices"]}" )
 
-            imgui.table_set_column_index(2)
+            imgui.table_set_column_index(3)
             imgui.text( f"{_model_mesh["baseVertex"]}" )
 
-            imgui.table_set_column_index(3)
+            imgui.table_set_column_index(4)
             imgui.text( f"{_model_mesh["firstIndex"]}" )
 
-            imgui.table_set_column_index(4)
+            imgui.table_set_column_index(5)
             imgui.text( f"{_model_mesh["material"]}" )
 
         for child in node.children:
@@ -173,7 +173,7 @@ class RendererInfo( Context ):
             #    continue
 
             imgui.table_next_row()
-            imgui.table_set_column_index(0)
+            imgui.table_set_column_index(1)
 
             # nodes
             flags = imgui.TreeNodeFlags_.span_all_columns
@@ -201,7 +201,8 @@ class RendererInfo( Context ):
                        imgui.TableFlags_.scroll_x | \
                        imgui.TableFlags_.scroll_y
 
-        if imgui.begin_table("Model Meshes", 5, _table_flags):
+        if imgui.begin_table("Model Meshes", 6, _table_flags):
+            imgui.table_setup_column("#")
             imgui.table_setup_column("Mesh")
             imgui.table_setup_column("indices")
             imgui.table_setup_column("baseVertex")
@@ -217,14 +218,13 @@ class RendererInfo( Context ):
 
                 imgui.table_next_row()
                 imgui.table_set_column_index(0)
+                imgui.text( str(i) )
 
+                imgui.table_set_column_index(1)
                 opened = imgui.tree_node_ex(
                     f"{_path}",
                     imgui.TreeNodeFlags_.span_all_columns# | imgui.TreeNodeFlags_.default_open
                 )
-
-                imgui.table_set_column_index(1)
-                imgui.text("-")
 
                 imgui.table_set_column_index(2)
                 imgui.text("-")
@@ -233,6 +233,9 @@ class RendererInfo( Context ):
                 imgui.text("-")
 
                 imgui.table_set_column_index(4)
+                imgui.text("-")
+
+                imgui.table_set_column_index(5)
                 imgui.text("-")
 
                 depth = 0
@@ -251,17 +254,20 @@ class RendererInfo( Context ):
                        imgui.TableFlags_.scroll_x | \
                        imgui.TableFlags_.scroll_y
 
-        if imgui.begin_table( "Textures", 4, _table_flags ):
+        if imgui.begin_table( "Textures", 7, _table_flags ):
         
             imgui.table_setup_column("#")
+            imgui.table_setup_column("")
             imgui.table_setup_column("OpenGL ID")
             imgui.table_setup_column("Bindless Handle")
+            imgui.table_setup_column("Dim")
+            imgui.table_setup_column("Raw Memory")
             imgui.table_setup_column("Path / Identifier")
             imgui.table_headers_row()
 
             for i in range(self.context.images._num_images):
                 texture_id = self.context.images.images[i]
-                _path = self.context.images.images_paths[i]
+                meta = self.context.images.image_meta[i]
                 _bindless = self.context.images.texture_to_bindless[i]
 
                 imgui.table_next_row()
@@ -271,13 +277,22 @@ class RendererInfo( Context ):
                 imgui.text( f"{i}" )
 
                 imgui.table_set_column_index(1)
-                imgui.text( f"{texture_id}" )
+                self.helper.draw_thumb( i, imgui.ImVec2(25.0, 25.0), mouse_over_tooltip=True )
 
                 imgui.table_set_column_index(2)
-                imgui.text( f"{_bindless}" )
+                imgui.text( f"{texture_id}" )
 
                 imgui.table_set_column_index(3)
-                imgui.text( f"{_path}" )
+                imgui.text( f"{_bindless}" )
+
+                imgui.table_set_column_index(4)
+                imgui.text( f"{meta.dimension[0]}/{meta.dimension[1]}" )
+
+                imgui.table_set_column_index(5)
+                imgui.text( f"{meta.size/1024:.2f} kb" )
+
+                imgui.table_set_column_index(6)
+                imgui.text( f"{meta.path}" )
 
             imgui.end_table()
 

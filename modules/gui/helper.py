@@ -339,10 +339,33 @@ class Helper( Context ):
 
         return bool(new_index != current_index), new_index, total_width
 
-    def draw_thumb( self, image_index : int, size : imgui.ImVec2 ):
+    def draw_thumb_tooltip( self, image_index ):
+        # Check if the item is hovered
+        if imgui.is_item_hovered():
+            m = imgui.get_cursor_screen_pos()
+
+            imgui.set_next_window_pos(imgui.ImVec2(m.x - 10, m.y))
+            imgui.set_next_window_size(imgui.ImVec2(170.0, 170.0))
+
+            _flags = imgui.WindowFlags_.tooltip | \
+                    imgui.WindowFlags_.no_scrollbar | \
+                    imgui.WindowFlags_.no_title_bar | \
+                    imgui.WindowFlags_.no_resize
+
+            imgui.begin( "##image_inspector", flags=_flags )
+
+            texture_id = self.gui.images.get_gl_texture(image_index)
+            imgui.image( imgui.ImTextureRef(texture_id), imgui.ImVec2(150.0, 150.0) )
+
+            imgui.end()
+
+    def draw_thumb( self, image_index : int, size : imgui.ImVec2, mouse_over_tooltip : bool = False ):
         #glBindTexture( GL_TEXTURE_2D, image )
         texture_id = self.gui.images.get_gl_texture(image_index)
         imgui.image( imgui.ImTextureRef(texture_id), size )
+
+        if mouse_over_tooltip:
+            self.draw_thumb_tooltip( image_index )
 
     def draw_popup_gameObject( self, uid : str, filter = None ):
         selected = -1

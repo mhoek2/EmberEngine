@@ -125,7 +125,7 @@ class Hierarchy( Context ):
                     imgui.pop_style_color( _pushed_styles )
 
                 #if imgui.is_item_clicked(): # and imgui.is_item_toggled_open():
-                if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(0):
+                if imgui.is_item_hovered() and imgui.is_mouse_released(0) and not imgui.is_mouse_dragging(0):
                     self.gui.set_selected_object( obj )
     
                 # dnd: source

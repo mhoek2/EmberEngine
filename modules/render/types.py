@@ -1,4 +1,5 @@
 from pyrr import matrix44, Matrix44, Vector3
+from pathlib import Path
 import uuid as uid
 
 from dataclasses import dataclass, field
@@ -41,3 +42,9 @@ class TextureKind_(enum.IntEnum):
     metallicRoughness   = enum.auto()
     albedo_dup          = enum.auto()
     occlusion           = enum.auto()
+
+@dataclass(slots=True)
+class ImageMeta:
+    path        : Path  = field( default=None       )
+    dimension   : tuple = field( default=( 0, 0 )   )
+    size        : int   = field( default=0          )
