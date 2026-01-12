@@ -27,3 +27,4 @@ Modules
    :maxdepth: 2
 
    modules/gui.rst
+   modules/render.rst
