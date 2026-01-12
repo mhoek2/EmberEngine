@@ -36,6 +36,7 @@ class EngineTypes:
                 GameObject  : EngineTypes.Meta( GameObject,   attachable=False ),
                 Light       : EngineTypes.Meta( Light,        attachable=True ),
                 Physic      : EngineTypes.Meta( Physic,       attachable=True ),
+                PhysicLink  : EngineTypes.Meta( PhysicLink,   attachable=True ),
                 Model       : EngineTypes.Meta( Model,        attachable=True ),
             }
 
