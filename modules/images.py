@@ -77,17 +77,18 @@ class Images( Context ):
 
         self._num_images = 0
         self.images = [None] * 300
+        self.images_paths : List[str] = [None] * 300
 
         self.upload_queue = queue.Queue()
 
-        self.images_paths : List[str] = [None] * 1000
 
         # bindless texture mapping
         #self.bindless_handles: List[int] = []
         self.texture_to_bindless : dict = {}
 
         self.defaultImage   = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default.jpg") )
-        self.defaultRMO     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default_rmo.png") )
+        #self.defaultRMO     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default_rmo_deprecated.png") )
+        self.defaultRMO     = self.create_default_physical_image() # allows to change format. alternative is to swizzle
         self.defaultNormal  = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}default_normal.png") )
         self.whiteImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}whiteimage.jpg") )
         self.blackImage     = self.loadOrFindFullPath( Path(f"{self.settings.engine_texture_path}blackimage.jpg") )
@@ -109,6 +110,13 @@ class Images( Context ):
             self.texture_to_bindless[self.defaultImage]
 
     def get_gl_texture( self, image_index ):
+        """Get the GPU uid of a texture
+
+        :param image_index: the image index point to image list containing the texture uid in GPU memory
+        :type image_index: int
+        :param: the texture uid in GPU memory
+        :rtype: uint32/uintc
+        """
         return self.images[image_index] if self.images[image_index] else self.images[self.defaultImage]
 
     def make_bindless( self, image_index : int, texture_id ):
@@ -124,7 +132,55 @@ class Images( Context ):
         self.texture_to_bindless[image_index] = handle
         return handle
 
-    def loadOrFindPhysicalMap( self, roughness_path : Path, metallic_path : Path, ao_path : Path ):
+    def create_default_physical_image( self ) -> int:
+        """Create a 256x256 texture where each channel represents a phyisical kind, occlusion, roughness, metallic
+        Current map format is ORM (occlusion, roughness, metallic )"""
+        size = 256
+        image_size = (size, size)
+
+        roughness = Images.create_grey_image( image_size )
+        metallic = Images.create_black_image( image_size )
+        ambient = Images.create_white_image( image_size )
+
+        combined_image = pygame.Surface(image_size)
+        roughness.lock()
+        metallic.lock()
+        ambient.lock()
+        combined_image.lock()
+
+        roughness_array = pygame.surfarray.array3d(roughness).astype(np.float32) / 255.0
+        metallic_array = pygame.surfarray.array3d(metallic).astype(np.float32) / 255.0
+        ambient_occlusion_array = pygame.surfarray.array3d(ambient).astype(np.float32) / 255.0
+
+        # you may need to transpose based on your orientation.
+        combined_array = np.zeros((size, size, 4), dtype=np.float32)
+
+        # RMO
+        #combined_array[..., 0] = roughness_array[..., 0]                            # Roughness from R channel
+        #combined_array[..., 1] = metallic_array[..., 1]                             # Metallic from G channel
+        #combined_array[..., 2] = ambient_occlusion_array[..., 2]                    # AO from B channel
+
+        # ORM
+        combined_array[..., 0] = ambient_occlusion_array[..., 2]                    # AO from B channel
+        combined_array[..., 1] = roughness_array[..., 0]                            # Roughness from R channel
+        combined_array[..., 2] = metallic_array[..., 1]                             # Metallic from G channel
+
+        combined_array[..., 3] = 1.0
+        combined_array = np.rot90(combined_array, k=1)
+
+        return self.queue_upload( 
+            upload_data = ImageUpload(
+                path                = "*physicalmap_default",
+                width               = size,
+                height              = size,
+                buffer              = combined_array.tobytes(),
+                _internal_format    = GL_RGBA16F,
+                _format             = GL_FLOAT,
+                mipmap              = True
+            )
+        )
+
+    def loadOrFindPhysicalMap( self, roughness_path : Path, metallic_path : Path, ao_path : Path ) -> int:
         """Load/Create/Combine a physical RMO texture.
         Find from cache is not implemented yet.
 
@@ -134,8 +190,8 @@ class Images( Context ):
         :type metallic_path: Path
         :param ao_path: 
         :type ao_path: Path
-        :return: the texture uid in GPU memory
-        :rtype: uint32/uintc
+        :return: the image index point to image list containing the texture uid in GPU memory
+        :rtype: int
         """
         index = self._num_images
 
@@ -190,17 +246,17 @@ class Images( Context ):
             metallic_array = pygame.surfarray.array3d(metallic).astype(np.float32) / 255.0
             ambient_occlusion_array = pygame.surfarray.array3d(ambient_occlusion).astype(np.float32) / 255.0
 
-            # you may need to transpose based on your orientation.
             combined_array = np.zeros((image_width, image_height, 4), dtype=np.float32)
+            # RMO
             #combined_array[..., 0] = roughness_array[..., 0]                            # Roughness from R channel
             #combined_array[..., 1] = metallic_array[..., 1]                             # Metallic from G channel
             #combined_array[..., 2] = ambient_occlusion_array[..., 2]                    # AO from B channel
-            
-            # yup..
-            # need to update stored default RMO
+
+            # ORM
+            combined_array[..., 0] = ambient_occlusion_array[..., 2]                    # AO from B channel
             combined_array[..., 1] = roughness_array[..., 0]                            # Roughness from R channel
             combined_array[..., 2] = metallic_array[..., 1]                             # Metallic from G channel
-            combined_array[..., 0] = ambient_occlusion_array[..., 2]                    # AO from B channel
+
 
             combined_array[..., 3] = 1.0
             combined_array = np.rot90(combined_array, k=1)
@@ -286,8 +342,8 @@ class Images( Context ):
 
         :param path: The path to the texture
         :type path: Path
-        :return: the texture uid in GPU memory
-        :rtype: uint32/uintc
+        :return: the image index point to image list containing the texture uid in GPU memory
+        :rtype: int
         """
 
         # not found
@@ -309,7 +365,7 @@ class Images( Context ):
     def bind_gl( self, texture_id : int, texture_index, shader_uniform : str, shader_index : int ):
         """Bind texture using OpenGL with image index
 
-        :param texture_id: the image index point to image list containing the texture uid in GPU memory
+        :param texture_id: the texture uid in GPU memory
         :type texture_id: uint32/uintc
         :param texture_index: The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)
         :type texture_index: uint32/uintc
@@ -326,7 +382,7 @@ class Images( Context ):
         """Bind texture using OpenGL with image index
 
         :param image_index: the image index point to image list containing the texture uid in GPU memory
-        :type image_index: uint32/uintc
+        :type image_index: int
         :param texture_index: The texture unit index in GLSL (eg. GL_TEXTURE0-GL_TEXTURE31)
         :type texture_index: uint32/uintc
         :param shader_uniform: The varaible name of the GLSL uniform sampler
