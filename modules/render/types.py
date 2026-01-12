@@ -3,6 +3,7 @@ import uuid as uid
 
 from dataclasses import dataclass, field
 import numpy as np
+import enum
 
 @dataclass(slots=True)
 class DrawItem:
@@ -26,3 +27,17 @@ class Material:
     opacity         : int = field( default_factory=int )
     phyiscal        : int = field( default_factory=int )
     hasNormalMap    : int = field( default_factory=int )
+
+class TextureKind_(enum.IntEnum):
+    none                = enum.auto()
+    albedo              = enum.auto()
+    normal              = enum.auto()
+    specular            = enum.auto()
+    roughness           = enum.auto()
+    metallic            = enum.auto()
+    ambient             = enum.auto()
+    emissive            = enum.auto()
+    opacity             = enum.auto()
+    metallicRoughness   = enum.auto()
+    albedo_dup          = enum.auto()
+    occlusion           = enum.auto()

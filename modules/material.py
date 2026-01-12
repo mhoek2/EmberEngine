@@ -11,7 +11,7 @@ from impasse.constants import MaterialPropertyKey, TextureSemantic
 
 from modules.context import Context
 from modules.images import Images
-from modules.render.types import Material
+from modules.render.types import Material, TextureKind_
 
 import uuid as uid
 
@@ -134,43 +134,45 @@ class Materials( Context ):
         #
 
         if prop.semantic == TextureSemantic.DIFFUSE:
-            return "albedo"
+            return TextureKind_.albedo
 
         elif prop.semantic == TextureSemantic.NORMALS or prop.semantic == TextureSemantic.HEIGHT:
-            return "normal"
+            return TextureKind_.normal
 
         elif prop.semantic == TextureSemantic.OPACITY:
-            return "opacity"
+            return TextureKind_.opacity
 
         elif prop.semantic == TextureSemantic.EMISSIVE:
-            return "emissive"
+            return TextureKind_.emissive
 
         elif prop.semantic == TextureSemantic.SHININESS: 
-            return "roughness"
+            return TextureKind_.roughness
 
         elif prop.semantic == TextureSemantic.AMBIENT: 
-            return "ambient"
+            return TextureKind_.ambient
 
         elif prop.key == "$raw.ReflectionFactor|file": # hmmmm
-            return "metallic"
+            return TextureKind_.metallic
 
         #elif prop.semantic == TextureSemantic.UNKNOWN: 
         else: 
             return {
-                0: "albedo",
-                1: "specular",
-                2: "ambient",
-                3: "emissive",
-                6: "metallicRoughness",     # whats this?
-                10: "metallicRoughness",    # orm?
-                #20: "normal",              # orm?
-                16: "normal",               #actual normal # orm?
-                12: "albedo_dup",
-                15: "metallic",
-                27: "occlusion",
-            }.get( prop.semantic )
+                0:      TextureKind_.albedo,
+                1:      TextureKind_.specular,
+                2:      TextureKind_.ambient,
+                3:      TextureKind_.emissive,
+                6:      TextureKind_.metallicRoughness,     # whats this?
+                10:     TextureKind_.metallicRoughness,    # orm?
+                #20:     TextureKind_.normal,              # orm?
+                16:     TextureKind_.normal,               #actual normal # orm?
+                12:     TextureKind_.albedo_dup,
+                15:     TextureKind_.metallic,
+                27:     TextureKind_.occlusion,
+            }.get( prop.semantic, TextureKind_.none )
             #}.get( prop.index )
             # uff, i dont think semantic is the correct index here
+
+            return TextureKind_.none
 
     def loadOrFind( self, material : ImpasseMaterial, path : Path ) -> int:
         """Create a material by parsing model material info and loading textures
@@ -226,14 +228,14 @@ class Materials( Context ):
                 continue
 
             kind = self.get_texture_kind( prop )
-            print( f"texture kind: {kind}")
+            print( f"texture kind: {kind.name}")
 
             if kind == None:
                 # console print?
                 print( f"uknown prop - semantic: {prop.semantic}")
 
             # albedo/diffuse
-            if kind == "albedo":
+            if kind == TextureKind_.albedo:
                 if self.is_gltf_texture( prop ):
                     mat.albedo= textures[ int(prop.data[1:]) ]
                 else:
@@ -245,43 +247,43 @@ class Materials( Context ):
                         o = ao
         
             # normals
-            if kind == "normal":
+            if kind == TextureKind_.normal:
                 if self.is_gltf_texture( prop ):
                     mat.normal = textures[ int(prop.data[1:]) ]
                 else:
                     mat.normal = self.load_texture( prop, path )
         
             # opacity
-            if kind == "opacity":
+            if kind == TextureKind_.opacity:
                 if self.is_gltf_texture( prop ):
                     mat.opacity = textures[ int(prop.data[1:]) ]
                 else:
                     mat.opacity = self.load_texture( prop, path )
 
             # emissive
-            if kind == "emissive":
+            if kind == TextureKind_.emissive:
                 if self.is_gltf_texture( prop ):
                     mat.emissive = textures[ int(prop.data[1:]) ]
                 else:
                     mat.emissive = self.load_texture( prop, path )
 
             # roughness
-            if kind == "roughness":
+            if kind == TextureKind_.roughness:
                 r = self._get_texture_path( prop.data, path )
                 #r = path / Path(prop.data).name
 
             # ambient occlusion
-            if kind == "ambient":
+            if kind == TextureKind_.ambient:
                 o = self._get_texture_path( prop.data, path )
                 #o = path / Path(prop.data).name
 
             # metallic
-            if kind == "metallic":
+            if kind == TextureKind_.metallic:
                 m = self._get_texture_path( prop.data, path )
                 #m = path / Path(prop.data).name
 
             # hm
-            if kind == "metallicRoughness":
+            if kind == TextureKind_.metallicRoughness:
                 if self.is_gltf_texture( prop ):
                     mat.phyiscal = textures[ int(prop.data[1:]) ]
                     found_phyisical = True
