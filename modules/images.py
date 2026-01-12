@@ -7,7 +7,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GL.ARB.bindless_texture import *
 
-from modules.imageLoader import ImageUpload, upload_image, create_white_image, create_black_image, create_grey_image 
+from modules.render.image import ImageUpload, upload_image
 from modules.context import Context
 
 import traceback
@@ -27,19 +27,25 @@ class Images( Context ):
         flip_y          : bool = field( default=True )
         base            : "Images.ImageUpload" = field( default=None )
 
-    #@dataclass(slots=True)
-    #class QueueRMO():
-    #    image_index     : int  = field( default=-1 )
-    #    roughness_path  : Path = field( default=None )
-    #    metallic_path   : Path = field( default=None )
-    #    ao_path         : Path = field( default=None )
-    #    roughness       : "Images.ImageUpload" = field( default=None )
-    #    metallic        : "Images.ImageUpload" = field( default=None )
-    #    ao              : "Images.ImageUpload" = field( default=None )
+    @staticmethod
+    def create_white_image( size ):
+        white_surface = pygame.Surface(size)
+        white_surface.fill((255, 255, 255, 255))
+        return white_surface
+
+    @staticmethod
+    def create_black_image( size ):
+        white_surface = pygame.Surface(size)
+        white_surface.fill((0, 0, 0, 255))
+        return white_surface
+
+    @staticmethod
+    def create_grey_image( size ):
+        white_surface = pygame.Surface(size)
+        white_surface.fill((127, 127, 127, 255))
+        return white_surface
 
     def image_upload_queue_flush( self ) -> None:
-        import pygame
-
         while not self.upload_queue.empty():
             item = self.upload_queue.get()
             image_index = item.image_index
@@ -92,6 +98,15 @@ class Images( Context ):
                 return i
 
         return None
+
+    def tex_to_bindless( self, index ):
+        if index in self.texture_to_bindless:
+            handle = self.texture_to_bindless[index]
+
+            # todomeh, fix this. init to 0
+            return handle if handle is not None else 0
+        else:
+            self.texture_to_bindless[self.defaultImage]
 
     def get_gl_texture( self, image_index ):
         return self.images[image_index] if self.images[image_index] else self.images[self.defaultImage]
@@ -146,13 +161,13 @@ class Images( Context ):
 
             # fill empty channels
             if not roughness_path:
-                roughness = create_grey_image( size )
+                roughness = Images.create_grey_image( size )
 
             if not metallic_path:
-                metallic = create_black_image( size )
+                metallic = Images.create_black_image( size )
 
             if not ao_path:
-                ambient_occlusion = create_white_image( size )
+                ambient_occlusion = Images.create_white_image( size )
 
             # Ensure all images are the same size
             # todo: should probably auto-scale to highest dimension ..

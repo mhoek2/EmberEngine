@@ -86,22 +86,3 @@ def load_cubemap_pygame( path : Path, extension, texture ):
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return texture
-
-
-def create_white_image( size ):
-    import pygame
-    white_surface = pygame.Surface(size)
-    white_surface.fill((255, 255, 255, 255))
-    return white_surface
-
-def create_black_image( size ):
-    import pygame
-    white_surface = pygame.Surface(size)
-    white_surface.fill((0, 0, 0, 255))
-    return white_surface
-
-def create_grey_image( size ):
-    import pygame
-    white_surface = pygame.Surface(size)
-    white_surface.fill((127, 127, 127, 255))
-    return white_surface

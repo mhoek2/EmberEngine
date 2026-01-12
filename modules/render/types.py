@@ -17,3 +17,12 @@ class MatrixItem:
     matrix      : np.ndarray    = field( default_factory=lambda: np.zeros((4, 4), dtype=np.float32))
     min_aabb    : np.ndarray    = field( default_factory=lambda: np.zeros(3, dtype=np.float32))
     max_aabb    : np.ndarray    = field( default_factory=lambda: np.zeros(3, dtype=np.float32)) 
+
+@dataclass(slots=True)
+class Material:
+    albedo          : int = field( default_factory=int )
+    normal          : int = field( default_factory=int )
+    emissive        : int = field( default_factory=int )
+    opacity         : int = field( default_factory=int )
+    phyiscal        : int = field( default_factory=int )
+    hasNormalMap    : int = field( default_factory=int )

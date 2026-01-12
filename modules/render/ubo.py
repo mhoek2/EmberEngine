@@ -11,7 +11,7 @@ import numpy as np
 import enum
 
 from modules.shader import Shader
-from modules.render.types import DrawItem, MatrixItem
+from modules.render.types import DrawItem, MatrixItem, Material
 
 if TYPE_CHECKING:
     from main import EmberEngine
@@ -164,9 +164,9 @@ class UBO:
         #
         self.ubo_lights             : UBO.LightUBO     = UBO.LightUBO( self.renderer.general, "Lights" )
         if self.renderer.USE_BINDLESS_TEXTURES:
-            self.ubo_materials      : UBO.MaterialUBOBindless  = UBO.MaterialSSBOBindless()
+            self.ubo_materials      : UBO.MaterialUBOBindless  = UBO.MaterialSSBOBindless( self.context )
         else:
-            self.ubo_materials      : UBO.MaterialUBO  = UBO.MaterialUBO( self.renderer.general, "Materials" )
+            self.ubo_materials      : UBO.MaterialUBO  = UBO.MaterialUBO( self.context, self.renderer.general, "Materials" )
 
         #
         # indirect
@@ -277,15 +277,9 @@ class UBO:
         # std430 layout: 5 uint64_t, 1 int, 1 uint padding = 48 bytes per material
         STRUCT_LAYOUT = struct.Struct("QQQQQiI")
 
-        class Material(TypedDict):
-            albedo          : int
-            normal          : int
-            phyiscal        : int
-            emissive        : int
-            opacity         : int
-            hasNormalMap    : int
+        def __init__( self, context ):
+            self.context    : 'EmberEngine' = context
 
-        def __init__( self ):
             self._dirty = True
 
             self.data = bytearray()
@@ -297,19 +291,19 @@ class UBO:
             glBufferData( GL_SHADER_STORAGE_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
             glBindBuffer( GL_SHADER_STORAGE_BUFFER, 0 )
 
-        def update(self, materials: list[dict]):
-            num_materials = min(len(materials), self.MAX_MATERIALS)
+        def update( self, count : int, materials : list[Material] ):
+            num_materials = min(count, self.MAX_MATERIALS)
             self.data = bytearray()
 
             # u_materials
             for mat in materials[:num_materials]:
                 self.data += self.STRUCT_LAYOUT.pack(
-                    mat["albedo"],
-                    mat["normal"],
-                    mat["phyiscal"],
-                    mat["emissive"],
-                    mat["opacity"],
-                    mat.get("hasNormalMap", 0),
+                    self.context.images.tex_to_bindless( mat.albedo   ),
+                    self.context.images.tex_to_bindless( mat.normal   ),
+                    self.context.images.tex_to_bindless( mat.phyiscal ),
+                    self.context.images.tex_to_bindless( mat.emissive ),
+                    self.context.images.tex_to_bindless( mat.opacity  ),
+                    mat.hasNormalMap,
                     0  # padding
                 )
 
@@ -333,18 +327,12 @@ class UBO:
         # std140 layout: 1 vec4 = 16 bytes per material
         STRUCT_LAYOUT = struct.Struct( b"4f" )
 
-        class Material(TypedDict):
-            albedo          : int   # skipped in non-bindless
-            normal          : int   # skipped in non-bindless
-            phyiscal        : int   # skipped in non-bindless
-            emissive        : int   # skipped in non-bindless
-            opacity         : int   # skipped in non-bindless
-            hasNormalMap    : int
-
-        def __init__(self, 
+        def __init__( self, context,
                      shader : Shader, 
                      block_name     : str ="Material"
             ):
+            self.context    : 'EmberEngine' = context
+
             self._dirty : bool = True
 
             self.data = bytearray()
@@ -365,8 +353,8 @@ class UBO:
             glBufferData( GL_UNIFORM_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
             glBindBuffer( GL_UNIFORM_BUFFER, 0 )
 
-        def update( self, materials ):
-            num_materials = min(len(materials), self.MAX_MATERIALS)
+        def update( self, count : int, materials : list[Material] ):
+            num_materials = min(count, self.MAX_MATERIALS)
 
             self.data = bytearray()
 
@@ -374,7 +362,7 @@ class UBO:
             for mat in materials[:num_materials]:
 
                 self.data += self.STRUCT_LAYOUT.pack(
-                    mat["hasNormalMap"], 0.0, 0.0, 0.0
+                    mat.hasNormalMap, 0.0, 0.0, 0.0
                 )
 
             # fill empty materials
@@ -466,37 +454,14 @@ class UBO:
         def bind( self, binding : int = 0 ):
             glBindBufferBase( GL_UNIFORM_BUFFER, binding, self.ubo )
    
-    # move to images module?
-    def tex_to_bindless( self, index ):
-        if index in self.context.images.texture_to_bindless:
-            handle = self.context.images.texture_to_bindless[index]
-
-            # todomeh, fix this. init to 0
-            return handle if handle is not None else 0
-
-        else:
-            self.context.images.texture_to_bindless[self.context.images.defaultImage]
-
+  
     def _upload_material_ubo( self ) -> None:
         """Build a UBO of materials and upload to GPU, rebuild when material list is marked dirty"""
         if self.ubo_materials._dirty:
-            materials : list[UBO.MaterialUBO.Material] = []
-
-            for i, mat in enumerate(self.context.materials.materials):
-                materials.append( UBO.MaterialUBO.Material(
-                    # bindless
-                    albedo          = self.tex_to_bindless( mat.get( "albedo",     self.context.images.defaultImage)     ),       
-                    normal          = self.tex_to_bindless( mat.get( "normal",     self.context.images.defaultNormal)    ),       
-                    phyiscal        = self.tex_to_bindless( mat.get( "phyiscal",   self.context.images.defaultRMO)       ),       
-                    emissive        = self.tex_to_bindless( mat.get( "emissive",   self.context.images.blackImage)       ),       
-                    opacity         = self.tex_to_bindless( mat.get( "opacity",    self.context.images.whiteImage)       ),
-                        
-                    # both bindless and non-bindless paths
-                    hasNormalMap    = mat.get( "hasNormalMap", 0 ),
-                )
+            self.ubo_materials.update( 
+                self.context.materials._num_materials, 
+                self.context.materials.materials 
             )
-
-            self.ubo_materials.update( materials )
 
     def _upload_lights_ubo( self, sun : "GameObject" ) -> None:
         """Build a UBO of lights, rebuilds every frame (currently)

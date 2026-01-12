@@ -11,17 +11,11 @@ from impasse.constants import MaterialPropertyKey, TextureSemantic
 
 from modules.context import Context
 from modules.images import Images
+from modules.render.types import Material
 
 import uuid as uid
 
 class Materials( Context ):
-    class Material(TypedDict):
-        albedo      : int # uint32/uintc
-        normal      : int # uint32/uintc
-        emissive    : int # uint32/uintc
-        opacity     : int # uint32/uintc
-        phyiscal    : int # uint32/uintc
-        hasNormalMap: int # uint32/uintc
 
     def __init__( self, context ):
         """Material loader for models
@@ -33,7 +27,7 @@ class Materials( Context ):
 
         self.images     : Images = context.images
 
-        self.materials : List[Materials.Material] = [{} for i in range(300)]
+        self.materials : List[Material] = [Material() for _ in range(1000)]
         self._num_materials : int = 0;
 
         self.defaultMaterial = self.buildMaterial()
@@ -75,26 +69,32 @@ class Materials( Context ):
         :rtype: int
         """
         index = self._num_materials
-        mat : Materials.Material = self.materials[index]
+        mat : Material = self.materials[index]
+
+        mat.albedo      = self.context.images.defaultImage
+        mat.normal      = self.context.images.defaultNormal
+        mat.emissive    = self.context.images.blackImage
+        mat.opacity     = self.images.whiteImage
+        mat.hasNormalMap = 0
 
         if albedo:
-            mat["albedo"] = self.images.loadOrFindFullPath( albedo )
+            mat.albedo = self.images.loadOrFindFullPath( albedo )
 
         if normal:
-            mat["normal"] = self.images.loadOrFindFullPath( normal )
+            mat.normal = self.images.loadOrFindFullPath( normal )
 
         if emissive:
-            mat["emissive"] = self.images.loadOrFindFullPath( emissive )
+            mat.emissive = self.images.loadOrFindFullPath( emissive )
 
-        mat["opacity"] = self.images.whiteImage
+        mat.opacity = self.images.whiteImage
 
         if rmo:
-            mat["phyiscal"] = self.images.loadOrFindFullPath( rmo )
+            mat.phyiscal = self.images.loadOrFindFullPath( rmo )
         else:
             if not r and not m and not o:
-                mat["phyiscal"] = self.images.defaultRMO
+                mat.phyiscal = self.images.defaultRMO
             else:
-                mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
+                mat.phyiscal = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
         self._num_materials += 1
 
@@ -235,9 +235,9 @@ class Materials( Context ):
             # albedo/diffuse
             if kind == "albedo":
                 if self.is_gltf_texture( prop ):
-                    mat["albedo"] = textures[ int(prop.data[1:]) ]
+                    mat.albedo= textures[ int(prop.data[1:]) ]
                 else:
-                    mat["albedo"] = self.load_texture( prop, path )
+                    mat.albedo= self.load_texture( prop, path )
 
                     # find ambient occlusion
                     ao = self._get_texture_path( self.add_ao_suffix( os.path.basename(prop.data) ), path )
@@ -247,23 +247,23 @@ class Materials( Context ):
             # normals
             if kind == "normal":
                 if self.is_gltf_texture( prop ):
-                    mat["normal"] = textures[ int(prop.data[1:]) ]
+                    mat.normal = textures[ int(prop.data[1:]) ]
                 else:
-                    mat["normal"] = self.load_texture( prop, path )
+                    mat.normal = self.load_texture( prop, path )
         
             # opacity
             if kind == "opacity":
                 if self.is_gltf_texture( prop ):
-                    mat["opacity"] = textures[ int(prop.data[1:]) ]
+                    mat.opacity = textures[ int(prop.data[1:]) ]
                 else:
-                    mat["opacity"] = self.load_texture( prop, path )
+                    mat.opacity = self.load_texture( prop, path )
 
             # emissive
             if kind == "emissive":
                 if self.is_gltf_texture( prop ):
-                    mat["emissive"] = textures[ int(prop.data[1:]) ]
+                    mat.emissive = textures[ int(prop.data[1:]) ]
                 else:
-                    mat["emissive"] = self.load_texture( prop, path )
+                    mat.emissive = self.load_texture( prop, path )
 
             # roughness
             if kind == "roughness":
@@ -283,7 +283,7 @@ class Materials( Context ):
             # hm
             if kind == "metallicRoughness":
                 if self.is_gltf_texture( prop ):
-                    mat["phyiscal"] = textures[ int(prop.data[1:]) ]
+                    mat.phyiscal = textures[ int(prop.data[1:]) ]
                     found_phyisical = True
                 else:
                     pass
@@ -291,12 +291,11 @@ class Materials( Context ):
         # r, m and o should be packed into a new _rmo file.
         if not found_phyisical:
             if not r and not m and not o:
-                mat["phyiscal"] = self.images.defaultRMO
+                mat.phyiscal = self.images.defaultRMO
             else:
-                mat["phyiscal"] = self.images.loadOrFindPhysicalMap( r, m, o ) 
+                mat.phyiscal = self.images.loadOrFindPhysicalMap( r, m, o ) 
 
-        normal = mat.get( "normal", self.images.defaultNormal )
-        mat["hasNormalMap"] = int( normal is not self.images.defaultNormal )
+        mat.hasNormalMap = int( mat.normal is not self.images.defaultNormal )
 
         self.context.renderer.ubo.ubo_materials._dirty = True
         return index
@@ -312,8 +311,8 @@ class Materials( Context ):
         else:
             mat = self.materials[self.context.materials.defaultMaterial]
 
-        self.images.bind( mat.get( "albedo",     self.images.defaultImage),  GL_TEXTURE0, "sTexture",     0 )
-        self.images.bind( mat.get( "normal",     self.images.defaultNormal), GL_TEXTURE1, "sNormal",      1 )
-        self.images.bind( mat.get( "phyiscal",   self.images.defaultRMO),    GL_TEXTURE2, "sPhysical",    2 )
-        self.images.bind( mat.get( "emissive",   self.images.blackImage),    GL_TEXTURE3, "sEmissive",    3 )
-        self.images.bind( mat.get( "opacity",    self.images.whiteImage),    GL_TEXTURE4, "sOpacity",     4 )
+        self.images.bind( mat.albedo,   GL_TEXTURE0, "sTexture",     0 )
+        self.images.bind( mat.normal,   GL_TEXTURE1, "sNormal",      1 )
+        self.images.bind( mat.phyiscal, GL_TEXTURE2, "sPhysical",    2 )
+        self.images.bind( mat.emissive, GL_TEXTURE3, "sEmissive",    3 )
+        self.images.bind( mat.opacity,  GL_TEXTURE4, "sOpacity",     4 )

@@ -19,7 +19,6 @@ Modules
    modules.camera
    modules.cubemap
    modules.files
-   modules.imageLoader
    modules.images
    modules.jsonHandling
    modules.material
