@@ -401,6 +401,7 @@ class UBO:
                      block_name     : str ="Lights"
             ):
             self.data = bytearray()
+            self.lights : list[UBO.LightUBO.Light] = [UBO.LightUBO.Light() for _ in range(self.MAX_LIGHTS) ]
 
             # support older openGL versions (sub 4.2):
             self.binding = 0
@@ -418,8 +419,8 @@ class UBO:
             glBufferData( GL_UNIFORM_BUFFER, total_size, None, GL_DYNAMIC_DRAW )
             glBindBuffer( GL_UNIFORM_BUFFER, 0 )
 
-        def update( self, lights ):
-            num_lights = min(len(lights), self.MAX_LIGHTS)
+        def update( self, num_lights : int ):
+            num_lights = min(num_lights, self.MAX_LIGHTS)
 
             self.data = bytearray()
 
@@ -427,7 +428,7 @@ class UBO:
             self.data += struct.pack("I 3I", num_lights, 0, 0, 0)
 
             # u_lights
-            for light in lights[:num_lights]:
+            for light in self.lights[:num_lights]:
                 ox, oy, oz  = light["origin"]
                 cx, cy, cz  = light["color"]
                 rx, ry, rz  = light["rotation"]
@@ -469,8 +470,7 @@ class UBO:
         :param sun: The sun GameObject, light is excluded from UBO
         :type sun: GameObject
         """
-        lights : list[UBO.LightUBO.Light] = []
-
+        num_lights = 0
         for uuid in self.context.world.lights.keys():
             obj : "GameObject" = self.context.world.gameObjects[uuid]
 
@@ -480,18 +480,18 @@ class UBO:
             if not self.renderer.game_runtime and not obj.hierachyVisible():
                 continue
 
-            lights.append( UBO.LightUBO.Light(
+            self.ubo_lights.lights[num_lights] = UBO.LightUBO.Light(
                 origin      = obj.transform.position,
                 rotation    = obj.transform.rotation,
-
 
                 color       = obj.light.light_color,
                 radius      = obj.light.radius,
                 intensity   = obj.light.intensity,
                 t           = obj.light.light_type
-            ) )
+            )
+            num_lights += 1
 
-        self.ubo_lights.update( lights )
+        self.ubo_lights.update( num_lights )
 
     #
     # indirect
