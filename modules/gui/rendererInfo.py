@@ -24,28 +24,65 @@ class RendererInfo( Context ):
         super().__init__( context )
         self.gui        = context.gui
         self.helper     = context.gui.helper
+        self.renderer   = context.renderer
      
         self.extension_filter = imgui.TextFilter()
         self.gameObject_filter = imgui.TextFilter()
         self.modelMeshes_filter = imgui.TextFilter()
 
     def _openGLInfo( self ) -> None:
-        imgui.text( f"GL_VERSION : { glGetString(GL_VERSION).decode() }" )   
-        imgui.text( f"GL_VENDOR  : { glGetString(GL_VENDOR).decode() }" )    
-        imgui.text( f"GL_RENDERER: { glGetString(GL_RENDERER).decode() }" )  
+        _table_flags = imgui.TableFlags_.resizable | \
+                       imgui.TableFlags_.hideable | \
+                       imgui.TableFlags_.borders_v | \
+                       imgui.TableFlags_.borders_outer | \
+                       imgui.TableFlags_.row_bg
+
+        yes_no = [ "no", "yes" ]
+
+        OpenGL_info : dict[str, str] = {
+            "GL_VERSION":   glGetString(GL_VERSION).decode(),
+            "GL_VENDOR":    glGetString(GL_VENDOR).decode(),
+            "GL_RENDERER":  glGetString(GL_RENDERER).decode()
+        }
+
+        Application_info : dict[str, str] = {
+            "Bindless":         yes_no[self.renderer.USE_BINDLESS_TEXTURES],
+            "Indirect":         yes_no[self.renderer.USE_INDIRECT],
+            "Shared VAO":       yes_no[self.renderer.SHARED_VAO],
+            "Compute Indirect": yes_no[self.renderer.USE_INDIRECT_COMPUTE],
+            "Full GPU driven":  yes_no[self.renderer.USE_FULL_GPU_DRIVEN]
+        }
+
+        def draw_table_group( fmt : str, data : dict[str, str], _table_flags : int ):
+            imgui.begin_group()
+            if imgui.begin_table( fmt, 2, _table_flags ):
+                for key, value in data.items():
+                    imgui.table_next_row()
+
+                    imgui.table_set_column_index(0)
+                    imgui.text( key )   
+
+                    imgui.table_set_column_index(1)
+                    imgui.text( value )   
+            
+                imgui.end_table()
+            imgui.end_group()
+
+        if imgui.begin_table("RendererTable", 2):
+            imgui.table_next_row()
+
+            imgui.table_set_column_index(0)
+            draw_table_group( "OpenGLContext", OpenGL_info, _table_flags)
+ 
+            imgui.table_set_column_index(1)
+            draw_table_group( "ApplicationContext", Application_info, _table_flags)
+
+            imgui.end_table()
 
         self.helper._node_sep()
 
         # filter
         self.extension_filter.draw("Filter")
-
-        _table_flags = imgui.TableFlags_.resizable | \
-                       imgui.TableFlags_.hideable | \
-                       imgui.TableFlags_.borders_v | \
-                       imgui.TableFlags_.borders_outer | \
-                       imgui.TableFlags_.row_bg | \
-                       imgui.TableFlags_.scroll_x | \
-                       imgui.TableFlags_.scroll_y
 
         if imgui.begin_table( "OpenGL Extensions", 1, _table_flags ):
 
@@ -299,7 +336,7 @@ class RendererInfo( Context ):
 
     def render( self ):
         if imgui.begin_popup_modal("Renderer Info", None, imgui.WindowFlags_.no_resize)[0]:
-            imgui.set_window_size( imgui.ImVec2(1024, 400) )  # Example: width=4
+            imgui.set_window_size( imgui.ImVec2(1200, 600) )  # Example: width=4
 
             if self.helper.draw_close_button( f"{fa.ICON_FA_CIRCLE_XMARK}", imgui.get_window_width() - 30 ):
                 imgui.close_current_popup()

@@ -329,8 +329,8 @@ class Renderer:
         supports_gl_460 = (major, minor) >= (4, 6)
         #
         self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 and self.has_extension("GL_ARB_bindless_texture") 
-        self.USE_INDIRECT           : bool = True  
-        self.SHARED_VAO             : bool = True
+        self.USE_INDIRECT           : bool = supports_gl_460  
+        self.SHARED_VAO             : bool = supports_gl_460
         
         # do not change
         self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
