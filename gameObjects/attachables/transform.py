@@ -278,7 +278,7 @@ class Transform:
         """Lambda/Proxy wrapper"""
         self.scale = list( data )
 
-    def _update_local_from_world(self):
+    def _update_local_from_world( self, ignore_scale : bool = False ):
         """Recompute local transform from world transform and parent safely."""
     
         world_matrix = Matrix44(self.world_model_matrix)
@@ -292,7 +292,8 @@ class Transform:
         scale, rot_quat, pos = local_matrix.decompose()
     
         self.local_position = tuple(pos)
-        self.local_scale = tuple(scale)
+        if not ignore_scale:
+            self.local_scale = tuple(scale)
 
         # Use quaternions for rotation to avoid flipping
         self._local_rotation_quat = Quaternion(rot_quat)

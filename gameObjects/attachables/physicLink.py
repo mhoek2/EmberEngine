@@ -363,7 +363,7 @@ class PhysicLink:
 
         # Always recompute local transform when parented (PhysicLink)
         self.gameObject.transform.world_model_matrix = _model_matrix
-        self.gameObject.transform._update_local_from_world()
+        self.gameObject.transform._update_local_from_world( ignore_scale=True )
 
         # debug to visualize collisions in runtime:
         if self.context.settings.drawColliders:

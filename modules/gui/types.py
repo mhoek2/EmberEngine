@@ -1,4 +1,4 @@
-from typing import TypedDict, Any
+from typing import TypedDict, Any, Callable
 from modules.context import Context
 
 from imgui_bundle import imgui
@@ -26,6 +26,7 @@ class RadioStruct(TypedDict):
     name    : str
     icon    : str
     flag    : int
+    hide    : Callable
 
 class ToggleStruct(TypedDict):
     name    : str

@@ -60,6 +60,7 @@ class ImGuizmo( Context ):
                 "name"  : "Scale",
                 "icon"  : fa.ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER,
                 "flag"  : self.gizmo.OPERATION.scale,
+                "hide"  : lambda: self.gameObject_is_physic
             }
         ]
 
@@ -81,6 +82,8 @@ class ImGuizmo( Context ):
     def begin_frame( self ):
         #self.gizmo.set_im_gui_context(imgui.get_current_context())
         self.gizmo.begin_frame()
+
+        self.gameObject_is_physic = self.helper.is_physic( self.gui.selectedObject )
 
     def render( self, _rect_min : imgui.ImVec2, _image_size : imgui.ImVec2 ) -> None:
         self.begin_frame()
@@ -106,17 +109,24 @@ class ImGuizmo( Context ):
 
             glEnable(GL_DEPTH_TEST)
             glDepthFunc(GL_LEQUAL)
-            self.gizmo.manipulate(
-                view_m16,
-                proj_m16,
-                self.operation_types[self.operation]["flag"],
-                self.mode_types[self.mode]["flag"],
-                model_m16,
-                None,
-                None,
-                None,
-                None
-            )
+
+            _draw_manipulate = True
+
+            if self.operation_types[self.operation]["flag"] == self.gizmo.OPERATION.scale and self.gameObject_is_physic:
+                _draw_manipulate = False
+
+            if _draw_manipulate:
+                self.gizmo.manipulate(
+                    view_m16,
+                    proj_m16,
+                    self.operation_types[self.operation]["flag"],
+                    self.mode_types[self.mode]["flag"],
+                    model_m16,
+                    None,
+                    None,
+                    None,
+                    None
+                )
 
             # write result back on update
             if self.gizmo.is_using():

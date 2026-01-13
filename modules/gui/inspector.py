@@ -59,7 +59,10 @@ class Inspector( Context ):
         if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
             self.helper._node_header_pad()
 
-            self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject.physic_link else 1) ] )
+            # physic has no scaling
+            gameObject_is_physic = self.helper.is_physic( gameObject )
+
+            self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject_is_physic else 1) ] )
 
             imgui.tree_pop()
 
