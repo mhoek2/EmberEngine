@@ -7,6 +7,7 @@ Render
    :recursive:
 
    modules.render.image
+   modules.render.shader
    modules.render.types
    modules.render.ubo
    modules.render.vao

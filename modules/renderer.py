@@ -22,7 +22,7 @@ import enum
 
 from modules.settings import Settings
 from modules.project import ProjectManager
-from modules.shader import Shader
+from modules.render.shader import Shader
 from modules.camera import Camera
 from modules.scene import SceneManager
 

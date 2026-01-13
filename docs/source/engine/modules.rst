@@ -15,7 +15,6 @@ Modules
    modules.models
    modules.project
    modules.scene
-   modules.shader
    modules.camera
    modules.cubemap
    modules.files

@@ -10,7 +10,7 @@ from OpenGL.GL.ARB.bindless_texture import *
 import numpy as np
 import enum
 
-from modules.shader import Shader
+from modules.render.shader import Shader
 from modules.render.types import DrawItem, MatrixItem, Material
 
 if TYPE_CHECKING:
