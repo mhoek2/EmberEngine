@@ -365,9 +365,19 @@ class PhysicLink:
         self.gameObject.transform.world_model_matrix = _model_matrix
         self.gameObject.transform._update_local_from_world( ignore_scale=True )
 
+        # do this in compute?
+        # visual matrix
+        _visual = self.visual
+        local_matrix = _visual.transform.compose_matrix(
+            _visual.transform.local_position,
+            _visual.transform._local_rotation_quat,
+            _visual.transform.local_scale
+        )
+        _visual.transform.world_model_matrix = _model_matrix * local_matrix
+
         # debug to visualize collisions in runtime:
         if self.context.settings.drawColliders:
-            _collision = self.gameObject.physic_link.collision
+            _collision = self.collision
             local_matrix = _collision.transform.compose_matrix(
                 _collision.transform.local_position,
                 _collision.transform._local_rotation_quat,

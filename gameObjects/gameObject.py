@@ -606,6 +606,7 @@ class GameObject( Context, Transform ):
             if self.physic_link or self.physic:
                 _physic = self.physic_link or self.physic
                 _physic.collision.transform._createWorldModelMatrix()
+                _physic.visual.transform._createWorldModelMatrix()
 
             if self.renderer.game_running and self.physic:
                 self.physic._updatePhysicsBody()

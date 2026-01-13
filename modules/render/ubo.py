@@ -583,11 +583,22 @@ class UBO:
             #if uuid in self.context.world.trash:
             #    continue
 
-            #_gameobject_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
-            _gameobject_buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
-            
-            # active/visible state
+            #_gameobject_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()            
             obj : GameObject = transform.gameObject
+
+
+            #(obj.physic and obj.children) or obj.physic_link
+            if obj.physic or obj.physic_link:
+                physic = obj.physic or obj.physic_link
+                _gameobject_buffer[offset].model[:] = np.asarray(physic.visual.transform.world_model_matrix, dtype=np.float32).reshape(16)
+            else:
+                _gameobject_buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
+
+
+
+
+
+            # active/visible state
             _gameobject_buffer[offset].enabled = obj.hierachyActive() \
                          and (self.renderer.game_runtime or obj.hierachyVisible()) \
                          and not (obj.is_camera and self.renderer.game_runtime)

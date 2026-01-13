@@ -529,8 +529,8 @@ class Inspector( Context ):
                 imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 visual : PhysicLink.Visual = physic_link.visual
 
-                #_t : Transform = visual.transform
-                #self.helper.draw_transform_local( _t )
+                _t : Transform = visual.transform
+                self.helper.draw_transform_local( _t )
 
                 imgui.end_tab_item()
 

@@ -348,7 +348,17 @@ class Physic( PhysicLink ):
         # or gameObject a single world physic with mass
         if is_base_physic or self.inertia.mass > 0.0:
             self.gameObject.transform.world_model_matrix = _model_matrix
-            self.gameObject.transform._update_local_from_world(ignore_scale=True)
+            self.gameObject.transform._update_local_from_world( ignore_scale=True )
+
+            # do this in compute?
+            # visual matrix
+            _visual = self.visual
+            local_matrix = _visual.transform.compose_matrix(
+                _visual.transform.local_position,
+                _visual.transform._local_rotation_quat,
+                _visual.transform.local_scale
+            )
+            _visual.transform.world_model_matrix = _model_matrix * local_matrix
 
             # debug to visualize collisions in runtime:
             if self.context.settings.drawColliders:
