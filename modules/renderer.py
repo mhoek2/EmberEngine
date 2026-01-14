@@ -1666,7 +1666,8 @@ class Renderer:
         self._runPhysics()
 
         # update static model:node(mesh) matrices when dirty
-        self.ubo._update_comp_meshnode_matrices_ssbo()
+        if self.USE_INDIRECT:
+            self.ubo._update_comp_meshnode_matrices_ssbo()
 
     def dispatch_drawcalls( self, _scene : SceneManager.Scene ) -> None:
         """"

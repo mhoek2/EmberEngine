@@ -190,13 +190,24 @@ class GameObject( Context, Transform ):
 
         if t is Physic:
             self.physic = self.attachables[t]
-            self.transform.scale = [1.0, 1.0, 1.0] # physics only use scale from visual and collider
             self.context.world.physics[self.uuid] = self.attachables[t] 
 
         if t is PhysicLink:
             self.physic_link = self.attachables[t]
-            self.transform.scale = [1.0, 1.0, 1.0] # physics only use scale from visual and collider
             self.context.world.physic_links[self.uuid] = self.attachables[t] 
+
+        # additional logic for physics
+        if t in (Physic, PhysicLink):
+            _physic = self.get_physic()
+
+            # visual and collision takes over scale from gameObject
+            # on scene load, this is overwritten by the stored scale immidiatly after
+            _physic.visual.transform.local_scale = list(self.transform.local_scale)
+            _physic.collision.transform.local_scale = list(self.transform.local_scale)
+
+            # reset gameObject to identity scale
+            # physics detaches scale from visual and collider
+            self.transform.local_scale = list([1.0, 1.0, 1.0])
 
         return self.attachables[t] 
 

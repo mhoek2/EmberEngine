@@ -107,12 +107,9 @@ class UBO:
         # to index the correct model/mesh combo, a map is used.
         # also, a map of the gameObjects modelmatrices is required with a map
         self.comp_gameobject_matrices_map   : dict[uid.UUID, int] = {}          # uuid -> offset
-        self.comp_meshnode_matrices_dirty   : bool = True
         self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {}  # not flattened
         self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}        # (model_index, mesh_index) -> offset
         self.comp_meshnode_max              : int = 0 # max possible bacthes to make
-
-        self.physic_ssbo_dirty              : bool = True
 
         self.object_map     : dict[(int, int, int), int] = {}
 
@@ -121,6 +118,7 @@ class UBO:
             self.max_elements   = max_elements
             self.element_type   = element_type
             self.target         = target
+            self._dirty         = True  
 
             if isinstance(element_type, int):
                 self.element_size = element_type      # number of floats per element
@@ -136,6 +134,9 @@ class UBO:
 
             glBindBuffer( target, self.ssbo )
             glBufferData( target, ctypes.sizeof(self.buffer), None, GL_DYNAMIC_DRAW )
+
+        def _mark_dirty( self, state : bool = True ):
+            self._dirty = state
 
         def upload( self, num_elements ):
             glBindBuffer( self.target, self.ssbo )
@@ -153,7 +154,7 @@ class UBO:
         def bind_base( self, binding : int = 0 ):
             glBindBufferBase( self.target, binding, self.ssbo )
 
-        def clear(self, value=0):
+        def clear( self, value=0 ):
             glBindBuffer(self.target, self.ssbo)
 
             if self.is_struct:
@@ -514,11 +515,12 @@ class UBO:
         Static flattened SSBO containing all local model matrices for each model:node(mesh)
         Updates only occur, when additional model(s) are loaded
         """
-        if not self.comp_meshnode_matrices_dirty:
+        if not self.comp_meshnode_matrices_ssbo._dirty:
             return
 
+        self.comp_meshnode_matrices_ssbo._mark_dirty( False ) 
+
         if not self.renderer.USE_INDIRECT:
-            self.comp_meshnode_matrices_dirty = False
             return
 
         # clear the mapping table, it is rebuilt.
@@ -574,13 +576,10 @@ class UBO:
         _mesh_ssbo.upload( offset )
         _model_ssbo.upload( len(self.comp_meshnode_matrices_nested) )
 
-        self.comp_meshnode_matrices_dirty = False   
-
     def _upload_comp_physic_matrices_map_ssbo( self ):
-        if not self.physic_ssbo_dirty:
+        if not self.physic_ssbo._dirty:
             return
-
-        self.physic_ssbo_dirty = False
+        self.physic_ssbo._mark_dirty( False )
 
         _physic_ssbo = self.physic_ssbo
         _physic_buffer = self.physic_ssbo.buffer

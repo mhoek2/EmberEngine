@@ -679,7 +679,7 @@ class SceneManager:
                     collision.transform.local_rotation      = tuple(_collision.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
                     collision.transform.local_scale         = tuple(_collision.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
 
-                    collision.transform.is_physic_shape = True
+                    #collision.transform.is_physic_shape = True # redundant
                     collision._update_transform()
                     
                     # contact
@@ -697,7 +697,7 @@ class SceneManager:
                     visual.transform.local_rotation      = tuple(_visual.get( "rotation",  ( 0.0, 0.0, 0.0 ) ) )
                     visual.transform.local_scale         = tuple(_visual.get( "scale",     ( 1.0, 1.0, 1.0 ) ) )
 
-                    visual.transform.is_physic_shape = True
+                    #visual.transform.is_physic_shape = True # redundant
                     visual._update_transform()
 
             if "Physic" in obj:

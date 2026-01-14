@@ -213,7 +213,7 @@ class PhysicLink:
             )
 
             if self.context.renderer.USE_INDIRECT:
-                self.context.renderer.ubo.physic_ssbo_dirty = True
+                self.context.renderer.ubo.physic_ssbo._mark_dirty()
 
             else:
                 self.transform._createWorldModelMatrix( local_matrix = self.local_matrix )
