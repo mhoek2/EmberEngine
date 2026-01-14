@@ -158,6 +158,15 @@ class GameObject( Context, Transform ):
             for c in self.children.values():
                 c._mark_dirty( flag )
 
+    def is_physic_full( self ) -> bool:
+        """gameObjects that have physic attachted, which are either a child of or has childrent
+        
+            When the object has no childrent, its concidered a simple pyhsic item
+            Meaning, it the visual shares the transform with the gameobject itself
+        
+        """
+        return self and (self.physic and self.children) or self.physic_link
+
     def addAttachable( self, t : type, object ):
         """Add a attachable object to this gameObject
         
@@ -606,7 +615,10 @@ class GameObject( Context, Transform ):
             if self.physic_link or self.physic:
                 _physic = self.physic_link or self.physic
                 _physic.collision.transform._createWorldModelMatrix()
-                _physic.visual.transform._createWorldModelMatrix()
+
+                # legacy, pre-compute modelmatrix (used for rendering)
+                if not self.context.renderer.USE_INDIRECT:
+                    _physic.visual.transform._createWorldModelMatrix()
 
             if self.renderer.game_running and self.physic:
                 self.physic._updatePhysicsBody()
@@ -633,6 +645,12 @@ class GameObject( Context, Transform ):
         is_visible : bool = True if self.renderer.game_runtime else self.hierachyVisible()
         
         if not is_visible:
+            return
+
+        # legacy, use precomputed physic visual model matrix
+        if self.is_physic_full() and not self.context.renderer.USE_INDIRECT:
+            physic = self.physic or self.physic_link
+            self.models.draw( self.model, physic.visual.transform._getModelMatrix(), uuid=self.uuid ) 
             return
 
         self.models.draw( self.model, self.transform._getModelMatrix(), uuid=self.uuid ) 

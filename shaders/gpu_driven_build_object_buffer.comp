@@ -3,11 +3,12 @@
 
 #include "common_structs.glsl"
 
-layout( std430, binding =  0 )	buffer ObjectBuffer					{ ObjectBlock object[];			};
-layout( std430, binding =  1 )	buffer MeshNodeBuffer				{ MeshNodeBlock mesh_node[];	};
-layout( std430, binding =  4 )	buffer ModelBuffer					{ ModelBlock models[];				};
-layout( std430, binding =  5 )	buffer GameObjectMatrices			{ GameObjectBlock gameObjects[];};
-layout( std430, binding =  13 )	buffer ObjectBase					{ uint object_base[];			};
+layout( std430, binding = 0 )	buffer ObjectBuffer					{ ObjectBlock object[];			};
+layout( std430, binding = 1 )	buffer MeshNodeBuffer				{ MeshNodeBlock mesh_node[];	};
+layout( std430, binding = 4 )	buffer ModelBuffer					{ ModelBlock models[];			};
+layout( std430, binding = 5 )	buffer GameObjectMatrices			{ GameObjectBlock gameObjects[];};
+layout( std430, binding = 13 )	buffer ObjectBase					{ uint object_base[];			};
+layout( std430, binding = 14 )	buffer PhysicBuffer					{ PhysicBlock physic_matrices[];};
 
 uniform uint num_gameObjects;
 
@@ -19,15 +20,20 @@ void main()
 
 	if (gid >= num_gameObjects) return;
 
-	GameObjectBlock obj = gameObjects[gid];
+	uint gameObjectMatrixId = gid;
+	GameObjectBlock obj = gameObjects[gameObjectMatrixId];
 
 	if (obj.enabled == 0) return;
 	if (obj.model_index < 0) return;
 
 	ModelBlock model = models[obj.model_index];
+	mat4 obj_modelmatrix = obj.model;
+
+	// precompose with physic vistual model
+	if (obj.physic_visual > 0)
+		obj_modelmatrix = obj_modelmatrix * physic_matrices[gameObjectMatrixId].visual_model;
 
 	uint base = object_base[gid];
-
 	for (uint n = 0; n < model.nodeCount; n++) {
 		uint meshNodeMatrixId = model.nodeOffset + n;
 
@@ -35,9 +41,9 @@ void main()
 
 		// build the draw buffer, this is used in color pass shaders
 		// it holds the modelmatrix, material, and references to the gameobject and model
-		object[object_idx].model				= obj.model * mesh_node[meshNodeMatrixId].model;
+		object[object_idx].model				= obj_modelmatrix * mesh_node[meshNodeMatrixId].model;
 		object[object_idx].meshNodeMatrixId		= int(meshNodeMatrixId);
-		object[object_idx].gameObjectMatrixId	= int(gid);
+		object[object_idx].gameObjectMatrixId	= int(gameObjectMatrixId);
 		object[object_idx].material				= mesh_node[meshNodeMatrixId].material;
 	}
 }

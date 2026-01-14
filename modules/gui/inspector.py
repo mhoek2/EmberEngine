@@ -60,7 +60,7 @@ class Inspector( Context ):
             self.helper._node_header_pad()
 
             # physic has no scaling
-            gameObject_is_physic = self.helper.is_physic( gameObject )
+            gameObject_is_physic = self.helper.is_physic_full( gameObject )
 
             self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject_is_physic else 1) ] )
 

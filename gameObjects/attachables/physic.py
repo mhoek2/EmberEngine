@@ -352,23 +352,14 @@ class Physic( PhysicLink ):
 
             # do this in compute?
             # visual matrix
-            _visual = self.visual
-            local_matrix = _visual.transform.compose_matrix(
-                _visual.transform.local_position,
-                _visual.transform._local_rotation_quat,
-                _visual.transform.local_scale
-            )
-            _visual.transform.world_model_matrix = _model_matrix * local_matrix
+            if not self.context.renderer.USE_INDIRECT:
+                _visual = self.visual
+                _visual.transform.world_model_matrix = _model_matrix * _visual.local_matrix
 
             # debug to visualize collisions in runtime:
             if self.context.settings.drawColliders:
                 _collision = self.collision
-                local_matrix = _collision.transform.compose_matrix(
-                    _collision.transform.local_position,
-                    _collision.transform._local_rotation_quat,
-                    _collision.transform.local_scale
-                )
-                _collision.transform.world_model_matrix = _model_matrix * local_matrix
+                _collision.transform.world_model_matrix = _model_matrix * _collision.local_matrix
 
         return True
 

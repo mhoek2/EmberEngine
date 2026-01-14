@@ -51,6 +51,11 @@ class ModelBlock(ctypes.Structure):
         ("pad1",                ctypes.c_int),
     ]
 
+class PhysicBlock(ctypes.Structure):
+    _fields_ = [
+        ("visual_model",        ctypes.c_float * 16),
+    ]
+
 class MeshNodeBlock(ctypes.Structure):
     _fields_ = [
         ("model",               ctypes.c_float * 16),
@@ -67,7 +72,7 @@ class GameObjectBlock(ctypes.Structure):
         ("model",               ctypes.c_float * 16),
         ("model_index",         ctypes.c_int),
         ("enabled",             ctypes.c_int),
-        ("pad1",                ctypes.c_int),
+        ("physic_visual",       ctypes.c_int),
         ("pad2",                ctypes.c_int),
     ]
 
@@ -106,6 +111,8 @@ class UBO:
         self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {}  # not flattened
         self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}        # (model_index, mesh_index) -> offset
         self.comp_meshnode_max              : int = 0 # max possible bacthes to make
+
+        self.physic_ssbo_dirty              : bool = True
 
         self.object_map     : dict[(int, int, int), int] = {}
 
@@ -228,6 +235,12 @@ class UBO:
             self.instances_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                     max_elements   = MAX_MESH_NODE_BATCHES,
                     element_type   = InstanceBlock,
+                    target         = GL_SHADER_STORAGE_BUFFER
+            )
+
+            self.physic_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                    max_elements   = MAX_MATRICES,
+                    element_type   = PhysicBlock,
                     target         = GL_SHADER_STORAGE_BUFFER
             )
         #
@@ -563,6 +576,34 @@ class UBO:
 
         self.comp_meshnode_matrices_dirty = False   
 
+    def _upload_comp_physic_matrices_map_ssbo( self ):
+        if not self.physic_ssbo_dirty:
+            return
+
+        self.physic_ssbo_dirty = False
+
+        _physic_ssbo = self.physic_ssbo
+        _physic_buffer = self.physic_ssbo.buffer
+
+        _gameobject_offset_map  = self.comp_gameobject_matrices_map
+
+        offset = 0
+
+        for uuid, transform in self.context.world.transforms.items():
+            obj : GameObject = transform.gameObject
+
+            if not obj.is_physic_full():
+                continue
+
+            offset = _gameobject_offset_map[uuid]
+            physic = obj.physic or obj.physic_link
+            _visual = physic.visual
+
+            _physic_buffer[offset].visual_model[:] = np.asarray(_visual.local_matrix, dtype=np.float32).reshape(16)
+
+        # upload to SSBO
+        _physic_ssbo.upload( offset + 1 )
+
     def _upload_comp_gameobject_matrices_map_ssbo( self ):
         """Build a SSBO with all gameObjects world matrices
         
@@ -571,7 +612,6 @@ class UBO:
         """
         # clear the mapping table, it is rebuilt.
         self.comp_gameobject_matrices_map = {}
-
         self.comp_gameobject_matrices_ssbo.clear()
 
         offset = 0
@@ -584,29 +624,23 @@ class UBO:
             #    continue
 
             #_gameobject_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()            
-            obj : GameObject = transform.gameObject
+            obj                 : GameObject = transform.gameObject
+            _gameobject_in_buf  : GameObjectBlock = _gameobject_buffer[offset]
 
+            _gameobject_in_buf.model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
 
-            #(obj.physic and obj.children) or obj.physic_link
-            if obj.physic or obj.physic_link:
-                physic = obj.physic or obj.physic_link
-                _gameobject_buffer[offset].model[:] = np.asarray(physic.visual.transform.world_model_matrix, dtype=np.float32).reshape(16)
-            else:
-                _gameobject_buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
-
-
-
-
+            # compose on gpu with physic visual local model matrix
+            _gameobject_in_buf.physic_visual = 1 if obj.is_physic_full() else 0
 
             # active/visible state
-            _gameobject_buffer[offset].enabled = obj.hierachyActive() \
+            _gameobject_in_buf.enabled = obj.hierachyActive() \
                          and (self.renderer.game_runtime or obj.hierachyVisible()) \
                          and not (obj.is_camera and self.renderer.game_runtime)
 
             if uuid in self.context.world.models:
-                _gameobject_buffer[offset].model_index = self.context.world.models[uuid].handle
+                _gameobject_in_buf.model_index = self.context.world.models[uuid].handle
             else:
-                _gameobject_buffer[offset].model_index = -1
+                _gameobject_in_buf.model_index = -1
 
             # create a map
             _gameobject_offset_map[uuid] = offset
