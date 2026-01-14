@@ -385,11 +385,8 @@ class PhysicLink:
         self.gameObject.transform.world_model_matrix = _model_matrix
         self.gameObject.transform._update_local_from_world( ignore_scale=True )
 
-        # do this in compute?
-        # visual matrix
-
         # legacy, pre-compute on CPU
-        # else, matrices are uploaded to SSBO, and computed on GPU
+        # else, matrices are uploaded to SSBO, and composed on the GPU
         if not self.context.renderer.USE_INDIRECT:
             _visual = self.visual
             self.visual.transform.world_model_matrix = _model_matrix * _visual.local_matrix

@@ -645,9 +645,12 @@ class GameObject( Context, Transform ):
         if not is_visible:
             return
 
-        _physic = self.get_physic()
+        if not self.hierachyActive():
+            return
+
         # legacy, 
         # use the precomputed physic visual model matrix instead of the gameobjects
+        _physic = self.get_physic()
         if _physic and not self.context.renderer.USE_INDIRECT:
             self.models.draw( self.model, _physic.visual.transform._getModelMatrix(), uuid=self.uuid ) 
             return
@@ -658,6 +661,9 @@ class GameObject( Context, Transform ):
         # debug draw collision geometry
         #if not self.renderer.game_runtime and self.physic_link is not None:
         _physic = self.get_physic()
+
+        if not self.hierachyActive() or not self.hierachyVisible():
+            return
 
         # dont visualize
         if self.physic and self.children:
