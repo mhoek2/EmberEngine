@@ -83,7 +83,7 @@ class ImGuizmo( Context ):
         #self.gizmo.set_im_gui_context(imgui.get_current_context())
         self.gizmo.begin_frame()
 
-        self.gameObject_is_physic = self.helper.is_physic( self.gui.selectedObject )
+        self.gameObject_is_physic = self.gui.selectedObject and self.gui.selectedObject.get_physic()
 
     def render( self, _rect_min : imgui.ImVec2, _image_size : imgui.ImVec2 ) -> None:
         self.begin_frame()

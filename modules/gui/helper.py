@@ -40,9 +40,6 @@ class Helper( Context ):
     #
     #    imgui.end_combo()
 
-    def is_physic( self, gameObject : GameObject ) -> bool:
-        return self.gui.selectedObject and ((gameObject.physic and gameObject.children) or gameObject.physic_link )
-
     def _node_sep( self ) -> None:
         imgui.dummy( imgui.ImVec2(0.0, 10.0) )
         imgui.separator()

@@ -158,6 +158,9 @@ class GameObject( Context, Transform ):
             for c in self.children.values():
                 c._mark_dirty( flag )
 
+    def get_physic( self ):
+        return self.physic or self.physic_link
+
     def addAttachable( self, t : type, object ):
         """Add a attachable object to this gameObject
         
@@ -187,10 +190,12 @@ class GameObject( Context, Transform ):
 
         if t is Physic:
             self.physic = self.attachables[t]
+            self.transform.scale = [1.0, 1.0, 1.0] # physics only use scale from visual and collider
             self.context.world.physics[self.uuid] = self.attachables[t] 
 
         if t is PhysicLink:
             self.physic_link = self.attachables[t]
+            self.transform.scale = [1.0, 1.0, 1.0] # physics only use scale from visual and collider
             self.context.world.physic_links[self.uuid] = self.attachables[t] 
 
         return self.attachables[t] 
@@ -603,9 +608,15 @@ class GameObject( Context, Transform ):
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
-            if self.physic_link or self.physic:
-                _physic = self.physic_link or self.physic
+            _physic = self.get_physic()
+
+            if _physic:
                 _physic.collision.transform._createWorldModelMatrix()
+
+                # legacy, 
+                # pre-compute modelmatrix for rendering, instead of using of the gameobjects
+                if not self.context.renderer.USE_INDIRECT:
+                    _physic.visual.transform._createWorldModelMatrix()
 
             if self.renderer.game_running and self.physic:
                 self.physic._updatePhysicsBody()
@@ -634,12 +645,25 @@ class GameObject( Context, Transform ):
         if not is_visible:
             return
 
+        if not self.hierachyActive():
+            return
+
+        # legacy, 
+        # use the precomputed physic visual model matrix instead of the gameobjects
+        _physic = self.get_physic()
+        if _physic and not self.context.renderer.USE_INDIRECT:
+            self.models.draw( self.model, _physic.visual.transform._getModelMatrix(), uuid=self.uuid ) 
+            return
+
         self.models.draw( self.model, self.transform._getModelMatrix(), uuid=self.uuid ) 
 
     def onRenderColliders( self ) -> None:
         # debug draw collision geometry
         #if not self.renderer.game_runtime and self.physic_link is not None:
-        _physic = self.physic_link or self.physic
+        _physic = self.get_physic()
+
+        if not self.hierachyActive() or not self.hierachyVisible():
+            return
 
         # dont visualize
         if self.physic and self.children:

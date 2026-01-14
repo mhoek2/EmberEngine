@@ -34,12 +34,17 @@ struct ModelBlock
 	int  pad1;
 };
 
+struct PhysicBlock
+{
+	mat4 visual_model;	// 64 bytes
+};
+
 struct GameObjectBlock
 {
-	mat4 model;        // 64 bytes
-	int  model_index;     // 4 bytes
+	mat4 model;			// 64 bytes
+	int  model_index;	// 4 bytes
 	int  enabled;
-	int  pad1;
+	int  physic_visual; // wheter to compose using physic visual model
 	int  pad2;
 };
 

@@ -60,7 +60,7 @@ class Inspector( Context ):
             self.helper._node_header_pad()
 
             # physic has no scaling
-            gameObject_is_physic = self.helper.is_physic( gameObject )
+            gameObject_is_physic = gameObject and gameObject.get_physic()
 
             self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject_is_physic else 1) ] )
 
@@ -528,15 +528,24 @@ class Inspector( Context ):
             if imgui.begin_tab_item("Visual##Tab3")[0]:
                 imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 visual : PhysicLink.Visual = physic_link.visual
+                collision : PhysicLink.Collision = physic_link.collision
 
-                #_t : Transform = visual.transform
-                #self.helper.draw_transform_local( _t )
+                _t : Transform = visual.transform
+                self.helper.draw_transform_local( _t )
+
+                if imgui.button(f"Copy to collider"):
+                    collision.transform.local_position  = tuple(visual.transform.local_position)
+                    collision.transform.local_rotation  = tuple(visual.transform.local_rotation)
+                    collision.transform.local_scale     = tuple(visual.transform.local_scale)
+                    collision._update_transform()
 
                 imgui.end_tab_item()
 
             if imgui.begin_tab_item("Collision##Tab4")[0]:
                 imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+                visual : PhysicLink.Visual = physic_link.visual
                 collision : PhysicLink.Collision = physic_link.collision
+
                 _t : Transform = collision.transform
 
                 # type
@@ -573,6 +582,12 @@ class Inspector( Context ):
                 self.helper.draw_transform_local( _t, 
                     mask=[1, 1, (1 if collision.geom_type == PhysicLink.GeometryType_.box else 0)] 
                 )
+
+                if imgui.button(f"Copy to visual"):
+                    visual.transform.local_position  = tuple(collision.transform.local_position)
+                    visual.transform.local_rotation  = tuple(collision.transform.local_rotation)
+                    visual.transform.local_scale     = tuple(collision.transform.local_scale)
+                    visual._update_transform()
 
                 #Bullet uses either:
                 #lateralFriction (simple model), or

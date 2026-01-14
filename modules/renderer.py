@@ -1587,6 +1587,7 @@ class Renderer:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
         self.ubo.object_base_ssbo.bind_base( binding = 13 )
+        self.ubo.physic_ssbo.bind_base( binding = 14 )
 
         # reset states
         self.ubo.object_ssbo.clear()
@@ -1680,6 +1681,7 @@ class Renderer:
         if self.USE_INDIRECT:
             # upload transforms to SSBO (for compute shader)
             self.ubo._upload_comp_gameobject_matrices_map_ssbo()
+            self.ubo._upload_comp_physic_matrices_map_ssbo()
 
             # Full GPU driven, batching, drawbuffer, and indirict buffer (no drawlist)
             if self.USE_FULL_GPU_DRIVEN:
@@ -1694,6 +1696,7 @@ class Renderer:
                 self.ubo.object_ssbo.bind_base( binding = 0 )
                 self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
                 self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
+                self.ubo.physic_ssbo.bind_base( binding = 3 )
 
                 # sort by model and mesh index, constructing a batched VAO list
                 batches, num_draw_items = self.ubo._build_batched_draw_list( self.draw_list )

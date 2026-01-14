@@ -204,7 +204,19 @@ class PhysicLink:
 
         def _update_transform( self ) -> None:
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
-            self.transform._createWorldModelMatrix()
+
+            # store local model matrix only for physic shapes:
+            self.local_matrix = self.transform.compose_matrix(
+                self.transform.local_position,
+                self.transform._local_rotation_quat,
+                self.transform.local_scale
+            )
+
+            if self.context.renderer.USE_INDIRECT:
+                self.context.renderer.ubo.physic_ssbo_dirty = True
+
+            else:
+                self.transform._createWorldModelMatrix( local_matrix = self.local_matrix )
 
     class Collision:
         def __init__( self, context         : "EmberEngine", 
@@ -239,7 +251,15 @@ class PhysicLink:
 
         def _update_transform( self ) -> None:
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
-            self.transform._createWorldModelMatrix()
+            
+            # store local model matrix only for physic shapes:
+            self.local_matrix = self.transform.compose_matrix(
+                self.transform.local_position,
+                self.transform._local_rotation_quat,
+                self.transform.local_scale
+            )
+            
+            self.transform._createWorldModelMatrix( local_matrix = self.local_matrix )
 
         def _update_radius_height( self, radius : float = None, height : float = None ) -> None:
             _t : Transform = self.transform
@@ -365,15 +385,16 @@ class PhysicLink:
         self.gameObject.transform.world_model_matrix = _model_matrix
         self.gameObject.transform._update_local_from_world( ignore_scale=True )
 
+        # legacy, pre-compute on CPU
+        # else, matrices are uploaded to SSBO, and composed on the GPU
+        if not self.context.renderer.USE_INDIRECT:
+            _visual = self.visual
+            self.visual.transform.world_model_matrix = _model_matrix * _visual.local_matrix
+        
         # debug to visualize collisions in runtime:
         if self.context.settings.drawColliders:
-            _collision = self.gameObject.physic_link.collision
-            local_matrix = _collision.transform.compose_matrix(
-                _collision.transform.local_position,
-                _collision.transform._local_rotation_quat,
-                _collision.transform.local_scale
-            )
-            _collision.transform.world_model_matrix = _model_matrix * local_matrix
+            _collision = self.collision
+            _collision.transform.world_model_matrix = _model_matrix * _collision.local_matrix
             #self.gameObject.physic_link.collision.transform._update_local_from_world()
 
         return True
