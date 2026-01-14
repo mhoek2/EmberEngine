@@ -392,7 +392,7 @@ class PhysicLink:
         # else, matrices are uploaded to SSBO, and computed on GPU
         if not self.context.renderer.USE_INDIRECT:
             _visual = self.visual
-            _visual.transform.world_model_matrix = _model_matrix * _visual.local_matrix
+            self.visual.transform.world_model_matrix = _model_matrix * _visual.local_matrix
         
         # debug to visualize collisions in runtime:
         if self.context.settings.drawColliders:

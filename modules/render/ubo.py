@@ -592,14 +592,14 @@ class UBO:
         for uuid, transform in self.context.world.transforms.items():
             obj : GameObject = transform.gameObject
 
-            if not obj.is_physic_full():
+            _physic = obj.get_physic()
+
+            if not _physic:
                 continue
 
             offset = _gameobject_offset_map[uuid]
-            physic = obj.physic or obj.physic_link
-            _visual = physic.visual
 
-            _physic_buffer[offset].visual_model[:] = np.asarray(_visual.local_matrix, dtype=np.float32).reshape(16)
+            _physic_buffer[offset].visual_model[:] = np.asarray(_physic.visual.local_matrix, dtype=np.float32).reshape(16)
 
         # upload to SSBO
         _physic_ssbo.upload( offset + 1 )
@@ -630,7 +630,7 @@ class UBO:
             _gameobject_in_buf.model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
 
             # compose on gpu with physic visual local model matrix
-            _gameobject_in_buf.physic_visual = 1 if obj.is_physic_full() else 0
+            _gameobject_in_buf.physic_visual = 1 if obj.get_physic() else 0
 
             # active/visible state
             _gameobject_in_buf.enabled = obj.hierachyActive() \
