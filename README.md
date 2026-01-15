@@ -5,13 +5,28 @@
 Developed using ```Python```, ```OpenGL```, ```PyBullet```,```Pygame```, ```ImGui```, and ```Assimp/Impasse```.  
 It demonstrates the core principles of interactive 3D rendering.
 
-
 ## :mortar_board: Built for educational purposes
 3D Engines are rarely written in Python. –And for good reason.  
 Python is interpreted, resulting in runtime overhead and efficiency loss
 
 "How controversial it may be. it provides a nice way to explore engine design and development concepts hands-on.  
 I value that as a good exercise!"
+
+## :o: Features
+- [x] - OpenGL Backend
+- [x] - Script behaivior
+- [x] - Integrated IDE
+- [x] - PyBullet physics engine
+- [x] - Binary export
+- [x] - Editor UI (Hierarchy/Inspector/Console)
+- [x] - Viewport Gizmos
+- [x] - GPU Driven Render Pipeline using compute with legacy fallback
+- [x] - Physical based rendering (layer visualization)
+- [x] - Precedural OR Cubemap Skybox environment with reflections
+- [x] - Serialized scenes (save/load)
+- [x] - Simple shadowmapping and Fog
+- [ ] - Cascaded shadowmapping
+- [x] - FBX, GLB, OBj file support using Assimp
 
 ## :high_brightness: Showcase
 
