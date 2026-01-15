@@ -25,7 +25,7 @@ Quat = tuple[float, float, float, float]
 
 @dataclass(slots=True)
 class MultiBodyLinks:
-    base: "Physic | None" = None
+    base: "PhysicBase | None" = None
 
     # map
     # 0 : base_footprint
@@ -174,7 +174,7 @@ class MultiBodyLinks:
             # debug
             #print( f"{gameObject.name} links to {parent_index}: {_parent.name}" )
 
-class Physic( PhysicLink ):
+class PhysicBase( PhysicLink ):
     def __init__( self, context : "EmberEngine",
                     gameObject      : "GameObject",
                     uuid            : uid.UUID      = None,
@@ -243,7 +243,7 @@ class Physic( PhysicLink ):
             -world_rotation_quat[3] # handedness
         ]
 
-        # base physic (Physic + nested children) 
+        # base physic (PhysicBase + nested children) 
         if is_base_physic:
             # construct the link list from nested children
             self.links.runtime_init()
@@ -301,7 +301,7 @@ class Physic( PhysicLink ):
         # cache references to physic_id, base and index of the link on the child GameObject
         self.links.cache_on_children()
 
-        # base physic (Physic + nested children) 
+        # base physic (PhysicBase + nested children) 
         if is_base_physic:
             for i, link in enumerate(self.links.index_to_link):
                 self._apply_dynamics( i, link.collision )
@@ -344,21 +344,22 @@ class Physic( PhysicLink ):
             )
         )
 
-        # Recompute local transform when base physic (Physic + nested children) 
+        # Recompute local transform when base physic (PhysicBase + nested children) 
         # or gameObject a single world physic with mass
         if is_base_physic or self.inertia.mass > 0.0:
             self.gameObject.transform.world_model_matrix = _model_matrix
-            self.gameObject.transform._update_local_from_world()
+            self.gameObject.transform._update_local_from_world( ignore_scale=True )
+
+            # do this in compute?
+            # visual matrix
+            if not self.context.renderer.USE_INDIRECT:
+                _visual = self.visual
+                _visual.transform.world_model_matrix = _model_matrix * _visual.local_matrix
 
             # debug to visualize collisions in runtime:
             if self.context.settings.drawColliders:
                 _collision = self.collision
-                local_matrix = _collision.transform.compose_matrix(
-                    _collision.transform.local_position,
-                    _collision.transform._local_rotation_quat,
-                    _collision.transform.local_scale
-                )
-                _collision.transform.world_model_matrix = _model_matrix * local_matrix
+                _collision.transform.world_model_matrix = _model_matrix * _collision.local_matrix
 
         return True
 

@@ -21,7 +21,7 @@ from modules.script import Script
 
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
-from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicBase import PhysicBase
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
 from gameObjects.attachables.model import Model
@@ -120,7 +120,7 @@ class GameObject( Context, Transform ):
         ) )
 
         # physic
-        self.physic : Physic = None  # reserved for physic attachment
+        self.physic_base : PhysicBase = None  # reserved for physic attachment
         self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
@@ -158,6 +158,9 @@ class GameObject( Context, Transform ):
             for c in self.children.values():
                 c._mark_dirty( flag )
 
+    def get_physic( self ):
+        return self.physic_base or self.physic_link
+
     def addAttachable( self, t : type, object ):
         """Add a attachable object to this gameObject
         
@@ -185,15 +188,60 @@ class GameObject( Context, Transform ):
             self.model = self.attachables[t] 
             self.context.world.models[self.uuid] = self.attachables[t] 
 
-        if t is Physic:
-            self.physic = self.attachables[t]
-            self.context.world.physics[self.uuid] = self.attachables[t] 
+        if t is PhysicBase:
+            self.physic_base = self.attachables[t]
+            self.context.world.physics_bases[self.uuid] = self.attachables[t] 
 
         if t is PhysicLink:
             self.physic_link = self.attachables[t]
             self.context.world.physic_links[self.uuid] = self.attachables[t] 
 
+        # additional logic for physics
+        if t in (PhysicBase, PhysicLink):
+            _physic = self.get_physic()
+
+            # visual and collision shapes takes over scale from gameObject
+            # on scene load, this is overwritten by the stored scale immidiatly after
+            _physic.visual.transform.local_scale = list(self.transform.local_scale)
+            _physic.collision.transform.local_scale = list(self.transform.local_scale)
+
+            # reset gameObject to identity scale
+            # physics detaches scale from visual and collider shapes
+            self.transform.local_scale = list([1.0, 1.0, 1.0])
+
         return self.attachables[t] 
+
+    def removeAttachable( self, t : type ):
+        print( f"remove {t.__name__}")
+
+        if t in (PhysicBase, PhysicLink):
+            _physic = self.get_physic()
+
+            # gameObject takes over scale from visual shape
+            self.transform.local_scale = list(_physic.visual.transform.local_scale)
+
+        self.attachables[t] = None
+
+        if t is Transform:
+            self.console.warn( f"{self.name} cannot remove primitive attachable: {t.__name__}")
+
+        if t is Light:
+            self.light = self.attachables[t] 
+            del self.context.world.lights[self.uuid] 
+
+        if t is Model:
+            self.model = self.attachables[t] 
+            del self.context.world.models[self.uuid]
+
+        if t is PhysicBase:
+            self.physic_base = self.attachables[t]
+            del self.context.world.physics_bases[self.uuid]
+
+        if t is PhysicLink:
+            self.physic_link = self.attachables[t]
+            del self.context.world.physic_links[self.uuid]
+
+        del self.attachables[t]
 
     def getAttachable( self, attachable: str = "" ):
         """Retrieve a reference to a attachable of this GameObject.
@@ -213,7 +261,7 @@ class GameObject( Context, Transform ):
             case "Light"        : _ref = self.attachables.get( Light )
             case "Model"        : _ref = self.attachables.get( Model )
             case "PhysicLink"   : _ref = self.attachables.get( PhysicLink )
-            case "Physic"       : _ref = self.attachables.get( Physic )
+            case "PhysicBase"       : _ref = self.attachables.get( PhysicBase )
             case "GameObject"   : _ref = self
 
         return _ref
@@ -390,7 +438,7 @@ class GameObject( Context, Transform ):
 
     def getParent( self, filter_physic_base : bool = False ) -> "GameObject":
         if self.parent and filter_physic_base:
-            if not self.parent.getAttachable( Physic ):
+            if not self.parent.getAttachable( PhysicBase ):
                 return self.parent.getParent( filter_physic_base )
         
         return self.parent
@@ -517,8 +565,8 @@ class GameObject( Context, Transform ):
             #"scripts"   : copy.deepcopy(self.scripts),
         }
 
-        if self.physic:
-            self._state_snapshot["Physic"] = self._save_physic_state( self.physic )
+        if self.physic_base:
+            self._state_snapshot["PhysicBase"] = self._save_physic_state( self.physic_base )
 
         if self.physic_link:
             self._state_snapshot["PhysicLink"] = self._save_physic_state( self.physic_link )
@@ -539,8 +587,8 @@ class GameObject( Context, Transform ):
         self.parent                     = state["parent"]
         #self.scripts                    = copy.deepcopy(state["scripts")
 
-        if "Physic" in state: 
-            self._restore_physic_state( self.physic, state["Physic"] )
+        if "PhysicBase" in state: 
+            self._restore_physic_state( self.physic_base, state["PhysicBase"] )
 
         if "PhysicLink" in state: 
             self._restore_physic_state( self.physic_link, state["PhysicLink"] )
@@ -565,8 +613,8 @@ class GameObject( Context, Transform ):
         if _on_start:
             self.onStartScripts();
 
-        if self.physic:
-            self.physic._initPhysics()
+        if self.physic_base:
+            self.physic_base._initPhysics()
 
     def onDisable( self, _on_stop=False ) -> None:
         self.onDisableScripts();
@@ -576,8 +624,8 @@ class GameObject( Context, Transform ):
             self._restore_state()
             #deinit scripts?
 
-        if self.physic:
-            self.physic._deInitPhysics()
+        if self.physic_base:
+            self.physic_base._deInitPhysics()
 
     #
     # start and update
@@ -603,12 +651,18 @@ class GameObject( Context, Transform ):
             self.transform._local_rotation_quat = self.transform.euler_to_quat( self.transform.local_rotation )
             self.transform._createWorldModelMatrix()
 
-            if self.physic_link or self.physic:
-                _physic = self.physic_link or self.physic
+            _physic = self.get_physic()
+
+            if _physic:
                 _physic.collision.transform._createWorldModelMatrix()
 
-            if self.renderer.game_running and self.physic:
-                self.physic._updatePhysicsBody()
+                # legacy, 
+                # pre-compute modelmatrix for rendering, instead of using of the gameobjects
+                if not self.context.renderer.USE_INDIRECT:
+                    _physic.visual.transform._createWorldModelMatrix()
+
+            if self.renderer.game_running and self.physic_base:
+                self.physic_base._updatePhysicsBody()
 
         if self._dirty:
             if self.scene.isSun( self.uuid ):
@@ -622,8 +676,8 @@ class GameObject( Context, Transform ):
                 return 
 
             # Run physics and update non-kinematic local transforms
-            if self.physic:
-                self.physic._runPhysics()
+            if self.physic_base:
+                self.physic_base._runPhysics()
 
             elif self.physic_link:
                 self.physic_link._runPhysics()
@@ -634,15 +688,28 @@ class GameObject( Context, Transform ):
         if not is_visible:
             return
 
+        if not self.hierachyActive():
+            return
+
+        # legacy, 
+        # use the precomputed physic visual model matrix instead of the gameobjects
+        _physic = self.get_physic()
+        if _physic and not self.context.renderer.USE_INDIRECT:
+            self.models.draw( self.model, _physic.visual.transform._getModelMatrix(), uuid=self.uuid ) 
+            return
+
         self.models.draw( self.model, self.transform._getModelMatrix(), uuid=self.uuid ) 
 
     def onRenderColliders( self ) -> None:
         # debug draw collision geometry
         #if not self.renderer.game_runtime and self.physic_link is not None:
-        _physic = self.physic_link or self.physic
+        _physic = self.get_physic()
+
+        if not self.hierachyActive() or not self.hierachyVisible():
+            return
 
         # dont visualize
-        if self.physic and self.children:
+        if self.physic_base and self.children:
             _physic = None
 
         if _physic is not None:

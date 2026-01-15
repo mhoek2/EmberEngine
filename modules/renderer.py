@@ -22,7 +22,7 @@ import enum
 
 from modules.settings import Settings
 from modules.project import ProjectManager
-from modules.shader import Shader
+from modules.render.shader import Shader
 from modules.camera import Camera
 from modules.scene import SceneManager
 
@@ -329,8 +329,8 @@ class Renderer:
         supports_gl_460 = (major, minor) >= (4, 6)
         #
         self.USE_BINDLESS_TEXTURES  : bool = supports_gl_460 and self.has_extension("GL_ARB_bindless_texture") 
-        self.USE_INDIRECT           : bool = True  
-        self.SHARED_VAO             : bool = True
+        self.USE_INDIRECT           : bool = supports_gl_460  
+        self.SHARED_VAO             : bool = supports_gl_460
         
         # do not change
         self.USE_GPU_DRIVEN_RENDERING : bool = self.USE_INDIRECT and self.SHARED_VAO and self.USE_BINDLESS_TEXTURES
@@ -1587,6 +1587,7 @@ class Renderer:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, self.ubo.instance_counter)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, self.ubo.meshnode_to_batch)
         self.ubo.object_base_ssbo.bind_base( binding = 13 )
+        self.ubo.physic_ssbo.bind_base( binding = 14 )
 
         # reset states
         self.ubo.object_ssbo.clear()
@@ -1665,7 +1666,8 @@ class Renderer:
         self._runPhysics()
 
         # update static model:node(mesh) matrices when dirty
-        self.ubo._update_comp_meshnode_matrices_ssbo()
+        if self.USE_INDIRECT:
+            self.ubo._update_comp_meshnode_matrices_ssbo()
 
     def dispatch_drawcalls( self, _scene : SceneManager.Scene ) -> None:
         """"
@@ -1680,6 +1682,7 @@ class Renderer:
         if self.USE_INDIRECT:
             # upload transforms to SSBO (for compute shader)
             self.ubo._upload_comp_gameobject_matrices_map_ssbo()
+            self.ubo._upload_comp_physic_matrices_map_ssbo()
 
             # Full GPU driven, batching, drawbuffer, and indirict buffer (no drawlist)
             if self.USE_FULL_GPU_DRIVEN:
@@ -1694,6 +1697,7 @@ class Renderer:
                 self.ubo.object_ssbo.bind_base( binding = 0 )
                 self.ubo.comp_meshnode_matrices_ssbo.bind_base( binding = 1 )
                 self.ubo.comp_gameobject_matrices_ssbo.bind_base( binding = 2 )
+                self.ubo.physic_ssbo.bind_base( binding = 3 )
 
                 # sort by model and mesh index, constructing a batched VAO list
                 batches, num_draw_items = self.ubo._build_batched_draw_list( self.draw_list )

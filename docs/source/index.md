@@ -99,6 +99,9 @@ Get Latest Release
 - header: "{fas}`keyboard;pst-color-warning` Integrated IDE"
   content: "[ImColorTextEdit](https://github.com/CedricGuillemet/ImGuizmo): Scripts can be edited directly in the Engine."
 
+- header: "{fas}`microchip;pst-color-warning` GPU Driven Pipeline"
+  content: "If OpenGL extensions are available, use compute shaders and SSBO's to compose model matrices, build the instance buffer and fill the indirect buffer"
+
 :::
 :::
 ::::

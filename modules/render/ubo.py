@@ -10,7 +10,7 @@ from OpenGL.GL.ARB.bindless_texture import *
 import numpy as np
 import enum
 
-from modules.shader import Shader
+from modules.render.shader import Shader
 from modules.render.types import DrawItem, MatrixItem, Material
 
 if TYPE_CHECKING:
@@ -51,6 +51,11 @@ class ModelBlock(ctypes.Structure):
         ("pad1",                ctypes.c_int),
     ]
 
+class PhysicBlock(ctypes.Structure):
+    _fields_ = [
+        ("visual_model",        ctypes.c_float * 16),
+    ]
+
 class MeshNodeBlock(ctypes.Structure):
     _fields_ = [
         ("model",               ctypes.c_float * 16),
@@ -67,7 +72,7 @@ class GameObjectBlock(ctypes.Structure):
         ("model",               ctypes.c_float * 16),
         ("model_index",         ctypes.c_int),
         ("enabled",             ctypes.c_int),
-        ("pad1",                ctypes.c_int),
+        ("physic_visual",       ctypes.c_int),
         ("pad2",                ctypes.c_int),
     ]
 
@@ -102,7 +107,6 @@ class UBO:
         # to index the correct model/mesh combo, a map is used.
         # also, a map of the gameObjects modelmatrices is required with a map
         self.comp_gameobject_matrices_map   : dict[uid.UUID, int] = {}          # uuid -> offset
-        self.comp_meshnode_matrices_dirty   : bool = True
         self.comp_meshnode_matrices_nested  : dict[int, list[MatrixItem]] = {}  # not flattened
         self.comp_meshnode_matrices_map     : dict[(int, int), int] = {}        # (model_index, mesh_index) -> offset
         self.comp_meshnode_max              : int = 0 # max possible bacthes to make
@@ -114,6 +118,7 @@ class UBO:
             self.max_elements   = max_elements
             self.element_type   = element_type
             self.target         = target
+            self._dirty         = True  
 
             if isinstance(element_type, int):
                 self.element_size = element_type      # number of floats per element
@@ -129,6 +134,9 @@ class UBO:
 
             glBindBuffer( target, self.ssbo )
             glBufferData( target, ctypes.sizeof(self.buffer), None, GL_DYNAMIC_DRAW )
+
+        def _mark_dirty( self, state : bool = True ):
+            self._dirty = state
 
         def upload( self, num_elements ):
             glBindBuffer( self.target, self.ssbo )
@@ -146,7 +154,7 @@ class UBO:
         def bind_base( self, binding : int = 0 ):
             glBindBufferBase( self.target, binding, self.ssbo )
 
-        def clear(self, value=0):
+        def clear( self, value=0 ):
             glBindBuffer(self.target, self.ssbo)
 
             if self.is_struct:
@@ -228,6 +236,12 @@ class UBO:
             self.instances_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
                     max_elements   = MAX_MESH_NODE_BATCHES,
                     element_type   = InstanceBlock,
+                    target         = GL_SHADER_STORAGE_BUFFER
+            )
+
+            self.physic_ssbo : UBO.GpuBuffer = UBO.GpuBuffer(
+                    max_elements   = MAX_MATRICES,
+                    element_type   = PhysicBlock,
                     target         = GL_SHADER_STORAGE_BUFFER
             )
         #
@@ -501,11 +515,12 @@ class UBO:
         Static flattened SSBO containing all local model matrices for each model:node(mesh)
         Updates only occur, when additional model(s) are loaded
         """
-        if not self.comp_meshnode_matrices_dirty:
+        if not self.comp_meshnode_matrices_ssbo._dirty:
             return
 
+        self.comp_meshnode_matrices_ssbo._mark_dirty( False ) 
+
         if not self.renderer.USE_INDIRECT:
-            self.comp_meshnode_matrices_dirty = False
             return
 
         # clear the mapping table, it is rebuilt.
@@ -561,7 +576,32 @@ class UBO:
         _mesh_ssbo.upload( offset )
         _model_ssbo.upload( len(self.comp_meshnode_matrices_nested) )
 
-        self.comp_meshnode_matrices_dirty = False   
+    def _upload_comp_physic_matrices_map_ssbo( self ):
+        if not self.physic_ssbo._dirty:
+            return
+        self.physic_ssbo._mark_dirty( False )
+
+        _physic_ssbo = self.physic_ssbo
+        _physic_buffer = self.physic_ssbo.buffer
+
+        _gameobject_offset_map  = self.comp_gameobject_matrices_map
+
+        offset = 0
+
+        for uuid, transform in self.context.world.transforms.items():
+            obj : GameObject = transform.gameObject
+
+            _physic = obj.get_physic()
+
+            if not _physic:
+                continue
+
+            offset = _gameobject_offset_map[uuid]
+
+            _physic_buffer[offset].visual_model[:] = np.asarray(_physic.visual.local_matrix, dtype=np.float32).reshape(16)
+
+        # upload to SSBO
+        _physic_ssbo.upload( offset + 1 )
 
     def _upload_comp_gameobject_matrices_map_ssbo( self ):
         """Build a SSBO with all gameObjects world matrices
@@ -571,7 +611,6 @@ class UBO:
         """
         # clear the mapping table, it is rebuilt.
         self.comp_gameobject_matrices_map = {}
-
         self.comp_gameobject_matrices_ssbo.clear()
 
         offset = 0
@@ -583,19 +622,24 @@ class UBO:
             #if uuid in self.context.world.trash:
             #    continue
 
-            #_gameobject_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()
-            _gameobject_buffer[offset].model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
-            
+            #_gameobject_buffer[offset*16:(offset+1)*16] = transform.world_model_matrix.flatten()            
+            obj                 : GameObject = transform.gameObject
+            _gameobject_in_buf  : GameObjectBlock = _gameobject_buffer[offset]
+
+            _gameobject_in_buf.model[:] = np.asarray(transform.world_model_matrix, dtype=np.float32).reshape(16)
+
+            # compose on gpu with physic visual local model matrix
+            _gameobject_in_buf.physic_visual = 1 if obj.get_physic() else 0
+
             # active/visible state
-            obj : GameObject = transform.gameObject
-            _gameobject_buffer[offset].enabled = obj.hierachyActive() \
+            _gameobject_in_buf.enabled = obj.hierachyActive() \
                          and (self.renderer.game_runtime or obj.hierachyVisible()) \
                          and not (obj.is_camera and self.renderer.game_runtime)
 
             if uuid in self.context.world.models:
-                _gameobject_buffer[offset].model_index = self.context.world.models[uuid].handle
+                _gameobject_in_buf.model_index = self.context.world.models[uuid].handle
             else:
-                _gameobject_buffer[offset].model_index = -1
+                _gameobject_in_buf.model_index = -1
 
             # create a map
             _gameobject_offset_map[uuid] = offset

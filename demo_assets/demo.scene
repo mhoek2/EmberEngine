@@ -32,6 +32,17 @@
         0.30000001192092896
     ],
     "procedural_night_brightness": 0.05000000074505806,
+    "fog_enabled": false,
+    "fog_lights_contrib": 0,
+    "fog_color": [
+        0.7369999885559082,
+        0.847000002861023,
+        0.9179999828338623
+    ],
+    "fog_density": 0.10000000149011612,
+    "fog_height": 1.0,
+    "fog_falloff": 0.10000000149011612,
+    "shadowmap_enabled": false,
     "gameObjects": [
         {
             "uuid": "eb6c62b81b4140cf8ea252f5b4697759",
@@ -85,9 +96,9 @@
                 0.0
             ],
             "scale": [
-                5.0,
-                0.10000000149011612,
-                5.0
+                1.0,
+                1.0,
+                1.0
             ],
             "scripts": [],
             "instance_data": {},
@@ -95,7 +106,7 @@
             "type": {
                 "base_mass": -1.0
             },
-            "Physic": {
+            "PhysicBase": {
                 "inertia": {
                     "mass": 0.0
                 },
@@ -115,9 +126,9 @@
                         0.0
                     ],
                     "scale": [
-                        1.0,
-                        1.0,
-                        1.0
+                        5.0,
+                        0.10000000149011612,
+                        5.0
                     ],
                     "lateral_friction": 2.0,
                     "rolling_friction": 0.0,
@@ -138,9 +149,9 @@
                         0.0
                     ],
                     "scale": [
-                        1.0,
-                        1.0,
-                        1.0
+                        5.0,
+                        0.10000000149011612,
+                        5.0
                     ]
                 }
             },
@@ -166,9 +177,9 @@
                 0.0
             ],
             "scale": [
-                1,
-                1,
-                1
+                1.0,
+                1.0,
+                1.0
             ],
             "scripts": [
                 {
@@ -179,8 +190,12 @@
                         "value": -1.0,
                         "boost": 30.0,
                         "manipulate": {
-                            "uuid": "eb6c62b81b4140cf8ea252f5b4697759"
-                        }
+                            "uuid": "259294da29e84da38f41af3c3e7f9052"
+                        },
+                        "wiel1": null,
+                        "wiel2": null,
+                        "wiel3": null,
+                        "wiel4": null
                     }
                 }
             ],
@@ -189,7 +204,7 @@
             "type": {
                 "base_mass": -1.0
             },
-            "Physic": {
+            "PhysicBase": {
                 "inertia": {
                     "mass": 1.0
                 },
@@ -260,9 +275,9 @@
                 -0.0
             ],
             "scale": [
-                0.21000003814697266,
-                0.21000003814697266,
-                0.21000003814697266
+                1.0,
+                1.0,
+                1.0
             ],
             "scripts": [],
             "instance_data": {},
@@ -270,7 +285,7 @@
             "type": {
                 "base_mass": -1.0
             },
-            "Physic": {
+            "PhysicBase": {
                 "inertia": {
                     "mass": 1.0
                 },
@@ -290,9 +305,9 @@
                         0.0
                     ],
                     "scale": [
-                        1.0,
-                        1.0,
-                        1.0
+                        0.20000000298023224,
+                        0.20000000298023224,
+                        0.20000000298023224
                     ],
                     "lateral_friction": 2.0,
                     "rolling_friction": 0.0,
@@ -313,9 +328,9 @@
                         0.0
                     ],
                     "scale": [
-                        1.0,
-                        1.0,
-                        1.0
+                        0.20000000298023224,
+                        0.20000000298023224,
+                        0.20000000298023224
                     ]
                 }
             },
@@ -350,11 +365,7 @@
                     "uuid": "34c8a845c77948b6a5f48eb8aafec957",
                     "file": "assets\\sun.py",
                     "active": true,
-                    "exports": {
-                        "test": null,
-                        "test7": "",
-                        "test3": 10.25
-                    }
+                    "exports": {}
                 }
             ],
             "instance_data": {},

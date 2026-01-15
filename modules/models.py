@@ -363,7 +363,9 @@ class Models( Context ):
 
             # construct static mesh matrix buffer
             self.create_matrices( index )
-            self.context.renderer.ubo.comp_meshnode_matrices_dirty = True
+
+            if self.context.renderer.USE_INDIRECT:
+                self.context.renderer.ubo.comp_meshnode_matrices_ssbo._mark_dirty()
 
     def loadOrFind( self, path : Path, material : int = -1, lazy_load : bool = True ) -> int:
         """Load or find an model, implement find later

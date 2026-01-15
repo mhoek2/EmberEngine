@@ -278,7 +278,7 @@ class Transform:
         """Lambda/Proxy wrapper"""
         self.scale = list( data )
 
-    def _update_local_from_world(self):
+    def _update_local_from_world( self, ignore_scale : bool = False ):
         """Recompute local transform from world transform and parent safely."""
     
         world_matrix = Matrix44(self.world_model_matrix)
@@ -292,7 +292,8 @@ class Transform:
         scale, rot_quat, pos = local_matrix.decompose()
     
         self.local_position = tuple(pos)
-        self.local_scale = tuple(scale)
+        if not ignore_scale:
+            self.local_scale = tuple(scale)
 
         # Use quaternions for rotation to avoid flipping
         self._local_rotation_quat = Quaternion(rot_quat)
@@ -319,13 +320,16 @@ class Transform:
 
         return Matrix44.identity()
 
-    def _createWorldModelMatrix( self, includeParent : bool = True ) -> Matrix44:
+    def _createWorldModelMatrix( self, local_matrix : Matrix44 = None, includeParent : bool = True ) -> Matrix44:
         """Create model matrix with translation, rotation and scale vectors"""
-        _local_model_matrix = self.compose_matrix(
-            self._local_position,
-            self._local_rotation_quat,
-            self._local_scale
-        )
+        if local_matrix is not None:
+            _local_model_matrix = local_matrix
+        else:
+            _local_model_matrix = self.compose_matrix(
+                self._local_position,
+                self._local_rotation_quat,
+                self._local_scale
+            )
 
         # here or _getParentModelMatrix()?
         #if self.is_physic_shape:

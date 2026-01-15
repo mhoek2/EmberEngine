@@ -44,6 +44,8 @@ class AssetBrowser( Context ):
                 path        = Path( path )
             ) )
 
+            self.gui.selectedObject = gameObject
+
         # scene
         if path.suffix == self.settings.SCENE_EXTENSION:
             self.scene.clearEditorScene()

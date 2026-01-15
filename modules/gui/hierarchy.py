@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Dict
 from modules.context import Context
 
 from gameObjects.gameObject import GameObject
-from gameObjects.attachables.physic import Physic
-from gameObjects.attachables.physic import PhysicLink
+from gameObjects.attachables.physicBase import PhysicBase
+from gameObjects.attachables.physicLink import PhysicLink
 
 from modules.gui.types import GameObjectTypes
 
@@ -27,7 +27,7 @@ class HierarchyStyle():
 class Hierarchy( Context ):
 
     styles = {
-        Physic: HierarchyStyle(
+        PhysicBase: HierarchyStyle(
             text  = (0.62, 0.50, 0.78, 1.0), 
             lines = (0.62, 0.50, 0.78, 0.30),
         ),
@@ -46,8 +46,8 @@ class Hierarchy( Context ):
     def tree_node_parse_style( self, obj : GameObject = None ) -> int:
         pushed_styles     : int = 0
 
-        if obj.physic:
-            _style = Hierarchy.styles[Physic]
+        if obj.physic_base:
+            _style = Hierarchy.styles[PhysicBase]
             imgui.push_style_color( imgui.Col_.text, _style.text )
             pushed_styles += 1 
 
@@ -61,8 +61,8 @@ class Hierarchy( Context ):
     def tree_node_line_style_color( self, obj : GameObject = None ):
         pushed_styles     : int = 0
 
-        if obj.physic:
-            _style = Hierarchy.styles[Physic]
+        if obj.physic_base:
+            _style = Hierarchy.styles[PhysicBase]
             imgui.push_style_color( imgui.Col_.tree_lines, _style.lines )
             pushed_styles += 1
 
@@ -192,22 +192,22 @@ class Hierarchy( Context ):
         imgui.begin( "Hierarchy" )
 
         if imgui.button( "Cube" ):
-            self.context.world.addDefaultCube()
+            self.gui.selectedObject = self.context.world.addDefaultCube()
 
         imgui.same_line()
 
         if imgui.button( "Light" ):
-            self.context.world.addDefaultLight()
+            self.gui.selectedObject = self.context.world.addDefaultLight()
 
         imgui.same_line()
 
         if imgui.button( "Empty" ):
-            self.context.world.addEmptyGameObject()
+            self.gui.selectedObject = self.context.world.addEmptyGameObject()
 
         imgui.same_line()
 
         if imgui.button( "Camera" ):
-            self.context.world.addDefaultCamera()
+            self.gui.selectedObject = self.context.world.addDefaultCamera()
 
         _base_tree_flags =  imgui.TreeNodeFlags_.default_open | \
                             imgui.TreeNodeFlags_.draw_lines_full | \

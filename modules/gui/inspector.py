@@ -16,7 +16,7 @@ from gameObjects.mesh import Mesh
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
-from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicBase import PhysicBase
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
 from gameObjects.attachables.model import Model
@@ -59,7 +59,10 @@ class Inspector( Context ):
         if imgui.tree_node_ex( f"{fa.ICON_FA_CUBE} Transform local", imgui.TreeNodeFlags_.default_open ):
             self.helper._node_header_pad()
 
-            self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject.physic_link else 1) ] )
+            # physic has no scaling
+            gameObject_is_physic = gameObject and gameObject.get_physic()
+
+            self.helper.draw_transform_local( _t, mask=[ 1, 1, (0 if gameObject_is_physic else 1) ] )
 
             imgui.tree_pop()
 
@@ -412,7 +415,17 @@ class Inspector( Context ):
 
         self.helper._node_sep()
 
+        _region = imgui.get_content_region_avail()
+
         if imgui.tree_node_ex( f"{fa.ICON_FA_LIGHTBULB} Light", imgui.TreeNodeFlags_.default_open ):
+
+            # actions
+            if not self.renderer.game_runtime: 
+                imgui.same_line()
+
+                if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                    gameObject.removeAttachable( Light )
+
             self.helper._node_header_pad()
 
             any_changed = False
@@ -525,15 +538,24 @@ class Inspector( Context ):
             if imgui.begin_tab_item("Visual##Tab3")[0]:
                 imgui.dummy( imgui.ImVec2(0.0, 10.0) )
                 visual : PhysicLink.Visual = physic_link.visual
+                collision : PhysicLink.Collision = physic_link.collision
 
-                #_t : Transform = visual.transform
-                #self.helper.draw_transform_local( _t )
+                _t : Transform = visual.transform
+                self.helper.draw_transform_local( _t )
+
+                if imgui.button(f"Copy to collider"):
+                    collision.transform.local_position  = tuple(visual.transform.local_position)
+                    collision.transform.local_rotation  = tuple(visual.transform.local_rotation)
+                    collision.transform.local_scale     = tuple(visual.transform.local_scale)
+                    collision._update_transform()
 
                 imgui.end_tab_item()
 
             if imgui.begin_tab_item("Collision##Tab4")[0]:
                 imgui.dummy( imgui.ImVec2(0.0, 10.0) )
+                visual : PhysicLink.Visual = physic_link.visual
                 collision : PhysicLink.Collision = physic_link.collision
+
                 _t : Transform = collision.transform
 
                 # type
@@ -571,6 +593,12 @@ class Inspector( Context ):
                     mask=[1, 1, (1 if collision.geom_type == PhysicLink.GeometryType_.box else 0)] 
                 )
 
+                if imgui.button(f"Copy to visual"):
+                    visual.transform.local_position  = tuple(collision.transform.local_position)
+                    visual.transform.local_rotation  = tuple(collision.transform.local_rotation)
+                    visual.transform.local_scale     = tuple(collision.transform.local_scale)
+                    visual._update_transform()
+
                 #Bullet uses either:
                 #lateralFriction (simple model), or
                 #contactStiffness + contactDamping
@@ -604,19 +632,29 @@ class Inspector( Context ):
 
         imgui.pop_id()
         
-    def _physic( self ) -> None: 
+    def _physicBase( self ) -> None: 
         gameObject      : GameObject    = self.gui.selectedObject
         is_base_physic  : bool          = bool(gameObject.children)
 
-        if Physic not in gameObject.attachables:
+        if PhysicBase not in gameObject.attachables:
             return
 
-        physic : Physic = gameObject.getAttachable(Physic)
+        physic : PhysicBase = gameObject.getAttachable(PhysicBase)
         is_base_physic = bool(gameObject.children)
 
         self.helper._node_sep()
 
+        _region = imgui.get_content_region_avail()
+
         if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
+
+            # actions
+            if not self.renderer.game_runtime: 
+                imgui.same_line()
+
+                if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                    gameObject.removeAttachable( PhysicBase )
+
             self.helper._node_header_pad()
 
             # no children, meaning its just a single world physic object
@@ -664,12 +702,22 @@ class Inspector( Context ):
 
         self.helper._node_sep()
 
-        if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
+        _region = imgui.get_content_region_avail()
+
+        if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic Link", imgui.TreeNodeFlags_.default_open ):
+            
+            # actions
+            if not self.renderer.game_runtime: 
+                imgui.same_line()
+
+                if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                    gameObject.removeAttachable( PhysicLink )
+
             self.helper._node_header_pad()
 
             # visualize relations
             if physic_link.runtime_base_physic:
-                _base_footprint : Physic = physic_link.runtime_base_physic
+                _base_footprint : PhysicBase = physic_link.runtime_base_physic
                 _link_index     : int = physic_link.runtime_link_index
                 
                 _link           : PhysicLink = _base_footprint.links.index_to_link[_link_index]
@@ -745,7 +793,7 @@ class Inspector( Context ):
             self._camera()
             self._model()
             self._light()
-            self._physic()
+            self._physicBase()
             self._physicLink()
             self._material()
             self._scripts()

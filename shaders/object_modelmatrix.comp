@@ -4,9 +4,10 @@
 
 #include "common_structs.glsl"
 
-layout( std430, binding =  0 )	buffer ObjectBuffer				{ ObjectBlock object[];			};
-layout( std430, binding =  1 )	buffer MeshNodeBuffer			{ MeshNodeBlock mesh_node[];	};
-layout( std430, binding =  2 )	buffer GameObjectMatrices		{ GameObjectBlock gameObject[];	};
+layout( std430, binding = 0 )	buffer ObjectBuffer				{ ObjectBlock object[];			};
+layout( std430, binding = 1 )	buffer MeshNodeBuffer			{ MeshNodeBlock mesh_node[];	};
+layout( std430, binding = 2 )	buffer GameObjectMatrices		{ GameObjectBlock gameObjects[];	};
+layout( std430, binding = 3 )	buffer PhysicBuffer				{ PhysicBlock physic_matrices[];};
 
 layout(local_size_x = 64) in;
 
@@ -14,11 +15,17 @@ void main()
 {
 	uint gid = gl_GlobalInvocationID.x;
 
-    //if (gid >= draw.length()) return;
-
 	uint meshNodeMatrixId = object[gid].meshNodeMatrixId;
 	uint gameObjectMatrixId = object[gid].gameObjectMatrixId;
 
-    object[gid].model = gameObject[gameObjectMatrixId].model * mesh_node[meshNodeMatrixId].model;
+    //if (gid >= draw.length()) return;
+	GameObjectBlock obj = gameObjects[gameObjectMatrixId];
+
+	mat4 obj_modelmatrix = obj.model;
+
+	if (obj.physic_visual > 0)
+		obj_modelmatrix = obj_modelmatrix * physic_matrices[gameObjectMatrixId].visual_model;
+
+    object[gid].model = obj_modelmatrix * mesh_node[meshNodeMatrixId].model;
     object[gid].material = mesh_node[meshNodeMatrixId].material;
 }
