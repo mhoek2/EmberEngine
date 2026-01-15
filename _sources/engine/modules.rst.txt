@@ -15,13 +15,13 @@ Modules
    modules.models
    modules.project
    modules.scene
-   modules.shader
    modules.camera
    modules.cubemap
    modules.files
    modules.images
    modules.jsonHandling
    modules.material
+   modules.world
 
 .. toctree::
    :maxdepth: 2

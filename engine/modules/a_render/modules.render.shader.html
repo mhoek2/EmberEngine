@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>modules.render.image &#8212; EmberEngine 1.0.0 documentation</title>
+    <title>modules.render.shader &#8212; EmberEngine 1.0.0 documentation</title>
   
   
   
@@ -44,12 +44,12 @@
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'engine/modules/a_render/modules.render.image';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'engine/modules/a_render/modules.render.shader';</script>
     <link rel="icon" href="../../../_static/logo.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="modules.render.shader" href="modules.render.shader.html" />
-    <link rel="prev" title="Render" href="../render.html" />
+    <link rel="next" title="modules.render.types" href="modules.render.types.html" />
+    <link rel="prev" title="modules.render.image" href="modules.render.image.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -351,8 +351,8 @@
 </ul>
 </details></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../render.html">Render</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">modules.render.image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules.render.shader.html">modules.render.shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.render.image.html">modules.render.image</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">modules.render.shader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.render.types.html">modules.render.types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.render.ubo.html">modules.render.ubo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules.render.vao.html">modules.render.vao</a></li>
@@ -407,7 +407,7 @@
     
     <li class="breadcrumb-item"><a href="../render.html" class="nav-link">Render</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">modules.render.image</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">modules.render.shader</span></li>
   </ul>
 </nav>
 </div>
@@ -424,58 +424,100 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-modules.render.image">
-<span id="modules-render-image"></span><h1>modules.render.image<a class="headerlink" href="#module-modules.render.image" title="Link to this heading">#</a></h1>
+  <section id="module-modules.render.shader">
+<span id="modules-render-shader"></span><h1>modules.render.shader<a class="headerlink" href="#module-modules.render.shader" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="modules.render.image.ImageUpload">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">ImageUpload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mipmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_UNSIGNED_BYTE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_internal_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_RGBA</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.ImageUpload" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="modules.render.shader.Shader">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.render.shader.</span></span><span class="sig-name descname"><span class="pre">Shader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">templated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.shader.Shader" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="modules.render.image.ImageUpload.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mipmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_UNSIGNED_BYTE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_internal_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">OpenGL.GL.GL_RGBA</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.render.image.ImageUpload.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.render.image.ImageUpload.buffer">
-<span class="sig-name descname"><span class="pre">buffer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.buffer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.render.image.ImageUpload.height">
-<span class="sig-name descname"><span class="pre">height</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.height" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.render.image.ImageUpload.mipmap">
-<span class="sig-name descname"><span class="pre">mipmap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.mipmap" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.render.image.ImageUpload.path">
-<span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.path" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="modules.render.image.ImageUpload.width">
-<span class="sig-name descname"><span class="pre">width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#modules.render.image.ImageUpload.width" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<dt class="sig sig-object py" id="modules.render.shader.Shader.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">templated</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.shader.Shader.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Load and parse GLSL shaders from .vert and .frag files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<em>EmberEngine</em>) – This is the main context of the application</p></li>
+<li><p><strong>uid</strong> (<em>str</em>) – The unique idenifier of the shader being initialized</p></li>
+<li><p><strong>templated</strong> (<em>bool</em>) – The version and defines will be set programmatically</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.render.image.create_image_pygame">
-<span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">create_image_pygame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.create_image_pygame" title="Link to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.bind_uniforms">
+<span class="sig-name descname"><span class="pre">bind_uniforms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.render.shader.Shader.bind_uniforms" title="Link to this definition">#</a></dt>
+<dd><p>Bind the found uniforms to the this shader program</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.inject_includes">
+<span class="sig-name descname"><span class="pre">inject_includes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#modules.render.shader.Shader.inject_includes" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.render.image.load_cubemap_pygame">
-<span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">load_cubemap_pygame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.load_cubemap_pygame" title="Link to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.inject_version_and_defines">
+<span class="sig-name descname"><span class="pre">inject_version_and_defines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.shader.Shader.inject_version_and_defines" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="modules.render.image.upload_image">
-<span class="sig-prename descclassname"><span class="pre">modules.render.image.</span></span><span class="sig-name descname"><span class="pre">upload_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texture_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#modules.render.image.ImageUpload" title="modules.render.image.ImageUpload"><span class="pre">ImageUpload</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.image.upload_image" title="Link to this definition">#</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.load_compute">
+<span class="sig-name descname"><span class="pre">load_compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_comp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.shader.Shader.load_compute" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.load_program">
+<span class="sig-name descname"><span class="pre">load_program</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_vert</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_frag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#modules.render.shader.Shader.load_program" title="Link to this definition">#</a></dt>
+<dd><p>Build and create the shader program from .vert and .frag shader</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_vert</strong> (<em>str</em>) – The content of a vertex shader</p></li>
+<li><p><strong>in_vert</strong> – The content of a fragment shader</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The index to a valid shader program in GPU memory</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.load_shader">
+<span class="sig-name descname"><span class="pre">load_shader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shader_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenGL.constant.IntConstant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.shader.Shader.load_shader" title="Link to this definition">#</a></dt>
+<dd><p>Compile shader from string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shader_type</strong> (<em>OpenGL.constant.IntConstant</em>) – The type of the shader: GL_VERTEX_SHADER or GL_FRAGMENT_SHADER</p></li>
+<li><p><strong>source</strong> (<em>str</em>) – The content of a shader file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.parse_uniforms">
+<span class="sig-name descname"><span class="pre">parse_uniforms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#modules.render.shader.Shader.parse_uniforms" title="Link to this definition">#</a></dt>
+<dd><p>Dynamicly find and parse uniforms required by the shader</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shader</strong> (<em>str</em>) – The content if a GLSL shader as string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="modules.render.shader.Shader.printOpenGLError">
+<span class="sig-name descname"><span class="pre">printOpenGLError</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modules.render.shader.Shader.printOpenGLError" title="Link to this definition">#</a></dt>
+<dd><p>Print any raised errors during GLSL parsing</p>
+</dd></dl>
+
+</dd></dl>
 
 </section>
 
@@ -490,20 +532,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../render.html"
+       href="modules.render.image.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Render</p>
+        <p class="prev-next-title">modules.render.image</p>
       </div>
     </a>
     <a class="right-next"
-       href="modules.render.shader.html"
+       href="modules.render.types.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">modules.render.shader</p>
+        <p class="prev-next-title">modules.render.types</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -526,18 +568,18 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload"><code class="docutils literal notranslate"><span class="pre">ImageUpload</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.__init__"><code class="docutils literal notranslate"><span class="pre">ImageUpload.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.buffer"><code class="docutils literal notranslate"><span class="pre">ImageUpload.buffer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.height"><code class="docutils literal notranslate"><span class="pre">ImageUpload.height</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.mipmap"><code class="docutils literal notranslate"><span class="pre">ImageUpload.mipmap</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.path"><code class="docutils literal notranslate"><span class="pre">ImageUpload.path</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.ImageUpload.width"><code class="docutils literal notranslate"><span class="pre">ImageUpload.width</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader"><code class="docutils literal notranslate"><span class="pre">Shader</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.__init__"><code class="docutils literal notranslate"><span class="pre">Shader.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.bind_uniforms"><code class="docutils literal notranslate"><span class="pre">Shader.bind_uniforms()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.inject_includes"><code class="docutils literal notranslate"><span class="pre">Shader.inject_includes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.inject_version_and_defines"><code class="docutils literal notranslate"><span class="pre">Shader.inject_version_and_defines()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.load_compute"><code class="docutils literal notranslate"><span class="pre">Shader.load_compute()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.load_program"><code class="docutils literal notranslate"><span class="pre">Shader.load_program()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.load_shader"><code class="docutils literal notranslate"><span class="pre">Shader.load_shader()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.parse_uniforms"><code class="docutils literal notranslate"><span class="pre">Shader.parse_uniforms()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.shader.Shader.printOpenGLError"><code class="docutils literal notranslate"><span class="pre">Shader.printOpenGLError()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.create_image_pygame"><code class="docutils literal notranslate"><span class="pre">create_image_pygame()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.load_cubemap_pygame"><code class="docutils literal notranslate"><span class="pre">load_cubemap_pygame()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modules.render.image.upload_image"><code class="docutils literal notranslate"><span class="pre">upload_image()</span></code></a></li>
 </ul>
   </nav></div>
 
@@ -545,7 +587,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../../_sources/engine/modules/a_render/modules.render.image.rst.txt"
+      <li><a href="../../../_sources/engine/modules/a_render/modules.render.shader.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

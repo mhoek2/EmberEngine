@@ -1,9 +1,0 @@
-﻿modules.shader
-==============
-
-
-.. automodule:: modules.shader
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
