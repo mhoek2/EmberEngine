@@ -415,7 +415,17 @@ class Inspector( Context ):
 
         self.helper._node_sep()
 
+        _region = imgui.get_content_region_avail()
+
         if imgui.tree_node_ex( f"{fa.ICON_FA_LIGHTBULB} Light", imgui.TreeNodeFlags_.default_open ):
+
+            # actions
+            if not self.renderer.game_runtime: 
+                imgui.same_line()
+
+                if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                    gameObject.removeAttachable( Light )
+
             self.helper._node_header_pad()
 
             any_changed = False
@@ -634,7 +644,17 @@ class Inspector( Context ):
 
         self.helper._node_sep()
 
+        _region = imgui.get_content_region_avail()
+
         if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physics Base", imgui.TreeNodeFlags_.default_open ):
+
+            # actions
+            if not self.renderer.game_runtime: 
+                imgui.same_line()
+
+                if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                    gameObject.removeAttachable( Physic )
+
             self.helper._node_header_pad()
 
             # no children, meaning its just a single world physic object
@@ -682,7 +702,17 @@ class Inspector( Context ):
 
         self.helper._node_sep()
 
+        _region = imgui.get_content_region_avail()
+
         if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
+            
+            # actions
+            if not self.renderer.game_runtime: 
+                imgui.same_line()
+
+                if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
+                    gameObject.removeAttachable( PhysicLink )
+
             self.helper._node_header_pad()
 
             # visualize relations

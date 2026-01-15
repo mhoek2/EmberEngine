@@ -200,16 +200,48 @@ class GameObject( Context, Transform ):
         if t in (Physic, PhysicLink):
             _physic = self.get_physic()
 
-            # visual and collision takes over scale from gameObject
+            # visual and collision shapes takes over scale from gameObject
             # on scene load, this is overwritten by the stored scale immidiatly after
             _physic.visual.transform.local_scale = list(self.transform.local_scale)
             _physic.collision.transform.local_scale = list(self.transform.local_scale)
 
             # reset gameObject to identity scale
-            # physics detaches scale from visual and collider
+            # physics detaches scale from visual and collider shapes
             self.transform.local_scale = list([1.0, 1.0, 1.0])
 
         return self.attachables[t] 
+
+    def removeAttachable( self, t : type ):
+        print( f"remove {t.__name__}")
+
+        if t in (Physic, PhysicLink):
+            _physic = self.get_physic()
+
+            # gameObject takes over scale from visual shape
+            self.transform.local_scale = list(_physic.visual.transform.local_scale)
+
+        self.attachables[t] = None
+
+        if t is Transform:
+            self.console.warn( f"{self.name} cannot remove primitive attachable: {t.__name__}")
+
+        if t is Light:
+            self.light = self.attachables[t] 
+            del self.context.world.lights[self.uuid] 
+
+        if t is Model:
+            self.model = self.attachables[t] 
+            del self.context.world.models[self.uuid]
+
+        if t is Physic:
+            self.physic = self.attachables[t]
+            del self.context.world.physics[self.uuid]
+
+        if t is PhysicLink:
+            self.physic_link = self.attachables[t]
+            del self.context.world.physic_links[self.uuid]
+
+        del self.attachables[t]
 
     def getAttachable( self, attachable: str = "" ):
         """Retrieve a reference to a attachable of this GameObject.
