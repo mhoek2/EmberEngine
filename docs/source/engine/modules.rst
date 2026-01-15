@@ -21,6 +21,7 @@ Modules
    modules.images
    modules.jsonHandling
    modules.material
+   modules.world
 
 .. toctree::
    :maxdepth: 2
