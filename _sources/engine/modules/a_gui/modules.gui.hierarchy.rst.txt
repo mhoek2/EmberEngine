@@ -1,0 +1,9 @@
+﻿modules.gui.hierarchy
+=====================
+
+
+.. automodule:: modules.gui.hierarchy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

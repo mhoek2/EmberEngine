@@ -1,0 +1,9 @@
+﻿gameObjects.mesh
+================
+
+
+.. automodule:: gameObjects.mesh
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

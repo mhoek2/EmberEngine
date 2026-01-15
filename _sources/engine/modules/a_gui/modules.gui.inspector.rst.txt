@@ -1,0 +1,9 @@
+﻿modules.gui.inspector
+=====================
+
+
+.. automodule:: modules.gui.inspector
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

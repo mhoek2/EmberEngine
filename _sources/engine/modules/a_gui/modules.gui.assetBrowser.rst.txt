@@ -1,0 +1,9 @@
+﻿modules.gui.assetBrowser
+========================
+
+
+.. automodule:: modules.gui.assetBrowser
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

@@ -1,0 +1,9 @@
+﻿modules.gui.sceneSettings
+=========================
+
+
+.. automodule:: modules.gui.sceneSettings
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

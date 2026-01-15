@@ -1,0 +1,9 @@
+﻿modules.gui.textEditor
+======================
+
+
+.. automodule:: modules.gui.textEditor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

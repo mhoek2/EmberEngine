@@ -1,0 +1,9 @@
+﻿modules.gui.rendererInfo
+========================
+
+
+.. automodule:: modules.gui.rendererInfo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

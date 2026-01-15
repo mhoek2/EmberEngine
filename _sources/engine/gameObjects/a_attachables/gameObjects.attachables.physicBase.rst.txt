@@ -1,0 +1,9 @@
+﻿gameObjects.attachables.physicBase
+==================================
+
+
+.. automodule:: gameObjects.attachables.physicBase
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

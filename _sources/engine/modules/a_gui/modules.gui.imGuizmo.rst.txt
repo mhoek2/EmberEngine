@@ -1,0 +1,9 @@
+﻿modules.gui.imGuizmo
+====================
+
+
+.. automodule:: modules.gui.imGuizmo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
