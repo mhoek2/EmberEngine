@@ -58,12 +58,12 @@ class World( Context ):
         self.physics.clear()
         self.physic_links.clear()
 
-    def addGameObject( self, obj : GameObject ) -> int:
+    def addGameObject( self, obj : GameObject ) -> GameObject:
         self.gameObjects[obj.uuid] = obj
         return obj
 
-    def addEmptyGameObject( self ):
-        return self.addGameObject( Mesh( self.context,
+    def addEmptyGameObject( self ) -> GameObject:
+        gameObject : GameObject = self.addGameObject( Mesh( self.context,
             name        = "Empty GameObject",
             material    = self.context.materials.defaultMaterial,
             translate   = [ 0, 0, 0 ],
@@ -71,7 +71,9 @@ class World( Context ):
             rotation    = [ 0.0, 0.0, 0.0 ]
         ) )
 
-    def addDefaultCube( self ):
+        return gameObject
+
+    def addDefaultCube( self ) -> GameObject:
         gameObject : GameObject = self.addGameObject( Mesh( self.context,
             name        = "Default cube",
             material    = self.context.materials.defaultMaterial,
@@ -86,7 +88,9 @@ class World( Context ):
             path        = Path( self.context.models.default_cube_path )
         ) )
 
-    def addDefaultCamera( self ):
+        return gameObject
+
+    def addDefaultCamera( self ) -> GameObject:
         gameObject : GameObject = self.addGameObject( Camera( self.context,
             name        = "Camera",
             material    = self.context.materials.defaultMaterial,
@@ -106,7 +110,9 @@ class World( Context ):
             path        = Path( f"{self.settings.engineAssets}models\\camera\\model.fbx" )
         ) )
 
-    def addDefaultLight( self ) -> None:
+        return gameObject
+
+    def addDefaultLight( self ) -> GameObject:
         gameObject : GameObject = self.addGameObject( Mesh( self.context,
             name        = "light",
             material    = self.context.materials.defaultMaterial,
@@ -120,6 +126,8 @@ class World( Context ):
             handle      = self.context.models.loadOrFind( Path( self.context.models.default_sphere_path ), gameObject.material ),
             path        = Path( self.context.models.default_sphere_path )
         ) )
+
+        return gameObject
 
     def removeGameObject( self, obj : GameObject ):
         try:

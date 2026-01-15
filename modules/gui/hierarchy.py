@@ -192,22 +192,22 @@ class Hierarchy( Context ):
         imgui.begin( "Hierarchy" )
 
         if imgui.button( "Cube" ):
-            self.context.world.addDefaultCube()
+            self.gui.selectedObject = self.context.world.addDefaultCube()
 
         imgui.same_line()
 
         if imgui.button( "Light" ):
-            self.context.world.addDefaultLight()
+            self.gui.selectedObject = self.context.world.addDefaultLight()
 
         imgui.same_line()
 
         if imgui.button( "Empty" ):
-            self.context.world.addEmptyGameObject()
+            self.gui.selectedObject = self.context.world.addEmptyGameObject()
 
         imgui.same_line()
 
         if imgui.button( "Camera" ):
-            self.context.world.addDefaultCamera()
+            self.gui.selectedObject = self.context.world.addDefaultCamera()
 
         _base_tree_flags =  imgui.TreeNodeFlags_.default_open | \
                             imgui.TreeNodeFlags_.draw_lines_full | \
