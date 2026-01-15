@@ -29,6 +29,7 @@ jobs:
           pip install pydata-sphinx-theme
           pip install pyrr
           pip install numpy
+          pip install pybullet
 
       - name: Build the docs
         run: |
