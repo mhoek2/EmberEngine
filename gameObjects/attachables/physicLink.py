@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from main import EmberEngine
     from modules.models import Model
     from gameObjects.gameObject import GameObject
-    from gameObjects.attachables.physic import Physic
+    from gameObjects.attachables.physicBase import PhysicBase
 
 import inspect
 import traceback
@@ -330,7 +330,7 @@ class PhysicLink:
         self.visual         : PhysicLink.Visual     = PhysicLink.Visual( context, self.gameObject )
 
         self.runtime_link_index = 0
-        self.runtime_base_physic : "Physic" = None
+        self.runtime_base_physic : "PhysicBase" = None
         self.physics_id = 0     # this is the physics id of the base link
 
     def __create_uuid( self ) -> uid.UUID:

@@ -106,7 +106,7 @@
             "type": {
                 "base_mass": -1.0
             },
-            "Physic": {
+            "PhysicBase": {
                 "inertia": {
                     "mass": 0.0
                 },
@@ -204,7 +204,7 @@
             "type": {
                 "base_mass": -1.0
             },
-            "Physic": {
+            "PhysicBase": {
                 "inertia": {
                     "mass": 1.0
                 },
@@ -285,7 +285,7 @@
             "type": {
                 "base_mass": -1.0
             },
-            "Physic": {
+            "PhysicBase": {
                 "inertia": {
                     "mass": 1.0
                 },

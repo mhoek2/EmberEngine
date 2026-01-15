@@ -13,7 +13,7 @@ from gameObjects.attachables.transform import Transform
 from modules.script import Script
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
-from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicBase import PhysicBase
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
 from gameObjects.attachables.model import Model
@@ -420,9 +420,9 @@ class SceneManager:
                 }
 
             # gameObject attachables
-            physic : Physic = obj.getAttachable(Physic)
+            physic : PhysicBase = obj.getAttachable(PhysicBase)
             if physic:
-                buffer[ type(Physic).__name__ ] = { 
+                buffer[ type(PhysicBase).__name__ ] = { 
                     "base_mass"     : float(physic.base_mass)
                 }
                 physicLink( buffer, physic )
@@ -655,7 +655,7 @@ class SceneManager:
                 if _light.get("is_sun", False):
                     self.setSun( gameObject.uuid, scene_id = scene_id )
 
-            def physicLink( _link : dict, physic_link : PhysicLink | Physic ):
+            def physicLink( _link : dict, physic_link : PhysicLink | PhysicBase ):
                 _inertia        = _link.get("inertia")
                 _joint          = _link.get("joint")
                 _collision      = _link.get("collision")
@@ -700,13 +700,13 @@ class SceneManager:
                     #visual.transform.is_physic_shape = True # redundant
                     visual._update_transform()
 
-            if "Physic" in obj:
-                _physic = obj["Physic"]
+            if "PhysicBase" in obj:
+                _physic = obj["PhysicBase"]
 
-                gameObject.addAttachable( Physic, Physic( self.context, gameObject ) )
-                gameObject.physic.base_mass = _physic.get("base_mass", -1.0)
+                gameObject.addAttachable( PhysicBase, PhysicBase( self.context, gameObject ) )
+                gameObject.physic_base.base_mass = _physic.get("base_mass", -1.0)
 
-                physicLink( _physic, gameObject.physic )
+                physicLink( _physic, gameObject.physic_base )
 
             if "PhysicLink" in obj:
                 _physic_link    = obj["PhysicLink"]

@@ -16,7 +16,7 @@ from gameObjects.mesh import Mesh
 from gameObjects.camera import Camera
 from gameObjects.skybox import Skybox
 
-from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicBase import PhysicBase
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
 from gameObjects.attachables.model import Model
@@ -632,14 +632,14 @@ class Inspector( Context ):
 
         imgui.pop_id()
         
-    def _physic( self ) -> None: 
+    def _physicBase( self ) -> None: 
         gameObject      : GameObject    = self.gui.selectedObject
         is_base_physic  : bool          = bool(gameObject.children)
 
-        if Physic not in gameObject.attachables:
+        if PhysicBase not in gameObject.attachables:
             return
 
-        physic : Physic = gameObject.getAttachable(Physic)
+        physic : PhysicBase = gameObject.getAttachable(PhysicBase)
         is_base_physic = bool(gameObject.children)
 
         self.helper._node_sep()
@@ -653,7 +653,7 @@ class Inspector( Context ):
                 imgui.same_line()
 
                 if self.helper.draw_trash_button( f"{fa.ICON_FA_TRASH}", _region.x - 20 ):
-                    gameObject.removeAttachable( Physic )
+                    gameObject.removeAttachable( PhysicBase )
 
             self.helper._node_header_pad()
 
@@ -704,7 +704,7 @@ class Inspector( Context ):
 
         _region = imgui.get_content_region_avail()
 
-        if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic", imgui.TreeNodeFlags_.default_open ):
+        if imgui.tree_node_ex( f"{fa.ICON_FA_PERSON_FALLING_BURST} Physic Link", imgui.TreeNodeFlags_.default_open ):
             
             # actions
             if not self.renderer.game_runtime: 
@@ -717,7 +717,7 @@ class Inspector( Context ):
 
             # visualize relations
             if physic_link.runtime_base_physic:
-                _base_footprint : Physic = physic_link.runtime_base_physic
+                _base_footprint : PhysicBase = physic_link.runtime_base_physic
                 _link_index     : int = physic_link.runtime_link_index
                 
                 _link           : PhysicLink = _base_footprint.links.index_to_link[_link_index]
@@ -793,7 +793,7 @@ class Inspector( Context ):
             self._camera()
             self._model()
             self._light()
-            self._physic()
+            self._physicBase()
             self._physicLink()
             self._material()
             self._scripts()

@@ -25,7 +25,7 @@ Quat = tuple[float, float, float, float]
 
 @dataclass(slots=True)
 class MultiBodyLinks:
-    base: "Physic | None" = None
+    base: "PhysicBase | None" = None
 
     # map
     # 0 : base_footprint
@@ -174,7 +174,7 @@ class MultiBodyLinks:
             # debug
             #print( f"{gameObject.name} links to {parent_index}: {_parent.name}" )
 
-class Physic( PhysicLink ):
+class PhysicBase( PhysicLink ):
     def __init__( self, context : "EmberEngine",
                     gameObject      : "GameObject",
                     uuid            : uid.UUID      = None,
@@ -243,7 +243,7 @@ class Physic( PhysicLink ):
             -world_rotation_quat[3] # handedness
         ]
 
-        # base physic (Physic + nested children) 
+        # base physic (PhysicBase + nested children) 
         if is_base_physic:
             # construct the link list from nested children
             self.links.runtime_init()
@@ -301,7 +301,7 @@ class Physic( PhysicLink ):
         # cache references to physic_id, base and index of the link on the child GameObject
         self.links.cache_on_children()
 
-        # base physic (Physic + nested children) 
+        # base physic (PhysicBase + nested children) 
         if is_base_physic:
             for i, link in enumerate(self.links.index_to_link):
                 self._apply_dynamics( i, link.collision )
@@ -344,7 +344,7 @@ class Physic( PhysicLink ):
             )
         )
 
-        # Recompute local transform when base physic (Physic + nested children) 
+        # Recompute local transform when base physic (PhysicBase + nested children) 
         # or gameObject a single world physic with mass
         if is_base_physic or self.inertia.mass > 0.0:
             self.gameObject.transform.world_model_matrix = _model_matrix

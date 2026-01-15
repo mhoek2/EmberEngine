@@ -238,7 +238,7 @@ class EmberEngine:
                     # viewmatrix
                     glUniformMatrix4fv(self.renderer.shader.uniforms['uVMatrix'], 1, GL_FALSE, self.renderer.view)
 
-                    for uuid in self.world.physics.keys():
+                    for uuid in self.world.physics_bases.keys():
                         self.world.gameObjects[uuid].onRenderColliders()
 
                     for uuid in self.world.physic_links.keys():

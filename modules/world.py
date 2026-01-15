@@ -16,7 +16,7 @@ from gameObjects.mesh import Mesh
 from gameObjects.skybox import Skybox
 from gameObjects.attachables.transform import Transform
 
-from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicBase import PhysicBase
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
 from gameObjects.attachables.model import Model
@@ -44,7 +44,7 @@ class World( Context ):
         self.lights         : Dict[uid.UUID, Light] = {}
         self.models         : Dict[uid.UUID, "Model"] = {}
         self.material       : Dict[uid.UUID, int] = {}
-        self.physics        : Dict[uid.UUID, Physic] = {}
+        self.physics_bases  : Dict[uid.UUID, PhysicBase] = {}
         self.physic_links   : Dict[uid.UUID, PhysicLink] = {}
 
         self.trash          : List[uid.UUID] = []
@@ -55,7 +55,7 @@ class World( Context ):
         self.lights.clear()
         self.models.clear()
         self.material.clear()
-        self.physics.clear()
+        self.physics_bases.clear()
         self.physic_links.clear()
 
     def addGameObject( self, obj : GameObject ) -> GameObject:

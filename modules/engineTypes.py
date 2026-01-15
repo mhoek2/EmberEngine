@@ -27,7 +27,7 @@ class EngineTypes:
             from gameObjects.gameObject import GameObject
             from gameObjects.attachables.transform import Transform
             from gameObjects.attachables.light import Light
-            from gameObjects.attachables.physic import Physic
+            from gameObjects.attachables.physicBase import PhysicBase
             from gameObjects.attachables.physicLink import PhysicLink
             from gameObjects.attachables.model import Model
 
@@ -35,7 +35,7 @@ class EngineTypes:
                 Transform   : EngineTypes.Meta( Transform,    attachable=False ),
                 GameObject  : EngineTypes.Meta( GameObject,   attachable=False ),
                 Light       : EngineTypes.Meta( Light,        attachable=True ),
-                Physic      : EngineTypes.Meta( Physic,       attachable=True ),
+                PhysicBase  : EngineTypes.Meta( PhysicBase,   attachable=True ),
                 PhysicLink  : EngineTypes.Meta( PhysicLink,   attachable=True ),
                 Model       : EngineTypes.Meta( Model,        attachable=True ),
             }

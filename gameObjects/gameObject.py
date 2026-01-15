@@ -21,7 +21,7 @@ from modules.script import Script
 
 from gameObjects.scriptBehaivior import ScriptBehaivior
 
-from gameObjects.attachables.physic import Physic
+from gameObjects.attachables.physicBase import PhysicBase
 from gameObjects.attachables.physicLink import PhysicLink
 from gameObjects.attachables.light import Light
 from gameObjects.attachables.model import Model
@@ -120,7 +120,7 @@ class GameObject( Context, Transform ):
         ) )
 
         # physic
-        self.physic : Physic = None  # reserved for physic attachment
+        self.physic_base : PhysicBase = None  # reserved for physic attachment
         self.physic_link : PhysicLink = None  # reserved for physic attachment
 
         # model
@@ -159,7 +159,7 @@ class GameObject( Context, Transform ):
                 c._mark_dirty( flag )
 
     def get_physic( self ):
-        return self.physic or self.physic_link
+        return self.physic_base or self.physic_link
 
     def addAttachable( self, t : type, object ):
         """Add a attachable object to this gameObject
@@ -188,16 +188,16 @@ class GameObject( Context, Transform ):
             self.model = self.attachables[t] 
             self.context.world.models[self.uuid] = self.attachables[t] 
 
-        if t is Physic:
-            self.physic = self.attachables[t]
-            self.context.world.physics[self.uuid] = self.attachables[t] 
+        if t is PhysicBase:
+            self.physic_base = self.attachables[t]
+            self.context.world.physics_bases[self.uuid] = self.attachables[t] 
 
         if t is PhysicLink:
             self.physic_link = self.attachables[t]
             self.context.world.physic_links[self.uuid] = self.attachables[t] 
 
         # additional logic for physics
-        if t in (Physic, PhysicLink):
+        if t in (PhysicBase, PhysicLink):
             _physic = self.get_physic()
 
             # visual and collision shapes takes over scale from gameObject
@@ -214,7 +214,7 @@ class GameObject( Context, Transform ):
     def removeAttachable( self, t : type ):
         print( f"remove {t.__name__}")
 
-        if t in (Physic, PhysicLink):
+        if t in (PhysicBase, PhysicLink):
             _physic = self.get_physic()
 
             # gameObject takes over scale from visual shape
@@ -233,9 +233,9 @@ class GameObject( Context, Transform ):
             self.model = self.attachables[t] 
             del self.context.world.models[self.uuid]
 
-        if t is Physic:
-            self.physic = self.attachables[t]
-            del self.context.world.physics[self.uuid]
+        if t is PhysicBase:
+            self.physic_base = self.attachables[t]
+            del self.context.world.physics_bases[self.uuid]
 
         if t is PhysicLink:
             self.physic_link = self.attachables[t]
@@ -261,7 +261,7 @@ class GameObject( Context, Transform ):
             case "Light"        : _ref = self.attachables.get( Light )
             case "Model"        : _ref = self.attachables.get( Model )
             case "PhysicLink"   : _ref = self.attachables.get( PhysicLink )
-            case "Physic"       : _ref = self.attachables.get( Physic )
+            case "PhysicBase"       : _ref = self.attachables.get( PhysicBase )
             case "GameObject"   : _ref = self
 
         return _ref
@@ -438,7 +438,7 @@ class GameObject( Context, Transform ):
 
     def getParent( self, filter_physic_base : bool = False ) -> "GameObject":
         if self.parent and filter_physic_base:
-            if not self.parent.getAttachable( Physic ):
+            if not self.parent.getAttachable( PhysicBase ):
                 return self.parent.getParent( filter_physic_base )
         
         return self.parent
@@ -565,8 +565,8 @@ class GameObject( Context, Transform ):
             #"scripts"   : copy.deepcopy(self.scripts),
         }
 
-        if self.physic:
-            self._state_snapshot["Physic"] = self._save_physic_state( self.physic )
+        if self.physic_base:
+            self._state_snapshot["PhysicBase"] = self._save_physic_state( self.physic_base )
 
         if self.physic_link:
             self._state_snapshot["PhysicLink"] = self._save_physic_state( self.physic_link )
@@ -587,8 +587,8 @@ class GameObject( Context, Transform ):
         self.parent                     = state["parent"]
         #self.scripts                    = copy.deepcopy(state["scripts")
 
-        if "Physic" in state: 
-            self._restore_physic_state( self.physic, state["Physic"] )
+        if "PhysicBase" in state: 
+            self._restore_physic_state( self.physic_base, state["PhysicBase"] )
 
         if "PhysicLink" in state: 
             self._restore_physic_state( self.physic_link, state["PhysicLink"] )
@@ -613,8 +613,8 @@ class GameObject( Context, Transform ):
         if _on_start:
             self.onStartScripts();
 
-        if self.physic:
-            self.physic._initPhysics()
+        if self.physic_base:
+            self.physic_base._initPhysics()
 
     def onDisable( self, _on_stop=False ) -> None:
         self.onDisableScripts();
@@ -624,8 +624,8 @@ class GameObject( Context, Transform ):
             self._restore_state()
             #deinit scripts?
 
-        if self.physic:
-            self.physic._deInitPhysics()
+        if self.physic_base:
+            self.physic_base._deInitPhysics()
 
     #
     # start and update
@@ -661,8 +661,8 @@ class GameObject( Context, Transform ):
                 if not self.context.renderer.USE_INDIRECT:
                     _physic.visual.transform._createWorldModelMatrix()
 
-            if self.renderer.game_running and self.physic:
-                self.physic._updatePhysicsBody()
+            if self.renderer.game_running and self.physic_base:
+                self.physic_base._updatePhysicsBody()
 
         if self._dirty:
             if self.scene.isSun( self.uuid ):
@@ -676,8 +676,8 @@ class GameObject( Context, Transform ):
                 return 
 
             # Run physics and update non-kinematic local transforms
-            if self.physic:
-                self.physic._runPhysics()
+            if self.physic_base:
+                self.physic_base._runPhysics()
 
             elif self.physic_link:
                 self.physic_link._runPhysics()
@@ -709,7 +709,7 @@ class GameObject( Context, Transform ):
             return
 
         # dont visualize
-        if self.physic and self.children:
+        if self.physic_base and self.children:
             _physic = None
 
         if _physic is not None:
