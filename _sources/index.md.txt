@@ -173,7 +173,15 @@ I value that as a good exercise!"
 ::::
 :::::
 
+### Demo
+A simple interactive export demo is [available here](https://github.com/mhoek2/EmberEngine-demo)
 
+```{raw} html
+<video style="width:100%" controls>
+  <source src="https://github.com/user-attachments/assets/bd79dec6-d593-4d2a-a012-768636c18604" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+```
 
 ### Development
 1. Install ```python``` from [the website](https://www.python.org/downloads/) ```*verified version: 3.12.7```

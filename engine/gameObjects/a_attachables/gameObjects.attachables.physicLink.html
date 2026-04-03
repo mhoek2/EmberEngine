@@ -41,8 +41,8 @@
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../../_static/documentation_options.js?v=8d563738"></script>
-    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'engine/gameObjects/a_attachables/gameObjects.attachables.physicLink';</script>
     <link rel="icon" href="../../../_static/logo.png"/>
@@ -417,107 +417,152 @@
 <span id="gameobjects-attachables-physiclink"></span><h1>gameObjects.attachables.physicLink<a class="headerlink" href="#module-gameObjects.attachables.physicLink" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gameObjects.attachables.physicLink.</span></span><span class="sig-name descname"><span class="pre">PhysicLink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UUID</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">gameObjects.attachables.physicLink.</span></span><span class="sig-name descname"><span class="pre">PhysicLink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UUID</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.damping">
+<span class="sig-name descname"><span class="pre">damping</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.damping" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.geom_type">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geom_type</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.geom_type" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">geom_type</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.geom_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.height">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">height</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.height" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">height</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.height" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.lateral_friction">
+<span class="sig-name descname"><span class="pre">lateral_friction</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.lateral_friction" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.model">
+<span class="sig-name descname"><span class="pre">model</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="gameObjects.attachables.model.html#gameObjects.attachables.model.Model" title="gameObjects.attachables.model.Model"><span class="pre">Model</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.model" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.radius">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radius</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.radius" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">radius</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.radius" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.restitution">
+<span class="sig-name descname"><span class="pre">restitution</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.restitution" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.rolling_friction">
+<span class="sig-name descname"><span class="pre">rolling_friction</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.rolling_friction" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.spinning_friction">
+<span class="sig-name descname"><span class="pre">spinning_friction</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.spinning_friction" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.stiffness">
+<span class="sig-name descname"><span class="pre">stiffness</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.stiffness" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Collision.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="gameObjects.attachables.transform.html#gameObjects.attachables.transform.Transform" title="gameObjects.attachables.transform.Transform"><span class="pre">Transform</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.transform" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.GeometryType_">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GeometryType_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GeometryType_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.GeometryType_.box">
-<span class="sig-name descname"><span class="pre">box</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.box" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">box</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.box" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.GeometryType_.cilinder">
-<span class="sig-name descname"><span class="pre">cilinder</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.cilinder" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cilinder</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.cilinder" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.GeometryType_.mesh">
-<span class="sig-name descname"><span class="pre">mesh</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.mesh" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">mesh</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.mesh" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.GeometryType_.sphere">
-<span class="sig-name descname"><span class="pre">sphere</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.sphere" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sphere</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_.sphere" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Inertia">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Inertia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Inertia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Inertia.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Inertia.mass">
+<span class="sig-name descname"><span class="pre">mass</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia.mass" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Joint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Joint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Type_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Type_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.continuous">
-<span class="sig-name descname"><span class="pre">continuous</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.continuous" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">continuous</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.continuous" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.fixed">
-<span class="sig-name descname"><span class="pre">fixed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.fixed" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fixed</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.fixed" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.floating">
-<span class="sig-name descname"><span class="pre">floating</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.floating" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">floating</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.floating" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.planar">
-<span class="sig-name descname"><span class="pre">planar</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.planar" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">planar</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.planar" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.prismatic">
-<span class="sig-name descname"><span class="pre">prismatic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.prismatic" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">prismatic</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.prismatic" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.revolute">
-<span class="sig-name descname"><span class="pre">revolute</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.revolute" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">revolute</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_.revolute" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -527,15 +572,25 @@
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Joint.geom_type">
+<span class="sig-name descname"><span class="pre">geom_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.Type_" title="gameObjects.attachables.physicLink.PhysicLink.Joint.Type_"><span class="pre">Type_</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.geom_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Visual">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Visual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Visual" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Visual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Visual" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Visual.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Visual.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.Visual.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="gameObjects.attachables.transform.html#gameObjects.attachables.transform.Transform" title="gameObjects.attachables.transform.Transform"><span class="pre">Transform</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.Visual.transform" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -545,9 +600,19 @@
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EmberEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gameObject</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../a_gameObjects/gameObjects.gameObject.html#gameObjects.gameObject.GameObject" title="gameObjects.gameObject.GameObject"><span class="pre">GameObject</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">UUID</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.active">
+<span class="sig-name descname"><span class="pre">active</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.active" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.collision">
+<span class="sig-name descname"><span class="pre">collision</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#gameObjects.attachables.physicLink.PhysicLink.Collision" title="gameObjects.attachables.physicLink.PhysicLink.Collision"><span class="pre">PhysicLink.Collision</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.collision" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.create_collision_shape">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_collision_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#gameObjects.attachables.physicLink.PhysicLink" title="gameObjects.attachables.physicLink.PhysicLink"><span class="pre">PhysicLink</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.create_collision_shape" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">create_collision_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#gameObjects.attachables.physicLink.PhysicLink" title="gameObjects.attachables.physicLink.PhysicLink"><span class="pre">PhysicLink</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.create_collision_shape" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -560,14 +625,39 @@
 <span class="sig-name descname"><span class="pre">getJointId</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.getJointId" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.inertia">
+<span class="sig-name descname"><span class="pre">inertia</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia" title="gameObjects.attachables.physicLink.PhysicLink.Inertia"><span class="pre">PhysicLink.Inertia</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.inertia" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.joint">
+<span class="sig-name descname"><span class="pre">joint</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#gameObjects.attachables.physicLink.PhysicLink.Joint" title="gameObjects.attachables.physicLink.PhysicLink.Joint"><span class="pre">PhysicLink.Joint</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.joint" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.pybullet_geom_type">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pybullet_geom_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.pybullet_geom_type" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pybullet_geom_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.pybullet_geom_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.pybullet_joint_type">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pybullet_joint_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.pybullet_joint_type" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pybullet_joint_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_t</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.pybullet_joint_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.runtime_base_physic">
+<span class="sig-name descname"><span class="pre">runtime_base_physic</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="gameObjects.attachables.physicBase.html#gameObjects.attachables.physicBase.PhysicBase" title="gameObjects.attachables.physicBase.PhysicBase"><span class="pre">PhysicBase</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.runtime_base_physic" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.uuid">
+<span class="sig-name descname"><span class="pre">uuid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">uid.UUID</span></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.uuid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gameObjects.attachables.physicLink.PhysicLink.visual">
+<span class="sig-name descname"><span class="pre">visual</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#gameObjects.attachables.physicLink.PhysicLink.Visual" title="gameObjects.attachables.physicLink.PhysicLink.Visual"><span class="pre">PhysicLink.Visual</span></a></span><a class="headerlink" href="#gameObjects.attachables.physicLink.PhysicLink.visual" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -615,9 +705,17 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink"><code class="docutils literal notranslate"><span class="pre">PhysicLink</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.__init__"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.damping"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.damping</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.geom_type"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.geom_type</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.height"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.height</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.lateral_friction"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.lateral_friction</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.model"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.model</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.radius"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.radius</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.restitution"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.restitution</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.rolling_friction"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.rolling_friction</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.spinning_friction"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.spinning_friction</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.stiffness"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.stiffness</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Collision.transform"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Collision.transform</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.GeometryType_"><code class="docutils literal notranslate"><span class="pre">PhysicLink.GeometryType_</span></code></a><ul class="nav section-nav flex-column">
@@ -629,6 +727,7 @@
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Inertia</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia.__init__"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Inertia.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Inertia.mass"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Inertia.mass</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Joint"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Joint</span></code></a><ul class="nav section-nav flex-column">
@@ -642,18 +741,27 @@
 </ul>
 </li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.__init__"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Joint.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Joint.geom_type"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Joint.geom_type</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Visual"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Visual</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Visual.__init__"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Visual.__init__()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.Visual.transform"><code class="docutils literal notranslate"><span class="pre">PhysicLink.Visual.transform</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.__init__"><code class="docutils literal notranslate"><span class="pre">PhysicLink.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.active"><code class="docutils literal notranslate"><span class="pre">PhysicLink.active</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.collision"><code class="docutils literal notranslate"><span class="pre">PhysicLink.collision</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.create_collision_shape"><code class="docutils literal notranslate"><span class="pre">PhysicLink.create_collision_shape()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.getBodyId"><code class="docutils literal notranslate"><span class="pre">PhysicLink.getBodyId()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.getJointId"><code class="docutils literal notranslate"><span class="pre">PhysicLink.getJointId()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.inertia"><code class="docutils literal notranslate"><span class="pre">PhysicLink.inertia</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.joint"><code class="docutils literal notranslate"><span class="pre">PhysicLink.joint</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.pybullet_geom_type"><code class="docutils literal notranslate"><span class="pre">PhysicLink.pybullet_geom_type()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.pybullet_joint_type"><code class="docutils literal notranslate"><span class="pre">PhysicLink.pybullet_joint_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.runtime_base_physic"><code class="docutils literal notranslate"><span class="pre">PhysicLink.runtime_base_physic</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.uuid"><code class="docutils literal notranslate"><span class="pre">PhysicLink.uuid</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gameObjects.attachables.physicLink.PhysicLink.visual"><code class="docutils literal notranslate"><span class="pre">PhysicLink.visual</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -702,7 +810,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>

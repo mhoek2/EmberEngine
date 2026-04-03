@@ -41,8 +41,8 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=8d563738"></script>
-    <script src="../../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'engine/a_modules/modules.scene';</script>
     <link rel="icon" href="../../_static/logo.png"/>
@@ -438,101 +438,101 @@
 <span id="modules-scene"></span><h1>modules.scene<a class="headerlink" href="#module-modules.scene" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="modules.scene.SceneManager">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">modules.scene.</span></span><span class="sig-name descname"><span class="pre">SceneManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">modules.scene.</span></span><span class="sig-name descname"><span class="pre">SceneManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#modules.scene.SceneManager" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Scene</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Scene</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></p>
 <p>Typedef for a scene file</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.ambient_color">
-<span class="sig-name descname"><span class="pre">ambient_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.ambient_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ambient_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.ambient_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.camera">
-<span class="sig-name descname"><span class="pre">camera</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../a_gameObjects/gameObjects.camera.html#gameObjects.camera.Camera" title="gameObjects.camera.Camera"><span class="pre">Camera</span></a></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.camera" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">camera</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../a_gameObjects/gameObjects.camera.html#gameObjects.camera.Camera" title="gameObjects.camera.Camera"><span class="pre">Camera</span></a></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.camera" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.fog_color">
-<span class="sig-name descname"><span class="pre">fog_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fog_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.fog_density">
-<span class="sig-name descname"><span class="pre">fog_density</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_density" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fog_density</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_density" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.fog_falloff">
-<span class="sig-name descname"><span class="pre">fog_falloff</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_falloff" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fog_falloff</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_falloff" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.fog_height">
-<span class="sig-name descname"><span class="pre">fog_height</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_height" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">fog_height</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.fog_height" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.gameObjects">
-<span class="sig-name descname"><span class="pre">gameObjects</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">_GameObject</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.gameObjects" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gameObjects</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">_GameObject</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.gameObjects" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.light_color">
-<span class="sig-name descname"><span class="pre">light_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.light_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">light_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.light_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_ground_color">
-<span class="sig-name descname"><span class="pre">procedural_ground_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_ground_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">procedural_ground_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_ground_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_horizon_color">
-<span class="sig-name descname"><span class="pre">procedural_horizon_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_horizon_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">procedural_horizon_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_horizon_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_night_brightness">
-<span class="sig-name descname"><span class="pre">procedural_night_brightness</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_night_brightness" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">procedural_night_brightness</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_night_brightness" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_night_color">
-<span class="sig-name descname"><span class="pre">procedural_night_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_night_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">procedural_night_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_night_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_sky_color">
-<span class="sig-name descname"><span class="pre">procedural_sky_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_sky_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">procedural_sky_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_sky_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.procedural_sunset_color">
-<span class="sig-name descname"><span class="pre">procedural_sunset_color</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_sunset_color" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">procedural_sunset_color</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.procedural_sunset_color" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.sky_type">
-<span class="sig-name descname"><span class="pre">sky_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../a_gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.Type_" title="gameObjects.skybox.Skybox.Type_"><span class="pre">Skybox.Type_</span></a></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.sky_type" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sky_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../a_gameObjects/gameObjects.skybox.html#gameObjects.skybox.Skybox.Type_" title="gameObjects.skybox.Skybox.Type_"><span class="pre">Skybox.Type_</span></a></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.sky_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.sun">
-<span class="sig-name descname"><span class="pre">sun</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../gameObjects/a_attachables/gameObjects.attachables.light.html#gameObjects.attachables.light.Light" title="gameObjects.attachables.light.Light"><span class="pre">Light</span></a></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.sun" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sun</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../gameObjects/a_attachables/gameObjects.attachables.light.html#gameObjects.attachables.light.Light" title="gameObjects.attachables.light.Light"><span class="pre">Light</span></a></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.sun" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="modules.scene.SceneManager.Scene.uid">
-<span class="sig-name descname"><span class="pre">uid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#modules.scene.SceneManager.Scene.uid" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">uid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#modules.scene.SceneManager.Scene.uid" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -951,7 +951,7 @@ This removes gameObjects, clears editor GUI state, resets camera index.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     <br/>
   </p>
 </div>
