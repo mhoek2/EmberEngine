@@ -40,6 +40,12 @@ https://github.com/user-attachments/assets/52a6dc86-628a-4592-92fe-6af80bde8c8c
 
 ![](docs/source/_static/showcase/hierarchy.jpg)
 
+
+## :video_game: Demo
+A simple interactive export demo is [available here](https://github.com/mhoek2/EmberEngine-demo)
+
+https://github.com/user-attachments/assets/bd79dec6-d593-4d2a-a012-768636c18604
+
 ## :fire: Installation (Windows)
 Download [Release or Beta](https://github.com/mhoek2/EmberEngine/releases) here.
 
